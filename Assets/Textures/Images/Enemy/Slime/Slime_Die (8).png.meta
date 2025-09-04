@@ -1,0 +1,663 @@
+fileFormatVersion: 2
+guid: f24594ab49ad624429f3359b795222b8
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -3494921897277427823
+    second: Slime_Die (8)_0
+  - first:
+      213: 431282251852009741
+    second: Slime_Die (8)_1
+  - first:
+      213: 9181398969937988106
+    second: Slime_Die (8)_2
+  - first:
+      213: 5832916099522517646
+    second: Slime_Die (8)_3
+  - first:
+      213: -2198963229469294442
+    second: Slime_Die (8)_4
+  - first:
+      213: 3674976544806229879
+    second: Slime_Die (8)_5
+  - first:
+      213: -4340611432680199077
+    second: Slime_Die (8)_6
+  - first:
+      213: 6343983902304951207
+    second: Slime_Die (8)_7
+  - first:
+      213: -554109522276954902
+    second: Slime_Die (8)_8
+  - first:
+      213: 4522323201602775036
+    second: Slime_Die (8)_9
+  - first:
+      213: -7483406345088305014
+    second: Slime_Die (8)_10
+  - first:
+      213: -3927188116275917086
+    second: Slime_Die (8)_11
+  - first:
+      213: -2076856489030355045
+    second: Slime_Die (8)_12
+  - first:
+      213: -3698306942739253945
+    second: Slime_Die (8)_13
+  - first:
+      213: -5168482360883278419
+    second: Slime_Die (8)_14
+  - first:
+      213: -3867173160927715870
+    second: Slime_Die (8)_15
+  - first:
+      213: -6990239069680178318
+    second: Slime_Die (8)_16
+  - first:
+      213: -1871994707065034389
+    second: Slime_Die (8)_17
+  - first:
+      213: -3105744342084532604
+    second: Slime_Die (8)_18
+  - first:
+      213: 3342491600937483149
+    second: Slime_Die (8)_19
+  - first:
+      213: 6710053247938626247
+    second: Slime_Die (8)_20
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 9
+  spritePivot: {x: 0.52, y: 0}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Slime_Die (8)_0
+      rect:
+        serializedVersion: 2
+        x: 404
+        y: 226
+        width: 11
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 19f6b032d0b8f7fc0800000000000000
+      internalID: -3494921897277427823
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime_Die (8)_1
+      rect:
+        serializedVersion: 2
+        x: 387
+        y: 206
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d01d19b4ce83cf500800000000000000
+      internalID: 431282251852009741
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime_Die (8)_2
+      rect:
+        serializedVersion: 2
+        x: 408
+        y: 199
+        width: 7
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a0a8a40d7b1ea6f70800000000000000
+      internalID: 9181398969937988106
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime_Die (8)_3
+      rect:
+        serializedVersion: 2
+        x: 368
+        y: 177
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e8a52b4d94ea2f050800000000000000
+      internalID: 5832916099522517646
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime_Die (8)_4
+      rect:
+        serializedVersion: 2
+        x: 377
+        y: 183
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6904659e796bb71e0800000000000000
+      internalID: -2198963229469294442
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime_Die (8)_5
+      rect:
+        serializedVersion: 2
+        x: 423
+        y: 173
+        width: 13
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 777511752b3200330800000000000000
+      internalID: 3674976544806229879
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime_Die (8)_6
+      rect:
+        serializedVersion: 2
+        x: 354
+        y: 156
+        width: 13
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b5ce81746ec03c3c0800000000000000
+      internalID: -4340611432680199077
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime_Die (8)_7
+      rect:
+        serializedVersion: 2
+        x: 394
+        y: 154
+        width: 13
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7abdead4fbb5a0850800000000000000
+      internalID: 6343983902304951207
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime_Die (8)_8
+      rect:
+        serializedVersion: 2
+        x: 371
+        y: 132
+        width: 7
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aec450643586f48f0800000000000000
+      internalID: -554109522276954902
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime_Die (8)_9
+      rect:
+        serializedVersion: 2
+        x: 405
+        y: 138
+        width: 9
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cf76a07ddf482ce30800000000000000
+      internalID: 4522323201602775036
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime_Die (8)_10
+      rect:
+        serializedVersion: 2
+        x: 414
+        y: 132
+        width: 11
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a887b13f399952890800000000000000
+      internalID: -7483406345088305014
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime_Die (8)_11
+      rect:
+        serializedVersion: 2
+        x: 439
+        y: 126
+        width: 8
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2ee0d332733df79c0800000000000000
+      internalID: -3927188116275917086
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime_Die (8)_12
+      rect:
+        serializedVersion: 2
+        x: 373
+        y: 112
+        width: 13
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9771e1e6068d23e0800000000000000
+      internalID: -2076856489030355045
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime_Die (8)_13
+      rect:
+        serializedVersion: 2
+        x: 415
+        y: 114
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7457aa71e69fcacc0800000000000000
+      internalID: -3698306942739253945
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime_Die (8)_14
+      rect:
+        serializedVersion: 2
+        x: 424
+        y: 113
+        width: 11
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dad0ea33dacd548b0800000000000000
+      internalID: -5168482360883278419
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime_Die (8)_15
+      rect:
+        serializedVersion: 2
+        x: 340
+        y: 89
+        width: 10
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2ed9af1df7a055ac0800000000000000
+      internalID: -3867173160927715870
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime_Die (8)_16
+      rect:
+        serializedVersion: 2
+        x: 370
+        y: 88
+        width: 25
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 27be7ac1a9eadfe90800000000000000
+      internalID: -6990239069680178318
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime_Die (8)_17
+      rect:
+        serializedVersion: 2
+        x: 411
+        y: 87
+        width: 25
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b692aff6bb65506e0800000000000000
+      internalID: -1871994707065034389
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime_Die (8)_18
+      rect:
+        serializedVersion: 2
+        x: 446
+        y: 93
+        width: 18
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4864fdec9fd26e4d0800000000000000
+      internalID: -3105744342084532604
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime_Die (8)_19
+      rect:
+        serializedVersion: 2
+        x: 351
+        y: 79
+        width: 13
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d8bfa9ad66ae26e20800000000000000
+      internalID: 3342491600937483149
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Slime_Die (8)_20
+      rect:
+        serializedVersion: 2
+        x: 305
+        y: 0
+        width: 190
+        height: 67
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7c2865ba0e5ee1d50800000000000000
+      internalID: 6710053247938626247
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Slime_Die (8)_0: -3494921897277427823
+      Slime_Die (8)_1: 431282251852009741
+      Slime_Die (8)_10: -7483406345088305014
+      Slime_Die (8)_11: -3927188116275917086
+      Slime_Die (8)_12: -2076856489030355045
+      Slime_Die (8)_13: -3698306942739253945
+      Slime_Die (8)_14: -5168482360883278419
+      Slime_Die (8)_15: -3867173160927715870
+      Slime_Die (8)_16: -6990239069680178318
+      Slime_Die (8)_17: -1871994707065034389
+      Slime_Die (8)_18: -3105744342084532604
+      Slime_Die (8)_19: 3342491600937483149
+      Slime_Die (8)_2: 9181398969937988106
+      Slime_Die (8)_20: 6710053247938626247
+      Slime_Die (8)_3: 5832916099522517646
+      Slime_Die (8)_4: -2198963229469294442
+      Slime_Die (8)_5: 3674976544806229879
+      Slime_Die (8)_6: -4340611432680199077
+      Slime_Die (8)_7: 6343983902304951207
+      Slime_Die (8)_8: -554109522276954902
+      Slime_Die (8)_9: 4522323201602775036
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

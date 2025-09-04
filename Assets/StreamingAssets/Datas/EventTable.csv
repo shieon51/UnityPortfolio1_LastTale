@@ -1,0 +1,7 @@
+EventID,EventName,IsAnytime,EventDay,StartTime,EndTime,NodeName,SceneID,PositionX,PositionY,TimeTaken
+10000,NPC1,FALSE,1,8,11,NPC1_Day1_001,0,4,-2,1
+10001,NPC1,FALSE,1,13,16,NPC1_Day1_002,0,4,-2,1
+10002,NPC1,FALSE,1,21,23,NPC1_Day1_003,0,4,-2,1
+90000,Training,TRUE,0,0,24,training,0,-2.5,0,2
+90001,Practice,TRUE,0,0,24,practice,0,-5,0,1
+90002,Sleep,TRUE,0,0,24,sleep,0,-7.5,0,8
