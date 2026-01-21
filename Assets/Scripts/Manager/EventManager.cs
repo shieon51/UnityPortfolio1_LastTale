@@ -192,7 +192,7 @@ public class EventManager : Singleton<EventManager>
         }
     }
 
-    //Dialogue가 끝났을 때 Invoke되는 함수
+    //Dialogue가 끝났을 때 Invoke되는 함수 ++ OCP 위배인듯. 수정 필요
     public void EventResult(EventData eventData)
     {
         //시간 변화

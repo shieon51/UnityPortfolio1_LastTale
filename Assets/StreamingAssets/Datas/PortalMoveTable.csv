@@ -1,0 +1,3 @@
+﻿ProtalID,FromSceneID,ToSceneID,ProtalPosX,ProtalPosY,SpawnProtalID,Condition
+1001,1,2,6,-2,1002,None
+1002,2,1,-2.5,0,1001,None

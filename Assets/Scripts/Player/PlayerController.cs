@@ -16,7 +16,7 @@ public class PlayerController : MonoBehaviour
     //public float LowJumpMultiplier = 2.0f;
     public float GroundCheckDistance = 0.2f;  // 낭떠러지 감지 거리
     public float GroundCheckDistanceWidth = 5.0f;  // 낭떠러지 감지 거리(너비)
-    private Vector3 _groundCheckLineOffset = new Vector3(0, -1, 0);
+    public Vector3 _groundCheckLineOffset = new Vector3(0, -1, 0);
 
     private float _horizontalInput;
     private Animator _animator;

@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 3738008883484734237}
   - component: {fileID: 5818614099001395486}
   - component: {fileID: 5171759405303234114}
+  - component: {fileID: 6760303895948612424}
   m_Layer: 6
   m_Name: Visual
   m_TagString: Untagged
@@ -124,8 +125,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ced149d1eacd6784996f4a425559d552, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  attackCollider: {fileID: 0}
+  meleeFirstSize: {x: 2.6, y: 1.6}
+  meleeFirstOffset: {x: -0.4, y: 1.1}
+  meleeSecondSize: {x: 3.8, y: 1.8}
+  meleeSecondOffset: {x: -0.3, y: 1.3}
   _currentAttack: 0
   _isAttacking: 0
+  _attackDistance: 0.1
+  _attackDashSpeed: 10
+  _manaPerAttack: 5
 --- !u!70 &5171759405303234114
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -163,6 +172,52 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 1.4}
   m_Size: {x: 1, y: 2.8}
   m_Direction: 0
+--- !u!61 &6760303895948612424
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1615819369699982626}
+  m_Enabled: 0
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: -0.3, y: 1.3}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0}
+    oldSize: {x: 1.3, y: 2.89}
+    newSize: {x: 1.3, y: 2.89}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 3.8, y: 1.8}
+  m_EdgeRadius: 0
 --- !u!1 &6994465021518602846
 GameObject:
   m_ObjectHideFlags: 0
@@ -215,9 +270,10 @@ MonoBehaviour:
   DEFALT_DASH_SPEED: 6
   CurRunSpeed: 0
   CurDashSpeed: 0
-  JumpForce: 700
-  GroundCheckDistance: 0.5
-  GroundCheckDistanceWidth: 0.34
+  JumpForce: 750
+  GroundCheckDistance: 0.4
+  GroundCheckDistanceWidth: 0.2
+  _groundCheckLineOffset: {x: 0, y: -0.92, z: 0}
 --- !u!50 &9157177150215643267
 Rigidbody2D:
   serializedVersion: 5
@@ -261,7 +317,7 @@ CircleCollider2D:
     m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
   m_LayerOverridePriority: 0
   m_ForceSendLayers:
     serializedVersion: 2
@@ -279,5 +335,5 @@ CircleCollider2D:
   m_UsedByEffector: 1
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.029077113, y: -0.85923386}
-  m_Radius: 0.16538239
+  m_Offset: {x: 0.02, y: -0.75}
+  m_Radius: 0.24141192
