@@ -1,0 +1,3 @@
+PortalID,OwnerSceneID,TargetPortalID,PosX,PosY,Condition
+1001,1,1002,28.49,1.88,None
+1002,2,1001,-5.32,-0.17,None

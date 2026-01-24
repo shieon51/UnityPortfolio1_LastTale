@@ -30,6 +30,15 @@ public class DialogueManager : Singleton<DialogueManager>
         story = new Story(inkJSON.text);
     }
 
+    private void Update()
+    {
+        //대화 중일 때 엔터 입력하면 -> 다음 대사 출력 (단, 선택지가 있을 경우 엔터 키 입력 막기)
+        if (IsTalking && !IsChoices && Input.GetKeyDown(KeyCode.Return))
+        {
+            DisplayNextLine();
+        }
+    }
+
     public void StartStory(EventData eventData)
     {
         curEventData = eventData;

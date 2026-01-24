@@ -2,9 +2,8 @@ using System.Collections.Generic;
 using System;
 using UnityEngine;
 using System.IO;
-using UnityEngine.EventSystems;
-using Unity.VisualScripting;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 [Serializable]
 public class EventData
@@ -37,7 +36,9 @@ public class EventManager : Singleton<EventManager>
     private GameObject eventTriggerPrefab;
     private Dictionary<int, EventData> eventDict = new Dictionary<int, EventData>();
     private List<EventTrigger> activeTriggers = new List<EventTrigger>(); // 최대 10개까지만 관리
+
     private EventTrigger closest = null;
+    private bool canInteract = false;    // 상호작용 가능 여부 플래그
 
     private void Awake()
     {
@@ -57,7 +58,21 @@ public class EventManager : Singleton<EventManager>
     private void Update()
     {
         UpdateNearestEvent();
+
+        // Z키 입력 시 상호작용
+        // (조건: 대화중이 아님 + 상호작용 가능한 거리임 + 대상이 존재함 + Z키 누름)
+        if (!DialogueManager.Instance.IsTalking &&
+             canInteract &&
+             closest != null &&
+             Input.GetKeyDown(KeyCode.Z))
+        {
+            Debug.Log($"상호작용 시작: {closest.eventData.EventName}");
+            closest.StartDialogue(); // 트리거의 대화 시작 함수 호출
+        }
+
     }
+
+
 
     private void InitializeEventTriggers(int count)
     {
@@ -101,18 +116,31 @@ public class EventManager : Singleton<EventManager>
 
     public void UpdateEventTriggers()
     {
+        // 만약 씬 로더가 아직 초기화 안 됐거나 ID가 없으면 중단 (예외 처리)
+        if (SceneLoader.Instance == null) return;
+
         int currentDay = TimeManager.Instance.currentDay;
         int currentTime = TimeManager.Instance.currentHour; // 24시간 기준 예: 9(9시), 18(18시)
+
+        // SceneLoader에게 현재 씬 ID 물어보기
+        int currentSceneID = SceneLoader.Instance.CurrentSceneID;
 
         // 현재 씬에서 유효한 이벤트 필터링
         List<EventData> validEvents = new List<EventData>();
         foreach (EventData eventEntry in eventDict.Values)
         {
-            //현재 날짜, 시간 범위 내에 해당되는 이벤트의 경우 -> 해당 위치에 EventTrigger를 배치 ++ eventEntry.SceneID도 체크!
-            if (eventEntry.IsAnytime ||
-                (eventEntry.Day == currentDay && 
-                currentTime >= eventEntry.StartTime && 
-                currentTime < eventEntry.EndTime))
+            // 현재 씬(currentSceneID)과 이벤트의 씬(eventEntry.SceneID)이 같은지 체크
+            bool isCorrectScene = (eventEntry.SceneID == currentSceneID);
+
+            //현재 날짜, 시간 범위 내에 해당되는 이벤트의 경우
+            // 날짜/시간 조건 체크
+            bool isCorrectTime = eventEntry.IsAnytime ||
+                                 (eventEntry.Day == currentDay &&
+                                  currentTime >= eventEntry.StartTime &&
+                                  currentTime < eventEntry.EndTime);
+
+            // 두 조건이 모두 맞아야 리스트에 추가
+            if (isCorrectScene && isCorrectTime)
             {
                 validEvents.Add(eventEntry);
             }
@@ -147,6 +175,10 @@ public class EventManager : Singleton<EventManager>
         {
             activeTriggers[i].gameObject.SetActive(false);
         }
+
+        // 씬 이동 직후 closest 초기화
+        closest = null;
+        canInteract = false;
     }
 
     private void UpdateNearestEvent() //가장 가까운 트리거 찾기
@@ -155,9 +187,14 @@ public class EventManager : Singleton<EventManager>
         EventTrigger temp = closest;
         closest = null;
 
-        foreach (EventTrigger trigger in activeTriggers) //가장 가까운 트리거 위치를 찾는다
+        // 매 프레임 초기화
+        canInteract = false;
+
+        // 1. 가장 가까운 트리거 위치 찾기
+        foreach (EventTrigger trigger in activeTriggers) 
         {
             if (!trigger.gameObject.activeSelf) continue;
+
             float distance = Vector2.Distance(player.position, trigger.transform.position);
             if (distance < minDistance)
             {
@@ -166,12 +203,13 @@ public class EventManager : Singleton<EventManager>
             }
         }
 
-        //해당 트리거가 플레이어 범위 내에 들어왔는지 확인한다. (범위 내로 들어왔으면 버튼 상호작용 가능)
+        // 2. 해당 트리거가 플레이어 범위 내에 들어왔는지 확인 (범위 내로 들어왔으면 버튼 상호작용 가능)
         if (closest != null) 
         {
             if (minDistance <= closest.InteractionRange) //가장 가까운 트리거 범위 내에 플레이어가 있다면
             {
                 closest.ShowInteractionButton(true);
+                canInteract = true; // 플래그 ON
 
                 if (temp != null && temp != closest) //만약 가장 가까운 트리거가 다른 것으로 변경된 경우엔 이전 것은 범위 내에 있어도 활성화 끄기
                 {
@@ -181,6 +219,7 @@ public class EventManager : Singleton<EventManager>
             else
             {
                 closest.ShowInteractionButton(false); //멀어지면 끄기
+                canInteract = false; // 플래그 OFF
             }
         }
         else //트리거가 아무것도 없다면

@@ -16,12 +16,8 @@ public class EventTrigger : MonoBehaviour
     private Image buttonImage;
 
     private float interactionRange = 1.5f;
-    public float InteractionRange
-    {
-        get { return interactionRange; }
-    }
+    public float InteractionRange => interactionRange;
 
-    private bool isPlayerInRange = false;
 
     private void Awake()
     {
@@ -31,27 +27,16 @@ public class EventTrigger : MonoBehaviour
         tmpText.text = "";
     }
 
+
+
     private void Start()
     {
-        tmpText.gameObject.SetActive(false);
-        buttonImage.gameObject.SetActive(false);
+        //tmpText.gameObject.SetActive(false);
+        //buttonImage.gameObject.SetActive(false);
+        // 초기화 시 확실하게 끄기
+        ShowInteractionButton(false);
     }
-    private void Update()
-    {
-        // Z키를 눌렀을 때 대화 시작
-        if (isPlayerInRange && !DialogueManager.Instance.IsTalking
-            && Input.GetKeyDown(KeyCode.Z))
-        {
-            StartDialogue();
-        }
 
-        //대화 중일 때 엔터 입력하면 -> 다음 대사 출력 (단, 선택지가 있을 경우 엔터 키 입력 막기)
-        if (DialogueManager.Instance.IsTalking &&
-            !DialogueManager.Instance.IsChoices && Input.GetKeyDown(KeyCode.Return))
-        {
-            DialogueManager.Instance.DisplayNextLine();
-        }
-    }
     public void SetInkNode(string node)
     {
         eventData.InkNodeName = node;
@@ -75,8 +60,8 @@ public class EventTrigger : MonoBehaviour
         //buttonImage.transform.position = Vector3.zero;
         //}
 
-        tmpText.gameObject.SetActive(false);
-        buttonImage.gameObject.SetActive(false);
+        // 데이터 갱신 시 상태 초기화 
+        ShowInteractionButton(false);
 
         eventData = data;
         tmpText.text = eventData.EventName;
@@ -84,9 +69,9 @@ public class EventTrigger : MonoBehaviour
 
     public void ShowInteractionButton(bool show) //**이벤트 매니저에서 호출
     {
-        tmpText.gameObject.SetActive(show);
-        buttonImage.gameObject.SetActive(show);
-        isPlayerInRange = show;
+        // UI만 껐다 켰다 함
+        if (tmpText != null) tmpText.gameObject.SetActive(show);
+        if (buttonImage != null) buttonImage.gameObject.SetActive(show);
     }
 
     private void OnDrawGizmos()

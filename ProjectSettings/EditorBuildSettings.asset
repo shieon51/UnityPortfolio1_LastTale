@@ -11,6 +11,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/BeginnerTown.unity
     guid: 6253d1ea2f2970041afbe245b53d83f9
+  - enabled: 1
+    path: Assets/Scenes/Forest.unity
+    guid: 70f1d71b65e3bd8479c23a9c7cbaf54e
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

@@ -7,18 +7,14 @@ using System.IO;
 
 /* SceneLoader - 현재 씬에 맞춰 맵 Scene을 로드*/
 
-[Serializable]
-public class SceneData
-{
-    public int SceneID;
-    public string SceneName;
-}
-
 public class SceneLoader : Singleton<SceneLoader>
 {
     private Dictionary<int, string> sceneDict = new Dictionary<int, string>(); // SceneTable.csv 데이터 받아오기
     private string currentMapScene = "";
+    public int CurrentSceneID { get; private set; }
+
     public GameObject player; // 인스펙터에서 할당
+    public GameObject portalPrefab; // 인스펙터에서 할당
 
     private void Awake()
     {
@@ -27,43 +23,47 @@ public class SceneLoader : Singleton<SceneLoader>
 
     private void Start()
     {
-        LoadInitialScene(1, player.transform.position); // ++ 임시 코드 (BiginnerTown Scene)
+        LoadScene(1, player.transform.position); // ++ 임시 코드 (BiginnerTown Scene)
 
+    }
+
+    public string GetSceneName(int sceneID)
+    {
+        return sceneDict.ContainsKey(sceneID) ? sceneDict[sceneID] : null;
     }
 
     //테이블에서 데이터 가져오기
     private void LoadSceneData()
     {
         string filePath = Path.Combine(Application.streamingAssetsPath, "Datas", "SceneTable.csv");
-        string[] lines = File.ReadAllLines(filePath);
+        if (!File.Exists(filePath))
+        {
+            Debug.LogError("SceneTable.csv 없음!");
+            return;
+        }
 
+        string[] lines = File.ReadAllLines(filePath);
         for (int i = 1; i < lines.Length; i++) // 첫 줄은 헤더
         {
+            if (string.IsNullOrEmpty(lines[i])) continue;
             string[] values = lines[i].Split(',');
 
-            SceneData sceneData = new SceneData
-            {
-                SceneID = int.Parse(values[0]),
-                SceneName = values[1]
-            };
+            int id = int.Parse(values[0]);
+            string name = values[1].Trim(); // 공백 제거 안전장치
 
-            sceneDict.Add(sceneData.SceneID, sceneData.SceneName);
+            if (!sceneDict.ContainsKey(id))
+                sceneDict.Add(id, name);
         }
     }
 
-    // (씬 데이터 등록 함수 ++ Csv 반영 되도록 나중에 수정)
-    public void RegisterSceneData(List<SceneData> sceneList)
-    {
-        sceneDict.Clear();
-        foreach (var s in sceneList)
-            sceneDict[s.SceneID] = s.SceneName;
-    }
+    //// (씬 데이터 등록 함수 ++ Csv 반영 되도록 나중에 수정)
+    //public void RegisterSceneData(List<SceneData> sceneList)
+    //{
+    //    sceneDict.Clear();
+    //    foreach (var s in sceneList)
+    //        sceneDict[s.SceneID] = s.SceneName;
+    //}
 
-    // 게임 시작 시 디폴트 씬
-    public void LoadInitialScene(int startSceneID, Vector2 startPos) //vec?
-    {
-        StartCoroutine(LoadSceneAsync(startSceneID, startPos));
-    }
     public void LoadScene(int targetSceneID, Vector2 spawnPos) //vec?
     {
         StartCoroutine(LoadSceneAsync(targetSceneID, spawnPos));
@@ -78,13 +78,16 @@ public class SceneLoader : Singleton<SceneLoader>
             yield break;
         }
 
+        // 현재 씬 ID 
+        CurrentSceneID = sceneID;
+        string nextSceneName = sceneDict[sceneID];
+
         // 이전 맵 씬 unload
         if (!string.IsNullOrEmpty(currentMapScene))
         {
             yield return SceneManager.UnloadSceneAsync(currentMapScene);
         }
 
-        string nextSceneName = sceneDict[sceneID];
         // 씬(맵지형) 로드하기(Additive)
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(nextSceneName, LoadSceneMode.Additive);
         while (!asyncLoad.isDone)
@@ -99,12 +102,28 @@ public class SceneLoader : Singleton<SceneLoader>
             SceneManager.SetActiveScene(loadedScene);
         }
 
+        // 씬 다 켜졌으니 해당 씬(sceneID)에 맞는 포탈들 심기
+        if (portalPrefab != null)
+        {
+            PortalManager.Instance.SpawnPortalsForScene(sceneID, portalPrefab);
+        }
+        else
+        {
+            Debug.LogError("SceneLoader에 Portal Prefab이 연결되지 않았습니다!");
+        }
+
         // Player 위치 이동
         if (player != null)
         {
             player.transform.position = spawnPos;
-            // 혹시 물리 충돌로 튕겨나가지 않게 잠시 물리 끄거나 위치 강제 동기화 추천
+            // 물리 충돌로 튕겨나가지 않게 잠시 물리 끄거나 위치 강제 동기화
             Physics2D.SyncTransforms();
+        }
+
+        // 플레이어 이동이 끝난 후 이벤트를 갱신
+        if (EventManager.Instance != null)
+        {
+            EventManager.Instance.UpdateEventTriggers();
         }
     }
 
