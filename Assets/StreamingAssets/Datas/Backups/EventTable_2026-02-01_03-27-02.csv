@@ -2,7 +2,6 @@
 10000,NPC1,False,1,19,21,NPC1_Day1_003,2,4.00,0.00,1
 10001,NPC1,False,1,14,17,NPC1_Day1_002,2,4.00,0.00,1
 10002,NPC1,False,1,8,11,NPC1_Day1_001,2,4.00,0.00,1
-10003,NPC2,False,1,0,2,NPC2_Day1_001,1,12.86,2.00,1
 90000,Training,True,0,0,24,training,1,4.00,2.00,2
 90001,Practice,True,0,0,24,practice,1,-3.00,0.00,1
 90002,Sleep,True,0,0,24,sleep,1,-8.00,0.00,8
