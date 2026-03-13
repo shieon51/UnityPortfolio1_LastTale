@@ -41,7 +41,7 @@ public class PlayerAttack : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.X) && PlayerState.Instance.currentMana >= _manaPerAttack) // 공격키 
+        if (Input.GetKeyDown(KeyCode.X) && PlayerManager.Instance.CurrentCharacter.currentMana >= _manaPerAttack) // 공격키 
         {
             if (!_isAttacking)  // 현재 공격 중이 아니면 즉시 실행
             {
@@ -64,7 +64,7 @@ public class PlayerAttack : MonoBehaviour
         _animator.Play("CloseAttack" + _currentAttack, -1, 0f);
 
         StartCoroutine(SmoothMoveTowards(_attackDistance, _attackDashSpeed)); //뒤로 살짝 밀림
-        PlayerState.Instance.UseMana(_manaPerAttack);
+        PlayerManager.Instance.CurrentCharacter.UseMana(_manaPerAttack);
     }
 
     IEnumerator SmoothMoveTowards(float distance, float speed)
@@ -86,7 +86,7 @@ public class PlayerAttack : MonoBehaviour
             _animator.Play("CloseAttack" + _currentAttack, -1, 0f);
 
             StartCoroutine(SmoothMoveTowards(_attackDistance, _attackDashSpeed)); //뒤로 살짝 밀림
-            PlayerState.Instance.UseMana(_manaPerAttack);
+            PlayerManager.Instance.CurrentCharacter.UseMana(_manaPerAttack);
         }
     }
 

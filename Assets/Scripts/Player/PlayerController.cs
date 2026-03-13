@@ -52,33 +52,67 @@ public class PlayerController : MonoBehaviour
 
     private void Start()
     {
-        PlayerState.Instance.OnFatigueChanged += HandleFatigueChange;
+        //PlayableCharacter.Instance.OnFatigueChanged += HandleFatigueChange;
     }
 
     private void Update()
     {
+        // 매 프레임 캐릭터 상태(소라의 피로도)를 확인하여 이속 갱신
+        CheckFatigueStatus();
+
         Move();
         Jump();
         GoUnderGround();
         Air();
     }
 
-    //피로도 일정 수준 이상 (상태)
-    private void HandleFatigueChange(int currentFatigue)
+    // 피로도 체크 로직 (이벤트 방식에서 Update 실시간 체크 방식으로 변경하여 안정성 확보)
+    private void CheckFatigueStatus()
     {
-        if (currentFatigue >= 30)
+        // 현재 조종 중인 캐릭터가 소라(SoraStats)일 때만 피로도 적용
+        if (PlayerManager.Instance.CurrentCharacter is SoraStats sora)
         {
-            CurRunSpeed = TIRED_RUN_SPEED;
-            CurDashSpeed = TIRED_RUN_SPEED * 2; // 피로도 24 이상이면 이동 속도 감소
-            _animator.speed = 0.5f;
-        } 
+            if (sora.currentFatigue >= 30) // 피로도 임계점 도달 시
+            {
+                CurRunSpeed = TIRED_RUN_SPEED;
+                CurDashSpeed = TIRED_RUN_SPEED * 2;
+                _animator.speed = 0.5f;
+            }
+            else
+            {
+                CurRunSpeed = DEFALT_RUN_SPEED;
+                CurDashSpeed = DEFALT_DASH_SPEED;
+                _animator.speed = 1f;
+            }
+        }
         else
         {
+            // 소라가 아닌 다른 캐릭터(리엘 등)는 기본 속도로 고정
             CurRunSpeed = DEFALT_RUN_SPEED;
             CurDashSpeed = DEFALT_DASH_SPEED;
             _animator.speed = 1f;
         }
     }
+
+    ////피로도 일정 수준 이상 (상태) //
+    //private void HandleFatigueChange(int currentFatigue)
+    //{
+    //    if (currentFatigue >= 30)
+    //    {
+    //        CurRunSpeed = TIRED_RUN_SPEED;
+    //        CurDashSpeed = TIRED_RUN_SPEED * 2; // 피로도 24 이상이면 이동 속도 감소
+    //        _animator.speed = 0.5f;
+    //    } 
+    //    else
+    //    {
+    //        CurRunSpeed = DEFALT_RUN_SPEED;
+    //        CurDashSpeed = DEFALT_DASH_SPEED;
+    //        _animator.speed = 1f;
+    //    }
+    //}
+
+
+
     //public LayerMask groundLayer;  // Inspector에서 "Ground" 설정
     //bool IsGrounded()
     //{
