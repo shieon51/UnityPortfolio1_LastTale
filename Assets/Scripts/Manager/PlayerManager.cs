@@ -17,7 +17,7 @@ public class PlayerManager : Singleton<PlayerManager>
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
         {
-            PlayableCharacter startChar = playerObj.GetComponent<PlayableCharacter>();
+            PlayableCharacter startChar = playerObj.GetComponent<PlayableCharacter>(); 
             if (startChar != null) PossessCharacter(startChar);
         }
     }
@@ -53,7 +53,7 @@ public class PlayerManager : Singleton<PlayerManager>
         var controller = character.GetComponent<PlayerController>();
         if (controller != null) controller.enabled = isPlayer;
 
-        var attack = character.GetComponent<PlayerAttack>();
+        var attack = character.GetComponentInChildren<PlayerAttack>();
         if (attack != null) attack.enabled = isPlayer;
 
         // 나중에 추가할 NPC 전용 AI 스크립트(예: BossFSM)는 플레이어일 땐 꺼야 함!

@@ -44,7 +44,7 @@ public class EventManager : Singleton<EventManager>
     private void Awake()
     {
         eventTriggerPrefab = Resources.Load<GameObject>("Prefabs/EventTrigger");
-        LoadEventData();
+        //LoadEventData();
 
         InitializeEventTriggers(10);
         InitializeBehaviors(); // 행동 전략 초기화
@@ -101,64 +101,73 @@ public class EventManager : Singleton<EventManager>
         }
     }
 
-    private void LoadEventData()
-    {
-        string filePath = Path.Combine(Application.streamingAssetsPath, "Datas", "EventTable.csv");
-        string[] lines = File.ReadAllLines(filePath);
+    //private void LoadEventData()
+    //{
+    //    string filePath = Path.Combine(Application.streamingAssetsPath, "Datas", "EventTable.csv");
+    //    string[] lines = File.ReadAllLines(filePath);
 
-        for (int i = 1; i < lines.Length; i++) // 첫 줄은 헤더
-        {
-            string[] values = lines[i].Split(',');
+    //    for (int i = 1; i < lines.Length; i++) // 첫 줄은 헤더
+    //    {
+    //        string[] values = lines[i].Split(',');
 
-            EventData eventData = new EventData
-            {
-                EventID = int.Parse(values[0]),
-                EventName = values[1],
-                IsAnytime = bool.Parse(values[2]),
-                Day = int.Parse(values[3]),
-                StartTime = int.Parse(values[4]),
-                EndTime = int.Parse(values[5]),
-                InkNodeName = values[6],
-                SceneID = int.Parse(values[7]),
-                Position = new Vector2(float.Parse(values[8]), float.Parse(values[9])),
-                TimeTaken = int.Parse(values[10]),
-            };
+    //        EventData eventData = new EventData
+    //        {
+    //            EventID = int.Parse(values[0]),
+    //            EventName = values[1],
+    //            IsAnytime = bool.Parse(values[2]),
+    //            Day = int.Parse(values[3]),
+    //            StartTime = int.Parse(values[4]),
+    //            EndTime = int.Parse(values[5]),
+    //            InkNodeName = values[6],
+    //            SceneID = int.Parse(values[7]),
+    //            Position = new Vector2(float.Parse(values[8]), float.Parse(values[9])),
+    //            TimeTaken = int.Parse(values[10]),
+    //        };
 
-            eventDict.Add(eventData.EventID, eventData);
-        }
-    }
+    //        eventDict.Add(eventData.EventID, eventData);
+    //    }
+    //}
 
     public void UpdateEventTriggers()
     {
-        // 만약 씬 로더가 아직 초기화 안 됐거나 ID가 없으면 중단 (예외 처리)
-        if (SceneLoader.Instance == null) return;
+        // 만약 씬 로더, 데이터 로드가 아직 초기화 안 됐거나 ID가 없으면 중단 (예외 처리)
+        if (SceneLoader.Instance == null || GameManager.Instance.CurrentGameMode == null) return;
 
-        int currentDay = TimeManager.Instance.currentDay;
-        int currentTime = TimeManager.Instance.currentHour; // 24시간 기준 예: 9(9시), 18(18시)
+        //int currentDay = TimeManager.Instance.currentDay;
+        //int currentTime = TimeManager.Instance.currentHour; // 24시간 기준 예: 9(9시), 18(18시)
 
         // SceneLoader에게 현재 씬 ID 물어보기
         int currentSceneID = SceneLoader.Instance.CurrentSceneID;
-
         // 현재 씬에서 유효한 이벤트 필터링
         List<EventData> validEvents = new List<EventData>();
-        foreach (EventData eventEntry in eventDict.Values)
+
+        // 💡 DataManager에서 데이터를 가져오고, 유효성 검사는 GameMode에게 위임 (SOLID 완벽 적용)
+        foreach (EventData eventEntry in DataManager.Instance.EventDict.Values)
         {
-            // 현재 씬(currentSceneID)과 이벤트의 씬(eventEntry.SceneID)이 같은지 체크
-            bool isCorrectScene = (eventEntry.SceneID == currentSceneID);
-
-            //현재 날짜, 시간 범위 내에 해당되는 이벤트의 경우
-            // 날짜/시간 조건 체크
-            bool isCorrectTime = eventEntry.IsAnytime ||
-                                 (eventEntry.Day == currentDay &&
-                                  currentTime >= eventEntry.StartTime &&
-                                  currentTime < eventEntry.EndTime);
-
-            // 두 조건이 모두 맞아야 리스트에 추가
-            if (isCorrectScene && isCorrectTime)
+            if (GameManager.Instance.CurrentGameMode.IsEventValid(eventEntry, currentSceneID))
             {
                 validEvents.Add(eventEntry);
             }
         }
+
+        //foreach (EventData eventEntry in eventDict.Values)
+        //{
+        //    // 현재 씬(currentSceneID)과 이벤트의 씬(eventEntry.SceneID)이 같은지 체크
+        //    bool isCorrectScene = (eventEntry.SceneID == currentSceneID);
+
+        //    //현재 날짜, 시간 범위 내에 해당되는 이벤트의 경우
+        //    // 날짜/시간 조건 체크
+        //    bool isCorrectTime = eventEntry.IsAnytime ||
+        //                         (eventEntry.Day == currentDay &&
+        //                          currentTime >= eventEntry.StartTime &&
+        //                          currentTime < eventEntry.EndTime);
+
+        //    // 두 조건이 모두 맞아야 리스트에 추가
+        //    if (isCorrectScene && isCorrectTime)
+        //    {
+        //        validEvents.Add(eventEntry);
+        //    }
+        //}
 
         // 필요한 EventTrigger 개수 결정 (최대 10개까지만 유지)
         int requiredTriggers = Mathf.Min(validEvents.Count, 10);
@@ -248,8 +257,12 @@ public class EventManager : Singleton<EventManager>
     //Dialogue가 끝났을 때 Invoke되는 함수 ++ OCP 위배인듯. 수정 필요
     public void EventResult(EventData eventData)
     {
-        //시간 변화
-        TimeManager.Instance.UseTimeCoins(eventData.TimeTaken);
+        ////시간 변화
+        //TimeManager.Instance.UseTimeCoins(eventData.TimeTaken);
+
+        // 💡 시간 코인 소모 로직을 GameMode에게 위임! (1부면 코인 소모, 2부면 행동력 소모)
+        GameManager.Instance.CurrentGameMode.ConsumeResourceForEvent(eventData.TimeTaken);
+
 
         // 2. 전략 패턴으로 분기 처리 없이 실행
         if (eventBehaviors.TryGetValue(eventData.EventID, out IEventBehavior behavior))

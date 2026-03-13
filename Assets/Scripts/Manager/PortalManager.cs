@@ -28,32 +28,32 @@ public class PortalManager : Singleton<PortalManager>
 
     private void LoadAndBuildData()
     {
-        _allPortalData.Clear();
+        _allPortalData = DataManager.Instance.PortalDict; // DataManager가 로드해둔 거 그냥 가져옴
         _sceneGraph.Clear();
 
-        string filePath = Path.Combine(Application.streamingAssetsPath, "Datas", "PortalTable.csv");
-        if (!File.Exists(filePath)) return;
+        //string filePath = Path.Combine(Application.streamingAssetsPath, "Datas", "PortalTable.csv");
+        //if (!File.Exists(filePath)) return;
 
-        string[] lines = File.ReadAllLines(filePath);
+        //string[] lines = File.ReadAllLines(filePath);
 
-        // 1. 포탈 데이터 로드 (딕셔너리에 넣기) - 포탈 객체 생성부터
-        for (int i = 1; i < lines.Length; i++)
-        {
-            if (string.IsNullOrEmpty(lines[i])) continue;
-            string[] values = lines[i].Split(',');
+        //// 1. 포탈 데이터 로드 (딕셔너리에 넣기) - 포탈 객체 생성부터
+        //for (int i = 1; i < lines.Length; i++)
+        //{
+        //    if (string.IsNullOrEmpty(lines[i])) continue;
+        //    string[] values = lines[i].Split(',');
 
-            // 1-1. PortalData 객체 생성
-            PortalData data = new PortalData
-            {
-                portalID = int.Parse(values[0]),
-                OwnerSceneID = int.Parse(values[1]),
-                TargetPortalID = int.Parse(values[2]),
-                Position = new Vector2(float.Parse(values[3]), float.Parse(values[4]))
-            };
+        //    // 1-1. PortalData 객체 생성
+        //    PortalData data = new PortalData
+        //    {
+        //        portalID = int.Parse(values[0]),
+        //        OwnerSceneID = int.Parse(values[1]),
+        //        TargetPortalID = int.Parse(values[2]),
+        //        Position = new Vector2(float.Parse(values[3]), float.Parse(values[4]))
+        //    };
 
-            // 1-2. 딕셔너리에 포탈 데이터 등록 (ID - PortalData 대응)
-            _allPortalData[data.portalID] = data; // (-> 아직 ConnectedTargetData는 null임)
-        }
+        //    // 1-2. 딕셔너리에 포탈 데이터 등록 (ID - PortalData 대응)
+        //    _allPortalData[data.portalID] = data; // (-> 아직 ConnectedTargetData는 null임)
+        //}
 
         // 2. 그래프 구축 및 참조 연결 
         foreach (var myData in _allPortalData.Values)

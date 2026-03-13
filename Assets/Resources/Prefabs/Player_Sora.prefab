@@ -38,6 +38,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &6521246441794267593
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -56,6 +57,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -77,9 +80,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: -2072661349
   m_SortingLayer: 3
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 5668146780232727986, guid: 0ce12db4372e2234d8a1848657c921d5, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -89,7 +94,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!95 &3738008883484734237
 Animator:
@@ -228,10 +232,11 @@ GameObject:
   m_Component:
   - component: {fileID: 8541148022777094637}
   - component: {fileID: 2175800781653705386}
+  - component: {fileID: 8950616784466513857}
   - component: {fileID: 9157177150215643267}
   - component: {fileID: 6480306007770481759}
   m_Layer: 6
-  m_Name: Player
+  m_Name: Player_Sora
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -274,6 +279,39 @@ MonoBehaviour:
   GroundCheckDistance: 0.4
   GroundCheckDistanceWidth: 0.2
   _groundCheckLineOffset: {x: 0, y: -0.92, z: 0}
+--- !u!114 &8950616784466513857
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6994465021518602846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e7e8b898f9ed6a4ebe6e9be6ee29381, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SoraStats
+  level: 1
+  maxHealth: 100
+  currentHealth: 0
+  maxMana: 50
+  currentMana: 0
+  attack:
+    baseValue: 10
+  defense:
+    baseValue: 5
+  agility:
+    baseValue: 5
+  currentElement: 0
+  isGuarding: 0
+  experience: 0
+  experienceToNextLevel: 100
+  fairyStage: 0
+  maxFatigue: 100
+  currentFatigue: 0
+  maxMental: 100
+  currentMental: 100
+  timeCrystals: 0
 --- !u!50 &9157177150215643267
 Rigidbody2D:
   serializedVersion: 5

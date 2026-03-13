@@ -81,14 +81,23 @@ public class UIManager : Singleton<UIManager>
 
     private void OnDestroy()
     {
-        // 💡 2. 파괴될 때 매니저 이벤트 해제
+        //// 💡 2. 파괴될 때 매니저 이벤트 해제
+        //if (PlayerManager.Instance != null)
+        //{
+        //    PlayerManager.Instance.OnCharacterPossessed -= HandleCharacterChanged;
+        //}
+
+        //// 현재 캐릭터의 이벤트도 해제
+        //UnsubscribeFromCharacter(PlayerManager.Instance.CurrentCharacter);
+
+        // 💡 PlayerManager가 파괴되지 않고 살아있을 때만 접근하도록 묶어줍니다.
         if (PlayerManager.Instance != null)
         {
             PlayerManager.Instance.OnCharacterPossessed -= HandleCharacterChanged;
-        }
 
-        // 현재 캐릭터의 이벤트도 해제
-        UnsubscribeFromCharacter(PlayerManager.Instance.CurrentCharacter);
+            // 기존에는 이 줄이 if문 밖에 있어서 오류가 났습니다! 안으로 넣어주세요.
+            UnsubscribeFromCharacter(PlayerManager.Instance.CurrentCharacter);
+        }
     }
 
     // 💡 3. 캐릭터가 변경될 때 호출되는 로직 (이전 캐릭터 구독 해제 -> 새 캐릭터 구독)

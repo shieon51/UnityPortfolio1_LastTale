@@ -9,7 +9,7 @@ using System.IO;
 
 public class SceneLoader : Singleton<SceneLoader>
 {
-    private Dictionary<int, string> sceneDict = new Dictionary<int, string>(); // SceneTable.csv 데이터 받아오기
+    //private Dictionary<int, string> sceneDict = new Dictionary<int, string>(); // SceneTable.csv 데이터 받아오기
     private string currentMapScene = "";
     public int CurrentSceneID { get; private set; }
 
@@ -18,7 +18,7 @@ public class SceneLoader : Singleton<SceneLoader>
 
     private void Awake()
     {
-        LoadSceneData();   // 씬 id : 씬 이름 대응 정보 불러오기
+        //LoadSceneData();   // 씬 id : 씬 이름 대응 정보 불러오기
     }
 
     private void Start()
@@ -29,32 +29,36 @@ public class SceneLoader : Singleton<SceneLoader>
 
     public string GetSceneName(int sceneID)
     {
-        return sceneDict.ContainsKey(sceneID) ? sceneDict[sceneID] : null;
+        //return sceneDict.ContainsKey(sceneID) ? sceneDict[sceneID] : null;
+
+        // DataManager에게 물어봄
+        if (DataManager.Instance.SceneDict.TryGetValue(sceneID, out string name)) return name;
+        return null;
     }
 
-    //테이블에서 데이터 가져오기
-    private void LoadSceneData()
-    {
-        string filePath = Path.Combine(Application.streamingAssetsPath, "Datas", "SceneTable.csv");
-        if (!File.Exists(filePath))
-        {
-            Debug.LogError("SceneTable.csv 없음!");
-            return;
-        }
+    ////테이블에서 데이터 가져오기
+    //private void LoadSceneData()
+    //{
+    //    string filePath = Path.Combine(Application.streamingAssetsPath, "Datas", "SceneTable.csv");
+    //    if (!File.Exists(filePath))
+    //    {
+    //        Debug.LogError("SceneTable.csv 없음!");
+    //        return;
+    //    }
 
-        string[] lines = File.ReadAllLines(filePath);
-        for (int i = 1; i < lines.Length; i++) // 첫 줄은 헤더
-        {
-            if (string.IsNullOrEmpty(lines[i])) continue;
-            string[] values = lines[i].Split(',');
+    //    string[] lines = File.ReadAllLines(filePath);
+    //    for (int i = 1; i < lines.Length; i++) // 첫 줄은 헤더
+    //    {
+    //        if (string.IsNullOrEmpty(lines[i])) continue;
+    //        string[] values = lines[i].Split(',');
 
-            int id = int.Parse(values[0]);
-            string name = values[1].Trim(); // 공백 제거 안전장치
+    //        int id = int.Parse(values[0]);
+    //        string name = values[1].Trim(); // 공백 제거 안전장치
 
-            if (!sceneDict.ContainsKey(id))
-                sceneDict.Add(id, name);
-        }
-    }
+    //        if (!sceneDict.ContainsKey(id))
+    //            sceneDict.Add(id, name);
+    //    }
+    //}
 
     //// (씬 데이터 등록 함수 ++ Csv 반영 되도록 나중에 수정)
     //public void RegisterSceneData(List<SceneData> sceneList)
@@ -72,7 +76,8 @@ public class SceneLoader : Singleton<SceneLoader>
     // (씬을 모두 로드하기 전까진 플레이어 위치 조정 하지 않도록)
     private IEnumerator LoadSceneAsync(int sceneID, Vector2 spawnPos)
     {
-        if (!sceneDict.ContainsKey(sceneID))
+        
+        if (!DataManager.Instance.SceneDict.ContainsKey(sceneID)) //?
         {
             Debug.LogError("씬 ID를 찾을 수 없음: " + sceneID);
             yield break;
@@ -80,7 +85,7 @@ public class SceneLoader : Singleton<SceneLoader>
 
         // 현재 씬 ID 
         CurrentSceneID = sceneID;
-        string nextSceneName = sceneDict[sceneID];
+        string nextSceneName = DataManager.Instance.SceneDict[sceneID]; //?
 
         // 이전 맵 씬 unload
         if (!string.IsNullOrEmpty(currentMapScene))
