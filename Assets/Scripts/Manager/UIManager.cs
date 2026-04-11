@@ -65,11 +65,6 @@ public class UIManager : Singleton<UIManager>
         // 현재 활성화된 캐릭터의 이벤트를 구독 (추후 캐릭터 변경 시 재구독 로직 필요)
         if (PlayerManager.Instance.CurrentCharacter != null)
         {
-            //PlayerManager.Instance.CurrentCharacter.OnHealthChanged += UpdateSliderUI;
-            //PlayerManager.Instance.CurrentCharacter.OnManaChanged += UpdateSliderUI;
-            //PlayerManager.Instance.CurrentCharacter.OnProgressionChanged += UpdateSliderUI;
-            //PlayerManager.Instance.CurrentCharacter.OnSpecialStatChanged += UpdateSliderUI;
-
             HandleCharacterChanged(PlayerManager.Instance.CurrentCharacter);
         }
         TimeManager.Instance.OnTimeUpdated += UpdateTimeUI; // 시간 업데이트 이벤트 연결
@@ -81,26 +76,17 @@ public class UIManager : Singleton<UIManager>
 
     private void OnDestroy()
     {
-        //// 💡 2. 파괴될 때 매니저 이벤트 해제
-        //if (PlayerManager.Instance != null)
-        //{
-        //    PlayerManager.Instance.OnCharacterPossessed -= HandleCharacterChanged;
-        //}
-
-        //// 현재 캐릭터의 이벤트도 해제
-        //UnsubscribeFromCharacter(PlayerManager.Instance.CurrentCharacter);
-
-        // 💡 PlayerManager가 파괴되지 않고 살아있을 때만 접근하도록 묶어줍니다.
+        // (PlayerManager가 파괴되지 않고 살아있을 때만 접근하도록)
         if (PlayerManager.Instance != null)
         {
             PlayerManager.Instance.OnCharacterPossessed -= HandleCharacterChanged;
 
-            // 기존에는 이 줄이 if문 밖에 있어서 오류가 났습니다! 안으로 넣어주세요.
+            // 현재 캐릭터의 이벤트도 해제
             UnsubscribeFromCharacter(PlayerManager.Instance.CurrentCharacter);
         }
     }
 
-    // 💡 3. 캐릭터가 변경될 때 호출되는 로직 (이전 캐릭터 구독 해제 -> 새 캐릭터 구독)
+    // 3. 캐릭터가 변경될 때 호출되는 로직 (이전 캐릭터 구독 해제 -> 새 캐릭터 구독)
     private void HandleCharacterChanged(PlayableCharacter newCharacter)
     {
         // (주의: 이전 캐릭터 정보를 가져올 수 있도록 PlayerManager에서 처리해줌)
@@ -173,23 +159,6 @@ public class UIManager : Singleton<UIManager>
             specialStatBar.gameObject.SetActive(false); // 없는 캐릭터면 UI 끄기
         }
 
-        //// '소라'일 경우에만 피로도 UI 업데이트 (나중에 피로도 UI 자체를 켜고 끄는 로직 추가 가능)
-        //if (currentCharacter is SoraStats sora)
-        //{
-        //    specialStatBar.value = (float)sora.currentFatigue / sora.maxFatigue;
-        //    specialStatText.text = $"{sora.currentFatigue}/{sora.maxFatigue}";
-        //}
-
-        //// 현재 체력, 마나, 경험치, 피로도를 UI에 반영
-        //healthBar.value = (float)PlayableCharacter.Instance.currentHealth / PlayableCharacter.Instance.maxHealth;
-        //manaBar.value = (float)PlayableCharacter.Instance.currentMana / PlayableCharacter.Instance.maxMana;
-        //expBar.value = (float)PlayableCharacter.Instance.experience / PlayableCharacter.Instance.experienceToNextLevel;
-        //fatigueBar.value = (float)PlayableCharacter.Instance.currentFatigue / PlayableCharacter.Instance.maxFatigue;
-
-        //healthText.text = $"{PlayableCharacter.Instance.currentHealth}/{PlayableCharacter.Instance.maxHealth}";
-        //manaText.text = $"{PlayableCharacter.Instance.currentMana}/{PlayableCharacter.Instance.maxMana}";
-        //expText.text = $"{PlayableCharacter.Instance.experience}/{PlayableCharacter.Instance.experienceToNextLevel}";
-        //fatigueText.text = $"{PlayableCharacter.Instance.currentFatigue}/{PlayableCharacter.Instance.maxFatigue}";
     }
 
     // 시간 코인 UI 업데이트

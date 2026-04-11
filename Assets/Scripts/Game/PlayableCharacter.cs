@@ -89,4 +89,26 @@ public abstract class PlayableCharacter : CharacterStats
     //    // 추가적인 사망 처리
     //}
 
+    // PlayableCharacter.cs 안에 추가 (기존 TakeDamage가 있다면 덮어씌우기)
+    public override void TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal)
+    {
+        base.TakeDamage(incomingDamage, attackElement);
+
+        // 만약 방금 맞아서 넉백 상태(isKnockedBack)가 되었다면 공격 모션 강제 취소
+        if (isKnockedBack)
+        {
+            PlayerAttack attackScript = GetComponentInChildren<PlayerAttack>();
+            if (attackScript != null)
+            {
+                attackScript.CancelAttack();
+            }
+
+            // 플레이어 피격 애니메이션 트리거 (필요 시)
+            // Animator anim = GetComponentInChildren<Animator>();
+            // if (anim != null) anim.SetTrigger("Hit");
+        }
+
+        CallProgressionChanged(); // UI 갱신 헬퍼
+    }
+
 }

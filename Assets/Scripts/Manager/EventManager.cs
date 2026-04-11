@@ -257,9 +257,6 @@ public class EventManager : Singleton<EventManager>
     //Dialogue가 끝났을 때 Invoke되는 함수 ++ OCP 위배인듯. 수정 필요
     public void EventResult(EventData eventData)
     {
-        ////시간 변화
-        //TimeManager.Instance.UseTimeCoins(eventData.TimeTaken);
-
         // 💡 시간 코인 소모 로직을 GameMode에게 위임! (1부면 코인 소모, 2부면 행동력 소모)
         GameManager.Instance.CurrentGameMode.ConsumeResourceForEvent(eventData.TimeTaken);
 
@@ -273,30 +270,6 @@ public class EventManager : Singleton<EventManager>
         {
             new DefaultEventBehavior().Execute(eventData); // 매핑 안 된 일반 NPC 대화 등
         }
-
-        //if (eventData.EventID == (int)EventID.Sleep) //'잠자기' 이벤트인 경우
-        //{
-        //    PlayableCharacter.Instance.RecoverFatigue(eventData.TimeTaken * 2);
-        //    PlayableCharacter.Instance.FullHP();
-        //    PlayableCharacter.Instance.RecoverMana(eventData.TimeTaken);
-        //}
-        //else if (eventData.EventID == (int)EventID.Training) //'훈련하기' 이벤트인 경우
-        //{
-        //    PlayableCharacter.Instance.IncreaseFatigue(eventData.TimeTaken * 2);
-        //    PlayableCharacter.Instance.GainExperience(eventData.TimeTaken * 10); //**임시
-        //    //++ 추후 공격력, 방어력, 민첩성 수치 증가 추가하기
-        //}
-        //else if (eventData.EventID == (int)EventID.Practice) //'수련하기' 이벤트인 경우
-        //{
-        //    PlayableCharacter.Instance.IncreaseFatigue(eventData.TimeTaken);
-        //    PlayableCharacter.Instance.GainExperience(eventData.TimeTaken * 15); //**임시
-        //    PlayableCharacter.Instance.RecoverMana(eventData.TimeTaken * 20); //**임시
-        //    PlayableCharacter.Instance.Heal(eventData.TimeTaken * 5);
-        //}
-        //else //기타 (npc 대화 등)
-        //{
-        //    PlayableCharacter.Instance.IncreaseFatigue(eventData.TimeTaken);
-        //}
     }
 
 
@@ -306,34 +279,5 @@ public class EventManager : Singleton<EventManager>
         if(closest != null) 
             Gizmos.DrawLine(closest.transform.position, player.position);
     }
-
-    
-    //// 이벤트 딕셔너리에 등록
-    //public void RegisterEvent(string eventID, Action eventAction)
-    //{
-    //    if (!eventDictionary.ContainsKey(eventID))
-    //    {
-    //        eventDictionary.Add(eventID, eventAction);
-    //    }
-    //}
-
-    //// 시간에 따른 이벤트 딕셔너리에 등록
-    //public void RegisterEventTimeCondition(string eventID, int day, int startTime, int endTime, string text)
-    //{
-    //    if (!eventTimeConditions.ContainsKey(eventID))
-    //    {
-    //        eventTimeConditions[eventID] = (day, startTime, endTime, text);
-    //    }
-    //}
-
-    //// 이벤트 실행
-    //public void TriggerEvent(string eventID)
-    //{
-    //    if (eventDictionary.ContainsKey(eventID))
-    //    {
-    //        eventDictionary[eventID].Invoke();
-    //    }
-    //}
-
 
 }

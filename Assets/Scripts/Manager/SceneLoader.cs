@@ -9,7 +9,6 @@ using System.IO;
 
 public class SceneLoader : Singleton<SceneLoader>
 {
-    //private Dictionary<int, string> sceneDict = new Dictionary<int, string>(); // SceneTable.csv 데이터 받아오기
     private string currentMapScene = "";
     public int CurrentSceneID { get; private set; }
 
@@ -29,44 +28,10 @@ public class SceneLoader : Singleton<SceneLoader>
 
     public string GetSceneName(int sceneID)
     {
-        //return sceneDict.ContainsKey(sceneID) ? sceneDict[sceneID] : null;
-
         // DataManager에게 물어봄
         if (DataManager.Instance.SceneDict.TryGetValue(sceneID, out string name)) return name;
         return null;
     }
-
-    ////테이블에서 데이터 가져오기
-    //private void LoadSceneData()
-    //{
-    //    string filePath = Path.Combine(Application.streamingAssetsPath, "Datas", "SceneTable.csv");
-    //    if (!File.Exists(filePath))
-    //    {
-    //        Debug.LogError("SceneTable.csv 없음!");
-    //        return;
-    //    }
-
-    //    string[] lines = File.ReadAllLines(filePath);
-    //    for (int i = 1; i < lines.Length; i++) // 첫 줄은 헤더
-    //    {
-    //        if (string.IsNullOrEmpty(lines[i])) continue;
-    //        string[] values = lines[i].Split(',');
-
-    //        int id = int.Parse(values[0]);
-    //        string name = values[1].Trim(); // 공백 제거 안전장치
-
-    //        if (!sceneDict.ContainsKey(id))
-    //            sceneDict.Add(id, name);
-    //    }
-    //}
-
-    //// (씬 데이터 등록 함수 ++ Csv 반영 되도록 나중에 수정)
-    //public void RegisterSceneData(List<SceneData> sceneList)
-    //{
-    //    sceneDict.Clear();
-    //    foreach (var s in sceneList)
-    //        sceneDict[s.SceneID] = s.SceneName;
-    //}
 
     public void LoadScene(int targetSceneID, Vector2 spawnPos) //vec?
     {
