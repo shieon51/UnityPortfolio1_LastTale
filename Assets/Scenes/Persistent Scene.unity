@@ -3801,6 +3801,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 5818614099001395486, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
+      propertyPath: _manaPerAttack
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5818614099001395486, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
       propertyPath: attackCollider
       value: 
       objectReference: {fileID: 0}
