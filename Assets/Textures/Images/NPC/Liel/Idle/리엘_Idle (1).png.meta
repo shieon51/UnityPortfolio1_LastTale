@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: bf85ad08aeb8bc04880cc2d2e3f41638
+guid: 28775efc4f15c564fb06efec713700b7
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 2149171401616436250
-    second: "\uC18C\uB77C_Idle (3)_0"
+      213: -4071229121926253171
+    second: "\uB9AC\uC5D8_Idle (1)_0"
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -139,13 +139,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "\uC18C\uB77C_Idle (3)_0"
+      name: "\uB9AC\uC5D8_Idle (1)_0"
       rect:
         serializedVersion: 2
-        x: 318
+        x: 326
         y: 0
-        width: 130
-        height: 285
+        width: 120
+        height: 318
       alignment: 7
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -154,8 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a1ca6c2c00463dd10800000000000000
-      internalID: 2149171401616436250
+      spriteID: d853c541fa61087c0800000000000000
+      internalID: -4071229121926253171
       vertices: []
       indices: 
       edges: []
@@ -164,7 +164,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 0563910af0fba564aa9f73b13565fe22
+    spriteID: 165dffa9e8bc49c448776434f314d579
     internalID: 0
     vertices: []
     indices: 
@@ -172,9 +172,11 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":768.0,"y":432.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      "\uC18C\uB77C_Idle (3)_0": 2149171401616436250
+      "\uB9AC\uC5D8_Idle (1)_0": -4071229121926253171
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

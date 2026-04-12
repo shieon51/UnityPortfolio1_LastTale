@@ -34,6 +34,11 @@ public class EventManager : Singleton<EventManager>
     private GameObject eventTriggerPrefab;
     private Dictionary<int, EventData> eventDict = new Dictionary<int, EventData>();
     private List<EventTrigger> activeTriggers = new List<EventTrigger>(); // 최대 10개까지만 관리
+    private List<EventTrigger> dynamicTriggers = new List<EventTrigger>(); // NPC들이 씬에 나타나면 스스로 등록하는 리스트
+
+    // 💡 [변경] Destroy 방식 대신, 한 번 만든 NPC를 보관하고 껐다 켜는 '풀링 딕셔너리'
+    // Key: EventName (예: "Liel"), Value: 생성된 NPC 게임오브젝트
+    private Dictionary<string, GameObject> npcPool = new Dictionary<string, GameObject>();
 
     private EventTrigger closest = null;
     private bool canInteract = false;    // 상호작용 가능 여부 플래그
@@ -86,8 +91,6 @@ public class EventManager : Singleton<EventManager>
 
     }
 
-
-
     private void InitializeEventTriggers(int count)
     {
         activeTriggers = new List<EventTrigger>(count); // 리스트 용량 지정 (단, 실제 요소 추가 X)
@@ -101,73 +104,60 @@ public class EventManager : Singleton<EventManager>
         }
     }
 
-    //private void LoadEventData()
-    //{
-    //    string filePath = Path.Combine(Application.streamingAssetsPath, "Datas", "EventTable.csv");
-    //    string[] lines = File.ReadAllLines(filePath);
+    // 💡 [신규] NPC가 스폰될 때 이 함수를 불러서 자기를 리스트에 넣음
+    public void RegisterDynamicTrigger(EventTrigger trigger)
+    {
+        if (!dynamicTriggers.Contains(trigger))
+        {
+            dynamicTriggers.Add(trigger);
+        }
+    }
 
-    //    for (int i = 1; i < lines.Length; i++) // 첫 줄은 헤더
-    //    {
-    //        string[] values = lines[i].Split(',');
-
-    //        EventData eventData = new EventData
-    //        {
-    //            EventID = int.Parse(values[0]),
-    //            EventName = values[1],
-    //            IsAnytime = bool.Parse(values[2]),
-    //            Day = int.Parse(values[3]),
-    //            StartTime = int.Parse(values[4]),
-    //            EndTime = int.Parse(values[5]),
-    //            InkNodeName = values[6],
-    //            SceneID = int.Parse(values[7]),
-    //            Position = new Vector2(float.Parse(values[8]), float.Parse(values[9])),
-    //            TimeTaken = int.Parse(values[10]),
-    //        };
-
-    //        eventDict.Add(eventData.EventID, eventData);
-    //    }
-    //}
+    // 💡 [신규] NPC가 맵에서 사라지거나 죽을 때 리스트에서 뺌
+    public void UnregisterDynamicTrigger(EventTrigger trigger)
+    {
+        if (dynamicTriggers.Contains(trigger))
+        {
+            dynamicTriggers.Remove(trigger);
+        }
+    }
 
     public void UpdateEventTriggers()
     {
         // 만약 씬 로더, 데이터 로드가 아직 초기화 안 됐거나 ID가 없으면 중단 (예외 처리)
         if (SceneLoader.Instance == null || GameManager.Instance.CurrentGameMode == null) return;
 
-        //int currentDay = TimeManager.Instance.currentDay;
-        //int currentTime = TimeManager.Instance.currentHour; // 24시간 기준 예: 9(9시), 18(18시)
-
         // SceneLoader에게 현재 씬 ID 물어보기
         int currentSceneID = SceneLoader.Instance.CurrentSceneID;
         // 현재 씬에서 유효한 이벤트 필터링
         List<EventData> validEvents = new List<EventData>();
 
+        // 💡 1. 갱신될 때 모든 NPC를 일단 꺼버립니다. (조건에 맞는 애들만 나중에 켬)
+        foreach (var npc in npcPool.Values)
+        {
+            if (npc != null) npc.SetActive(false);
+        }
+
         // 💡 DataManager에서 데이터를 가져오고, 유효성 검사는 GameMode에게 위임 (SOLID 완벽 적용)
         foreach (EventData eventEntry in DataManager.Instance.EventDict.Values)
         {
+            // 현재 씬과 시간에 유효한 이벤트인지 확인
             if (GameManager.Instance.CurrentGameMode.IsEventValid(eventEntry, currentSceneID))
             {
-                validEvents.Add(eventEntry);
+                // 💡 3. [여기가 핵심 호출부!] 
+                // 이벤트 ID가 NPC 대역(10000 ~ 19999)인지 확인합니다.
+                if (eventEntry.EventID >= (int)EventID.NPC && eventEntry.EventID < 20000)
+                {
+                    // 💡 2. NPC 이벤트면 부수지 않고 껐다 켜기 함수 호출!
+                    SpawnOrToggleNPC(eventEntry);
+                }
+                else
+                {
+                    // NPC가 아닌 일반 이벤트(수련, 잠자기 등)는 기존처럼 풀링 리스트에 추가합니다.
+                    validEvents.Add(eventEntry);
+                }
             }
         }
-
-        //foreach (EventData eventEntry in eventDict.Values)
-        //{
-        //    // 현재 씬(currentSceneID)과 이벤트의 씬(eventEntry.SceneID)이 같은지 체크
-        //    bool isCorrectScene = (eventEntry.SceneID == currentSceneID);
-
-        //    //현재 날짜, 시간 범위 내에 해당되는 이벤트의 경우
-        //    // 날짜/시간 조건 체크
-        //    bool isCorrectTime = eventEntry.IsAnytime ||
-        //                         (eventEntry.Day == currentDay &&
-        //                          currentTime >= eventEntry.StartTime &&
-        //                          currentTime < eventEntry.EndTime);
-
-        //    // 두 조건이 모두 맞아야 리스트에 추가
-        //    if (isCorrectScene && isCorrectTime)
-        //    {
-        //        validEvents.Add(eventEntry);
-        //    }
-        //}
 
         // 필요한 EventTrigger 개수 결정 (최대 10개까지만 유지)
         int requiredTriggers = Mathf.Min(validEvents.Count, 10);
@@ -213,8 +203,13 @@ public class EventManager : Singleton<EventManager>
         // 매 프레임 초기화
         canInteract = false;
 
+        // 1. 정적 이벤트(activeTriggers) + 동적 NPC 이벤트(dynamicTriggers) 모두 검사!
+        List<EventTrigger> allTriggers = new List<EventTrigger>();
+        allTriggers.AddRange(activeTriggers);
+        allTriggers.AddRange(dynamicTriggers); // 합쳐서 검사
+
         // 1. 가장 가까운 트리거 위치 찾기
-        foreach (EventTrigger trigger in activeTriggers) 
+        foreach (EventTrigger trigger in allTriggers) 
         {
             if (!trigger.gameObject.activeSelf) continue;
 
@@ -271,6 +266,70 @@ public class EventManager : Singleton<EventManager>
             new DefaultEventBehavior().Execute(eventData); // 매핑 안 된 일반 NPC 대화 등
         }
     }
+
+    // 💡 [핵심] NPC를 새로 만들거나, 이미 있으면 켜서 이동시키고 대사를 업데이트하는 함수
+    private void SpawnOrToggleNPC(EventData data)
+    {
+        GameObject npcObj = null;
+
+        // 1. 이미 생성된 적이 있는가?
+        if (npcPool.TryGetValue(data.EventName, out npcObj))
+        {
+            // 씬 이동으로 파괴되었다면 풀에서 지우고 새로 만듦
+            if (npcObj == null)
+            {
+                npcPool.Remove(data.EventName);
+                npcObj = CreateNewNPC(data);
+            }
+        }
+        else
+        {
+            // 한 번도 생성된 적 없으면 생성
+            npcObj = CreateNewNPC(data);
+        }
+
+        if (npcObj == null) return;
+
+        // 2. 위치 설정 및 바닥 감지 (Raycast)
+        Vector2 spawnPos = data.Position;
+
+        // 💡 아래로 5만큼 레이저를 쏴서 "Ground" 레이어를 찾습니다. (프로젝트의 땅 레이어 이름이 Ground인지 확인해주세요!)
+        RaycastHit2D hit = Physics2D.Raycast(spawnPos, Vector2.down, 5f, LayerMask.GetMask("Ground"));
+        if (hit.collider != null)
+        {
+            // 바닥을 찾았다면, 바닥 위치에서 위로 살짝(0.5f) 올려서 안착시킴. (NPC 피벗이 바닥이면 0f, 중앙이면 0.5f 등 조절 필요)
+            spawnPos = hit.point + new Vector2(0, 1.0f);
+        }
+        npcObj.transform.position = spawnPos;
+
+        // 3. 💡 시간대별 대사 꼬임 방지를 위해 현재 시간의 이벤트 데이터를 직접 주입!
+        NPC npcScript = npcObj.GetComponent<NPC>();
+        if (npcScript != null)
+        {
+            npcScript.SetupCurrentEvent(data); // 새로 추가할 함수
+        }
+
+        // 4. 활성화
+        npcObj.SetActive(true);
+    }
+
+    // NPC 프리팹 생성 헬퍼 함수
+    private GameObject CreateNewNPC(EventData data)
+    {
+        GameObject prefab = Resources.Load<GameObject>($"Prefabs/NPC/{data.EventName}");
+        if (prefab != null)
+        {
+            GameObject npc = Instantiate(prefab);
+            npcPool.Add(data.EventName, npc);
+            return npc;
+        }
+        else
+        {
+            Debug.LogError($"[EventManager] Resources/Prefabs/NPC/ 경로에 '{data.EventName}' 프리팹이 없습니다!");
+            return null;
+        }
+    }
+
 
 
     private void OnDrawGizmos()
