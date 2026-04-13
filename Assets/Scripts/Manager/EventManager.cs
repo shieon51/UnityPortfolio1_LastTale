@@ -145,11 +145,11 @@ public class EventManager : Singleton<EventManager>
             if (GameManager.Instance.CurrentGameMode.IsEventValid(eventEntry, currentSceneID))
             {
                 // 💡 3. [여기가 핵심 호출부!] 
-                // 이벤트 ID가 NPC 대역(10000 ~ 19999)인지 확인합니다.
-                if (eventEntry.EventID >= (int)EventID.NPC && eventEntry.EventID < 20000)
+                // 이벤트 ID가 NPC 대역(10000 ~ 89999)인지 확인합니다.
+                if (eventEntry.EventID >= (int)EventID.NPC && eventEntry.EventID < 90000)
                 {
                     // 💡 2. NPC 이벤트면 부수지 않고 껐다 켜기 함수 호출!
-                    SpawnOrToggleNPC(eventEntry);
+                    SpawnOrUpdateNPC(eventEntry);
                 }
                 else
                 {
@@ -268,49 +268,65 @@ public class EventManager : Singleton<EventManager>
     }
 
     // 💡 [핵심] NPC를 새로 만들거나, 이미 있으면 켜서 이동시키고 대사를 업데이트하는 함수
-    private void SpawnOrToggleNPC(EventData data)
+    private void SpawnOrUpdateNPC(EventData data)
     {
         GameObject npcObj = null;
 
-        // 1. 이미 생성된 적이 있는가?
-        if (npcPool.TryGetValue(data.EventName, out npcObj))
+        // 1. 풀에서 가져오거나 새로 생성
+        if (!npcPool.TryGetValue(data.EventName, out npcObj) || npcObj == null)
         {
-            // 씬 이동으로 파괴되었다면 풀에서 지우고 새로 만듦
-            if (npcObj == null)
+            GameObject prefab = Resources.Load<GameObject>($"Prefabs/NPC/{data.EventName}");
+            if (prefab == null) return;
+            npcObj = Instantiate(prefab);
+            npcPool[data.EventName] = npcObj;
+        }
+
+        // -----------------------------------------------------
+        // 💡 [핵심 해결] 
+        // 비활성화 상태에선 bounds 값이 고장 나므로, 
+        // 일단 대략적인 위치에 두고 먼저 활성화(SetActive)를 시켜야 합니다!
+        // -----------------------------------------------------
+        npcObj.transform.position = data.Position;
+        npcObj.SetActive(true); // 콜라이더 정상화!
+
+        // 대사/이벤트 데이터 주입 (Ink 갱신)
+        NPC npcScript = npcObj.GetComponent<NPC>();
+        if (npcScript != null) npcScript.SetupCurrentEvent(data);
+
+        // -----------------------------------------------------
+        // 💡 [스마트 바닥 안착 & 레이캐스트 길이 보정]
+        // -----------------------------------------------------
+        // 시작점: 마커 기준 위로 1.0f (대략 무릎~허리 사이). 
+        // NPC 몸통이 있어도 Ground 레이어만 찾으므로 무시하고 땅을 뚫어지게 봅니다.
+        float startOffset = 1.0f;
+        // 길이: 아래로 2.5f. (윗층에서 쏘더라도 아래층까지 안 뚫고 갈 적당한 길이)
+        float rayDistance = 3.0f;
+
+        Vector2 rayStart = data.Position + Vector2.up * startOffset;
+        RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, rayDistance, LayerMask.GetMask("Ground"));
+
+        // 디버그 레이 (씬 뷰에서 파란색 선 확인)
+        Debug.DrawRay(rayStart, Vector2.down * rayDistance, Color.cyan, 5f);
+
+        if (hit.collider != null)
+        {
+            // 활성화된 상태이므로 발밑 서클 콜라이더 정보를 완벽하게 가져옵니다!
+            Collider2D col = npcObj.GetComponentInChildren<Collider2D>();
+            if (col != null)
             {
-                npcPool.Remove(data.EventName);
-                npcObj = CreateNewNPC(data);
+                // 물리 엔진에 현재 위치 동기화 
+                Physics2D.SyncTransforms();
+
+                // Transform 중심 Y 좌표 - 서클 콜라이더 맨 밑바닥 Y 좌표 = 정확한 오프셋!
+                float pivotToBottom = npcObj.transform.position.y - col.bounds.min.y;
+                npcObj.transform.position = new Vector3(data.Position.x, hit.point.y + pivotToBottom, 0);
             }
         }
         else
         {
-            // 한 번도 생성된 적 없으면 생성
-            npcObj = CreateNewNPC(data);
+            // 허공이거나 범위를 벗어나면 강제 이동 없이 CSV 좌표 유지
+            npcObj.transform.position = data.Position;
         }
-
-        if (npcObj == null) return;
-
-        // 2. 위치 설정 및 바닥 감지 (Raycast)
-        Vector2 spawnPos = data.Position;
-
-        // 💡 아래로 5만큼 레이저를 쏴서 "Ground" 레이어를 찾습니다. (프로젝트의 땅 레이어 이름이 Ground인지 확인해주세요!)
-        RaycastHit2D hit = Physics2D.Raycast(spawnPos, Vector2.down, 5f, LayerMask.GetMask("Ground"));
-        if (hit.collider != null)
-        {
-            // 바닥을 찾았다면, 바닥 위치에서 위로 살짝(0.5f) 올려서 안착시킴. (NPC 피벗이 바닥이면 0f, 중앙이면 0.5f 등 조절 필요)
-            spawnPos = hit.point + new Vector2(0, 1.0f);
-        }
-        npcObj.transform.position = spawnPos;
-
-        // 3. 💡 시간대별 대사 꼬임 방지를 위해 현재 시간의 이벤트 데이터를 직접 주입!
-        NPC npcScript = npcObj.GetComponent<NPC>();
-        if (npcScript != null)
-        {
-            npcScript.SetupCurrentEvent(data); // 새로 추가할 함수
-        }
-
-        // 4. 활성화
-        npcObj.SetActive(true);
     }
 
     // NPC 프리팹 생성 헬퍼 함수

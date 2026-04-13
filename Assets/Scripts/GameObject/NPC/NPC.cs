@@ -37,13 +37,22 @@ public abstract class NPC : CharacterStats
     protected Animator animator;
     protected Transform player;
 
+    // 💡 중력을 제어하기 위한 Rigidbody 추가
+    protected Rigidbody2D rb;
+    private float originalGravity; // 보스전 돌입 시 돌려줄 원래 중력
+
     protected override void Awake()
     {
         base.Awake();
         animator = GetComponentInChildren<Animator>();
 
+        // 💡 Rigidbody 캐싱
+        rb = GetComponent<Rigidbody2D>();
+        if (rb != null) originalGravity = rb.gravityScale;
+
         // 💡 자식 오브젝트에 달려 있는 EventTrigger를 찾음
         myEventTrigger = GetComponentInChildren<EventTrigger>(true);
+
     }
 
     private void Start()
@@ -64,14 +73,15 @@ public abstract class NPC : CharacterStats
 
     private void OnEnable()
     {
-        // 💡 SetActive(true)가 될 때마다 매니저에 나를 등록합니다.
-        if (myEventTrigger != null && currentMode == NPCMode.Normal)
+        // 💡 일반 모드일 때만 물리 간섭 차단
+        if (currentMode == NPCMode.Normal)
         {
-            EventManager.Instance.RegisterDynamicTrigger(myEventTrigger);
-
-            //// 데이터 매니저에서 이 NPC의 ID와 현재 시간/날짜에 맞는 EventData를 가져와서 넣어줌
-            //EventData myData = DataManager.Instance.EventDict[npcID]; // (예시)
-            //myEventTrigger.UpdateTrigger(myData);
+            if (myEventTrigger != null) EventManager.Instance.RegisterDynamicTrigger(myEventTrigger);
+            if (rb != null)
+            {
+                rb.gravityScale = 0f; // 촥! 붙어있게 함
+                rb.linearVelocity = Vector2.zero;
+            }
         }
     }
 
@@ -143,11 +153,17 @@ public abstract class NPC : CharacterStats
     public void SwitchToAttackMode()
     {
         currentMode = NPCMode.Attack;
+        if (rb != null) rb.gravityScale = originalGravity; // 전투 시 중력 복구
+
         if (myEventTrigger != null)
         {
             EventManager.Instance.UnregisterDynamicTrigger(myEventTrigger);
             myEventTrigger.gameObject.SetActive(false);
         }
+
+        // 💡 [중력 복구] 전투가 시작되면 다시 중력을 줘서 정상적인 물리 전투가 되게 합니다.
+        if (rb != null) rb.gravityScale = originalGravity;
+
         Debug.Log($"{gameObject.name}이(가) 공격 모드로 돌입했습니다!");
     }
 }
