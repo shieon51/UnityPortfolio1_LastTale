@@ -17,11 +17,20 @@ public class Liel_AI : NPC
     private float actionCooldown = 1.5f;
     private float lastActionTime = 0f;
 
+    // 💡 [신규 추가] 일반 모드 행동 제어용 변수들
+    [Header("Normal Mode AI")]
+    public float approachDistance = 6f; // 다가오기 시작하는 감지 거리
+    public float stopDistance = 2f;     // 플레이어 코앞 (멈추는 거리)
+    public float walkSpeed = 1.5f;        // 걷는 속도
+    private bool hasApproached = false; // 1회만 다가오게 하는 플래그
+
+
     protected override void Awake()
     {
         base.Awake();
         currentElement = ElementType.Light; // 빛 속성 고정
         myPersonality = PersonalityTrait.Cold; // 리엘의 성향
+        npcName = "Liel"; // NPCData와 매칭될 이름
 
         // 💡 세계관 최강자 세팅
         level = 99;
@@ -29,39 +38,53 @@ public class Liel_AI : NPC
         agility.AddBaseValue(999); // 회피 Max
     }
 
-    protected virtual void Update()
-    {
-        if (isKnockedBack) return;
-
-        // 나중엔 여기에 State Machine(FSM)이 들어갈 자리입니다!
-        if (currentMode == NPCMode.Normal)
-        {
-            // Idle 애니메이션이 무한 반복되고 있을 테니, 일단 비워둡니다.
-        }
-    }
-
     // ==========================================
     // 1. 일반 모드 (성격 반영)
     // ==========================================
     protected override void HandleNormalModeAI()
     {
-        if (player == null) return;
+        if (player == null || myData == null) return;
         float dist = Vector2.Distance(transform.position, player.position);
 
-        // Cold 성향 + 관계 등급 연동 행동
-        if (CurrentRelationship == RelationshipTier.Romance)
+        // 1. 친밀도 확인 (예: Friend 이상일 때만 반응하도록 설정)
+        if (CurrentRelationship >= RelationshipTier.Friend)
         {
-            // 겉으론 차갑지만(Cold), 플레이어가 위험(피가 적음)하면 조용히 힐을 던져줌
-            CharacterStats pStats = player.GetComponent<CharacterStats>();
-            if (pStats != null && pStats.currentHealth < pStats.maxHealth * 0.3f && dist < 8f)
+            // 2. 감지 거리 안으로 들어왔고, 아직 다가간 적이 없다면?
+            if (dist <= approachDistance && !hasApproached)
             {
-                Debug.Log("[리엘] \"...멍청하게 다치고 다니지 마라.\" (조용히 힐)");
-                // 힐 로직...
+                LookAtPlayer(); // 방향 전환
+
+                // 코앞(stopDistance)까지 오지 않았다면 걷기!
+                if (dist > stopDistance)
+                {
+                    animator.SetBool("IsWalk", true); // 걷기 애니메이션 ON
+
+                    float dir = (player.position.x > transform.position.x) ? 1f : -1f;
+                    transform.position += new Vector3(dir * walkSpeed * Time.deltaTime, 0, 0);
+                }
+                else
+                {
+                    // 코앞에 도착했으면 멈추고 1회 플래그 달성
+                    animator.SetBool("IsWalk", false); // 걷기 애니메이션 OFF
+                    hasApproached = true;
+                }
+            }
+            else
+            {
+                // 다가가는 중이 아닐 때 (이미 다가왔거나, 아예 범위 밖일 때)
+                animator.SetBool("IsWalk", false);
+
+                // 💡 [기획 팁] 플레이어가 멀~리 떠나면 다시 다가올 수 있게 리셋해주면 자연스럽습니다.
+                if (dist > approachDistance * 1.5f)
+                {
+                    hasApproached = false;
+                }
             }
         }
-        else if (CurrentRelationship <= RelationshipTier.Wary)
+        else
         {
-            // 경계/적대 상태일 땐 플레이어가 다가오면 무기를 뽑는 모션 등
+            // 안 친할 때: 쳐다보지도 않고 가만히 있음
+            animator.SetBool("IsWalk", false);
         }
     }
 
@@ -70,6 +93,12 @@ public class Liel_AI : NPC
     // ==========================================
     protected override void HandleAttackModeAI()
     {
+        // 💡 유틸리티 AI 로직에서 핸디캡을 줄 때도 myData 활용
+        // if (myData.hiddenAffection > 50) score -= 30f; (봐주기)
+
+        // ... 보스 페이즈 관리도 myData 활용
+        // if (hpPercent < 0.7f && myData.bossPhase == 1) { myData.bossPhase = 2; ... }
+
         if (player == null || Time.time < lastActionTime + actionCooldown) return;
         if (isGroggy)
         {
@@ -193,5 +222,25 @@ public class Liel_AI : NPC
 
     private void ExecuteLightUltimate() { UseMana(ultimateManaCost); /* 궁극기 쾅! */ }
     private void ExecuteBasicAttack() { /* 기본 공격 */ }
+
+
+    // 💡 [수정 2-2] Liel_AI에서 기즈모 오버라이드
+    protected override void OnDrawGizmosSelected()
+    {
+        base.OnDrawGizmosSelected();
+
+        // 일반 모드일 때만 범위 기즈모 그리기!
+        if (myData != null && myData.currentMode == NPCMode.Normal)
+        {
+            // 감지 범위 (노란색 선)
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(transform.position, approachDistance);
+
+            // 멈춤 범위 (빨간색 선)
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(transform.position, stopDistance);
+        }
+        // 공격 모드 기즈모를 추가하고 싶다면 아래에 else if 추가 가능
+    }
 
 }

@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 7079097833459111121}
   - component: {fileID: 2386597809401269983}
   - component: {fileID: 663565770948976550}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Liel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -90,15 +90,18 @@ MonoBehaviour:
   isGuarding: 0
   invincibilityDuration: 0.2
   isSuperArmor: 0
-  understanding: 0
-  hiddenAffection: 0
+  npcName: 
   myPersonality: 0
-  currentMode: 0
+  debugUnderstanding: 0
+  debugHiddenAffection: 0
   currentCombatStyle: 0
   bossPhase: 1
   teleportManaCost: 20
   ultimateManaCost: 40
   isGroggy: 0
+  approachDistance: 6
+  stopDistance: 2
+  walkSpeed: 1.5
 --- !u!58 &663565770948976550
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -115,7 +118,7 @@ CircleCollider2D:
     m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 64
   m_LayerOverridePriority: 0
   m_ForceSendLayers:
     serializedVersion: 2
@@ -147,7 +150,7 @@ GameObject:
   - component: {fileID: 4695153608099272124}
   - component: {fileID: 4557298855416544362}
   - component: {fileID: 5837489318169250162}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Visual
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -295,9 +298,21 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 604758761269354018}
     m_Modifications:
+    - target: {fileID: 1438036189335292205, guid: 552d4be6706da0d4388c586728b0c743, type: 3}
+      propertyPath: m_Layer
+      value: 9
+      objectReference: {fileID: 0}
     - target: {fileID: 1666129357468143610, guid: 552d4be6706da0d4388c586728b0c743, type: 3}
       propertyPath: m_Name
       value: EventTrigger
+      objectReference: {fileID: 0}
+    - target: {fileID: 1666129357468143610, guid: 552d4be6706da0d4388c586728b0c743, type: 3}
+      propertyPath: m_Layer
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 1675757650202852045, guid: 552d4be6706da0d4388c586728b0c743, type: 3}
+      propertyPath: m_Layer
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 1830553192990458237, guid: 552d4be6706da0d4388c586728b0c743, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -342,6 +357,14 @@ PrefabInstance:
     - target: {fileID: 5860024857493715305, guid: 552d4be6706da0d4388c586728b0c743, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6937124844552055442, guid: 552d4be6706da0d4388c586728b0c743, type: 3}
+      propertyPath: m_Layer
+      value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 8497732325989246080, guid: 552d4be6706da0d4388c586728b0c743, type: 3}
+      propertyPath: m_Layer
+      value: 9
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

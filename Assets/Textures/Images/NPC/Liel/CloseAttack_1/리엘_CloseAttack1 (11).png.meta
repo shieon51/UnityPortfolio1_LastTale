@@ -1,0 +1,307 @@
+fileFormatVersion: 2
+guid: 5f94101244b5b5b4a87f84c91b652e7b
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 640347747582603523
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_0"
+  - first:
+      213: 5690890251366304961
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_1"
+  - first:
+      213: 5386407860026301764
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_2"
+  - first:
+      213: 1335653133172726521
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_3"
+  - first:
+      213: -371633381506827980
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_4"
+  - first:
+      213: -4017455515306651801
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_5"
+  - first:
+      213: 7881898079084357082
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_6"
+  - first:
+      213: 847909449716247724
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_7"
+  - first:
+      213: -631769644677251309
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_8"
+  - first:
+      213: 3547978474209668486
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_9"
+  - first:
+      213: -7544092345882328134
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_10"
+  - first:
+      213: -1039636021060937781
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_11"
+  - first:
+      213: -97586877846367181
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_12"
+  - first:
+      213: 757176740576276999
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_13"
+  - first:
+      213: 1070228932805449805
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_14"
+  - first:
+      213: 792165486191456830
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_15"
+  - first:
+      213: -5765198067639944647
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_16"
+  - first:
+      213: -2437634849918011127
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_17"
+  - first:
+      213: -1401503377769263297
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_18"
+  - first:
+      213: -6823110796478709995
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_19"
+  - first:
+      213: 6566286354792522853
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_20"
+  - first:
+      213: 38434869369036058
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_21"
+  - first:
+      213: 4487131086105065260
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_22"
+  - first:
+      213: 4953751227984918439
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_23"
+  - first:
+      213: 1643846102868261393
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_24"
+  - first:
+      213: 7196438031486885607
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_25"
+  - first:
+      213: -8231401116530695516
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_26"
+  - first:
+      213: 6783355129477036692
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_27"
+  - first:
+      213: 7309797501438386082
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_28"
+  - first:
+      213: 5675875986758497216
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_29"
+  - first:
+      213: -502911283868233644
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_30"
+  - first:
+      213: -273018605075403356
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_31"
+  - first:
+      213: -1692868648355096956
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_32"
+  - first:
+      213: 7822536425265203862
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_33"
+  - first:
+      213: 7655764515014657276
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_34"
+  - first:
+      213: -4567884370233605777
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_35"
+  - first:
+      213: 5762217043847183067
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_36"
+  - first:
+      213: -8848377468766480945
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_37"
+  - first:
+      213: 1637239975324926377
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_38"
+  - first:
+      213: -9040005531898379258
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_39"
+  - first:
+      213: 4829076464946880487
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_40"
+  - first:
+      213: 990060474103384642
+    second: "\uB9AC\uC5D8_CloseAttack1 (11)_41"
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: "\uB9AC\uC5D8_CloseAttack1 (11)_0"
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 1046
+        height: 432
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 301f16b32e8f2e800800000000000000
+      internalID: 640347747582603523
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 27cdf06a0f4de004b8b9026a3e2e4b1c
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":1080.0,"y":432.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      "\uB9AC\uC5D8_CloseAttack1 (11)_0": 640347747582603523
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

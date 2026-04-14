@@ -32,13 +32,10 @@ public class EventManager : Singleton<EventManager>
 
     private Transform player;
     private GameObject eventTriggerPrefab;
-    private Dictionary<int, EventData> eventDict = new Dictionary<int, EventData>();
+
+    // 💡 [트리거 관리 풀]
     private List<EventTrigger> activeTriggers = new List<EventTrigger>(); // 최대 10개까지만 관리
     private List<EventTrigger> dynamicTriggers = new List<EventTrigger>(); // NPC들이 씬에 나타나면 스스로 등록하는 리스트
-
-    // 💡 [변경] Destroy 방식 대신, 한 번 만든 NPC를 보관하고 껐다 켜는 '풀링 딕셔너리'
-    // Key: EventName (예: "Liel"), Value: 생성된 NPC 게임오브젝트
-    private Dictionary<string, GameObject> npcPool = new Dictionary<string, GameObject>();
 
     private EventTrigger closest = null;
     private bool canInteract = false;    // 상호작용 가능 여부 플래그
@@ -49,8 +46,6 @@ public class EventManager : Singleton<EventManager>
     private void Awake()
     {
         eventTriggerPrefab = Resources.Load<GameObject>("Prefabs/EventTrigger");
-        //LoadEventData();
-
         InitializeEventTriggers(10);
         InitializeBehaviors(); // 행동 전략 초기화
     }
@@ -86,6 +81,13 @@ public class EventManager : Singleton<EventManager>
              Input.GetKeyDown(KeyCode.Z))
         {
             Debug.Log($"상호작용 시작: {closest.eventData.EventName}");
+
+            // 💡 [신규] 상호작용 대상이 NPC라면 대화가 시작되었다고 알림!
+            if (closest.eventData.EventID >= (int)EventID.NPC && closest.eventData.EventID < 90000)
+            {
+                NPCManager.Instance.StartNPCDialogue(closest.eventData.EventName);
+            }
+
             closest.StartDialogue(); // 트리거의 대화 시작 함수 호출
         }
 
@@ -132,24 +134,19 @@ public class EventManager : Singleton<EventManager>
         // 현재 씬에서 유효한 이벤트 필터링
         List<EventData> validEvents = new List<EventData>();
 
-        // 💡 1. 갱신될 때 모든 NPC를 일단 꺼버립니다. (조건에 맞는 애들만 나중에 켬)
-        foreach (var npc in npcPool.Values)
-        {
-            if (npc != null) npc.SetActive(false);
-        }
+        // 💡 [신규] NPC 전용 리스트 분리
+        List<EventData> validNPCEvents = new List<EventData>();
 
-        // 💡 DataManager에서 데이터를 가져오고, 유효성 검사는 GameMode에게 위임 (SOLID 완벽 적용)
+        // 2. 이벤트 데이터 순회
         foreach (EventData eventEntry in DataManager.Instance.EventDict.Values)
         {
             // 현재 씬과 시간에 유효한 이벤트인지 확인
             if (GameManager.Instance.CurrentGameMode.IsEventValid(eventEntry, currentSceneID))
             {
-                // 💡 3. [여기가 핵심 호출부!] 
-                // 이벤트 ID가 NPC 대역(10000 ~ 89999)인지 확인합니다.
+                // 이벤트 ID가 NPC 대역(10000 ~ 89999)인지 확인
                 if (eventEntry.EventID >= (int)EventID.NPC && eventEntry.EventID < 90000)
                 {
-                    // 💡 2. NPC 이벤트면 부수지 않고 껐다 켜기 함수 호출!
-                    SpawnOrUpdateNPC(eventEntry);
+                    validNPCEvents.Add(eventEntry); // NPC 리스트에 추가
                 }
                 else
                 {
@@ -159,26 +156,25 @@ public class EventManager : Singleton<EventManager>
             }
         }
 
+        // 💡 [핵심] NPC 배치는 NPCManager에게 통째로 위임합니다! (단일 책임 원칙 완벽 준수)
+        if (NPCManager.Instance != null)
+        {
+            NPCManager.Instance.UpdateNPCsOnMap(validNPCEvents);
+        }
+
+        // 3. 정적(일반) 트리거 재활용 및 활성화
         // 필요한 EventTrigger 개수 결정 (최대 10개까지만 유지)
         int requiredTriggers = Mathf.Min(validEvents.Count, 10);
 
         // 기존 트리거 재활용
         for (int i = 0; i < requiredTriggers; i++)
         {
-            if (i < activeTriggers.Count)
+            if (i >= activeTriggers.Count)
             {
-                // 기존 트리거 업데이트
-                activeTriggers[i].UpdateTrigger(validEvents[i]);
-                
-            }
-            else
-            {
-                // 새 트리거 생성
                 GameObject obj = Instantiate(eventTriggerPrefab);
-                EventTrigger newTrigger = obj.GetComponent<EventTrigger>();
-                newTrigger.UpdateTrigger(validEvents[i]);
-                activeTriggers.Add(newTrigger);
+                activeTriggers.Add(obj.GetComponent<EventTrigger>());
             }
+            activeTriggers[i].UpdateTrigger(validEvents[i]);
             activeTriggers[i].gameObject.transform.position = validEvents[i].Position;
             activeTriggers[i].gameObject.SetActive(true);
         }
@@ -255,6 +251,11 @@ public class EventManager : Singleton<EventManager>
         // 💡 시간 코인 소모 로직을 GameMode에게 위임! (1부면 코인 소모, 2부면 행동력 소모)
         GameManager.Instance.CurrentGameMode.ConsumeResourceForEvent(eventData.TimeTaken);
 
+        // 💡 [신규] 대화가 끝난 게 NPC라면 대화 종료 알림!
+        if (eventData.EventID >= (int)EventID.NPC && eventData.EventID < 90000)
+        {
+            NPCManager.Instance.EndNPCDialogue(eventData.EventName);
+        }
 
         // 2. 전략 패턴으로 분기 처리 없이 실행
         if (eventBehaviors.TryGetValue(eventData.EventID, out IEventBehavior behavior))
@@ -266,87 +267,6 @@ public class EventManager : Singleton<EventManager>
             new DefaultEventBehavior().Execute(eventData); // 매핑 안 된 일반 NPC 대화 등
         }
     }
-
-    // 💡 [핵심] NPC를 새로 만들거나, 이미 있으면 켜서 이동시키고 대사를 업데이트하는 함수
-    private void SpawnOrUpdateNPC(EventData data)
-    {
-        GameObject npcObj = null;
-
-        // 1. 풀에서 가져오거나 새로 생성
-        if (!npcPool.TryGetValue(data.EventName, out npcObj) || npcObj == null)
-        {
-            GameObject prefab = Resources.Load<GameObject>($"Prefabs/NPC/{data.EventName}");
-            if (prefab == null) return;
-            npcObj = Instantiate(prefab);
-            npcPool[data.EventName] = npcObj;
-        }
-
-        // -----------------------------------------------------
-        // 💡 [핵심 해결] 
-        // 비활성화 상태에선 bounds 값이 고장 나므로, 
-        // 일단 대략적인 위치에 두고 먼저 활성화(SetActive)를 시켜야 합니다!
-        // -----------------------------------------------------
-        npcObj.transform.position = data.Position;
-        npcObj.SetActive(true); // 콜라이더 정상화!
-
-        // 대사/이벤트 데이터 주입 (Ink 갱신)
-        NPC npcScript = npcObj.GetComponent<NPC>();
-        if (npcScript != null) npcScript.SetupCurrentEvent(data);
-
-        // -----------------------------------------------------
-        // 💡 [스마트 바닥 안착 & 레이캐스트 길이 보정]
-        // -----------------------------------------------------
-        // 시작점: 마커 기준 위로 1.0f (대략 무릎~허리 사이). 
-        // NPC 몸통이 있어도 Ground 레이어만 찾으므로 무시하고 땅을 뚫어지게 봅니다.
-        float startOffset = 1.0f;
-        // 길이: 아래로 2.5f. (윗층에서 쏘더라도 아래층까지 안 뚫고 갈 적당한 길이)
-        float rayDistance = 3.0f;
-
-        Vector2 rayStart = data.Position + Vector2.up * startOffset;
-        RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, rayDistance, LayerMask.GetMask("Ground"));
-
-        // 디버그 레이 (씬 뷰에서 파란색 선 확인)
-        Debug.DrawRay(rayStart, Vector2.down * rayDistance, Color.cyan, 5f);
-
-        if (hit.collider != null)
-        {
-            // 활성화된 상태이므로 발밑 서클 콜라이더 정보를 완벽하게 가져옵니다!
-            Collider2D col = npcObj.GetComponentInChildren<Collider2D>();
-            if (col != null)
-            {
-                // 물리 엔진에 현재 위치 동기화 
-                Physics2D.SyncTransforms();
-
-                // Transform 중심 Y 좌표 - 서클 콜라이더 맨 밑바닥 Y 좌표 = 정확한 오프셋!
-                float pivotToBottom = npcObj.transform.position.y - col.bounds.min.y;
-                npcObj.transform.position = new Vector3(data.Position.x, hit.point.y + pivotToBottom, 0);
-            }
-        }
-        else
-        {
-            // 허공이거나 범위를 벗어나면 강제 이동 없이 CSV 좌표 유지
-            npcObj.transform.position = data.Position;
-        }
-    }
-
-    // NPC 프리팹 생성 헬퍼 함수
-    private GameObject CreateNewNPC(EventData data)
-    {
-        GameObject prefab = Resources.Load<GameObject>($"Prefabs/NPC/{data.EventName}");
-        if (prefab != null)
-        {
-            GameObject npc = Instantiate(prefab);
-            npcPool.Add(data.EventName, npc);
-            return npc;
-        }
-        else
-        {
-            Debug.LogError($"[EventManager] Resources/Prefabs/NPC/ 경로에 '{data.EventName}' 프리팹이 없습니다!");
-            return null;
-        }
-    }
-
-
 
     private void OnDrawGizmos()
     {
