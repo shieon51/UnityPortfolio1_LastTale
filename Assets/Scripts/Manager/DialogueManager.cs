@@ -17,6 +17,9 @@ public class DialogueManager : Singleton<DialogueManager>
 
     private bool isTalking = false; //현재 대화가 진행중일 때 -> EventTrigger에서 Z키 입력 불가, 엔터 키 입력 가능 처리.
     private bool isChoices = false; //선택지가 주어진 상태일 때 -> EventTrigger에서 엔터키 입력에 대한 예외처리
+
+    private string pendingBattleNPC = ""; // 전투가 예약된 NPC 이름
+
     public bool IsTalking
     { get { return isTalking; } }
     public bool IsChoices        
@@ -60,6 +63,15 @@ public class DialogueManager : Singleton<DialogueManager>
             print(text);
             UIManager.Instance.UpdateDialogueText(text);
 
+            // 💡 태그 파싱: #battle:Liel 이 있으면 예약!
+            foreach (string tag in story.currentTags)
+            {
+                string[] args = tag.Split(':');
+                if (args[0] == "battle" && args.Length > 1)
+                {
+                    pendingBattleNPC = args[1]; // "Liel" 예약
+                }
+            }
             //// 태그를 읽어올 때 Split(':')을 사용하면 완벽한 함수 인자가 됩니다!
             //foreach (string tag in story.currentTags)
             //{
@@ -93,10 +105,6 @@ public class DialogueManager : Singleton<DialogueManager>
         }
         else
         {
-            //TimeManager.Instance.UseTimeCoins(curEventData.TimeTaken, curEventData.EventName != "Sleep"); //invoke 해놓을까? -> 수련, 훈련, 잠자기
-            //isTalking = false;
-            //dialogueText.text = "";
-            //CloseDialog();
             EndDialogue();
         }
 
@@ -117,6 +125,13 @@ public class DialogueManager : Singleton<DialogueManager>
         NPCManager.Instance.SaveNPCData(lielData); // 영구 저장!
 
         OnDialogueEnd?.Invoke(curEventData); // 다이얼로그가 끝나면 실행하기
+
+        // 💡 [신규] 대화가 완전히 끝난 직후, 예약된 전투가 있다면 실행!
+        if (!string.IsNullOrEmpty(pendingBattleNPC))
+        {
+            NPCManager.Instance.TriggerBossBattle(pendingBattleNPC);
+            pendingBattleNPC = ""; // 초기화
+        }
     }
 
     // 코루틴 추가 (짧은 딜레이 후 다시 입력 가능)

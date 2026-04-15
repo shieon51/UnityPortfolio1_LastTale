@@ -64,7 +64,7 @@ public abstract class NPC : CharacterStats
 
     }
 
-    private void Start()
+    protected virtual void Start()
     {
         if (PlayerManager.Instance != null && PlayerManager.Instance.CurrentCharacter != null)
             player = PlayerManager.Instance.CurrentCharacter.transform;
@@ -178,7 +178,7 @@ public abstract class NPC : CharacterStats
     //}
 
     // 공격 모드로 진입하는 함수 (스토리나 특정 조건 만족 시 호출됨)
-    public void SwitchToAttackMode()
+    public virtual void SwitchToAttackMode()
     {
         if (myData == null) return;
 

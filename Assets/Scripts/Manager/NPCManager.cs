@@ -168,6 +168,41 @@ public class NPCManager : Singleton<NPCManager>
     {
         NPCData targetData = GetNPCData(targetNpcName);
         targetData.currentMode = NPC.NPCMode.Attack;
-        // 전투 씬으로 넘기거나, 씬에 있는 NPC에게 즉시 전투 모드 돌입 명령
+
+        if (npcPool.TryGetValue(targetNpcName, out GameObject npcObj) && npcObj != null)
+        {
+            NPC npcScript = npcObj.GetComponent<NPC>();
+            if (npcScript != null)
+            {
+                npcScript.SwitchToAttackMode(); // NPC를 공격 모드로 전환
+
+                // 💡 [임시 구현] 전투 시작 시 강제로 거리를 벌려줌 (카메라 연출용)
+                // 실제로는 맵마다 지정된 '보스전 시작 위치(Transform)'를 가져다 쓰는 것이 좋습니다.
+                Transform player = PlayerManager.Instance.CurrentCharacter.transform;
+
+                // 플레이어는 원래 위치, 보스는 플레이어 기준 오른쪽으로 5칸 뒤로 순간이동!
+                Vector2 bossStartPos = new Vector2(player.position.x + 5f, player.position.y);
+
+                // NPC 위치 보정 (바닥 레이캐스트 재활용)
+                RaycastHit2D hit = Physics2D.Raycast(bossStartPos + Vector2.up * 1f, Vector2.down, 3f, LayerMask.GetMask("Ground"));
+                if (hit.collider != null)
+                {
+                    Collider2D col = npcObj.GetComponentInChildren<Collider2D>();
+                    if (col != null)
+                    {
+                        float pivotToBottom = npcObj.transform.position.y - col.bounds.min.y;
+                        npcObj.transform.position = new Vector3(bossStartPos.x, hit.point.y + pivotToBottom, 0);
+                    }
+                }
+                else
+                {
+                    npcObj.transform.position = bossStartPos;
+                }
+
+                Debug.Log($"[전투 시작] {targetNpcName} 보스전 돌입! 거리를 벌립니다.");
+
+                // TODO: UIManager.Instance.ShowBattleUI(); 등 보스전 전용 체력바 켜기
+            }
+        }
     }
 }
