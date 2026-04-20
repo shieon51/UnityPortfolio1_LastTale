@@ -123,17 +123,16 @@ public class CharacterStats : MonoBehaviour
         {
             isKnockedBack = true;
 
-            // 💡 [버그 해결] Y축은 살리되, X축은 0으로 만들고 밀어냄
+            // 초기 X축 속도를 초기화하고 밀어냄
             rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
-
-            // 힘을 가함 (공중 넉백도 자연스럽게)
             Vector2 force = new Vector2(direction.x, 0.5f).normalized * power;
             rb.AddForce(force, ForceMode2D.Impulse);
 
             yield return new WaitForSeconds(duration);
 
             // 밀려난 후 미끄러짐 방지 (Y축 중력은 유지!)
-            if (rb != null) rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+            //if (rb != null) rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+
             isKnockedBack = false;
         }
     }

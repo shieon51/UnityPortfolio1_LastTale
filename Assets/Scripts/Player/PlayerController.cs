@@ -236,10 +236,13 @@ public class PlayerController : MonoBehaviour
     {
         //대화중인 경우에는 움직이지 못하도록
         if (DialogueManager.Instance.IsTalking) return;
-        // 💡 넉백 중이거나 공격 중이면 키보드 이동 입력 무시!
+
+        // 💡 1. 넉백(경직) 중이거나 공격 중이면 키보드 입력 완벽 무시!
         if (PlayerManager.Instance.CurrentCharacter.isKnockedBack || _playerAttack._isAttacking) return;
 
-        _horizontalInput = Input.GetAxis("Horizontal");
+        // 💡 [핵심 버그 수정] 서서히 줄어드는 GetAxis 대신, 
+        // 즉각 0으로 떨어지는 GetAxisRaw를 써야 의도치 않은 브레이크를 막습니다!
+        _horizontalInput = Input.GetAxisRaw("Horizontal");  //GetAxis
         _isDash = _isGrounded ? Input.GetKey(KeyCode.LeftShift) : _isDash; //(점프 동작 중에는 마지막 대시 상태를 넘기기)
 
         if (_horizontalInput != 0)
@@ -256,7 +259,30 @@ public class PlayerController : MonoBehaviour
 
         //이동
         float moveSpeed = _isDash ? CurDashSpeed : CurRunSpeed;
-        _rigidbody.linearVelocity = new Vector2(_horizontalInput * moveSpeed, _rigidbody.linearVelocity.y);
+
+        // 💡 2. 완벽한 공중 관성 & 에어 컨트롤 로직
+        if (_isGrounded)
+        {
+            // 땅에서는 즉시 움직이고 멈춤
+            _rigidbody.linearVelocity = new Vector2(_horizontalInput * moveSpeed, _rigidbody.linearVelocity.y);
+        }
+        else
+        {
+            // 공중에 있을 때
+            if (_horizontalInput != 0)
+            {
+                // 방향키를 누르면 원래 날아가던 관성에 '유저의 이동 의지'를 부드럽게 섞어줌 (Air Strafe)
+                // 강제로 덮어씌우지 않으므로 넉백 중 키를 눌러도 뚝 떨어지지 않음!
+                float targetSpeed = _horizontalInput * moveSpeed;
+                float newX = Mathf.MoveTowards(_rigidbody.linearVelocity.x, targetSpeed, 15f * Time.deltaTime);
+                _rigidbody.linearVelocity = new Vector2(newX, _rigidbody.linearVelocity.y);
+            }
+            else
+            {
+                // 💡 [해결] 키보드에서 손을 떼면? 아무것도 안 함! 
+                // 물리 엔진이 알아서 원래 넉백 힘(포물선) 그대로 쭈욱 날아가게 냅둡니다.
+            }
+        }
     }
 
     private void OnDrawGizmos()

@@ -1,12 +1,28 @@
-﻿using UnityEngine;
+﻿using TMPro;
+using UnityEngine;
 
 // 💡 abstract 키워드를 붙여서, 'NPC'라는 객체 자체는 생성하지 못하고 무조건 상속받게 만듭니다.
 public abstract class NPC : CharacterStats
 {
+    // ** 디버깅 전용 **
+    [Header("Debug Settings")]
+    public TextMeshProUGUI statusText; // NPC 머리 위 TextMesh (World Space)
+
+    // 인스펙터에서 호감도를 보거나 수정하기 위해 property 대신 직접 접근 가능하게 만듭니다.
+    // 주의: 인스펙터 수정은 실행 중에만 myData에 반영되며, 에디터 수정값을 초기값으로 쓰려면 NPCData 초기화 로직을 건드려야 합니다.
+    [Header("Relations (Read/Write)")]
+    [SerializeField] private int debugUnderstanding = 0;
+    [SerializeField] private int debugHiddenAffection = 0;
+
+    //------------------------------------------------------------------
+    // 💡 [수정] 외부 상태 클래스들이 접근할 수 있도록 Property로 변경
+    public StateMachine StateMachine { get; protected set; }
+
     //  관계 등급(내면) & 표현 성향(표현 방식)
     public enum RelationshipTier { Hostile, Wary, Acquaintance, Friend, Trusted, Romance }
     public enum PersonalityTrait { Honest, Tsundere, Shy, Cold }
     public enum NPCMode { Normal, Attack }
+
 
     [Header("Identity")]
     public string npcName; // 프리팹 인스펙터에서 설정! (예: "Liel")
@@ -14,14 +30,11 @@ public abstract class NPC : CharacterStats
 
     protected NPCData myData;
 
-    // 💡 [신규] 매니저가 처음 나를 스폰시켰을 때의 CSV 좌표
+    // 매니저가 처음 나를 스폰시켰을 때의 CSV 좌표
     [HideInInspector] public Vector2 originalCsvPos;
 
-    // 💡 [수정 1] 인스펙터에서 호감도를 보거나 수정하기 위해 property 대신 직접 접근 가능하게 만듭니다.
-    // 주의: 인스펙터 수정은 실행 중에만 myData에 반영되며, 에디터 수정값을 초기값으로 쓰려면 NPCData 초기화 로직을 건드려야 합니다.
-    [Header("Relations (Read/Write)")]
-    [SerializeField] private int debugUnderstanding = 0;
-    [SerializeField] private int debugHiddenAffection = 0;
+    // 모든 NPC가 공유할 스프라이트 렌더러
+    protected SpriteRenderer spriteRenderer;
 
     public NPCMode CurrentMode => myData != null ? myData.currentMode : NPCMode.Normal;
     public RelationshipTier CurrentRelationship => myData != null ? myData.GetRelationshipTier() : RelationshipTier.Wary;
@@ -35,10 +48,10 @@ public abstract class NPC : CharacterStats
     protected Rigidbody2D rb;
     private float originalGravity; // 보스전 돌입 시 돌려줄 원래 중력
 
-    // 💡 [신규] 모든 NPC가 공유할 스프라이트 렌더러
-    protected SpriteRenderer spriteRenderer;
+    // 방향 전환 가능 여부 플래그 (보스전)
+    public bool canRotate = true; 
 
-    // 💡 [신규] 대화 관련 변수들
+    // 대화 관련 변수들
     protected bool isTalking = false;
     private bool previousFlipX = false;
 
@@ -62,6 +75,7 @@ public abstract class NPC : CharacterStats
             myData = NPCManager.Instance.GetNPCData(npcName);
         }
 
+        StateMachine = new StateMachine();
     }
 
     protected virtual void Start()
@@ -133,9 +147,11 @@ public abstract class NPC : CharacterStats
     private void Update()
     {
         if (isKnockedBack || myData == null) return; // 넉백 중엔 행동 불가
+        if (isTalking) return;                       // 대화 중일 때는 AI 판단(다가가기 등)을 멈춤!
 
-        // 💡 [핵심] 대화 중일 때는 AI 판단(다가가기 등)을 멈춤!
-        if (isTalking) return;
+        // 💡 디버깅용 상태 출력
+        if (statusText != null && StateMachine.CurrentState != null)
+            statusText.text = StateMachine.CurrentState.GetType().Name.Replace("Liel_", "");
 
         // 💡 [수정 1-2] 에디터에서 값을 바꾸면 실제 데이터(myData)에도 실시간 반영 (디버깅 편의)
 #if UNITY_EDITOR
@@ -222,7 +238,9 @@ public abstract class NPC : CharacterStats
     // 플레이어를 쳐다보는 함수
     protected void LookAtPlayer()
     {
-        if (player != null) LookAtTarget(player.position);
+        if (!canRotate || player == null || spriteRenderer == null) return; // 💡 플래그 체크 
+        
+        LookAtTarget(player.position);
     }
 
     // 💡 [수정 2] 공통 기즈모 그리기 함수 (자식에서 호출 가능)

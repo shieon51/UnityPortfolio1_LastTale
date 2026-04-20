@@ -1,10 +1,10 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class Liel_Attack1State : NPCState
 {
     private Liel_AI liel;
     private float attackTimer = 0f;
-    private float attackDuration = 1.5f; // ¾Ö´Ï¸ŞÀÌ¼Ç Àç»ı ±æÀÌ
+    private float attackDuration = 1.5f; // ì• ë‹ˆë©”ì´ì…˜ ì¬ìƒ ê¸¸ì´
 
     public Liel_Attack1State(Liel_AI npc, Animator anim, Transform p) : base(npc, anim, p)
     {
@@ -14,18 +14,29 @@ public class Liel_Attack1State : NPCState
     public override void Enter()
     {
         attackTimer = 0f;
+        liel.canRotate = false; // ğŸ’¡ ê³µê²© ì‹œì‘ ì‹œ ë°©í–¥ ì „í™˜ ì ê¸ˆ!
         animator.SetTrigger("Attack1");
-        Debug.Log("[Liel] ¼Ò¶ó¿¡°Ô ±ÙÁ¢ °ø°İ 1 ½ÃÀü!");
+
+        Debug.Log("[Liel] ì†Œë¼ì—ê²Œ ê·¼ì ‘ ê³µê²© 1 ì‹œì „!");
     }
 
     public override void Execute()
     {
         attackTimer += Time.deltaTime;
 
-        // ¾Ö´Ï¸ŞÀÌ¼ÇÀÌ ³¡³ª¸é ´Ù½Ã ÀüÅõ ´ë±â·Î º¹±Í
+        // ì• ë‹ˆë©”ì´ì…˜ì´ ëë‚˜ë©´ ë‹¤ì‹œ ì „íˆ¬ ëŒ€ê¸°ë¡œ ë³µê·€
         if (attackTimer >= attackDuration)
         {
-            liel.StateMachine.ChangeState(new Liel_BattleIdleState(liel, animator, player));
+            //liel.StateMachine.ChangeState(new Liel_BattleIdleState(liel, animator, player));
+
+            // ğŸ’¡ ë°”ë¡œ Idleë¡œ ê°€ëŠ” ê²Œ ì•„ë‹ˆë¼ 'íšŒë³µ(Recovery)' ìƒíƒœë¡œ ê°€ì„œ ë© ë•Œë¦¼ ì¶”ê°€
+            liel.StateMachine.ChangeState(new Liel_RecoveryState(liel, animator, player, 0.8f));
         }
     }
+
+    public override void Exit()
+    {
+        liel.canRotate = true; // ğŸ’¡ ìƒíƒœ ë‚˜ê°ˆ ë•Œ ì ê¸ˆ í•´ì œ
+    }
+
 }

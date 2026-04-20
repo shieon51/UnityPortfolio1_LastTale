@@ -2,17 +2,14 @@
 
 public class Liel_AI : NPC
 {
-    // 💡 [수정] 외부 상태 클래스들이 접근할 수 있도록 Property로 변경
-    public StateMachine StateMachine { get; private set; }
-
     public enum LielCombatStyle { InjuredCommander, FallenAngel }
 
     [Header("Liel Specifics")]
     public LielCombatStyle currentCombatStyle = LielCombatStyle.InjuredCommander;
     public int bossPhase = 1; // 타락 모드일 때 1~3페이즈 관리
 
-    [Header("Combat Settings")]
-    public float attack1Range = 2f; // 공격 사거리
+    //[Header("Combat Settings")]
+    //public float attack1Range = 2f; // 공격 사거리
 
     [Header("Injured Mechanics (치명상 기믹)")]
     public int teleportManaCost = 20;
@@ -30,6 +27,9 @@ public class Liel_AI : NPC
     public float walkSpeed = 1.5f;        // 걷는 속도
     public bool hasApproached = false; // 상태 클래스에서 수정할 수 있게 public으로 변경 // 1회만 다가오게 하는 플래그
 
+    // 💡 [신규] LielAttackCompo 컴포넌트를 캐싱해둘 변수
+    [HideInInspector] public LielAttackCompo attackCompo;
+
 
     protected override void Awake()
     {
@@ -43,7 +43,9 @@ public class Liel_AI : NPC
         attack.AddBaseValue(500);
         agility.AddBaseValue(999); // 회피 Max
 
-        StateMachine = new StateMachine();
+        // 💡 [신규] 시작할 때 컴포넌트 찾아서 쥐고 있기
+        attackCompo = GetComponent<LielAttackCompo>();
+        if (attackCompo == null) attackCompo = GetComponentInChildren<LielAttackCompo>();
     }
 
     protected override void Start()
