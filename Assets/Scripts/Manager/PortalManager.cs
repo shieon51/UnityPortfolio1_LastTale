@@ -28,7 +28,7 @@ public class PortalManager : Singleton<PortalManager>
 
     private void LoadAndBuildData()
     {
-        _allPortalData = DataManager.Instance.PortalDict; // DataManager가 로드해둔 거 그냥 가져옴
+        _allPortalData = DataManager.Instance.PortalDict; // DataManager가 로드해둔 정보 가져오기
         _sceneGraph.Clear();
 
         // 2. 그래프 구축 및 참조 연결 
@@ -51,7 +51,7 @@ public class PortalManager : Singleton<PortalManager>
             }
         }
 
-        // 2-3 (보완) 씬 연결은 모든 노드가 생성된 후 수행하는 것이 안전
+        // 2-3 씬 연결은 모든 노드가 생성된 후 수행
         BuildSceneConnections();
     }
 

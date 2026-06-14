@@ -84,7 +84,7 @@ public class PoolManager : Singleton<PoolManager>
         }
     }
 
-    // 💡 맵의 구역(Zone)이 완전히 바뀔 때 호출하여 메모리 해제
+    // 맵의 구역(Zone)이 완전히 바뀔 때 호출하여 메모리 해제
     public void ClearZonePools()
     {
         foreach (var pool in zonePools.Values)

@@ -63,7 +63,7 @@ public class DialogueManager : Singleton<DialogueManager>
             print(text);
             UIManager.Instance.UpdateDialogueText(text);
 
-            // 💡 태그 파싱: #battle:Liel 이 있으면 예약!
+            // 태그 파싱: #battle:Liel 이 있으면 예약!
             foreach (string tag in story.currentTags)
             {
                 string[] args = tag.Split(':');
@@ -72,7 +72,7 @@ public class DialogueManager : Singleton<DialogueManager>
                     pendingBattleNPC = args[1]; // "Liel" 예약
                 }
             }
-            //// 태그를 읽어올 때 Split(':')을 사용하면 완벽한 함수 인자가 됩니다!
+            //// 태그를 읽어올 때 Split(':')을 사용
             //foreach (string tag in story.currentTags)
             //{
             //    string[] args = tag.Split(':');

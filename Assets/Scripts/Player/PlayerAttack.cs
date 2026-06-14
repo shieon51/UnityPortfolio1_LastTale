@@ -148,7 +148,7 @@ public class PlayerAttack : MonoBehaviour
         }
     }
 
-    // 💡 [수정됨] 촥 나갔다가 원래 관성(X, Y 모두)을 되돌려주는 대시 코루틴
+    // 순간 돌진으로 앞으로 나갔다가 원래 관성(X, Y 모두)을 되돌려주는 대시 코루틴
     private IEnumerator JuicyDashRoutine(float dir)
     {
         float elapsed = 0f;
@@ -194,10 +194,10 @@ public class PlayerAttack : MonoBehaviour
         StartCoroutine(ActiveHitboxRoutine());
     }
 
-    // 💡 0.15초 동안 매 프레임 박스를 그리며 이동 궤적의 모든 적을 벱니다!
+    // 0.15초 동안 매 프레임 박스를 그리며 이동 궤적의 모든 적을 벰
     private IEnumerator ActiveHitboxRoutine()
     {
-        float activeDuration = 0.15f; // 공격 판정이 살아있는 시간 (필요 시 조절)
+        float activeDuration = 0.15f; // 공격 판정이 살아있는 시간 
         float elapsed = 0f;
 
         // 다단히트(한 번 휘두를 때 여러 번 맞는 것) 방지용 리스트
@@ -210,22 +210,22 @@ public class PlayerAttack : MonoBehaviour
 
         while (elapsed < activeDuration)
         {
-            // 매 프레임마다 플레이어의 현재 위치를 기반으로 박스 중심점 갱신 (이동 궤적 추적!)
+            // 매 프레임마다 플레이어의 현재 위치를 기반으로 박스 중심점 갱신 (이동 궤적 추적)
             Vector2 currentOffset = offset;
             currentOffset.x *= _spriteRenderer.flipX ? -1 : 1;
             Vector2 center = (Vector2)_player.position + currentOffset;
 
             _lastHitboxCenter = center; // 기즈모 중심점 갱신
-            _showHitbox = true; // 기즈모 켜기
+            _showHitbox = true;         // 기즈모 켜기
 
             // 해당 프레임에 박스에 닿은 적 모두 추출
             Collider2D[] hits = Physics2D.OverlapBoxAll(center, size, 0f, LayerMask.GetMask("Enemy"));
 
-            bool hitSomethingThisFrame = false; // 💡 이번 프레임에 타격이 있었는지 체크
+            bool hitSomethingThisFrame = false; // 이번 프레임에 타격이 있었는지 체크
 
             foreach (var hit in hits)
             {
-                // 💡 이번 공격(휘두르기)에서 이미 때린 적은 무시! (다단히트 방지)
+                // 이번 공격(휘두르기)에서 이미 때린 적은 무시 (다단히트 방지)
                 if (!alreadyHitEnemies.Contains(hit))
                 {
                     alreadyHitEnemies.Add(hit); // 때린 목록에 추가
@@ -241,12 +241,12 @@ public class PlayerAttack : MonoBehaviour
                         Vector2 knockbackDir = (hit.transform.position - _player.position).normalized;
                         enemyStats.ApplyKnockback(knockbackDir, 5f);
 
-                        hitSomethingThisFrame = true; // 적을 썰었다!
+                        hitSomethingThisFrame = true; // 적을 타격하였음
                     }
                 }
             }
 
-            // 💡 [역경직 발동] 적을 썰어버린 프레임에 애니메이션을 잠깐 멈춤
+            // [역경직 발동] 적을 썰어버린 프레임에 애니메이션을 잠깐 멈춤
             if (hitSomethingThisFrame)
             {
                 if (_hitStopCoroutine != null) StopCoroutine(_hitStopCoroutine);
@@ -254,13 +254,13 @@ public class PlayerAttack : MonoBehaviour
             }
 
             elapsed += Time.deltaTime;
-            yield return null; // 다음 프레임으로 넘어가서 또 긁음
+            yield return null; // 다음 프레임으로 넘어가기
         }
 
         _showHitbox = false; // 판정 시간 끝나면 기즈모 끄기
-    }
+    } // ActiveHitboxRoutine 끝
 
-    // 💡 [역경직(Hit Stop) 코루틴] 화면이 멈칫하며 타격감 극대화
+    // [역경직(Hit Stop) 코루틴] 화면이 멈칫하며 타격감 극대화
     private IEnumerator HitStopRoutine(float duration)
     {
         _animator.speed = 0f; // 애니메이션 일시정지

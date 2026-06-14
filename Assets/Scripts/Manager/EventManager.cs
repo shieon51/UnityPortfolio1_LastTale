@@ -217,15 +217,19 @@ public class EventManager : Singleton<EventManager>
             }
         }
 
-        // 2. 해당 트리거가 플레이어 범위 내에 들어왔는지 확인 (범위 내로 들어왔으면 버튼 상호작용 가능)
+        // 2. 해당 트리거가 플레이어 범위 내에 들어왔는지 확인
+        // (범위 내로 들어왔으면 버튼 상호작용 가능)
         if (closest != null) 
         {
-            if (minDistance <= closest.InteractionRange) //가장 가까운 트리거 범위 내에 플레이어가 있다면
+            //가장 가까운 트리거 범위 내에 플레이어가 있다면
+            if (minDistance <= closest.InteractionRange) 
             {
                 closest.ShowInteractionButton(true);
                 canInteract = true; // 플래그 ON
 
-                if (temp != null && temp != closest) //만약 가장 가까운 트리거가 다른 것으로 변경된 경우엔 이전 것은 범위 내에 있어도 활성화 끄기
+                //만약 가장 가까운 트리거가 다른 것으로 변경된 경우엔
+                //이전 것은 범위 내에 있어도 활성화 끄기
+                if (temp != null && temp != closest) 
                 {
                     temp.ShowInteractionButton(false);
                 }
