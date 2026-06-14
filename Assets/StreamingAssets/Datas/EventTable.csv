@@ -1,8 +1,8 @@
 ﻿EventID,EventName,IsAnytime,EventDay,StartTime,EndTime,NodeName,SceneID,PositionX,PositionY,TimeTaken
-10000,NPC1,False,1,19,21,NPC1_Day1_003,2,4.00,0.00,1
-10001,NPC1,False,1,14,17,NPC1_Day1_002,2,4.00,0.00,1
-10002,NPC1,False,1,8,11,NPC1_Day1_001,2,4.00,0.00,1
-10003,NPC2,False,1,0,2,NPC2_Day1_001,1,12.86,2.00,1
+10000,Liel,False,1,19,21,Liel_Day1_003,1,7.43,2.00,1
+10001,Liel,False,1,14,17,Liel_Day1_002,1,18.00,2.00,1
+10002,Liel,False,1,8,11,Liel_Day1_001,2,2.00,0.00,1
+10003,Liel,False,2,7,12,Liel_Day2_001,2,22.00,0.00,0
 90000,Training,True,0,0,24,training,1,4.00,2.00,2
 90001,Practice,True,0,0,24,practice,1,-3.00,0.00,1
 90002,Sleep,True,0,0,24,sleep,1,-8.00,0.00,8

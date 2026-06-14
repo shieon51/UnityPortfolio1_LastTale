@@ -57,6 +57,7 @@ Animator:
   m_WriteDefaultValuesOnDisable: 0
 --- !u!212 &5086155897034054547
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -75,6 +76,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -96,9 +99,11 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 6a5d302ef70e10f47940d66bfd84f056, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -108,7 +113,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &7628004311223390980
 GameObject:
@@ -184,15 +188,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1af3bd4fe4f76ec43bc6a1fd9019f69b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 0
-  currentHealth: 0
+  level: 1
+  maxHealth: 100
+  currentHealth: 100
+  maxMana: 50
+  currentMana: 0
+  attack:
+    baseValue: 10
+  defense:
+    baseValue: 5
+  agility:
+    baseValue: 5
+  currentElement: 0
+  isGuarding: 0
+  invincibilityDuration: 0.2
   attackPower: 0
-  defense: 0
   currentState: 0
   patrolMoveSpeed: 1
   chaseMoveSpeed: 2
   detectionRange: 4
   attackRange: 1.2
+  contactDamageMultiplier: 0.5
+  actualAttackRadius: 1
 --- !u!61 &-6638461442677333706
 BoxCollider2D:
   m_ObjectHideFlags: 0

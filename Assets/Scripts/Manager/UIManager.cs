@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using TMPro;
 using UnityEditor.Rendering;
 using UnityEngine;
@@ -6,37 +6,37 @@ using UnityEngine.UI;
 
 public class UIManager : Singleton<UIManager>
 {
-    //Ã¼·Â, ¸¶³ª, °æÇèÄ¡, ÇÇ·Îµµ ¹Ù UI
-    [Header("ÇÃ·¹ÀÌ¾î State UI")]
+    //ì²´ë ¥, ë§ˆë‚˜, ê²½í—˜ì¹˜, í”¼ë¡œë„ ë°” UI
+    [Header("í”Œë ˆì´ì–´ State UI")]
     public Slider healthBar;
     public Slider manaBar;
     public Slider expBar;
-    public Slider fatigueBar;
+    public Slider specialStatBar; // * fatigueBarë¥¼ ë²”ìš©ì ì¸ ì´ë¦„ìœ¼ë¡œ ë³€ê²½í•¨
 
-    public TextMeshProUGUI healthText; // Ã¼·Â ÅØ½ºÆ®
-    public TextMeshProUGUI manaText; // ¸¶³ª ÅØ½ºÆ®
-    public TextMeshProUGUI expText; // °æÇèÄ¡ ÅØ½ºÆ®
-    public TextMeshProUGUI fatigueText; // °æÇèÄ¡ ÅØ½ºÆ®
+    public TextMeshProUGUI healthText; // ì²´ë ¥ í…ìŠ¤íŠ¸
+    public TextMeshProUGUI manaText; // ë§ˆë‚˜ í…ìŠ¤íŠ¸
+    public TextMeshProUGUI expText; // ê²½í—˜ì¹˜ í…ìŠ¤íŠ¸
+    public TextMeshProUGUI specialStatText; // (ì†Œë¼ì¸ ê²½ìš°) í”¼ë¡œë„ í…ìŠ¤íŠ¸
 
-    //½Ã°£ ÄÚÀÎ UI
-    [Header("½Ã°£ ÄÚÀÎ UI")]
+    //ì‹œê°„ ì½”ì¸ UI
+    [Header("ì‹œê°„ ì½”ì¸ UI")]
     public Transform coinParent;
     public GameObject coinPrefab;
     public TextMeshProUGUI timeText;
     public TextMeshProUGUI dayText;
-    public Color usedCoinColor = new Color(0.5f, 0, 0, 1); // °ËºÓÀº »ö
-    public Color unusedCoinColor = new Color(0, 1, 0.8f, 1); // ¹ÎÆ®»ö
+    public Color usedCoinColor = new Color(0.5f, 0, 0, 1); // ê²€ë¶‰ì€ ìƒ‰
+    public Color unusedCoinColor = new Color(0, 1, 0.8f, 1); // ë¯¼íŠ¸ìƒ‰
 
     private List<Image> coinImages = new List<Image>();
     private int totalCoins = 24;
 
-    // ´ÙÀÌ¾ó·Î±× UI
-    [Header("´ÙÀÌ¾ó·Î±× UI")]
+    // ë‹¤ì´ì–¼ë¡œê·¸ UI
+    [Header("ë‹¤ì´ì–¼ë¡œê·¸ UI")]
     public TextMeshProUGUI dialogueText;
     //private GameObject dialogPanelPrefab;
     public GameObject dialogPanel;
-    public GameObject choiceContainer;  // ¼±ÅÃÁö¸¦ ´ãÀ» ºÎ¸ğ ¿ÀºêÁ§Æ® (Canvas ¾È¿¡ ÀÖ¾î¾ß ÇÔ)
-    private GameObject choiceButtonPrefab; // ¼±ÅÃÁö ¹öÆ° ÇÁ¸®ÆÕ
+    public GameObject choiceContainer;  // ì„ íƒì§€ë¥¼ ë‹´ì„ ë¶€ëª¨ ì˜¤ë¸Œì íŠ¸ (Canvas ì•ˆì— ìˆì–´ì•¼ í•¨)
+    private GameObject choiceButtonPrefab; // ì„ íƒì§€ ë²„íŠ¼ í”„ë¦¬íŒ¹
 
 
     private void Awake()
@@ -47,27 +47,73 @@ public class UIManager : Singleton<UIManager>
 
     private void Start()
     {
-        //´ÙÀÌ¾ó·Î±× UI
+        //ë‹¤ì´ì–¼ë¡œê·¸ UI
         //dialogueText = GetComponent<TextMeshProUGUI>();
         HideDialogUI();
 
         healthText = healthBar.transform.Find("HealthText").GetComponent<TextMeshProUGUI>();
         manaText = manaBar.transform.Find("ManaText").GetComponent<TextMeshProUGUI>();
         expText = expBar.transform.Find("ExpText").GetComponent<TextMeshProUGUI>();
-        fatigueText = fatigueBar.transform.Find("FatigueText").GetComponent<TextMeshProUGUI>();
+        specialStatText = specialStatBar.transform.Find("FatigueText").GetComponent<TextMeshProUGUI>();
 
         CreateTimeCoins();
 
-        // PlayerStatsÀÇ »óÅÂ°¡ º¯ÇÒ ¶§ UI ¾÷µ¥ÀÌÆ®
-        PlayerState.Instance.OnStatsChanged += UpdateSliderUI;
-        TimeManager.Instance.OnTimeUpdated += UpdateTimeUI; // ½Ã°£ ¾÷µ¥ÀÌÆ® ÀÌº¥Æ® ¿¬°á
+        // ğŸ’¡ 1. PlayerManagerì˜ 'ìºë¦­í„° ë³€ê²½ ì´ë²¤íŠ¸'ë¥¼ êµ¬ë…í•©ë‹ˆë‹¤.
+        PlayerManager.Instance.OnCharacterPossessed += HandleCharacterChanged;
+        TimeManager.Instance.OnTimeUpdated += UpdateTimeUI;
 
-        // ½ÃÀÛÇÒ ¶§µµ UI °»½Å
-        UpdateSliderUI();
+        // í˜„ì¬ í™œì„±í™”ëœ ìºë¦­í„°ì˜ ì´ë²¤íŠ¸ë¥¼ êµ¬ë… (ì¶”í›„ ìºë¦­í„° ë³€ê²½ ì‹œ ì¬êµ¬ë… ë¡œì§ í•„ìš”)
+        if (PlayerManager.Instance.CurrentCharacter != null)
+        {
+            HandleCharacterChanged(PlayerManager.Instance.CurrentCharacter);
+        }
+        TimeManager.Instance.OnTimeUpdated += UpdateTimeUI; // ì‹œê°„ ì—…ë°ì´íŠ¸ ì´ë²¤íŠ¸ ì—°ê²°
+
+        // ì‹œì‘í•  ë•Œë„ UI ê°±ì‹ 
+        //UpdateSliderUI();
         UpdateTimeUI(TimeManager.Instance.timeCoins, TimeManager.Instance.currentDay);
     }
 
-    // ½Ã°£ ÄÚÀÎ UI »ı¼º
+    private void OnDestroy()
+    {
+        // (PlayerManagerê°€ íŒŒê´´ë˜ì§€ ì•Šê³  ì‚´ì•„ìˆì„ ë•Œë§Œ ì ‘ê·¼í•˜ë„ë¡)
+        if (PlayerManager.Instance != null)
+        {
+            PlayerManager.Instance.OnCharacterPossessed -= HandleCharacterChanged;
+
+            // í˜„ì¬ ìºë¦­í„°ì˜ ì´ë²¤íŠ¸ë„ í•´ì œ
+            UnsubscribeFromCharacter(PlayerManager.Instance.CurrentCharacter);
+        }
+    }
+
+    // 3. ìºë¦­í„°ê°€ ë³€ê²½ë  ë•Œ í˜¸ì¶œë˜ëŠ” ë¡œì§ (ì´ì „ ìºë¦­í„° êµ¬ë… í•´ì œ -> ìƒˆ ìºë¦­í„° êµ¬ë…)
+    private void HandleCharacterChanged(PlayableCharacter newCharacter)
+    {
+        // (ì£¼ì˜: ì´ì „ ìºë¦­í„° ì •ë³´ë¥¼ ê°€ì ¸ì˜¬ ìˆ˜ ìˆë„ë¡ PlayerManagerì—ì„œ ì²˜ë¦¬í•´ì¤Œ)
+        SubscribeToCharacter(newCharacter);
+        UpdateSliderUI(); // UI ì¦‰ì‹œ ê°±ì‹ 
+    }
+
+    private void SubscribeToCharacter(PlayableCharacter character)
+    {
+        if (character == null) return;
+        character.OnHealthChanged += UpdateSliderUI;
+        character.OnManaChanged += UpdateSliderUI;
+        character.OnProgressionChanged += UpdateSliderUI;
+        character.OnSpecialStatChanged += UpdateSliderUI;
+    }
+
+    private void UnsubscribeFromCharacter(PlayableCharacter character)
+    {
+        if (character == null) return;
+        character.OnHealthChanged -= UpdateSliderUI;
+        character.OnManaChanged -= UpdateSliderUI;
+        character.OnProgressionChanged -= UpdateSliderUI;
+        character.OnSpecialStatChanged -= UpdateSliderUI;
+    }
+
+
+    // ì‹œê°„ ì½”ì¸ UI ìƒì„±
     private void CreateTimeCoins()
     {
         float radius = 80f;
@@ -86,30 +132,36 @@ public class UIManager : Singleton<UIManager>
         }
     }
 
-    private void OnDestroy()
-    {
-        // ¾ÀÀÌ º¯°æµÇ°Å³ª UIManager°¡ »èÁ¦µÉ ¶§ ÀÌº¥Æ® Á¦°Å
-        if (PlayerState.Instance != null)
-        {
-            PlayerState.Instance.OnStatsChanged -= UpdateSliderUI;
-        }
-    }
-
     private void UpdateSliderUI()
     {
-        // ÇöÀç Ã¼·Â, ¸¶³ª, °æÇèÄ¡, ÇÇ·Îµµ¸¦ UI¿¡ ¹İ¿µ
-        healthBar.value = (float)PlayerState.Instance.currentHealth / PlayerState.Instance.maxHealth;
-        manaBar.value = (float)PlayerState.Instance.currentMana / PlayerState.Instance.maxMana;
-        expBar.value = (float)PlayerState.Instance.experience / PlayerState.Instance.experienceToNextLevel;
-        fatigueBar.value = (float)PlayerState.Instance.currentFatigue / PlayerState.Instance.maxFatigue;
+        PlayableCharacter currentCharacter = PlayerManager.Instance.CurrentCharacter;
+        if (currentCharacter == null) return;
 
-        healthText.text = $"{PlayerState.Instance.currentHealth}/{PlayerState.Instance.maxHealth}";
-        manaText.text = $"{PlayerState.Instance.currentMana}/{PlayerState.Instance.maxMana}";
-        expText.text = $"{PlayerState.Instance.experience}/{PlayerState.Instance.experienceToNextLevel}";
-        fatigueText.text = $"{PlayerState.Instance.currentFatigue}/{PlayerState.Instance.maxFatigue}";
+        // ê³µí†µ ìŠ¤íƒ¯ ì—…ë°ì´íŠ¸
+        healthBar.value = (float)currentCharacter.currentHealth / currentCharacter.maxHealth;
+        manaBar.value = (float)currentCharacter.currentMana / currentCharacter.maxMana;
+        expBar.value = (float)currentCharacter.experience / currentCharacter.experienceToNextLevel;
+
+        healthText.text = $"{currentCharacter.currentHealth}/{currentCharacter.maxHealth}";
+        manaText.text = $"{currentCharacter.currentMana}/{currentCharacter.maxMana}";
+        expText.text = $"{currentCharacter.experience}/{currentCharacter.experienceToNextLevel}";
+
+        // ğŸ’¡ 4. SOLID ì™„ë²½ ì¤€ìˆ˜! UIManagerëŠ” ì´ ìºë¦­í„°ê°€ ì†Œë¼ì¸ì§€ ë¦¬ì—˜ì¸ì§€ ëª¨ë¦…ë‹ˆë‹¤.
+        // ê·¸ì € "ë„ˆ íŠ¹ìˆ˜ ìŠ¤íƒ¯(í”¼ë¡œë„, ì‹ ì„±ë ¥ ë“±) ìˆì–´? ìˆìœ¼ë©´ ì¤˜!" ë¼ê³  ë¬¼ì–´ë³´ê¸°ë§Œ í•©ë‹ˆë‹¤.
+        if (currentCharacter.HasSpecialStat)
+        {
+            specialStatBar.gameObject.SetActive(true); // íŠ¹ìˆ˜ ìŠ¤íƒ¯ì´ ìˆëŠ” ìºë¦­í„°ë©´ UI ì¼œê¸°
+            specialStatBar.value = currentCharacter.SpecialStatPercentage;
+            specialStatText.text = currentCharacter.SpecialStatText;
+        }
+        else
+        {
+            specialStatBar.gameObject.SetActive(false); // ì—†ëŠ” ìºë¦­í„°ë©´ UI ë„ê¸°
+        }
+
     }
 
-    // ½Ã°£ ÄÚÀÎ UI ¾÷µ¥ÀÌÆ®
+    // ì‹œê°„ ì½”ì¸ UI ì—…ë°ì´íŠ¸
     public void UpdateTimeUI(int remainingCoins, int currentDay)
     {
         for (int i = 0; i < totalCoins; i++)
@@ -125,7 +177,7 @@ public class UIManager : Singleton<UIManager>
         dayText.text = $"Day {currentDay}";
     }
 
-    //´ÙÀÌ¾ó·Î±× Ã¢ & ¼±ÅÃÁö Ã¢ UI
+    //ë‹¤ì´ì–¼ë¡œê·¸ ì°½ & ì„ íƒì§€ ì°½ UI
     public void ShowDialogUI()
     {
         dialogPanel.SetActive(true);
@@ -152,7 +204,7 @@ public class UIManager : Singleton<UIManager>
         }
     }
 
-    // ¼±ÅÃÁö Á¤¸® (´ÙÀ½ ¼±ÅÃÁö¸¦ À§ÇØ ±âÁ¸ UI Á¦°Å)
+    // ì„ íƒì§€ ì •ë¦¬ (ë‹¤ìŒ ì„ íƒì§€ë¥¼ ìœ„í•´ ê¸°ì¡´ UI ì œê±°)
     public void ClearChoices()
     {
         foreach (Transform child in choiceContainer.transform)
