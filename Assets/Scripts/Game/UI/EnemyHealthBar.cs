@@ -41,7 +41,7 @@ public class EnemyHealthBar : MonoBehaviour
         fadeCoroutine = StartCoroutine(WaitAndFadeOut(3.0f));
     }
 
-    // 💡 몬스터를 매 프레임 부드럽게 쫓아다님
+    // 몬스터를 매 프레임 부드럽게 쫓아다님
     private void LateUpdate()
     {
         if (targetEnemy != null)
@@ -71,7 +71,7 @@ public class EnemyHealthBar : MonoBehaviour
 
         canvasGroup.alpha = 0f;
 
-        // 💡 투명해지면 스스로 PoolManager에게 반납! (메모리 절약)
+        // 투명해지면 스스로 PoolManager에게 반납 (메모리 절약)
         targetEnemy = null;
         PoolManager.Instance.ReturnToPool(gameObject);
     }

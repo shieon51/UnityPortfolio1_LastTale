@@ -12,7 +12,7 @@ public class Portal : MonoBehaviour
 
     private bool playerInRange = false;
 
-    // ★ 생성되자마자 매니저가 호출해줄 초기화 함수
+    // 생성되자마자 매니저가 호출해줄 초기화 함수
     public void Init(int id)
     {
         myPortalID = id;

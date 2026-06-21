@@ -63,7 +63,7 @@ public class DialogueManager : Singleton<DialogueManager>
             print(text);
             UIManager.Instance.UpdateDialogueText(text);
 
-            // 태그 파싱: #battle:Liel 이 있으면 예약!
+            // 태그 파싱: #battle:Liel 이 있으면 예약
             foreach (string tag in story.currentTags)
             {
                 string[] args = tag.Split(':');
@@ -116,17 +116,17 @@ public class DialogueManager : Singleton<DialogueManager>
         isTalking = false;
         UIManager.Instance.HideDialogUI();
 
-        // 💡 2. 대화가 끝나는 순간! 잉크 속의 호감도 변수를 뽑아와서 NPCManager에 전달
+        // 2. 대화가 끝나는 순간 Ink 속의 호감도 변수를 뽑아와 NPCManager에 전달
         // (잉크에 선언된 변수 이름과 동일해야 함)
         int lielFriendship = (int)story.variablesState["Liel_friendship"];
 
         NPCData lielData = NPCManager.Instance.GetNPCData("Liel");
         lielData.hiddenAffection = lielFriendship; // 덮어씌우기
-        NPCManager.Instance.SaveNPCData(lielData); // 영구 저장!
+        NPCManager.Instance.SaveNPCData(lielData); // 영구 저장
 
         OnDialogueEnd?.Invoke(curEventData); // 다이얼로그가 끝나면 실행하기
 
-        // 💡 [신규] 대화가 완전히 끝난 직후, 예약된 전투가 있다면 실행!
+        // 대화가 완전히 끝난 직후 예약된 전투가 있다면 실행
         if (!string.IsNullOrEmpty(pendingBattleNPC))
         {
             NPCManager.Instance.TriggerBossBattle(pendingBattleNPC);

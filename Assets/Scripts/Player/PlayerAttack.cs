@@ -8,9 +8,9 @@ public class PlayerAttack : MonoBehaviour
     private Animator _animator;
     private Transform _player;
     private SpriteRenderer _spriteRenderer;
-    private Rigidbody2D _rb; // 💡 Rigidbody 참조 추가
+    private Rigidbody2D _rb; // Rigidbody 참조 추가
 
-    // 이제 콜라이더 컴포넌트가 필요 없습니다! 크기와 위치 데이터만 씁니다.
+    // 공격 범위 크기, 위치 데이터
     [Header("Hitbox Settings")]
     [SerializeField] private Vector2 meleeFirstSize = new Vector2(2.6f, 1.6f);
     [SerializeField] private Vector2 meleeFirstOffset = new Vector2(-0.4f, 1.1f);
@@ -37,7 +37,7 @@ public class PlayerAttack : MonoBehaviour
     private float _originalGravity;
     private Coroutine _hitStopCoroutine; // 역경직 코루틴 관리용
 
-    // 💡 [안전장치 추가] 애니메이션 증발 버그를 막기 위한 타이머 변수
+    // 애니메이션 증발 버그를 막기 위한 타이머 변수
     //private float _attackStartTime;
     //private float _maxAttackDuration = 1.0f; // 1초 뒤 무조건 강제 초기화
 
@@ -51,13 +51,13 @@ public class PlayerAttack : MonoBehaviour
         _player = transform.parent;
         _rb = _player.GetComponent<Rigidbody2D>(); // 부모의 Rigidbody 가져오기
 
-        // 💡 게임 시작 시 캐릭터의 기본 중력값을 기억해 둡니다.
+        // 게임 시작 시 캐릭터의 기본 중력값을 기억해둠
         if (_rb != null) _originalGravity = _rb.gravityScale;
     }
 
     private void Update()
     {
-        // 💡 [안전장치(Failsafe)] 공격 중인데 1초가 넘도록 OnAttackEnd가 안 불렸다면? -> 애니가 끊긴 버그!
+        // [안전장치(Failsafe)] 공격 중인데 1초가 넘도록 OnAttackEnd가 안 불렸다면? -> 애니가 끊긴 버그
         //if (_isAttacking && Time.time > _attackStartTime + _maxAttackDuration)
         //{
         //    Debug.LogWarning("[PlayerAttack] 애니메이션이 끊겨 강제로 공격 상태를 초기화합니다!");
@@ -81,7 +81,7 @@ public class PlayerAttack : MonoBehaviour
             }
         }
 
-        // 💡 [참고용] 추후 궁극기 추가 시 예시
+        // [참고용] 추후 궁극기 추가 시 예시
         // if (Input.GetKeyDown(KeyCode.V) && GetComponentInParent<PlayerController>()._isGrounded)
         // { ... StartUltimate(); ... }
 
@@ -90,19 +90,19 @@ public class PlayerAttack : MonoBehaviour
     private void StartAttack()
     {
         _isAttacking = true;  // 공격 중 상태 설정
-        //_attackStartTime = Time.time; // 💡 시작 시간 기록
+        //_attackStartTime = Time.time; // 시작 시간 기록
 
-        // 💡 공격 시작! 슈퍼아머 장착 (넉백 무시)
+        // 공격 시작! 슈퍼아머 장착 (넉백 무시)
         if (PlayerManager.Instance.CurrentCharacter != null)
             PlayerManager.Instance.CurrentCharacter.isSuperArmor = true;
 
-        // 💡 [동시 입력 버그 방지] 공격을 시작하면, 혹시 예약되어 있던 점프 명령을 강제로 지워버림!
+        // [동시 입력 버그 방지] 공격을 시작하면 예약되어 있던 점프 명령을 강제로 지워버림
         _animator.ResetTrigger("Jump");
 
         _currentAttack++;  // 다음 공격 번호 증가 1
         _animator.Play("CloseAttack" + _currentAttack, -1, 0f);
 
-        // 💡 코루틴 대신 함수 호출
+        // 코루틴 대신 함수 호출
         ApplyAttackDash();
         
     }
@@ -111,7 +111,7 @@ public class PlayerAttack : MonoBehaviour
     {
         if (_attackQueue.Count > 0 && _currentAttack < _maxAttackNum)  // 예약된 공격이 있다면 실행
         {
-            //_attackStartTime = Time.time; // 💡 콤보 시작 시간 갱신
+            //_attackStartTime = Time.time; // 콤보 시작 시간 갱신
             _currentAttack = _attackQueue.Dequeue();
             _animator.Play("CloseAttack" + _currentAttack, -1, 0f);
 
@@ -126,11 +126,11 @@ public class PlayerAttack : MonoBehaviour
         _currentAttack = 0;
         _isAttacking = false;
 
-        // 💡 공격 종료! 슈퍼아머 해제
+        // 공격 종료. 슈퍼아머 해제
         if (PlayerManager.Instance.CurrentCharacter != null)
             PlayerManager.Instance.CurrentCharacter.isSuperArmor = false;
 
-        // 💡 공격이 끝날 때 X축 밀림 방지. (중력은 이미 코루틴에서 복구됨)
+        // 공격이 끝날 때 X축 밀림 방지. (중력은 이미 코루틴에서 복구됨)
         if (_rb != null)
         {
             _rb.linearVelocity = new Vector2(0, _rb.linearVelocity.y);
@@ -138,13 +138,13 @@ public class PlayerAttack : MonoBehaviour
         }
     }
 
-    // 💡 [버그 해결] Transform 강제 조작 대신 Rigidbody에 짧은 힘을 주어 굳는 현상 방지
+    // Transform 강제 조작 대신 Rigidbody에 짧은 힘을 주어 굳는 현상 방지
     private void ApplyAttackDash()
     {
         if (_rb != null)
         {
             float dir = _spriteRenderer.flipX ? 1f : -1f;
-            StartCoroutine(JuicyDashRoutine(dir)); // 💡 부드러운 대시 코루틴으로 교체
+            StartCoroutine(JuicyDashRoutine(dir)); // 부드러운 대시 코루틴으로 교체
         }
     }
 
@@ -178,7 +178,7 @@ public class PlayerAttack : MonoBehaviour
             yield return null;
         }
 
-        // 3. 💡 [핵심] 0.1초가 끝나면 즉시 중력을 복구하고, 아까 기억해둔 '원래 속도'를 그대로 돌려줌!
+        // 3. 0.1초가 끝나면 즉시 중력을 복구하고, 아까 기억해둔 '원래 속도'를 그대로 돌려줌!
         _rb.gravityScale = _originalGravity;
         _rb.linearVelocity = savedVelocity;
         //_rb.linearVelocity = new Vector2(0f, _rb.linearVelocity.y);
@@ -187,10 +187,10 @@ public class PlayerAttack : MonoBehaviour
     //공격 범위 콜라이더 조정
     public void EnableAttackCollider()
     {
-        // 💡 [정석] 진짜 타격이 발생하는 이 순간에 마나를 소모합니다!
+        // 진짜 타격이 발생하는 이 순간에 마나를 소모
         PlayerManager.Instance.CurrentCharacter.UseMana(_manaPerAttack);
 
-        // 💡 단발성 판정 대신, 0.15초 동안 궤적을 긁는 코루틴 실행!
+        // 단발성 판정 대신 0.15초 동안 궤적을 긁는 코루틴 실행
         StartCoroutine(ActiveHitboxRoutine());
     }
 
@@ -268,7 +268,7 @@ public class PlayerAttack : MonoBehaviour
         _animator.speed = 1f; // 정상 속도 복구
     }
 
-    // 💡 피격 코루틴 강제 정지를 위한 취소 함수 (PlayerStats 등에서 넉백/사망 시 호출 가능)
+    // 피격 코루틴 강제 정지를 위한 취소 함수 (PlayerStats 등에서 넉백/사망 시 호출 가능)
     //  -> StateMachineBehaviour나 피격 시 강제로 캔슬할 때 호출됨
     public void CancelAttack()
     {
@@ -281,7 +281,7 @@ public class PlayerAttack : MonoBehaviour
 
         StopAllCoroutines();
 
-        // 💡 [중력/속도 복구] 취소 시 멈췄던 애니메이션과 중력을 모두 돌려놓음
+        // [중력/속도 복구] 취소 시 멈췄던 애니메이션과 중력을 모두 돌려놓음
         _animator.speed = 1f;
         if (_rb != null)
         {
@@ -298,10 +298,10 @@ public class PlayerAttack : MonoBehaviour
     }
 
 #if UNITY_EDITOR
-    // 💡 OnDrawGizmosSelected: 하이어라키에서 이 오브젝트를 클릭했을 때만 씬 창에 그려집니다!
+
     private void OnDrawGizmosSelected()
     {
-        // 게임 실행 전(Edit Mode)에는 _player 변수가 세팅되지 않았으므로 부모 위치를 직접 찾습니다.
+        // 게임 실행 전(Edit Mode)에는 _player 변수가 세팅되지 않았으므로 부모 위치를 직접 찾기
         Vector3 basePosition = transform.parent != null ? transform.parent.position : transform.position;
 
         // 현재 에디터 상에서 캐릭터가 왼쪽을 보고 있는지(flipX) 확인
@@ -319,7 +319,7 @@ public class PlayerAttack : MonoBehaviour
         Gizmos.DrawWireCube(center2, meleeSecondSize);
     }
 
-    // 💡 기존에 있던 OnDrawGizmos (게임 실행 중에 진짜 타격 순간에만 켜지는 빨간 박스)
+    // 기존에 있던 OnDrawGizmos (게임 실행 중에 진짜 타격 순간에만 켜지는 빨간 박스)
     private void OnDrawGizmos()
     {
         if (_showHitbox)

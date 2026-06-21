@@ -33,7 +33,7 @@ public class EventManager : Singleton<EventManager>
     private Transform player;
     private GameObject eventTriggerPrefab;
 
-    // 💡 [트리거 관리 풀]
+    // [트리거 관리 풀]
     private List<EventTrigger> activeTriggers = new List<EventTrigger>(); // 최대 10개까지만 관리
     private List<EventTrigger> dynamicTriggers = new List<EventTrigger>(); // NPC들이 씬에 나타나면 스스로 등록하는 리스트
 
@@ -50,7 +50,7 @@ public class EventManager : Singleton<EventManager>
         InitializeBehaviors(); // 행동 전략 초기화
     }
 
-    // 💡 나중에 새로운 이벤트가 생기면 이 곳에 한 줄만 추가하면 됨! ***
+    // 나중에 새로운 이벤트가 생기면 이 곳에 한 줄만 추가하면 됨 ***
     private void InitializeBehaviors()
     {
         eventBehaviors = new Dictionary<int, IEventBehavior>
@@ -82,7 +82,7 @@ public class EventManager : Singleton<EventManager>
         {
             Debug.Log($"상호작용 시작: {closest.eventData.EventName}");
 
-            // 💡 [신규] 상호작용 대상이 NPC라면 대화가 시작되었다고 알림!
+            // 상호작용 대상이 NPC라면 대화가 시작되었다고 알림
             if (closest.eventData.EventID >= (int)EventID.NPC && closest.eventData.EventID < 90000)
             {
                 NPCManager.Instance.StartNPCDialogue(closest.eventData.EventName);
@@ -106,7 +106,7 @@ public class EventManager : Singleton<EventManager>
         }
     }
 
-    // 💡 [신규] NPC가 스폰될 때 이 함수를 불러서 자기를 리스트에 넣음
+    // NPC가 스폰될 때 이 함수를 불러서 자기를 리스트에 넣음
     public void RegisterDynamicTrigger(EventTrigger trigger)
     {
         if (!dynamicTriggers.Contains(trigger))
@@ -115,7 +115,7 @@ public class EventManager : Singleton<EventManager>
         }
     }
 
-    // 💡 [신규] NPC가 맵에서 사라지거나 죽을 때 리스트에서 뺌
+    // NPC가 맵에서 사라지거나 죽을 때 리스트에서 뺌
     public void UnregisterDynamicTrigger(EventTrigger trigger)
     {
         if (dynamicTriggers.Contains(trigger))
@@ -134,7 +134,7 @@ public class EventManager : Singleton<EventManager>
         // 현재 씬에서 유효한 이벤트 필터링
         List<EventData> validEvents = new List<EventData>();
 
-        // 💡 [신규] NPC 전용 리스트 분리
+        // NPC 전용 리스트 분리
         List<EventData> validNPCEvents = new List<EventData>();
 
         // 2. 이벤트 데이터 순회
@@ -150,13 +150,13 @@ public class EventManager : Singleton<EventManager>
                 }
                 else
                 {
-                    // NPC가 아닌 일반 이벤트(수련, 잠자기 등)는 기존처럼 풀링 리스트에 추가합니다.
+                    // NPC가 아닌 일반 이벤트(수련, 잠자기 등)는 기존처럼 풀링 리스트에 추가
                     validEvents.Add(eventEntry);
                 }
             }
         }
 
-        // 💡 [핵심] NPC 배치는 NPCManager에게 통째로 위임합니다! (단일 책임 원칙 완벽 준수)
+        // NPC 배치는 NPCManager에게 위임
         if (NPCManager.Instance != null)
         {
             NPCManager.Instance.UpdateNPCsOnMap(validNPCEvents);
@@ -199,7 +199,7 @@ public class EventManager : Singleton<EventManager>
         // 매 프레임 초기화
         canInteract = false;
 
-        // 1. 정적 이벤트(activeTriggers) + 동적 NPC 이벤트(dynamicTriggers) 모두 검사!
+        // 1. 정적 이벤트(activeTriggers) + 동적 NPC 이벤트(dynamicTriggers) 모두 검사
         List<EventTrigger> allTriggers = new List<EventTrigger>();
         allTriggers.AddRange(activeTriggers);
         allTriggers.AddRange(dynamicTriggers); // 합쳐서 검사
@@ -249,13 +249,13 @@ public class EventManager : Singleton<EventManager>
         }
     }
 
-    //Dialogue가 끝났을 때 Invoke되는 함수 ++ OCP 위배인듯. 수정 필요
+    //Dialogue가 끝났을 때 Invoke되는 함수
     public void EventResult(EventData eventData)
     {
-        // 💡 시간 코인 소모 로직을 GameMode에게 위임! (1부면 코인 소모, 2부면 행동력 소모)
+        // 시간 코인 소모 로직을 GameMode에게 위임! (1부면 코인 소모, 2부면 행동력 소모)
         GameManager.Instance.CurrentGameMode.ConsumeResourceForEvent(eventData.TimeTaken);
 
-        // 💡 [신규] 대화가 끝난 게 NPC라면 대화 종료 알림!
+        // 대화가 끝난 게 NPC라면 대화 종료 알림
         if (eventData.EventID >= (int)EventID.NPC && eventData.EventID < 90000)
         {
             NPCManager.Instance.EndNPCDialogue(eventData.EventName);

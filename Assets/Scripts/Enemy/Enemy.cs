@@ -39,7 +39,7 @@ public class Enemy : CharacterStats
     protected Animator animator;
     protected SpriteRenderer spriteRenderer;
 
-    // 💡 더 이상 자식 컴포넌트가 아니라, 풀에서 빌려온 체력바를 기억하는 변수
+    // 풀에서 빌려온 체력바를 기억하는 변수
     protected EnemyHealthBar activeHealthBar;
 
     protected bool isMoving = false;
@@ -53,19 +53,18 @@ public class Enemy : CharacterStats
 
     }
 
-    // 💡 이 Start 함수를 새로 추가해 주세요!
     //protected virtual void Start()
     //{
     //    if (enemyHealthBar != null)
     //    {
-    //        enemyHealthBar.Init(maxHealth); // 슬라이더의 최대치를 몬스터의 MaxHP로 설정!
+    //        enemyHealthBar.Init(maxHealth); // 슬라이더의 최대치를 몬스터의 MaxHP로 설정
     //        enemyHealthBar.HideImmediate(); // 시작할 때는 숨겨둠
     //    }
     //}
 
     //protected virtual void Update()
     //{
-    //    // 💡 부모(CharacterStats)의 넉백 상태를 확인! 넉백 중엔 AI 정지!
+    //    // 부모(CharacterStats)의 넉백 상태를 확인. 넉백 중엔 AI 정지
     //    if (isKnockedBack) return;
     //    // Die 상태일 때는 업데이트 처리 하지 않기
     //    if (currentState == EnemyState.Die) return;
@@ -80,13 +79,13 @@ public class Enemy : CharacterStats
         HandleAI();
     }
 
-    // 💡 자식 클래스(Slime 등)가 반드시 구현해야 할 AI 로직
+    // 자식 클래스(Slime 등)가 반드시 구현해야 할 AI 로직
     protected virtual void HandleAI()
     {
         // 빈 껍데기. 슬라임이나 보스가 오버라이드해서 사용.
     }
 
-    // 💡 1. 접촉 데미지 (모든 몬스터 공통)
+    // 1. 접촉 데미지 (모든 몬스터 공통)
     protected virtual void OnCollisionStay2D(Collision2D collision)
     {
         if (currentState == EnemyState.Die) return; // 죽었으면 데미지 안줌
@@ -113,14 +112,13 @@ public class Enemy : CharacterStats
         }
     }
 
-    // 💡 2. 데미지 받았을 때 처리 (CharacterStats 오버라이드)
-    // float 대신 부모와 동일한 int를 사용합니다!
+    // 2. 데미지 받았을 때 처리 (CharacterStats 오버라이드)
     public override void TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal)
     {
         int preHealth = currentHealth; // 맞기 전 체력 기억
         base.TakeDamage(incomingDamage, attackElement); // 부모의 데미지 계산 및 UI 갱신 로직
 
-        // 💡 [버그 수정] 체력이 진짜로 깎였을 때만 (무적시간 통과 시에만) 처리
+        // 체력이 진짜로 깎였을 때만 (무적시간 통과 시에만) 처리
         if (currentHealth < preHealth)
         {
             // 1. 체력바 풀링 요청 및 갱신

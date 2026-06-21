@@ -13,7 +13,7 @@ public class DataManager : Singleton<DataManager>
     private void Awake()
     {
         // Manager들 중 가장 먼저 초기화되어야 하므로 Script Execution Order에서 우선순위를 높이거나,
-        // Boot 씬에서 명시적으로 호출하는 것이 좋습니다.
+        // Boot 씬에서 명시적으로 호출하는 것이 좋을 듯
         LoadAllData();
     }
 

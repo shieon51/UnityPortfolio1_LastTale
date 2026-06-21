@@ -93,7 +93,7 @@ public class EventMarkerEditor : Editor
         GUILayout.Label($"Target: {fileName}.ink\nFolder: {folderName}", style);
     }
 
-    // ★★★ [기능 추가] main.ink에 INCLUDE 구문 추가하는 함수 ★★★
+    // main.ink에 INCLUDE 구문 추가하는 함수
     private void AddToMainInk(string folderName, string fileName)
     {
         // main.ink 경로 (Assets/Datas/main.ink)

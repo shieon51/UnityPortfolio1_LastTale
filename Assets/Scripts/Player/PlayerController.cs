@@ -4,14 +4,14 @@ using static UnityEngine.Rendering.DebugUI;
 
 public class PlayerController : MonoBehaviour
 {
-    public float TIRED_RUN_SPEED = 1f; //피곤한 상태일 시 
+    public float TIRED_RUN_SPEED = 1f; // 피곤한 상태일 시 
     public float DEFALT_RUN_SPEED = 3f;
     public float DEFALT_DASH_SPEED = 6f;
 
-    public float CurRunSpeed; //걷기
-    public float CurDashSpeed; //뛰기
+    public float CurRunSpeed; // 걷기
+    public float CurDashSpeed; // 뛰기
 
-    public float JumpForce = 10f; //점프 파워
+    public float JumpForce = 10f; // 점프 파워
     //public float FallJumpMultiplier = 2.5f;
     //public float LowJumpMultiplier = 2.0f;
     public float GroundCheckDistance = 0.2f;  // 낭떠러지 감지 거리
@@ -27,9 +27,9 @@ public class PlayerController : MonoBehaviour
     private CapsuleCollider2D _playerHitbox;
 
     private bool _isDash;
-    private bool _isGrounded;  //땅에 닿아있는 상태인지
-    private bool _isAscending = false; //최고점 도달했는지
-    private bool _goToUnder = false; //아래 지형 이동키 눌렀을 시
+    private bool _isGrounded;  // 땅에 닿아있는 상태인지
+    private bool _isAscending = false; // 최고점 도달했는지
+    private bool _goToUnder = false; // 아래 지형 이동키 눌렀을 시
 
     private GameObject _groundPrefab;
     
@@ -60,7 +60,7 @@ public class PlayerController : MonoBehaviour
         // 매 프레임 캐릭터 상태(소라의 피로도)를 확인하여 이속 갱신
         CheckFatigueStatus();
 
-        // 💡 넉백 중일 때는 이동 및 점프 로직 무시!
+        // 넉백 중일 때는 이동 및 점프 로직 무시
         if (PlayerManager.Instance.CurrentCharacter != null &&
             PlayerManager.Instance.CurrentCharacter.isKnockedBack)
             return;
@@ -133,12 +133,12 @@ public class PlayerController : MonoBehaviour
 
     private void Jump()
     {
-        //대화중인 경우에는 움직이지 못하도록
+        // 대화중인 경우에는 움직이지 못하도록
         if (DialogueManager.Instance.IsTalking) return;
-        //공격 중이라면 점프 못하게
+        // 공격 중이라면 점프 못하게
         if (_playerAttack._isAttacking) return; 
 
-        //점프 애니메이션
+        // 점프 애니메이션
         if (Input.GetKeyDown(KeyCode.LeftControl) && _isGrounded)
         {
             _animator.SetTrigger("Jump");
@@ -153,15 +153,15 @@ public class PlayerController : MonoBehaviour
 
     private void GoUnderGround()
     {
-        //대화중인 경우에는 움직이지 못하도록
+        // 대화중인 경우에는 움직이지 못하도록
         if (DialogueManager.Instance.IsTalking) return;
 
-        //아래 지형으로 내려가기
+        // 아래 지형으로 내려가기
         if (Input.GetKeyDown(KeyCode.DownArrow) && _isGrounded)
         {
             _goToUnder = true;
 
-            // 잠시 후에 다시 충돌을 활성화
+            // 잠시 후에 다시 충돌 활성화
             StartCoroutine(ResetColliderTrigger());
         }
     }
@@ -192,22 +192,22 @@ public class PlayerController : MonoBehaviour
         rightHit = Physics2D.Raycast(pos, Vector2.down, GroundCheckDistance, LayerMask.GetMask("Ground"));
 
         bool isHit = false;
-        if (!_goToUnder) //지형 아래로 내려가는 중이 아닐 때 -> ray 충돌 확인
+        if (!_goToUnder) // 지형 아래로 내려가는 중이 아닐 때 -> ray 충돌 확인
         {
             isHit |= leftHit.collider != null;
             isHit |= rightHit.collider != null;
         }
 
-        if (!_isGrounded && isHit) //착지한 경우
+        if (!_isGrounded && isHit) // 착지한 경우
         {
             _animator.SetBool("IsGrounded", true);
         }
-        if (_isGrounded && !isHit) //낭떠러지인 경우
+        if (_isGrounded && !isHit) // 낭떠러지인 경우
         {
             if (_rigidbody.linearVelocityY <= 0)
                 _animator.SetBool("IsAscending", false);
         }
-        if (!_isGrounded) //땅에 있지 않을 때
+        if (!_isGrounded) // 땅에 있지 않을 때
         {
             if (_isAscending && _rigidbody.linearVelocityY < 0)
             {
@@ -234,14 +234,13 @@ public class PlayerController : MonoBehaviour
 
     private void Move()
     {
-        //대화중인 경우에는 움직이지 못하도록
+        // 대화중인 경우에는 움직이지 못하도록
         if (DialogueManager.Instance.IsTalking) return;
 
-        // 💡 1. 넉백(경직) 중이거나 공격 중이면 키보드 입력 완벽 무시!
+        // 1. 넉백(경직) 중이거나 공격 중이면 키보드 입력 완벽 무시!
         if (PlayerManager.Instance.CurrentCharacter.isKnockedBack || _playerAttack._isAttacking) return;
 
-        // 💡 [핵심 버그 수정] 서서히 줄어드는 GetAxis 대신, 
-        // 즉각 0으로 떨어지는 GetAxisRaw를 써야 의도치 않은 브레이크를 막습니다!
+        // ** 서서히 줄어드는 GetAxis 대신, 바로 0으로 떨어지는 GetAxisRaw를 써야 의도치 않은 브레이크를 막을 수 있음
         _horizontalInput = Input.GetAxisRaw("Horizontal");  //GetAxis
         _isDash = _isGrounded ? Input.GetKey(KeyCode.LeftShift) : _isDash; //(점프 동작 중에는 마지막 대시 상태를 넘기기)
 
@@ -260,7 +259,7 @@ public class PlayerController : MonoBehaviour
         //이동
         float moveSpeed = _isDash ? CurDashSpeed : CurRunSpeed;
 
-        // 💡 2. 완벽한 공중 관성 & 에어 컨트롤 로직
+        // 2. 공중 관성 & 에어 컨트롤 로직
         if (_isGrounded)
         {
             // 땅에서는 즉시 움직이고 멈춤
@@ -272,15 +271,15 @@ public class PlayerController : MonoBehaviour
             if (_horizontalInput != 0)
             {
                 // 방향키를 누르면 원래 날아가던 관성에 '유저의 이동 의지'를 부드럽게 섞어줌 (Air Strafe)
-                // 강제로 덮어씌우지 않으므로 넉백 중 키를 눌러도 뚝 떨어지지 않음!
+                // (강제로 덮어씌우지 않으므로 넉백 중 키를 눌러도 뚝 떨어지지 않음) ==> 아직 문제 있어 수정중.
                 float targetSpeed = _horizontalInput * moveSpeed;
                 float newX = Mathf.MoveTowards(_rigidbody.linearVelocity.x, targetSpeed, 15f * Time.deltaTime);
                 _rigidbody.linearVelocity = new Vector2(newX, _rigidbody.linearVelocity.y);
             }
             else
             {
-                // 💡 [해결] 키보드에서 손을 떼면? 아무것도 안 함! 
-                // 물리 엔진이 알아서 원래 넉백 힘(포물선) 그대로 쭈욱 날아가게 냅둡니다.
+                // 키보드에서 손을 떼면 아무것도 안 함
+                // 물리 엔진이 알아서 원래 넉백 힘(포물선) 그대로 날아가게 냅둠.
             }
         }
     }

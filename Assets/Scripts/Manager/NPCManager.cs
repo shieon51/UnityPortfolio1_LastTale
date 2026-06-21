@@ -8,19 +8,19 @@ public class NPCManager : Singleton<NPCManager>
     private Dictionary<string, NPCData> npcDataDict = new Dictionary<string, NPCData>();
 
 
-    // 💡 2. 씬 내에서 껐다 켜기 위한 껍데기(프리팹) 보관소
+    // 씬 내에서 껐다 켜기 위한 껍데기(프리팹) 보관소
     private Dictionary<string, GameObject> npcPool = new Dictionary<string, GameObject>();
 
     private void Awake()
     {
-        // 나중에는 여기서 Save 파일 데이터를 불러와서 npcDataDict에 덮어씌웁니다.
-        // 지금은 세이브 기능이 없으니 임시로 초기 데이터를 세팅합니다.
+        // 나중에는 여기서 Save 파일 데이터를 불러와서 npcDataDict에 덮어씌울 것.
+        // 현재 세이브 기능이 없으니 임시로 초기 데이터 세팅
         InitializeDefaultNPCData();
     }
 
     private void InitializeDefaultNPCData()
     {
-        // 💡 게임에 등장하는 모든 NPC의 초기 상태를 등록해 둡니다.
+        // 게임에 등장하는 모든 NPC의 초기 상태를 등록
         npcDataDict.Add("Liel", new NPCData("Liel"));
         //npcDataDict.Add("Diaber", new NPCData("Diavalu"));
         //npcDataDict.Add("Gaon", new NPCData("Gaon"));
@@ -52,7 +52,7 @@ public class NPCManager : Singleton<NPCManager>
     }
 
     // =========================================================
-    // 💡 [핵심] EventManager에게서 위임받은 NPC 스폰 & 배치 기능 (필요한 애들만 업데이트)
+    // EventManager에게서 위임받은 NPC 스폰 & 배치 기능 (필요한 애들만 업데이트)
     // =========================================================
     public void UpdateNPCsOnMap(List<EventData> activeNPCEvents)
     {
@@ -60,7 +60,7 @@ public class NPCManager : Singleton<NPCManager>
         HashSet<string> activeNames = new HashSet<string>();
         foreach (var data in activeNPCEvents) activeNames.Add(data.EventName);
 
-        // 2. 이번 타임에 없는 NPC만 풀에서 꺼버림 (살아남을 애들은 안 건드림!)
+        // 2. 이번 타임에 없는 NPC만 풀에서 꺼버림 (살아남을 애들은 안 건드림)
         foreach (var kvp in npcPool)
         {
             if (!activeNames.Contains(kvp.Key) && kvp.Value != null)
@@ -79,7 +79,7 @@ public class NPCManager : Singleton<NPCManager>
     private void SpawnOrUpdateNPC(EventData data)
     {
         GameObject npcObj = null;
-        bool isAlreadyActive = false; // 💡 현재 켜져 있는지 확인용
+        bool isAlreadyActive = false; // 현재 켜져 있는지 확인용
 
         if (npcPool.TryGetValue(data.EventName, out npcObj) && npcObj != null)
         {
@@ -97,9 +97,9 @@ public class NPCManager : Singleton<NPCManager>
         NPC npcScript = npcObj.GetComponent<NPC>();
 
         // -----------------------------------------------------
-        // 💡 [버그 해결] 스마트 연속 이벤트 처리
+        // 스마트 연속 이벤트 처리:
         // 이미 씬에 켜져 있고 위치가 동일하면, 
-        // 절대 Transform을 건드리지 않고 대사만 주입하고 끝냅니다!
+        // Transform을 건드리지 않고 대사만 주입하기
         // -----------------------------------------------------
         if (isAlreadyActive && npcScript != null && Vector2.Distance(npcScript.originalCsvPos, data.Position) < 0.1f)
         {
@@ -107,9 +107,7 @@ public class NPCManager : Singleton<NPCManager>
             return;
         }
 
-        // -----------------------------------------------------
         // 이하 위치 갱신 및 바닥 스냅 로직 (장소가 바뀌었거나 첫 스폰일 때만)
-        // -----------------------------------------------------
         npcObj.transform.position = data.Position;
         npcObj.SetActive(true);
 
@@ -120,13 +118,13 @@ public class NPCManager : Singleton<NPCManager>
         }
 
 
-        // 💡 [바닥 자동 안착 시스템] (완벽 보정판)
+        // 바닥 자동 안착 기능
         float startOffset = 1.0f;
         float rayDistance = 3.0f;
         Vector2 rayStart = data.Position + Vector2.up * startOffset;
 
         RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, rayDistance, LayerMask.GetMask("Ground"));
-        Debug.DrawRay(rayStart, Vector2.down * rayDistance, Color.magenta, 5f); // NPC는 눈에 띄게 보라색 레이저
+        Debug.DrawRay(rayStart, Vector2.down * rayDistance, Color.magenta, 5f); // NPC는 보라색 레이저로 표시
 
         if (hit.collider != null)
         {
@@ -144,7 +142,7 @@ public class NPCManager : Singleton<NPCManager>
         }
     }
 
-    // 💡 [신규] EventManager에서 호출할 대화 연결 함수
+    // EventManager에서 호출할 대화 연결 함수
     public void StartNPCDialogue(string npcName)
     {
         if (npcPool.TryGetValue(npcName, out GameObject npcObj) && npcObj != null)
@@ -163,7 +161,7 @@ public class NPCManager : Singleton<NPCManager>
         }
     }
 
-    // 💡 [참고] 나중에 보스전 진입 시, EventManager가 아니라 여기서 처리하는 게 맞습니다!
+    // 나중에 보스전 진입 시 처리 (다이얼로그 매니저에서 호출)
     public void TriggerBossBattle(string targetNpcName)
     {
         NPCData targetData = GetNPCData(targetNpcName);
@@ -176,11 +174,11 @@ public class NPCManager : Singleton<NPCManager>
             {
                 npcScript.SwitchToAttackMode(); // NPC를 공격 모드로 전환
 
-                // 💡 [임시 구현] 전투 시작 시 강제로 거리를 벌려줌 (카메라 연출용)
-                // 실제로는 맵마다 지정된 '보스전 시작 위치(Transform)'를 가져다 쓰는 것이 좋습니다.
+                // ** [임시 구현] 전투 시작 시 강제로 거리를 벌려줌 (카메라 연출용)
+                // (실제로는 맵마다 지정된 '보스전 시작 위치(Transform)'를 가져다 쓸 예정)
                 Transform player = PlayerManager.Instance.CurrentCharacter.transform;
 
-                // 플레이어는 원래 위치, 보스는 플레이어 기준 오른쪽으로 5칸 뒤로 순간이동!
+                // 플레이어는 원래 위치, 보스는 플레이어 기준 오른쪽으로 5칸 뒤로 순간이동
                 Vector2 bossStartPos = new Vector2(player.position.x + 5f, player.position.y);
 
                 // NPC 위치 보정 (바닥 레이캐스트 재활용)

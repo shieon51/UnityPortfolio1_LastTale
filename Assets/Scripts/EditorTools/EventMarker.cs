@@ -26,7 +26,7 @@ public class EventMarker : MonoBehaviour
     public int SceneID;
     public int TimeTaken = 1;
 
-    // ★★★ [추가된 부분] 게임 시작 시 자동 삭제 ★★★
+    // 게임 시작 시 자동 삭제 
     private void Awake()
     {
         // 게임 플레이 모드라면? -> 나(마커)는 필요 없으니 사라진다!
