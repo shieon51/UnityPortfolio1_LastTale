@@ -13,7 +13,7 @@ public class SoraStats : PlayableCharacter
     public int timeCrystals = 0;
 
 
-    // 💡 SOLID 구현: 소라의 특수 스탯은 '피로도'임을 UI에게 알려줌
+    // 소라의 특수 스탯은 '피로도'임을 UI에게 알려줌
     public override bool HasSpecialStat => true;
     public override float SpecialStatPercentage => (float)currentFatigue / maxFatigue;
     public override string SpecialStatText => $"{currentFatigue}/{maxFatigue}";
@@ -76,7 +76,7 @@ public class SoraStats : PlayableCharacter
         if (currentMental < 30) Debug.Log("[소라] 정신력 붕괴! 환영이 보입니다.");
     }
 
-    // 💡 2번: 피로도 관련 함수
+    // 2번: 피로도 관련 함수
     public void IncreaseFatigue(int amount)
     {
         currentFatigue = Mathf.Min(maxFatigue, currentFatigue + amount);

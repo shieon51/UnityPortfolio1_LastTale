@@ -58,7 +58,7 @@ public class UIManager : Singleton<UIManager>
 
         CreateTimeCoins();
 
-        // 💡 1. PlayerManager의 '캐릭터 변경 이벤트'를 구독합니다.
+        // 1. PlayerManager의 '캐릭터 변경 이벤트'를 구독
         PlayerManager.Instance.OnCharacterPossessed += HandleCharacterChanged;
         TimeManager.Instance.OnTimeUpdated += UpdateTimeUI;
 
@@ -146,8 +146,7 @@ public class UIManager : Singleton<UIManager>
         manaText.text = $"{currentCharacter.currentMana}/{currentCharacter.maxMana}";
         expText.text = $"{currentCharacter.experience}/{currentCharacter.experienceToNextLevel}";
 
-        // 💡 4. SOLID 완벽 준수! UIManager는 이 캐릭터가 소라인지 리엘인지 모릅니다.
-        // 그저 "너 특수 스탯(피로도, 신성력 등) 있어? 있으면 줘!" 라고 물어보기만 합니다.
+        // 4. UIManager는 해당 캐릭터의 특수 스탯을 넘겨줌
         if (currentCharacter.HasSpecialStat)
         {
             specialStatBar.gameObject.SetActive(true); // 특수 스탯이 있는 캐릭터면 UI 켜기

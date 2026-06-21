@@ -14,7 +14,7 @@ public class Liel_Attack1State : NPCState
     public override void Enter()
     {
         attackTimer = 0f;
-        liel.canRotate = false; // 💡 공격 시작 시 방향 전환 잠금!
+        liel.canRotate = false; // 공격 시작 시 방향 전환 잠금
         animator.SetTrigger("Attack1");
 
         Debug.Log("[Liel] 소라에게 근접 공격 1 시전!");
@@ -29,7 +29,7 @@ public class Liel_Attack1State : NPCState
         {
             //liel.StateMachine.ChangeState(new Liel_BattleIdleState(liel, animator, player));
 
-            // 💡 바로 Idle로 가는 게 아니라 '회복(Recovery)' 상태로 가서 멍 때림 추가
+            // 바로 Idle로 가는 게 아니라 '회복(Recovery)' 상태로 가기
             liel.StateMachine.ChangeState(new Liel_RecoveryState(liel, animator, player, 0.8f));
         }
     }

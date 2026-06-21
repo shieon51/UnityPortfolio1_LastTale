@@ -5,7 +5,7 @@ using System;
 using UnityEngine.SceneManagement;
 using System.IO;
 
-/* SceneLoader - 현재 씬에 맞춰 맵 Scene을 로드*/
+/* SceneLoader - 현재 씬에 맞춰 맵 Scene을 로드 */
 
 public class SceneLoader : Singleton<SceneLoader>
 {
@@ -17,7 +17,7 @@ public class SceneLoader : Singleton<SceneLoader>
 
     private void Awake()
     {
-        //LoadSceneData();   // 씬 id : 씬 이름 대응 정보 불러오기
+        //LoadSceneData();   // 씬 id: 씬 이름 대응 정보 불러오기
     }
 
     private void Start()

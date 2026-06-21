@@ -34,10 +34,10 @@ public class CharacterStats : MonoBehaviour
     public event Action OnHealthChanged;
     public event Action OnManaChanged;
 
-    // 💡 넉백 상태인지 확인하는 변수 추가
+    // 넉백 상태인지 확인하는 변수 추가
     public bool isKnockedBack { get; protected set; } = false;
 
-    // 💡 슈퍼아머 변수 추가 (공격 중일 때 true가 됨) -> 공격 모션 중에는 대미지는 받되 밀려나지 않는 상태
+    // 슈퍼아머 변수 추가 (공격 중일 때 true가 됨) -> 공격 모션 중에는 대미지는 받되 밀려나지 않는 상태
     public bool isSuperArmor = false;
 
     protected virtual void Awake()
@@ -48,10 +48,10 @@ public class CharacterStats : MonoBehaviour
 
     public virtual void TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal)
     {
-        // 💡 무적 시간 체크: 마지막 맞은 시간 + 무적 시간보다 현재 시간이 커야만 데미지 인정
+        // 무적 시간 체크: 마지막 맞은 시간 + 무적 시간보다 현재 시간이 커야만 데미지 인정
         if (Time.time < lastHitTime + invincibilityDuration)
         {
-            return; // 무적 시간 중이면 데미지 무시!
+            return; // 무적 시간 중이면 데미지 무시
         }
 
         lastHitTime = Time.time; // 마지막 맞은 시간 갱신
@@ -110,7 +110,7 @@ public class CharacterStats : MonoBehaviour
 
     public virtual void ApplyKnockback(Vector2 direction, float knockbackPower, float knockbackTime = 0.2f)
     {
-        if (isSuperArmor) return; // 💡 슈퍼아머(공격중)면 넉백 무시!
+        if (isSuperArmor) return; // 슈퍼아머(공격중)면 넉백 무시
 
         StartCoroutine(KnockbackRoutine(direction, knockbackPower, knockbackTime));
     }
@@ -130,7 +130,7 @@ public class CharacterStats : MonoBehaviour
 
             yield return new WaitForSeconds(duration);
 
-            // 밀려난 후 미끄러짐 방지 (Y축 중력은 유지!)
+            // 밀려난 후 미끄러짐 방지 (Y축 중력은 유지)
             //if (rb != null) rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
 
             isKnockedBack = false;

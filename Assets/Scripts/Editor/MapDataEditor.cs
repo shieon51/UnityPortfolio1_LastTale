@@ -199,7 +199,7 @@ public class MapDataEditor : EditorWindow
     }
 
     // =================================================================================
-    // [탭 2] NPC 스케줄표 (요청하신 기능 복구!)
+    // [탭 2] NPC 스케줄표 
     // =================================================================================
     private void DrawScheduleTab()
     {
@@ -277,7 +277,7 @@ public class MapDataEditor : EditorWindow
         string currentSceneName = EditorSceneManager.GetActiveScene().name;
         int currentID = GetSceneIDByName(currentSceneName);
 
-        // 2. ★ 변경사항이 있는지 검사 (Smart Check) ★
+        // 2. 변경사항이 있는지 검사 (Smart Check)
         bool isDirty = IsCurrentSceneDirty(currentID);
 
         // 3. 변경사항이 있을 때만 물어봄

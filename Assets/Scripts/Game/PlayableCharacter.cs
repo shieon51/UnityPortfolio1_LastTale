@@ -21,7 +21,7 @@ public abstract class PlayableCharacter : CharacterStats
     //public event Action<int> OnFatigueChanged; // 피로도 변화 이벤트 -> PlayerController에서 확인(이동속도 감소)
 
 
-    // 💡 SOLID를 위한 범용 특수 스탯(피로도, 신성력 등) 프로퍼티 정의
+    // 범용 특수 스탯(피로도, 신성력 등) 프로퍼티 정의
     // 자식 클래스(SoraStats, LielStats)가 무조건 이 값을 어떻게 줄지 정의해야 함
     public abstract bool HasSpecialStat { get; }
     public abstract float SpecialStatPercentage { get; }

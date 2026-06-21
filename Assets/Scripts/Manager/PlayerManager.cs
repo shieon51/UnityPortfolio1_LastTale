@@ -40,7 +40,7 @@ public class PlayerManager : Singleton<PlayerManager>
             CurrentCharacter.OnPossessed();
             SetCharacterControl(CurrentCharacter, true); // 조작 활성화
 
-            // UI 매니저 등에게 캐릭터가 바뀌었다고 알림!
+            // UI 매니저 등에게 캐릭터가 바뀌었다고 알림
             OnCharacterPossessed?.Invoke(CurrentCharacter);
             Debug.Log($"현재 플레이 캐릭터가 {CurrentCharacter.gameObject.name}(으)로 변경되었습니다.");
         }
@@ -56,9 +56,9 @@ public class PlayerManager : Singleton<PlayerManager>
         var attack = character.GetComponentInChildren<PlayerAttack>();
         if (attack != null) attack.enabled = isPlayer;
 
-        // 나중에 추가할 NPC 전용 AI 스크립트(예: BossFSM)는 플레이어일 땐 꺼야 함!
+        // 나중에 추가할 NPC 전용 AI 스크립트(예: BossFSM)는 플레이어일 땐 꺼야 함
         // var ai = character.GetComponent<BossAI>();
-        // if (ai != null) ai.enabled = !isPlayer; // 조종 중일 땐 AI 끄기, 조종 안할 땐 AI 켜기!
+        // if (ai != null) ai.enabled = !isPlayer; // 조종 중일 땐 AI 끄기, 조종 안할 땐 AI 켜기
     }
 
     // 외부에서 데미지를 주거나 힐을 할 때 사용하는 헬퍼 함수
