@@ -36,7 +36,7 @@ public class Liel_Attack1State : NPCState
 
     public override void Exit()
     {
-        liel.canRotate = true; // 💡 상태 나갈 때 잠금 해제
+        liel.canRotate = true; // 상태 나갈 때 잠금 해제
     }
 
 }

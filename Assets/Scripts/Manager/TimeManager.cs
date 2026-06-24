@@ -21,7 +21,7 @@ public class TimeManager : Singleton<TimeManager>
             NextDay();
         }
 
-        OnTimeChanged?.Invoke(); //**아직 안 쓰임
+        //OnTimeChanged?.Invoke(); //**아직 안 쓰임
 
         // UI 갱신 이벤트 호출
         OnTimeUpdated?.Invoke(timeCoins, currentDay);
@@ -35,6 +35,6 @@ public class TimeManager : Singleton<TimeManager>
         currentHour -= 24;
         currentDay++;
 
-        OnDayChanged?.Invoke(); //** 아직 안 쓰임
+        //OnDayChanged?.Invoke(); //** 아직 안 쓰임
     }
 }
