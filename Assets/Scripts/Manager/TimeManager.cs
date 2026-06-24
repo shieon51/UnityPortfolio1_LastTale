@@ -7,8 +7,8 @@ public class TimeManager : Singleton<TimeManager>
     public int currentHour = 0;
     public int currentDay = 1;
 
-    public event Action OnTimeChanged;
-    public event Action OnDayChanged;
+    // public event Action OnTimeChanged;
+    // public event Action OnDayChanged;
     public event Action<int, int> OnTimeUpdated; // 남은 시간 코인, 현재 날짜 -> UIManager에서 시간 UI 업데이트
 
     public void UseTimeCoins(int amount)
