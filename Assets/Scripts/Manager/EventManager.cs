@@ -200,7 +200,7 @@ public class EventManager : Singleton<EventManager>
         canInteract = false;
 
         // 1. 정적 이벤트(activeTriggers) + 동적 NPC 이벤트(dynamicTriggers) 모두 검사
-        List<EventTrigger> allTriggers = new List<EventTrigger>();
+        List<EventTrigger> allTriggers = new List<EventTrigger>(); // ==> ? 여기 왜 매번 생성 중인가? -> 수정 예정
         allTriggers.AddRange(activeTriggers);
         allTriggers.AddRange(dynamicTriggers); // 합쳐서 검사
 
