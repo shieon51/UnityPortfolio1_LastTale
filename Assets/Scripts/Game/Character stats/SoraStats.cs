@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 // PlayableCharacter를 상속받는 1부 전용 주인공 '소라'
 public class SoraStats : PlayableCharacter
@@ -12,6 +13,7 @@ public class SoraStats : PlayableCharacter
     [Header("Sora Exclusives - Time Loop")] // 시간결정체
     public int timeCrystals = 0;
 
+    private bool _isTransforming = false; // 변신 딜레이 중인지 체크
 
     // 소라의 특수 스탯은 '피로도'임을 UI에게 알려줌
     public override bool HasSpecialStat => true;
@@ -26,13 +28,14 @@ public class SoraStats : PlayableCharacter
         currentMental = maxMental;
     }
 
-    // 플레이어가 소라를 조종하기 시작할 때 호출됨
+    // 플레이어가 소라를 조종하기 시작할 때 호출됨 (빙의)
     public override void OnPossessed()
     {
         Debug.Log("소라의 시점으로 플레이를 시작합니다.");
         // UI 매니저에게 소라 전용 UI(정신력 바, 피로도 바)를 켜라고 명령
     }
 
+    // 빙의 해제
     public override void OnUnpossessed()
     {
         Debug.Log("소라의 시점에서 벗어납니다.");
@@ -41,7 +44,13 @@ public class SoraStats : PlayableCharacter
     // 소라만의 고유 업데이트 로직 (마나 리젠, 요정화 패널티)
     protected override void HandleSpecialMechanics()
     {
-        // 1. 시간 결정체에 비례한 마나 리젠 로직
+        // [추가됨] Tab 키를 누르면 1단계 <-> 2단계 변신 (3단계는 강제 발동이므로 2단계까지만 토글)
+        if (Input.GetKeyDown(KeyCode.Tab) && !_isTransforming && !isKnockedBack)
+        {
+            StartCoroutine(FairyTransformRoutine());
+        }
+
+        // 1. 시간 결정체에 비례한 마나 리젠 로직 // ***
         if (currentMana < maxMana)
         {
             // float regen = 1f + (timeCrystals * 0.2f);
@@ -60,7 +69,52 @@ public class SoraStats : PlayableCharacter
         }
     }
 
-    #region 소라 고유 시스템 (결정체, 정신력, 피로도)
+    // [기획 반영] 1초의 변신 딜레이
+    private IEnumerator FairyTransformRoutine()
+    {
+        _isTransforming = true;
+        isSuperArmor = true; // 변신 중 무적이나 슈퍼아머 처리 (원하는 대로 변경 가능)
+
+        // 시각 효과 호출 (이펙트 등)
+        Debug.Log("요정화 변신 시작...");
+
+        yield return new WaitForSeconds(1.0f); // 1초 딜레이
+
+        fairyStage = (fairyStage == 0) ? 1 : 0; // 0(1단계) <-> 1(2단계) 토글
+        Debug.Log($"요정화 단계가 {fairyStage + 1}단계로 변경되었습니다.");
+
+        isSuperArmor = false;
+        _isTransforming = false;
+    }
+
+    // [기획 반영] 폼체인지 시 마나 사용 효율 증가
+    public override int CalculateManaCost(int originalCost)
+    {
+        if (fairyStage == 1) return Mathf.FloorToInt(originalCost * 0.8f); // 2단계: 마나 20% 감소
+        if (fairyStage == 2) return Mathf.FloorToInt(originalCost * 0.5f); // 3단계: 마나 50% 감소
+        return originalCost;
+    }
+
+    // [기획 반영] 시간 속성의 소라는 역상성(예: Normal)에 맞으면 추가 피해 및 정신력 감소
+    public override void TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal)
+    {
+        int finalDamage = incomingDamage;
+        if (fairyStage > 0 && attackElement == ElementType.Normal) // 기획에 따라 상성 정의 필요    //************* 추후 수정
+        {
+            finalDamage = Mathf.FloorToInt(incomingDamage * 1.5f); // 1.5배 피해
+            LoseMental(5); // 상성에 맞으면 정신력도 깎임
+            Debug.Log("[상성 피해] 요정화 상태에서 역상성 공격을 받아 피해가 증가합니다!");
+        }
+
+        base.TakeDamage(finalDamage, attackElement);
+    }
+
+    public override float GetSpeedMultiplier()
+    {
+        return (currentFatigue >= 30) ? 0.5f : 1.0f; // 피로도 30 이상이면 이속 0.5배
+    }
+
+    #region 소라 고유 시스템 (시간결정체, 정신력, 피로도)
     public void CollectTimeCrystal()
     {
         timeCrystals++;

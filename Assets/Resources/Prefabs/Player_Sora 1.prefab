@@ -13,7 +13,6 @@ GameObject:
   - component: {fileID: 3738008883484734237}
   - component: {fileID: 5171759405303234114}
   - component: {fileID: 792944762275080432}
-  - component: {fileID: 3892407507060766860}
   m_Layer: 6
   m_Name: Visual
   m_TagString: Untagged
@@ -166,18 +165,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 629aae5b9fbc8a346be1cfc4e7d6a0d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerVisual
---- !u!114 &3892407507060766860
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1615819369699982626}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b04a1cc046cf5d544a2f3c4214e5ebcf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimationRelay
 --- !u!1 &6994465021518602846
 GameObject:
   m_ObjectHideFlags: 0
@@ -189,11 +176,10 @@ GameObject:
   - component: {fileID: 8541148022777094637}
   - component: {fileID: 2175800781653705386}
   - component: {fileID: 8950616784466513857}
-  - component: {fileID: 6681634649405490063}
   - component: {fileID: 9157177150215643267}
   - component: {fileID: 6480306007770481759}
   m_Layer: 6
-  m_Name: Player_Sora
+  m_Name: Player_Sora 1
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -229,13 +215,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   baseRunSpeed: 3
   baseDashSpeed: 6
-  jumpForce: 15
+  jumpForce: 10
   groundCheckDistance: 0.2
-  groundCheckWidth: 0.58
+  groundCheckWidth: 0.4
   groundLayer:
     serializedVersion: 2
-    m_Bits: 8
-  groundCheckOffset: {x: 0.1, y: -0.87, z: 0}
+    m_Bits: 0
+  groundCheckOffset: {x: 0, y: -0.87, z: 0}
 --- !u!114 &8950616784466513857
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -271,22 +257,6 @@ MonoBehaviour:
   maxMental: 100
   currentMental: 100
   timeCrystals: 0
---- !u!114 &6681634649405490063
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6994465021518602846}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 79713d015ea52e8469272afb8a6af1dc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerCombat
-  skillQ: {fileID: 11400000, guid: 8e7653478aabe5f49a1730da7ac6fbbf, type: 2}
-  skillW: {fileID: 0}
-  skillE: {fileID: 0}
-  skillR: {fileID: 0}
 --- !u!50 &9157177150215643267
 Rigidbody2D:
   serializedVersion: 5

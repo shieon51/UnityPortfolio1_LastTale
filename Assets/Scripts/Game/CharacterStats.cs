@@ -108,6 +108,18 @@ public class CharacterStats : MonoBehaviour
         OnManaChanged?.Invoke();
     }
 
+    // 속도
+    public virtual float GetSpeedMultiplier()
+    {
+        return 1.0f; // 기본은 1배속
+    }
+
+    // 요정화 등에 따른 마나 사용 효율 계산 (기본은 그대로 반환)
+    public virtual int CalculateManaCost(int originalCost) 
+    { 
+        return originalCost; 
+    }
+
     public virtual void ApplyKnockback(Vector2 direction, float knockbackPower, float knockbackTime = 0.2f)
     {
         if (isSuperArmor) return; // 슈퍼아머(공격중)면 넉백 무시

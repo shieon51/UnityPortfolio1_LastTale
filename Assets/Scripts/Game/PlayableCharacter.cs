@@ -97,10 +97,10 @@ public abstract class PlayableCharacter : CharacterStats
         // 만약 방금 맞아서 넉백 상태(isKnockedBack)가 되었다면 공격 모션 강제 취소
         if (isKnockedBack)
         {
-            PlayerAttack attackScript = GetComponentInChildren<PlayerAttack>();
-            if (attackScript != null)
+            PlayerCombat combatScript = GetComponentInChildren<PlayerCombat>();
+            if (combatScript != null)
             {
-                attackScript.CancelAttack();
+                combatScript.CancelAttack();
             }
 
             // 플레이어 피격 애니메이션 트리거 (필요 시)
