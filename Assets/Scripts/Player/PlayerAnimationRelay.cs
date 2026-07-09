@@ -4,13 +4,20 @@ using UnityEngine;
 public class PlayerAnimationRelay : MonoBehaviour
 {
     private PlayerCombat _combat;
+    private PlayerVisual _visual;
 
     private void Awake()
     {
         _combat = GetComponentInParent<PlayerCombat>();
+        _visual = GetComponent<PlayerVisual>(); // 임시
     }
 
+    // 전투 관련
     public void EnableAttackCollider() => _combat.EnableAttackCollider();
     public void OnAttackCombo() => _combat.OnAttackCombo();
     public void OnAttackEnd() => _combat.OnAttackEnd();
+
+    // 이동/점프 관련
+    public void OnJumpApex() => _visual.OnJumpApex();
+    public void OnGroundEnd() => _visual.OnGroundEnd();
 }

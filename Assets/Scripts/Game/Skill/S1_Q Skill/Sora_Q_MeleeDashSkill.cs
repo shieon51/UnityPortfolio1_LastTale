@@ -5,10 +5,6 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "New Melee Dash Skill", menuName = "LastMarchan/Skills/Melee Dash")]
 public class Sora_Q_MeleeDashSkill : SkillBase
 {
-    [Header("Hitbox Setup")]
-    public Vector2 hitboxSize = new Vector2(2.6f, 1.6f);
-    public Vector2 hitboxOffset = new Vector2(1.2f, 1.1f);
-
     [Header("Combat Feel")]
     public float dashSpeed = 10f;
     public float dashDuration = 0.1f;

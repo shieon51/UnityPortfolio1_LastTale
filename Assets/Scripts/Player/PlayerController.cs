@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 using static UnityEngine.Rendering.DebugUI;
 
@@ -14,20 +15,33 @@ public class PlayerController : MonoBehaviour
     public float groundCheckDistance = 0.2f;// '미리 착지 감지' 거리
     public float groundCheckWidth = 0.4f; // Raycast 2개 대신 BoxCast가 더 안정적임
     public float groundCheckHeight = 0.1f; // [추가됨] 바닥 체크용 박스 두께 조절 가능
-    public LayerMask groundLayer;
+    public LayerMask groundLayer; // Solid Ground + One-Way Platform 모두 포함
     public Vector3 groundCheckOffset = new Vector3(0, -0.5f, 0);
+
+    [Header("One-Way Platform")]
+    [Tooltip("아래 방향키로 통과 가능한 '발판' 전용 레이어. 여기 포함 안 된 지형(메인 바닥)은 통과 안 됨.")]
+    public LayerMask oneWayPlatformLayer;
+
+    // 애니메이션 타이밍 제어
+    public event Action OnJumpTriggered; // 점프
+    public event Action OnLanded;        // 착지
+    public event Action OnFallStarted;   // 점프가 아닌 낙하(아래 지형 이동 등)
 
     // --- 상태 프로퍼티 (Visual이나 다른 스크립트에서 읽어갈 수 있게 열어둠) ---
     public float CurrentSpeed => _goToUnder ? 0f : (Mathf.Abs(_horizontalInput) > 0 ? (IsDashing ? baseDashSpeed : baseRunSpeed) : 0f); // BT 파라미터를 위해 실제 속도(0, 3, 6)를 반환하도록 계산!
     public float VelocityY => _rb.linearVelocity.y;
     public bool IsGrounded { get; private set; }
     public bool IsDashing { get; private set; }
-    public bool IsAscending => !IsGrounded && VelocityY > 0;
+    public float SpeedMultiplier => _stats != null ? _stats.GetSpeedMultiplier() : 1f; // 애니메이션 재생 속도 조절 (피로도 등)
+
+    // 공격 중일 때 좌우 플립(방향 전환)을 막기 위한 프로퍼티
+    public bool CanFlip => !IsActionLocked();
+    // 대화 중일 때는 Idle로 모션 변경
+    public bool IsDialogueLocked => DialogueManager.Instance != null && DialogueManager.Instance.IsTalking;
 
     private float _horizontalInput;
     private bool _goToUnder = false; // 아래 지형 이동키 눌렀을 시
     private float _lastTeleportTime = 0f;
-
     private bool _isDashLatchedInAir = false; // 공중 대시 관성 유지를 위한 변수
     private float _lastJumpTime = 0f;
 
@@ -51,7 +65,11 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         // 1. 행동 불가 상태면 입력 무시
-        if (IsActionLocked()) return;
+        if (IsActionLocked())
+        {
+            _horizontalInput = 0f; // 잠금 중엔 입력을 0으로 고정 (3번 버그의 절반 원인)
+            return;
+        }
 
         // 2. 바닥 판정 (매 프레임)
         CheckGrounded();
@@ -63,7 +81,15 @@ public class PlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         // 4. 물리 이동 (FixedUpdate에서 처리하는 것이 정석)
-        if (IsActionLocked()) return;
+        // - 대화 중이거나 락이 걸렸을 때 미끄러지지 않고 멈추도록 속도를 0으로 강제
+        if (IsActionLocked())
+        {
+            if (_stats != null && !_stats.isKnockedBack && (_playerCombat == null || !_playerCombat.IsAttacking))
+            {
+                _rb.linearVelocity = new Vector2(0, _rb.linearVelocity.y);
+            }
+            return;
+        }
         ApplyMovement();
     }
 
@@ -108,13 +134,17 @@ public class PlayerController : MonoBehaviour
             IsDashing = false; 
         }
 
-        // 점프
+        // Space 누르면 점프 이벤트(OnJumped) 발송
         if (Input.GetKeyDown(KeyCode.Space) && IsGrounded)
+        {
             Jump();
+        }
 
-        // 아래 지형 통과
+        // 아래+스페이스바 조합으로 통과하거나, 원본대로 DownArrow로 통과 (이벤트 발송)
         if (Input.GetKeyDown(KeyCode.DownArrow) && IsGrounded)
+        {
             GoUnderGround();
+        }
     }
 
     private void ApplyMovement()
@@ -152,19 +182,25 @@ public class PlayerController : MonoBehaviour
         _rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
         IsGrounded = false;
 
+        // Visual 스크립트에게 '점프 트리거 터트려라'고 알림
+        OnJumpTriggered?.Invoke();
         Debug.Log($"[PlayerController] Space 점프 발동! 점프력: {jumpForce}, 대시점프 유지: {_isDashLatchedInAir}");
     }
 
     private void GoUnderGround()
     {
+        PlatformEffector2D effector = GetCurrentPlatformEffector();
+        if (effector == null) return; // 애초에 원웨이 플랫폼이 아니면 통과 불가
+
+        // 원웨이 플랫폼 전용 레이어에 속한 지형인지 확인 (메인 바닥은 여기 안 걸림)
+        if ((oneWayPlatformLayer.value & (1 << effector.gameObject.layer)) == 0) return;
+
         _goToUnder = true;
-        StartCoroutine(ResetColliderTriggerRoutine());
+        StartCoroutine(ResetColliderTriggerRoutine(effector));
     }
 
-    private IEnumerator ResetColliderTriggerRoutine()
+    private IEnumerator ResetColliderTriggerRoutine(PlatformEffector2D effector)
     {
-        // Raycast 대신 기존에 밟고 있던 플랫폼 Effector를 찾아 캐싱
-        PlatformEffector2D effector = GetCurrentPlatformEffector();
         if (effector != null && _groundCollider != null)
         {
             Collider2D platformCollider = effector.GetComponent<Collider2D>();
@@ -177,33 +213,47 @@ public class PlayerController : MonoBehaviour
 
     private void CheckGrounded()
     {
+        bool wasGroundedPrev = IsGrounded; // 이번 판정 '이전' 프레임 상태를 먼저 저장
+
         if (_goToUnder)
         {
             IsGrounded = false;
+            if (wasGroundedPrev) OnFallStarted?.Invoke(); // 지형 통과 → JumpUp 없이 바로 Fall
             return;
         }
 
-        // [버그 수정 완료] 점프 직후 0.1초 동안은 바닥에 닿았다고 착각하지 않게 막아줌! (대시 풀림 방지)
+        // 점프 직후 0.1초 동안은 바닥에 닿았다고 착각하지 않게 막아줌 (대시 풀림 방지)
         if (Time.time < _lastJumpTime + 0.1f)
         {
+            IsGrounded = false;
+            return; // 점프 직후 grace period. 이 낙하는 이미 OnJumpTriggered가 처리했으므로 재발행 안 함
+        }
+
+        // 상승 중엔 원웨이 플랫폼을 관통 중일 수 있음 → 착지 판정 자체를 하지 않아 깜빡임 방지
+        if (_rb.linearVelocity.y > 0.01f)
+        {
+            if (wasGroundedPrev) OnFallStarted?.Invoke();
             IsGrounded = false;
             return;
         }
 
-        // Raycast 2개를 쏘는 것보다 BoxCast 하나가 지형 판정에 훨씬 빈틈이 없고 완벽함.
         Vector2 origin = transform.position + groundCheckOffset;
         Vector2 size = new Vector2(groundCheckWidth, groundCheckHeight);
-
         RaycastHit2D hit = Physics2D.BoxCast(origin, size, 0f, Vector2.down, groundCheckDistance, groundLayer);
 
-        bool wasGrounded = IsGrounded;
         IsGrounded = hit.collider != null;
 
         // 방금 땅에 닿았다면 공중 대시 관성 리셋
-        if (IsGrounded && !wasGrounded)
+        if (IsGrounded && !wasGroundedPrev)
         {
             _isDashLatchedInAir = false;
             Debug.Log("[PlayerController] 바닥 착지 완료.");
+            OnLanded?.Invoke();
+        }
+        else if (!IsGrounded && wasGroundedPrev)
+        {
+            // 점프 호출 없이 자연스럽게 공중으로 진입한 경우 (낭떠러지 등)
+            OnFallStarted?.Invoke();
         }
     }
 
@@ -234,7 +284,7 @@ public class PlayerController : MonoBehaviour
 #if UNITY_EDITOR
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = IsGrounded ? Color.red : Color.yellow;
+        Gizmos.color = IsGrounded ? Color.red : Color.green;
         Vector2 origin = transform.position + groundCheckOffset;
         Vector2 size = new Vector2(groundCheckWidth, groundCheckHeight);
         Gizmos.DrawWireCube(origin + Vector2.down * groundCheckDistance, size);
