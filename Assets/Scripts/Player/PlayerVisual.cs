@@ -8,10 +8,6 @@ public class PlayerVisual : MonoBehaviour
     private PlayerController _controller;
     private Animator[] _partAnimators; // 자식으로 있는 모든 애니메이터를 싹 다 관리
 
-    private float _statSpeedMultiplier = 1f;
-    private Coroutine _hitStopRoutine;
-    private bool _wasDialogueLocked = false;
-
     // 상태 이름 오타 방지용 (에디터의 노드 이름과 정확히 일치해야 함)
     private static class AnimState
     {
@@ -20,6 +16,11 @@ public class PlayerVisual : MonoBehaviour
         public const string JumpTree = "JumpTree";
         public const string Ground = "Player_Ground";
     }
+
+    private float _statSpeedMultiplier = 1f;
+    private Coroutine _hitStopRoutine;
+    private bool _wasDialogueLocked = false;
+    private bool _wasActionLocked = false;
 
     private void Awake()
     {
@@ -51,21 +52,39 @@ public class PlayerVisual : MonoBehaviour
     {
         if (_controller == null) return;
 
-        HandleDialogueLockTransition();
+        HandleLockTransitions();
         UpdateAnimations();
         UpdateSpriteDirection();
         UpdateAnimationSpeed();
     }
 
-    private void HandleDialogueLockTransition()
+    // 대화 시작 순간엔 강제로 Idle, 그리고 (모든 종류의) 잠금이 풀리는 순간엔
+    // 그동안 억눌러뒀던 실제 물리 상태(공중/지상)와 화면을 다시 동기화한다.
+    private void HandleLockTransitions()
     {
         bool isDialogueLocked = _controller.IsDialogueLocked;
         if (isDialogueLocked && !_wasDialogueLocked)
         {
-            // 대화가 막 시작된 프레임: Fall이든 JumpUp이든 상관없이 즉시 Idle(Movement)로 강제 전환
             PlayImmediate(AnimState.Movement);
         }
         _wasDialogueLocked = isDialogueLocked;
+
+        bool isActionLocked = _controller.IsActionLocked;
+        if (!isActionLocked && _wasActionLocked)
+        {
+            SyncVisualToPhysicalState();
+        }
+        _wasActionLocked = isActionLocked;
+    }
+
+    private void SyncVisualToPhysicalState()
+    {
+        // 땅 위라면 이미 Idle/Movement 상태이므로 별도 처리 불필요.
+        // 공중이라면(예: 공격이 끝났는데 아직 착지 전) 그제서야 Fall 상태로 전환.
+        if (!_controller.IsGrounded)
+        {
+            CrossFadeAll(AnimState.JumpTree, 0.05f);
+        }
     }
 
     private void UpdateAnimations()
@@ -120,9 +139,24 @@ public class PlayerVisual : MonoBehaviour
 
     // --- 점프/착지/낙하: Transition에 맡기지 않고 코드가 직접 상태를 강제 지정 ---
 
-    private void HandleJumpTriggered() => PlayImmediate(AnimState.JumpUp);
-    private void HandleFallStarted() => CrossFadeAll(AnimState.JumpTree, 0.05f);
-    private void HandleLanded() => PlayImmediate(AnimState.Ground);
+    // 대화/공격/넉백 등으로 잠긴 상태에서는 Jump/Fall/Landed 시각 반응을 무시한다.
+    // (물리적 IsGrounded 값 자체는 컨트롤러에서 항상 정확히 갱신되고 있으므로,
+    //  잠금이 풀리는 순간 SyncVisualToPhysicalState가 최종 상태를 바로 잡아준다.)
+    private void HandleJumpTriggered()
+    {
+        if (_controller.IsActionLocked) return;
+        PlayImmediate(AnimState.JumpUp);
+    }
+    private void HandleFallStarted()
+    {
+        if (_controller.IsActionLocked) return;
+        CrossFadeAll(AnimState.JumpTree, 0.05f);
+    }
+    private void HandleLanded()
+    {
+        if (_controller.IsActionLocked) return;
+        PlayImmediate(AnimState.Ground);
+    }
 
     // Player_JumpUp 클립 마지막 프레임의 Animation Event에서 호출 (Relay 경유)
     public void OnJumpApex() => CrossFadeAll(AnimState.JumpTree, 0.05f);

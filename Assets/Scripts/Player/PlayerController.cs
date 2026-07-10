@@ -14,7 +14,7 @@ public class PlayerController : MonoBehaviour
     [Header("Ground Check")]
     public float groundCheckDistance = 0.2f;// '미리 착지 감지' 거리
     public float groundCheckWidth = 0.4f; // Raycast 2개 대신 BoxCast가 더 안정적임
-    public float groundCheckHeight = 0.1f; // [추가됨] 바닥 체크용 박스 두께 조절 가능
+    public float groundCheckHeight = 0.1f; // 바닥 체크용 박스 두께 조절 가능
     public LayerMask groundLayer; // Solid Ground + One-Way Platform 모두 포함
     public Vector3 groundCheckOffset = new Vector3(0, -0.5f, 0);
 
@@ -32,12 +32,22 @@ public class PlayerController : MonoBehaviour
     public float VelocityY => _rb.linearVelocity.y;
     public bool IsGrounded { get; private set; }
     public bool IsDashing { get; private set; }
+    public bool CanFlip => !IsActionLocked; // 공격 중일 때 좌우 플립(방향 전환)을 막기 위한 프로퍼티
+    public bool IsDialogueLocked => DialogueManager.Instance != null && DialogueManager.Instance.IsTalking; // 대화 중일 때는 Idle로 모션 변경
     public float SpeedMultiplier => _stats != null ? _stats.GetSpeedMultiplier() : 1f; // 애니메이션 재생 속도 조절 (피로도 등)
 
-    // 공격 중일 때 좌우 플립(방향 전환)을 막기 위한 프로퍼티
-    public bool CanFlip => !IsActionLocked();
-    // 대화 중일 때는 Idle로 모션 변경
-    public bool IsDialogueLocked => DialogueManager.Instance != null && DialogueManager.Instance.IsTalking;
+
+    // 대화/공격/넉백 중 어느 하나라도 걸리면 true (행동 불가 상태)
+    public bool IsActionLocked
+    {
+        get
+        {
+            if (DialogueManager.Instance != null && DialogueManager.Instance.IsTalking) return true;
+            if (_stats != null && _stats.isKnockedBack) return true;
+            if (_playerCombat != null && _playerCombat.IsAttacking) return true;
+            return false;
+        }
+    }
 
     private float _horizontalInput;
     private bool _goToUnder = false; // 아래 지형 이동키 눌렀을 시
@@ -64,15 +74,17 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        // 1. 행동 불가 상태면 입력 무시
-        if (IsActionLocked())
+        // 1. 바닥 판정 (매 프레임)
+        // 바닥 여부는 '물리적 사실'이므로 잠금 여부와 무관하게 항상 정확히 추적한다.
+        // (대화/공격/넉백 중에도 실제로는 계속 낙하하다 착지할 수 있기 때문)
+        CheckGrounded();
+
+        // 2. 행동 불가 상태면 입력 무시
+        if (IsActionLocked)
         {
-            _horizontalInput = 0f; // 잠금 중엔 입력을 0으로 고정 (3번 버그의 절반 원인)
+            _horizontalInput = 0f; // 잠금 중엔 입력을 0으로 고정
             return;
         }
-
-        // 2. 바닥 판정 (매 프레임)
-        CheckGrounded();
 
         // 3. 입력 감지
         HandleInput();
@@ -82,7 +94,7 @@ public class PlayerController : MonoBehaviour
     {
         // 4. 물리 이동 (FixedUpdate에서 처리하는 것이 정석)
         // - 대화 중이거나 락이 걸렸을 때 미끄러지지 않고 멈추도록 속도를 0으로 강제
-        if (IsActionLocked())
+        if (IsActionLocked)
         {
             if (_stats != null && !_stats.isKnockedBack && (_playerCombat == null || !_playerCombat.IsAttacking))
             {
@@ -91,16 +103,6 @@ public class PlayerController : MonoBehaviour
             return;
         }
         ApplyMovement();
-    }
-
-    // 행동 불가 상태인지 체크 (넉백, 대화중, 공격중)
-    private bool IsActionLocked()
-    {
-        if (DialogueManager.Instance != null && DialogueManager.Instance.IsTalking) return true;
-        if (_stats != null && _stats.isKnockedBack) return true; // 넉백 체크
-        if (_playerCombat != null && _playerCombat.IsAttacking) return true;
-
-        return false;
     }
 
     private void HandleInput()
@@ -229,19 +231,20 @@ public class PlayerController : MonoBehaviour
             return; // 점프 직후 grace period. 이 낙하는 이미 OnJumpTriggered가 처리했으므로 재발행 안 함
         }
 
-        // 상승 중엔 원웨이 플랫폼을 관통 중일 수 있음 → 착지 판정 자체를 하지 않아 깜빡임 방지
-        if (_rb.linearVelocity.y > 0.01f)
-        {
-            if (wasGroundedPrev) OnFallStarted?.Invoke();
-            IsGrounded = false;
-            return;
-        }
-
         Vector2 origin = transform.position + groundCheckOffset;
         Vector2 size = new Vector2(groundCheckWidth, groundCheckHeight);
         RaycastHit2D hit = Physics2D.BoxCast(origin, size, 0f, Vector2.down, groundCheckDistance, groundLayer);
 
-        IsGrounded = hit.collider != null;
+        bool grounded = hit.collider != null;
+
+        // 원웨이 플랫폼을 '위로 관통 중'일 때만 이 히트를 무시한다.
+        // 경사로(Solid Ground)는 오를 때도 Y속도가 양수가 되므로 이 예외에서 반드시 제외해야 한다.
+        if (grounded && _rb.linearVelocity.y > 0.01f && IsOneWayPlatformLayer(hit.collider.gameObject.layer))
+        {
+            grounded = false;
+        }
+
+        IsGrounded = grounded;
 
         // 방금 땅에 닿았다면 공중 대시 관성 리셋
         if (IsGrounded && !wasGroundedPrev)
@@ -255,6 +258,11 @@ public class PlayerController : MonoBehaviour
             // 점프 호출 없이 자연스럽게 공중으로 진입한 경우 (낭떠러지 등)
             OnFallStarted?.Invoke();
         }
+    }
+
+    private bool IsOneWayPlatformLayer(int layer)
+    {
+        return (oneWayPlatformLayer.value & (1 << layer)) != 0;
     }
 
     private PlatformEffector2D GetCurrentPlatformEffector()
