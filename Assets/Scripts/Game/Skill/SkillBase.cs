@@ -15,6 +15,10 @@ public abstract class SkillBase : ScriptableObject
     public float activeDuration = 0.15f; // 판정 지속 시간
     public SkillPriority priority = SkillPriority.Normal; // 캔슬 가능 여부 판단용
 
+    [Header("Safety")]
+    [Tooltip("OnAttackEnd 이벤트가 이 시간 안에 호출되지 않으면 강제 종료시키는 안전장치(초). 클립 전체 길이보다 넉넉하게 설정하세요.")]
+    public float maxAnimationDuration = 2f;
+
     // 모든 스킬이 히트박스를 가질 수 있으므로 베이스로 올림
     [Header("Hitbox Setup")]
     public Vector2 hitboxSize = new Vector2(2.6f, 1.6f);

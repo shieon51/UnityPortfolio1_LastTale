@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using System.Collections;
 
+[DefaultExecutionOrder(-10)] // PlayerController보다 항상 먼저 실행되어, 동시입력 시 공격이 우선권을 갖도록 보장
 public class PlayerCombat : MonoBehaviour
 {
     private Rigidbody2D _rb;
@@ -27,8 +28,9 @@ public class PlayerCombat : MonoBehaviour
     // 슬롯(Q,W,E,R)마다 현재 몇 타째인지 독립적으로 기억하는 딕셔너리
     private Dictionary<SkillSequenceData, int> _comboStepTracker = new Dictionary<SkillSequenceData, int>();
 
-    // 콤보 허용 창. 이게 true일 때 키를 누르면 이전 모션을 씹고 즉시 다음 모션이 나감
-    private bool _isComboWindowOpen = false;
+    private float _lastAttackTime;
+    private bool _isComboWindowOpen = false;  // 콤보 허용 창. 이게 true일 때 키를 누르면 이전 모션을 씹고 즉시 다음 모션이 나감
+    private int _attackSessionId = 0; // 안전장치(watchdog)가 최신 공격인지 판별하기 위한 세션 ID
 
     // 디버그용 (스킬 클래스에서 호출받음)
     private bool _showHitbox = false;
@@ -132,6 +134,7 @@ public class PlayerCombat : MonoBehaviour
         IsAttacking = true;
         _stats.isSuperArmor = true;
         _currentPlayingSkill = skillToPlay;
+        _lastAttackTime = Time.time;
 
         // 다음 콤보 스텝 미리 증가시켜두기
         _comboStepTracker[seq] = step + 1;
@@ -139,7 +142,23 @@ public class PlayerCombat : MonoBehaviour
         // Visual 스크립트를 통해 모든 파츠(Body, Hair 등) 애니메이션 동시 재생!
         if (_playerVisual != null) _playerVisual.PlayAttackAnimation(skillToPlay.animStateName);
 
+        _attackSessionId++;
+        int sessionId = _attackSessionId;
         StartCoroutine(skillToPlay.ExecuteSkillBehavior(this, _rb, null, _stats));
+        StartCoroutine(AttackWatchdogRoutine(sessionId, skillToPlay));
+    }
+
+    // 애니메이션 이벤트(OnAttackEnd)가 어떤 이유로든 호출되지 못했을 때를 대비한 최종 안전장치.
+    // sessionId가 여전히 최신이고 아직 공격 중이라면, 스킬에 설정된 시간 이후 강제로 종료시킨다.
+    private IEnumerator AttackWatchdogRoutine(int sessionId, SkillBase skill)
+    {
+        yield return new WaitForSeconds(skill.maxAnimationDuration);
+
+        if (sessionId == _attackSessionId && IsAttacking)
+        {
+            Debug.LogWarning($"[PlayerCombat] '{skill.skillName}' 스킬의 OnAttackEnd 이벤트가 {skill.maxAnimationDuration}초 내 호출되지 않아 안전장치가 강제로 종료합니다. 클립의 Animation Event를 확인해보세요.");
+            OnAttackEnd();
+        }
     }
 
     // --- 애니메이션 이벤트 (PlayerAnimationRelay에서 전달) ---
@@ -170,7 +189,7 @@ public class PlayerCombat : MonoBehaviour
             _rb.gravityScale = _originalGravity;
         }
 
-        if (_playerVisual != null) _playerVisual.ReturnToMovement();
+        if (_playerVisual != null) _playerVisual.ReturnToLocomotion();
     }
 
     public void CancelAttack()
@@ -186,7 +205,7 @@ public class PlayerCombat : MonoBehaviour
         if (_playerVisual != null)
         {
             _playerVisual.ResetAnimationSpeed();
-            _playerVisual.ReturnToMovement();
+            _playerVisual.ReturnToLocomotion();
         }
     }
 

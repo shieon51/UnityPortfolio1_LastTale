@@ -18,14 +18,11 @@ public class PlayerController : MonoBehaviour
     public LayerMask groundLayer; // Solid Ground + One-Way Platform 모두 포함
     public Vector3 groundCheckOffset = new Vector3(0, -0.5f, 0);
 
-    [Header("One-Way Platform")]
-    [Tooltip("아래 방향키로 통과 가능한 '발판' 전용 레이어. 여기 포함 안 된 지형(메인 바닥)은 통과 안 됨.")]
-    public LayerMask oneWayPlatformLayer;
-
     // 애니메이션 타이밍 제어
     public event Action OnJumpTriggered; // 점프
     public event Action OnLanded;        // 착지
-    public event Action OnFallStarted;   // 점프가 아닌 낙하(아래 지형 이동 등)
+    public event Action OnFallStarted;   // 점프가 아닌 낙하(아래 지형 이
+                                         // 동 등)
 
     // --- 상태 프로퍼티 (Visual이나 다른 스크립트에서 읽어갈 수 있게 열어둠) ---
     public float CurrentSpeed => _goToUnder ? 0f : (Mathf.Abs(_horizontalInput) > 0 ? (IsDashing ? baseDashSpeed : baseRunSpeed) : 0f); // BT 파라미터를 위해 실제 속도(0, 3, 6)를 반환하도록 계산!
@@ -55,11 +52,15 @@ public class PlayerController : MonoBehaviour
     private bool _isDashLatchedInAir = false; // 공중 대시 관성 유지를 위한 변수
     private float _lastJumpTime = 0f;
 
+    private int _groundedMismatchStreak = 0;
+    private const int GroundedConfirmFrames = 2; // 연속 몇 프레임 동안 같은 값이 나와야 착지/이탈로 확정할지
+
     // --- 컴포넌트 캐싱 ---
     private Rigidbody2D _rb;
     private Collider2D _groundCollider;
     private CharacterStats _stats; // (스탯 시스템 의존성)
     private PlayerCombat _playerCombat;
+    private OneWayPlatformController _oneWayPlatform;
 
     private void Awake()
     {
@@ -67,6 +68,7 @@ public class PlayerController : MonoBehaviour
         _groundCollider = GetComponent<Collider2D>();
         _stats = GetComponent<CharacterStats>();
         _playerCombat = GetComponentInChildren<PlayerCombat>();
+        _oneWayPlatform = GetComponent<OneWayPlatformController>();
 
         // 충돌 감지 방식을 Continuous로 설정
         _rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
@@ -179,6 +181,7 @@ public class PlayerController : MonoBehaviour
         // 점프하는 순간 대시 중이었다면 상태를 기억함
         _isDashLatchedInAir = IsDashing;
         _lastJumpTime = Time.time;       // 점프 시간 기록
+        _groundedMismatchStreak = 0; // 점프는 디바운스 없이 즉시/확정적으로 반영
 
         _rb.linearVelocity = new Vector2(_rb.linearVelocity.x, 0); // 기존 Y 낙하 관성 무시하고 점프
         _rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
@@ -191,88 +194,166 @@ public class PlayerController : MonoBehaviour
 
     private void GoUnderGround()
     {
-        PlatformEffector2D effector = GetCurrentPlatformEffector();
-        if (effector == null) return; // 애초에 원웨이 플랫폼이 아니면 통과 불가
+        if (_oneWayPlatform == null) return;
 
-        // 원웨이 플랫폼 전용 레이어에 속한 지형인지 확인 (메인 바닥은 여기 안 걸림)
-        if ((oneWayPlatformLayer.value & (1 << effector.gameObject.layer)) == 0) return;
+        Vector2 origin = transform.position + groundCheckOffset;
+        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, 1.0f, groundLayer);
+        if (hit.collider == null || !_oneWayPlatform.IsOneWayPlatformLayer(hit.collider.gameObject.layer)) return;
 
-        _goToUnder = true;
-        StartCoroutine(ResetColliderTriggerRoutine(effector));
+        if (_oneWayPlatform.TryPassThrough(hit.collider))
+        {
+            _goToUnder = true;
+            StartCoroutine(ResetGoToUnderFlagRoutine(_oneWayPlatform.passThroughDuration));
+        }
+
+        //PlatformEffector2D effector = GetCurrentPlatformEffector();
+        //if (effector == null) return; // 애초에 원웨이 플랫폼이 아니면 통과 불가
+
+        //// 원웨이 플랫폼 전용 레이어에 속한 지형인지 확인 (메인 바닥은 여기 안 걸림)
+        //if ((oneWayPlatformLayer.value & (1 << effector.gameObject.layer)) == 0) return;
+
+        //_goToUnder = true;
+        //StartCoroutine(ResetColliderTriggerRoutine(effector));
     }
 
-    private IEnumerator ResetColliderTriggerRoutine(PlatformEffector2D effector)
+    private IEnumerator ResetGoToUnderFlagRoutine(float duration)
     {
-        if (effector != null && _groundCollider != null)
-        {
-            Collider2D platformCollider = effector.GetComponent<Collider2D>();
-            Physics2D.IgnoreCollision(_groundCollider, platformCollider, true); // 지형 통과
-            yield return new WaitForSeconds(0.5f);
-            Physics2D.IgnoreCollision(_groundCollider, platformCollider, false);
-        }
+        yield return new WaitForSeconds(duration);
         _goToUnder = false;
     }
 
+
+    //private IEnumerator ResetColliderTriggerRoutine(PlatformEffector2D effector)
+    //{
+    //    if (effector != null && _groundCollider != null)
+    //    {
+    //        Collider2D platformCollider = effector.GetComponent<Collider2D>();
+    //        Physics2D.IgnoreCollision(_groundCollider, platformCollider, true); // 지형 통과
+    //        yield return new WaitForSeconds(0.5f);
+    //        Physics2D.IgnoreCollision(_groundCollider, platformCollider, false);
+    //    }
+    //    _goToUnder = false;
+    //}
+
     private void CheckGrounded()
     {
-        bool wasGroundedPrev = IsGrounded; // 이번 판정 '이전' 프레임 상태를 먼저 저장
+        //bool wasGroundedPrev = IsGrounded; // 이번 판정 '이전' 프레임 상태를 먼저 저장
 
         if (_goToUnder)
         {
-            IsGrounded = false;
-            if (wasGroundedPrev) OnFallStarted?.Invoke(); // 지형 통과 → JumpUp 없이 바로 Fall
+            //IsGrounded = false;
+            //if (wasGroundedPrev) OnFallStarted?.Invoke(); // 지형 통과 → JumpUp 없이 바로 Fall
+
+            SetGroundedImmediate(false);
             return;
         }
 
         // 점프 직후 0.1초 동안은 바닥에 닿았다고 착각하지 않게 막아줌 (대시 풀림 방지)
         if (Time.time < _lastJumpTime + 0.1f)
         {
-            IsGrounded = false;
+            //IsGrounded = false;
+
+            SetGroundedImmediate(false);
             return; // 점프 직후 grace period. 이 낙하는 이미 OnJumpTriggered가 처리했으므로 재발행 안 함
         }
 
+        bool rawGrounded = ComputeRawGrounded();
+        EvaluateGroundedWithDebounce(rawGrounded);
+
+        //Vector2 origin = transform.position + groundCheckOffset;
+        //Vector2 size = new Vector2(groundCheckWidth, groundCheckHeight);
+        //RaycastHit2D hit = Physics2D.BoxCast(origin, size, 0f, Vector2.down, groundCheckDistance, groundLayer);
+
+        //bool grounded = hit.collider != null;
+
+        //// 원웨이 플랫폼을 '위로 관통 중'일 때만 이 히트를 무시한다.
+        //// 경사로(Solid Ground)는 오를 때도 Y속도가 양수가 되므로 이 예외에서 반드시 제외해야 한다.
+        //if (grounded && _rb.linearVelocity.y > 0.01f && IsOneWayPlatformLayer(hit.collider.gameObject.layer))
+        //{
+        //    grounded = false;
+        //}
+
+        //IsGrounded = grounded;
+
+        //// 방금 땅에 닿았다면 공중 대시 관성 리셋
+        //if (IsGrounded && !wasGroundedPrev)
+        //{
+        //    _isDashLatchedInAir = false;
+        //    Debug.Log("[PlayerController] 바닥 착지 완료.");
+        //    OnLanded?.Invoke();
+        //}
+        //else if (!IsGrounded && wasGroundedPrev)
+        //{
+        //    // 점프 호출 없이 자연스럽게 공중으로 진입한 경우 (낭떠러지 등)
+        //    OnFallStarted?.Invoke();
+        //}
+    }
+
+    private bool ComputeRawGrounded()
+    {
         Vector2 origin = transform.position + groundCheckOffset;
         Vector2 size = new Vector2(groundCheckWidth, groundCheckHeight);
         RaycastHit2D hit = Physics2D.BoxCast(origin, size, 0f, Vector2.down, groundCheckDistance, groundLayer);
+        if (hit.collider == null) return false;
 
-        bool grounded = hit.collider != null;
+        // 원웨이 플랫폼을 '위로 관통 중'일 때만 이 히트를 무시 (경사로는 예외 대상 아님)
+        if (_rb.linearVelocity.y > 0.01f && _oneWayPlatform != null && _oneWayPlatform.IsOneWayPlatformLayer(hit.collider.gameObject.layer))
+            return false;
 
-        // 원웨이 플랫폼을 '위로 관통 중'일 때만 이 히트를 무시한다.
-        // 경사로(Solid Ground)는 오를 때도 Y속도가 양수가 되므로 이 예외에서 반드시 제외해야 한다.
-        if (grounded && _rb.linearVelocity.y > 0.01f && IsOneWayPlatformLayer(hit.collider.gameObject.layer))
+        return true;
+    }
+
+    private void EvaluateGroundedWithDebounce(bool rawGrounded)
+    {
+        if (rawGrounded == IsGrounded)
         {
-            grounded = false;
+            _groundedMismatchStreak = 0;
+            return;
         }
 
+        _groundedMismatchStreak++;
+        if (_groundedMismatchStreak < GroundedConfirmFrames) return; // 순간적 흔들림일 수 있으므로 이전 상태 유지
+
+        _groundedMismatchStreak = 0;
+        ApplyGroundedChange(rawGrounded);
+    }
+
+    private void SetGroundedImmediate(bool grounded)
+    {
+        _groundedMismatchStreak = 0;
+        if (grounded == IsGrounded) return;
+        ApplyGroundedChange(grounded);
+    }
+
+    private void ApplyGroundedChange(bool grounded)
+    {
+        bool wasGroundedPrev = IsGrounded;
         IsGrounded = grounded;
 
-        // 방금 땅에 닿았다면 공중 대시 관성 리셋
         if (IsGrounded && !wasGroundedPrev)
         {
             _isDashLatchedInAir = false;
-            Debug.Log("[PlayerController] 바닥 착지 완료.");
             OnLanded?.Invoke();
         }
         else if (!IsGrounded && wasGroundedPrev)
         {
-            // 점프 호출 없이 자연스럽게 공중으로 진입한 경우 (낭떠러지 등)
             OnFallStarted?.Invoke();
         }
     }
 
-    private bool IsOneWayPlatformLayer(int layer)
-    {
-        return (oneWayPlatformLayer.value & (1 << layer)) != 0;
-    }
+    //private bool IsOneWayPlatformLayer(int layer)
+    //{
+    //    return (oneWayPlatformLayer.value & (1 << layer)) != 0;
+    //}
 
-    private PlatformEffector2D GetCurrentPlatformEffector()
-    {
-        Vector2 origin = transform.position + groundCheckOffset;
-        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, 1.0f, groundLayer);
-        if (hit.collider != null)
-            return hit.collider.GetComponent<PlatformEffector2D>();
-        return null;
-    }
+    //private PlatformEffector2D GetCurrentPlatformEffector()
+    //{
+    //    Vector2 origin = transform.position + groundCheckOffset;
+    //    RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, 1.0f, groundLayer);
+    //    if (hit.collider != null)
+    //        return hit.collider.GetComponent<PlatformEffector2D>();
+    //    return null;
+    //}
 
     private void Teleport()
     {
@@ -298,291 +379,4 @@ public class PlayerController : MonoBehaviour
         Gizmos.DrawWireCube(origin + Vector2.down * groundCheckDistance, size);
     }
 #endif
-    //// 피로도 체크 로직 (이벤트 방식에서 Update 실시간 체크 방식으로 변경하여 안정성 확보)
-    //private void CheckFatigueStatus()
-    //{
-    //    // 현재 조종 중인 캐릭터가 소라(SoraStats)일 때만 피로도 적용
-    //    if (PlayerManager.Instance.CurrentCharacter is SoraStats sora)
-    //    {
-    //        if (sora.currentFatigue >= 30) // 피로도 임계점 도달 시
-    //        {
-    //            CurRunSpeed = tiredRunSpeed;
-    //            CurDashSpeed = tiredRunSpeed * 2;
-    //            _animator.speed = 0.5f;
-    //        }
-    //        else
-    //        {
-    //            CurRunSpeed = defaultRunSpeed;
-    //            CurDashSpeed = defaultDashSpeed;
-    //            _animator.speed = 1f;
-    //        }
-    //    }
-    //    else
-    //    {
-    //        // 소라가 아닌 다른 캐릭터(리엘 등)는 기본 속도로 고정
-    //        CurRunSpeed = defaultRunSpeed;
-    //        CurDashSpeed = defaultDashSpeed;
-    //        _animator.speed = 1f;
-    //    }
-    //}
-
-    //////피로도 일정 수준 이상 (상태) //
-    ////private void HandleFatigueChange(int currentFatigue)
-    ////{
-    ////    if (currentFatigue >= 30)
-    ////    {
-    ////        CurRunSpeed = TIRED_RUN_SPEED;
-    ////        CurDashSpeed = TIRED_RUN_SPEED * 2; // 피로도 24 이상이면 이동 속도 감소
-    ////        _animator.speed = 0.5f;
-    ////    } 
-    ////    else
-    ////    {
-    ////        CurRunSpeed = DEFALT_RUN_SPEED;
-    ////        CurDashSpeed = DEFALT_DASH_SPEED;
-    ////        _animator.speed = 1f;
-    ////    }
-    ////}
-
-
-
-    ////public LayerMask groundLayer;  // Inspector에서 "Ground" 설정
-    ////bool IsGrounded()
-    ////{
-    ////    float rayDistance = 0.2f;
-    ////    Vector2 left = (Vector2)transform.position + new Vector2(-0.2f, 0);
-    ////    Vector2 center = transform.position;
-    ////    Vector2 right = (Vector2)transform.position + new Vector2(0.2f, 0);
-    ////
-    ////    return Physics2D.Raycast(left, Vector2.down, rayDistance, groundLayer) ||
-    ////           Physics2D.Raycast(center, Vector2.down, rayDistance, groundLayer) ||
-    ////           Physics2D.Raycast(right, Vector2.down, rayDistance, groundLayer);
-    ////}
-
-    //private void Jump()
-    //{
-    //    // 대화중인 경우에는 움직이지 못하도록
-    //    if (DialogueManager.Instance.IsTalking) return;
-    //    // 공격 중이라면 점프 못하게
-    //    if (_playerAttack._isAttacking) return; 
-
-    //    // 점프 애니메이션
-    //    if (Input.GetKeyDown(KeyCode.LeftControl) && _isGrounded)
-    //    {
-    //        _animator.SetTrigger("Jump");
-    //        _animator.SetBool("IsAscending", true);
-    //        _animator.SetBool("IsGrounded", false);
-    //        //_rigidbody.linearVelocity = new Vector2(_rigidbody.linearVelocityX, JumpForce);
-    //        _rigidbody.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse); // Impulse로 주는 게 점프에 더 적합함
-    //        _isAscending = true;
-    //        _isGrounded = false;
-    //    }
-    //}
-
-    //private void GoUnderGround()
-    //{
-    //    // 대화중인 경우에는 움직이지 못하도록
-    //    if (DialogueManager.Instance.IsTalking) return;
-
-    //    // 아래 지형으로 내려가기
-    //    if (Input.GetKeyDown(KeyCode.DownArrow) && _isGrounded)
-    //    {
-    //        _goToUnder = true;
-
-    //        // 잠시 후에 다시 충돌 활성화
-    //        StartCoroutine(ResetColliderTrigger());
-    //    }
-    //}
-
-    //// 잠시 후에 다시 충돌을 활성화하는 코루틴
-    //private IEnumerator ResetColliderTrigger()
-    //{
-    //    // 현재 서 있는 플랫폼 가져오기
-    //    PlatformEffector2D effector = GetCurrentPlatformEffector();
-    //    if (effector != null)
-    //    {
-    //        Physics2D.IgnoreCollision(_playerGroundCollider, effector.GetComponent<Collider2D>(), true);
-    //        yield return new WaitForSeconds(0.5f);
-    //        Physics2D.IgnoreCollision(_playerGroundCollider, effector.GetComponent<Collider2D>(), false);
-    //    }
-    //    _goToUnder = false;
-    //}
-
-    //private void Air()
-    //{
-    //    //RaycastHit2D hit;
-    //    RaycastHit2D leftHit, rightHit;
-
-    //    Vector3 pos = transform.position + _groundCheckLineOffset + Vector3.right * GroundCheckDistanceWidth;
-    //    leftHit = Physics2D.Raycast(pos, Vector2.down, GroundCheckDistance, LayerMask.GetMask("Ground"));
-
-    //    pos = transform.position + _groundCheckLineOffset - Vector3.right * GroundCheckDistanceWidth;
-    //    rightHit = Physics2D.Raycast(pos, Vector2.down, GroundCheckDistance, LayerMask.GetMask("Ground"));
-
-    //    bool isHit = false;
-    //    if (!_goToUnder) // 지형 아래로 내려가는 중이 아닐 때 -> ray 충돌 확인
-    //    {
-    //        isHit |= leftHit.collider != null;
-    //        isHit |= rightHit.collider != null;
-    //    }
-
-    //    if (!_isGrounded && isHit) // 착지한 경우
-    //    {
-    //        _animator.SetBool("IsGrounded", true);
-    //    }
-    //    if (_isGrounded && !isHit) // 낭떠러지인 경우
-    //    {
-    //        if (_rigidbody.linearVelocity.y <= 0)
-    //            _animator.SetBool("IsAscending", false);
-    //    }
-    //    if (!_isGrounded) // 땅에 있지 않을 때
-    //    {
-    //        if (_isAscending && _rigidbody.linearVelocity.y < 0)
-    //        {
-    //            _animator.SetBool("IsAscending", false);
-    //            _isAscending = false;
-    //        }
-    //    }
-
-    //    _isGrounded = isHit;
-    //    _animator.SetBool("IsGrounded", _isGrounded);
-
-    //}
-
-    //private PlatformEffector2D GetCurrentPlatformEffector()
-    //{
-    //    // 플레이어 아래 위치한 플랫폼 Effector 찾기
-    //    RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 1.2f, LayerMask.GetMask("Ground"));
-    //    if (hit.collider != null)
-    //    {
-    //        return hit.collider.GetComponent<PlatformEffector2D>();
-    //    }
-    //    return null;
-    //}
-
-    //private void Move()
-    //{
-    //    // 대화중인 경우에는 움직이지 못하도록
-    //    if (DialogueManager.Instance.IsTalking) return;
-
-    //    // 1. 넉백(경직) 중이거나 공격 중이면 키보드 입력 완벽 무시!
-    //    if (PlayerManager.Instance.CurrentCharacter.isKnockedBack || _playerAttack._isAttacking) return;
-
-    //    // ** 서서히 줄어드는 GetAxis 대신, 바로 0으로 떨어지는 GetAxisRaw를 써야 의도치 않은 브레이크를 막을 수 있음
-    //    _horizontalInput = Input.GetAxisRaw("Horizontal");  //GetAxis
-    //    _isDash = _isGrounded ? Input.GetKey(KeyCode.LeftShift) : _isDash; //(점프 동작 중에는 마지막 대시 상태를 넘기기)
-
-    //    if (_horizontalInput != 0)
-    //    {
-    //        _spriteRenderer.flipX = _horizontalInput > 0;
-    //    }
-
-    //    // [수정됨] 요정화(Fairy Stage)에 따른 이동 방식(Shift) 처리
-    //    HandlePhaseMovement();
-
-    //    if (_isGrounded)
-    //    {
-    //        //걷기 & 달리기 애니메이션
-    //        _animator.SetFloat("Speed", Mathf.Abs(_horizontalInput));
-    //        _animator.SetBool("IsDash", _isDash && _horizontalInput != 0);
-    //    }
-
-    //    //이동
-    //    float moveSpeed = _isDash ? CurDashSpeed : CurRunSpeed;
-
-    //    // 2. 공중 관성 & 에어 컨트롤 로직
-    //    if (_isGrounded)
-    //    {
-    //        // 땅에서는 즉시 움직이고 멈춤
-    //        _rigidbody.linearVelocity = new Vector2(_horizontalInput * moveSpeed, _rigidbody.linearVelocity.y);
-    //    }
-    //    else
-    //    {
-    //        // 공중에 있을 때
-    //        if (_horizontalInput != 0)
-    //        {
-    //            // 방향키를 누르면 원래 날아가던 관성에 '유저의 이동 의지'를 부드럽게 섞어줌 (Air Strafe)
-    //            // (강제로 덮어씌우지 않으므로 넉백 중 키를 눌러도 뚝 떨어지지 않음) ==> 아직 문제 있어 수정중.
-    //            float targetSpeed = _horizontalInput * moveSpeed;
-    //            float newX = Mathf.MoveTowards(_rigidbody.linearVelocity.x, targetSpeed, 15f * Time.deltaTime);
-    //            _rigidbody.linearVelocity = new Vector2(newX, _rigidbody.linearVelocity.y);
-    //        }
-    //        else
-    //        {
-    //            // 키보드에서 손을 떼면 아무것도 안 함
-    //            // 물리 엔진이 알아서 원래 넉백 힘(포물선) 그대로 날아가게 냅둠.
-    //        }
-    //    }
-    //}
-
-    //// [추가됨] 기획에 맞춰 페이즈 1, 2, 3의 이동기를 분리해둔 함수
-    //private void HandlePhaseMovement()
-    //{
-    //    SoraStats sora = PlayerManager.Instance.CurrentCharacter as SoraStats;
-    //    int currentPhase = (sora != null) ? sora.fairyStage : 0;
-
-    //    if (Input.GetKey(KeyCode.LeftShift))
-    //    {
-    //        switch (currentPhase)
-    //        {
-    //            case 1: // 2페이즈 (소형 날개) -> 공중에서도 대시/비행 가능
-    //                _isDash = true;
-    //                // TODO: 필요시 중력을 무시하거나 Y축 이동 로직 추가 (ex. 비행)
-    //                break;
-
-    //            case 2: // 3페이즈 (대형 날개) -> 순간이동
-    //                if (Input.GetKeyDown(KeyCode.LeftShift) && Time.time >= _lastTeleportTime + _teleportCooldown)
-    //                {
-    //                    Teleport();
-    //                    _lastTeleportTime = Time.time;
-    //                }
-    //                _isDash = false; // 순간이동은 대시 판정이 아님
-    //                break;
-
-    //            default: // 1페이즈 (기본) -> 땅에서만 대시 유지
-    //                _isDash = _isGrounded;
-    //                break;
-    //        }
-    //    }
-    //    else
-    //    {
-    //        // Shift 키를 떼면 대시 해제 (점프 중 대시 유지 등은 여기서 조건 추가 가능)
-    //        _isDash = false;
-    //    }
-    //}
-
-    //// [추가됨] 3페이즈 전용 순간이동 로직
-    //private void Teleport()
-    //{
-    //    float teleportDistance = 5f;
-    //    float dir = _spriteRenderer.flipX ? 1f : -1f;
-
-    //    // 벽을 뚫지 않도록 Raycast 검사 후 이동
-    //    RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.right * dir, teleportDistance, LayerMask.GetMask("Ground"));
-
-    //    Vector3 targetPos = transform.position + new Vector3(dir * teleportDistance, 0, 0);
-    //    if (hit.collider != null)
-    //    {
-    //        targetPos = hit.point - new Vector2(dir * 0.5f, 0); // 벽에 부딪히면 벽 바로 앞까지만
-    //    }
-
-    //    transform.position = targetPos;
-    //    _animator.SetTrigger("Teleport"); // 순간이동 연출용 트리거
-    //    Debug.Log("3페이즈 순간이동 발동!");
-    //}
-
-
-    //private void OnDrawGizmos()
-    //{
-    //    if (_isGrounded)
-    //        Gizmos.color = Color.red;
-    //    else
-    //        Gizmos.color = Color.yellow;
-
-    //    Vector3 pos = transform.position + _groundCheckLineOffset + Vector3.right * GroundCheckDistanceWidth;
-    //    Gizmos.DrawLine(pos, pos + Vector3.down * GroundCheckDistance);
-    //    pos = transform.position + _groundCheckLineOffset - Vector3.right * GroundCheckDistanceWidth;
-    //    Gizmos.DrawLine(pos, pos + Vector3.down * GroundCheckDistance);
-    //}
-
-    
 }

@@ -6,6 +6,7 @@ public class PlayerVisual : MonoBehaviour
 {
     private SpriteRenderer _rootSpriteRenderer;
     private PlayerController _controller;
+    private Animator _rootAnimator; // Visual 자신의 Animator (이벤트가 실제로 걸려있는 대표 애니메이터)
     private Animator[] _partAnimators; // 자식으로 있는 모든 애니메이터를 싹 다 관리
 
     // 상태 이름 오타 방지용 (에디터의 노드 이름과 정확히 일치해야 함)
@@ -26,6 +27,7 @@ public class PlayerVisual : MonoBehaviour
     {
         _rootSpriteRenderer = GetComponent<SpriteRenderer>();
         _controller = GetComponentInParent<PlayerController>();
+        _rootAnimator = GetComponent<Animator>();
         _partAnimators = GetComponentsInChildren<Animator>(true); // true를 넣으면 비활성화된 파츠(ex: 날개)의 애니메이터도 긁어옴
         Debug.Log($"[PlayerVisual] 총 {_partAnimators.Length}개의 파츠 애니메이터를 동기화합니다.");
 
@@ -77,11 +79,25 @@ public class PlayerVisual : MonoBehaviour
         _wasActionLocked = isActionLocked;
     }
 
+    // 잠금(넉백 등)이 풀리는 순간, 실제로 공중이라면 Fall로 바로잡는다.
+    // (공격 종료는 OnAttackEnd에서 ReturnToLocomotion을 직접 호출하므로 여기선 지상 케이스는 건드리지 않음)
     private void SyncVisualToPhysicalState()
     {
-        // 땅 위라면 이미 Idle/Movement 상태이므로 별도 처리 불필요.
-        // 공중이라면(예: 공격이 끝났는데 아직 착지 전) 그제서야 Fall 상태로 전환.
         if (!_controller.IsGrounded)
+        {
+            CrossFadeAll(AnimState.JumpTree, 0.05f);
+        }
+    }
+
+    // 안전장치: 공중 + 비잠금 상태인데 화면상 상태가 Jump/Fall 계열이 아니면 강제로 바로잡는다.
+    // (이벤트 유실 등 어떤 경로로 상태가 꼬이든 최종적으로 항상 여기서 걸러진다)
+    private void ReconcileAirborneVisual()
+    {
+        if (_controller.IsGrounded || _controller.IsActionLocked || _rootAnimator == null) return;
+
+        AnimatorStateInfo info = _rootAnimator.GetCurrentAnimatorStateInfo(0);
+        bool isAirborneState = info.IsName(AnimState.JumpUp) || info.IsName(AnimState.JumpTree);
+        if (!isAirborneState)
         {
             CrossFadeAll(AnimState.JumpTree, 0.05f);
         }
@@ -167,6 +183,13 @@ public class PlayerVisual : MonoBehaviour
     // --- PlayerCombat에서 호출 ---
     public void PlayAttackAnimation(string stateName) => PlayImmediate(stateName);
     public void ReturnToMovement() => CrossFadeAll(AnimState.Movement, 0.1f);
+
+    // 잠금 상태(공격 등)에서 벗어날 때 호출: 현재 물리 상태에 맞는 이동 모션으로 복귀
+    public void ReturnToLocomotion()
+    {
+        if (_controller.IsGrounded) CrossFadeAll(AnimState.Movement, 0.1f);
+        else CrossFadeAll(AnimState.JumpTree, 0.1f);
+    }
 
     public void TriggerHitStop(float duration)
     {
