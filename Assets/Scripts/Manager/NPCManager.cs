@@ -4,9 +4,12 @@ using UnityEngine;
 
 public class NPCManager : Singleton<NPCManager>
 {
+    [Header("Ground Snap")]
+    [Tooltip("NPC가 자동으로 안착할 바닥으로 인정할 레이어들 (Ground + OneWayPlatform 둘 다 체크)")]
+    public LayerMask groundSnapLayer;
+
     // NPC 이름을 Key로 하여 데이터를 영구 보관하는 딕셔너리
     private Dictionary<string, NPCData> npcDataDict = new Dictionary<string, NPCData>();
-
 
     // 씬 내에서 껐다 켜기 위한 껍데기(프리팹) 보관소
     private Dictionary<string, GameObject> npcPool = new Dictionary<string, GameObject>();
@@ -117,14 +120,39 @@ public class NPCManager : Singleton<NPCManager>
             npcScript.SetupCurrentEvent(data);
         }
 
+        npcObj.transform.position = ComputeSnappedPosition(npcObj, data.Position);
 
-        // 바닥 자동 안착 기능
-        float startOffset = 1.0f;
-        float rayDistance = 3.0f;
-        Vector2 rayStart = data.Position + Vector2.up * startOffset;
+        //// 바닥 자동 안착 기능
+        //float startOffset = 1.0f;
+        //float rayDistance = 3.0f;
+        //Vector2 rayStart = data.Position + Vector2.up * startOffset;
 
-        RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, rayDistance, LayerMask.GetMask("Ground"));
-        Debug.DrawRay(rayStart, Vector2.down * rayDistance, Color.magenta, 5f); // NPC는 보라색 레이저로 표시
+        //RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, rayDistance, LayerMask.GetMask("Ground"));
+        //Debug.DrawRay(rayStart, Vector2.down * rayDistance, Color.magenta, 5f); // NPC는 보라색 레이저로 표시
+
+        //if (hit.collider != null)
+        //{
+        //    Collider2D col = npcObj.GetComponentInChildren<Collider2D>();
+        //    if (col != null)
+        //    {
+        //        Physics2D.SyncTransforms();
+        //        float pivotToBottom = npcObj.transform.position.y - col.bounds.min.y;
+        //        npcObj.transform.position = new Vector3(data.Position.x, hit.point.y + pivotToBottom, 0);
+        //    }
+        //}
+        //else
+        //{
+        //    npcObj.transform.position = data.Position;
+        //}
+    }
+
+    // 기존 SpawnOrUpdateNPC()의 '바닥 자동 안착 기능' 블록과
+    // TriggerBossBattle()의 위치 보정 블록을 아래 헬퍼 하나로 교체
+    private Vector3 ComputeSnappedPosition(GameObject npcObj, Vector2 desiredPos, float startOffset = 1f, float rayDistance = 3f)
+    {
+        Vector2 rayStart = desiredPos + Vector2.up * startOffset;
+        RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, rayDistance, groundSnapLayer);
+        Debug.DrawRay(rayStart, Vector2.down * rayDistance, Color.magenta, 5f);
 
         if (hit.collider != null)
         {
@@ -133,13 +161,10 @@ public class NPCManager : Singleton<NPCManager>
             {
                 Physics2D.SyncTransforms();
                 float pivotToBottom = npcObj.transform.position.y - col.bounds.min.y;
-                npcObj.transform.position = new Vector3(data.Position.x, hit.point.y + pivotToBottom, 0);
+                return new Vector3(desiredPos.x, hit.point.y + pivotToBottom, 0);
             }
         }
-        else
-        {
-            npcObj.transform.position = data.Position;
-        }
+        return new Vector3(desiredPos.x, desiredPos.y, 0);
     }
 
     // EventManager에서 호출할 대화 연결 함수
@@ -182,20 +207,22 @@ public class NPCManager : Singleton<NPCManager>
                 Vector2 bossStartPos = new Vector2(player.position.x + 5f, player.position.y);
 
                 // NPC 위치 보정 (바닥 레이캐스트 재활용)
-                RaycastHit2D hit = Physics2D.Raycast(bossStartPos + Vector2.up * 1f, Vector2.down, 3f, LayerMask.GetMask("Ground"));
-                if (hit.collider != null)
-                {
-                    Collider2D col = npcObj.GetComponentInChildren<Collider2D>();
-                    if (col != null)
-                    {
-                        float pivotToBottom = npcObj.transform.position.y - col.bounds.min.y;
-                        npcObj.transform.position = new Vector3(bossStartPos.x, hit.point.y + pivotToBottom, 0);
-                    }
-                }
-                else
-                {
-                    npcObj.transform.position = bossStartPos;
-                }
+                npcObj.transform.position = ComputeSnappedPosition(npcObj, bossStartPos);
+
+                //RaycastHit2D hit = Physics2D.Raycast(bossStartPos + Vector2.up * 1f, Vector2.down, 3f, LayerMask.GetMask("Ground"));
+                //if (hit.collider != null)
+                //{
+                //    Collider2D col = npcObj.GetComponentInChildren<Collider2D>();
+                //    if (col != null)
+                //    {
+                //        float pivotToBottom = npcObj.transform.position.y - col.bounds.min.y;
+                //        npcObj.transform.position = new Vector3(bossStartPos.x, hit.point.y + pivotToBottom, 0);
+                //    }
+                //}
+                //else
+                //{
+                //    npcObj.transform.position = bossStartPos;
+                //}
 
                 Debug.Log($"[전투 시작] {targetNpcName} 보스전 돌입! 거리를 벌립니다.");
 

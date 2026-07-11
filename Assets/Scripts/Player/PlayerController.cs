@@ -21,8 +21,7 @@ public class PlayerController : MonoBehaviour
     // 애니메이션 타이밍 제어
     public event Action OnJumpTriggered; // 점프
     public event Action OnLanded;        // 착지
-    public event Action OnFallStarted;   // 점프가 아닌 낙하(아래 지형 이
-                                         // 동 등)
+    public event Action OnFallStarted;   // 점프가 아닌 낙하(아래 지형 이동 등)
 
     // --- 상태 프로퍼티 (Visual이나 다른 스크립트에서 읽어갈 수 있게 열어둠) ---
     public float CurrentSpeed => _goToUnder ? 0f : (Mathf.Abs(_horizontalInput) > 0 ? (IsDashing ? baseDashSpeed : baseRunSpeed) : 0f); // BT 파라미터를 위해 실제 속도(0, 3, 6)를 반환하도록 계산!
