@@ -4,19 +4,21 @@ using UnityEngine;
 [RequireComponent(typeof(Animator), typeof(SpriteRenderer))]
 public class PlayerVisual : MonoBehaviour
 {
+    private IFormStageProvider _formProvider; // 폼체인지 연출 반응 관련
+
     private SpriteRenderer _rootSpriteRenderer;
-    private PlayerController _controller;
+    private IPlayerMotor _controller;
     private Animator _rootAnimator; // Visual 자신의 Animator (이벤트가 실제로 걸려있는 대표 애니메이터)
     private Animator[] _partAnimators; // 자식으로 있는 모든 애니메이터를 싹 다 관리
 
     // 상태 이름 오타 방지용 (에디터의 노드 이름과 정확히 일치해야 함)
-    private static class AnimState
-    {
-        public const string Movement = "Movement";
-        public const string JumpUp = "Player_JumpUp";
-        public const string JumpTree = "JumpTree";
-        public const string Ground = "Player_Ground";
-    }
+    //private static class AnimState
+    //{
+    //    public const string Movement = "Movement";
+    //    public const string JumpUp = "Player_JumpUp";
+    //    public const string JumpTree = "JumpTree";
+    //    public const string Ground = "Player_Ground";
+    //}
 
     private float _statSpeedMultiplier = 1f;
     private Coroutine _hitStopRoutine;
@@ -26,7 +28,7 @@ public class PlayerVisual : MonoBehaviour
     private void Awake()
     {
         _rootSpriteRenderer = GetComponent<SpriteRenderer>();
-        _controller = GetComponentInParent<PlayerController>();
+        _controller = GetComponentInParent<IPlayerMotor>();
         _rootAnimator = GetComponent<Animator>();
         _partAnimators = GetComponentsInChildren<Animator>(true); // true를 넣으면 비활성화된 파츠(ex: 날개)의 애니메이터도 긁어옴
         Debug.Log($"[PlayerVisual] 총 {_partAnimators.Length}개의 파츠 애니메이터를 동기화합니다.");
@@ -38,6 +40,14 @@ public class PlayerVisual : MonoBehaviour
             _controller.OnFallStarted += HandleFallStarted;
             _controller.OnLanded += HandleLanded;
         }
+
+        _formProvider = GetComponentInParent<IFormStageProvider>();
+
+        if (_formProvider != null)
+        {
+            _formProvider.OnFormTransformStarted += HandleFormTransformStarted;
+            _formProvider.OnFormStageChanged += HandleFormStageChanged;
+        }
     }
 
     private void OnDestroy()
@@ -47,6 +57,12 @@ public class PlayerVisual : MonoBehaviour
             _controller.OnJumpTriggered -= HandleJumpTriggered;
             _controller.OnFallStarted -= HandleFallStarted;
             _controller.OnLanded -= HandleLanded;
+        }
+
+        if (_formProvider != null)
+        {
+            _formProvider.OnFormTransformStarted -= HandleFormTransformStarted;
+            _formProvider.OnFormStageChanged -= HandleFormStageChanged;
         }
     }
 
@@ -60,6 +76,10 @@ public class PlayerVisual : MonoBehaviour
         UpdateAnimationSpeed();
     }
 
+    // 폼체인지(요정화) 모션 관련
+    private void HandleFormTransformStarted() => PlayImmediate("Transform"); // 베이스 컨트롤러에 공용 "Transform" 상태 하나 추가 필요
+    private void HandleFormStageChanged(int newStage) => ReturnToLocomotion();
+
     // 대화 시작 순간엔 강제로 Idle, 그리고 (모든 종류의) 잠금이 풀리는 순간엔
     // 그동안 억눌러뒀던 실제 물리 상태(공중/지상)와 화면을 다시 동기화한다.
     private void HandleLockTransitions()
@@ -67,7 +87,7 @@ public class PlayerVisual : MonoBehaviour
         bool isDialogueLocked = _controller.IsDialogueLocked;
         if (isDialogueLocked && !_wasDialogueLocked)
         {
-            PlayImmediate(AnimState.Movement);
+            PlayImmediate(PlayerAnimStateNames.Movement);
         }
         _wasDialogueLocked = isDialogueLocked;
 
@@ -85,7 +105,7 @@ public class PlayerVisual : MonoBehaviour
     {
         if (!_controller.IsGrounded)
         {
-            CrossFadeAll(AnimState.JumpTree, 0.05f);
+            CrossFadeAll(PlayerAnimStateNames.JumpTree, 0.05f);
         }
     }
 
@@ -96,10 +116,10 @@ public class PlayerVisual : MonoBehaviour
         if (_controller.IsGrounded || _controller.IsActionLocked || _rootAnimator == null) return;
 
         AnimatorStateInfo info = _rootAnimator.GetCurrentAnimatorStateInfo(0);
-        bool isAirborneState = info.IsName(AnimState.JumpUp) || info.IsName(AnimState.JumpTree);
+        bool isAirborneState = info.IsName(PlayerAnimStateNames.JumpUp) || info.IsName(PlayerAnimStateNames.JumpTree);
         if (!isAirborneState)
         {
-            CrossFadeAll(AnimState.JumpTree, 0.05f);
+            CrossFadeAll(PlayerAnimStateNames.JumpTree, 0.05f);
         }
     }
 
@@ -161,34 +181,34 @@ public class PlayerVisual : MonoBehaviour
     private void HandleJumpTriggered()
     {
         if (_controller.IsActionLocked) return;
-        PlayImmediate(AnimState.JumpUp);
+        PlayImmediate(PlayerAnimStateNames.JumpUp);
     }
     private void HandleFallStarted()
     {
         if (_controller.IsActionLocked) return;
-        CrossFadeAll(AnimState.JumpTree, 0.05f);
+        CrossFadeAll(PlayerAnimStateNames.JumpTree, 0.05f);
     }
     private void HandleLanded()
     {
         if (_controller.IsActionLocked) return;
-        PlayImmediate(AnimState.Ground);
+        PlayImmediate(PlayerAnimStateNames.Ground);
     }
 
     // Player_JumpUp 클립 마지막 프레임의 Animation Event에서 호출 (Relay 경유)
-    public void OnJumpApex() => CrossFadeAll(AnimState.JumpTree, 0.05f);
+    public void OnJumpApex() => CrossFadeAll(PlayerAnimStateNames.JumpTree, 0.05f);
 
     // Player_Ground 클립 마지막 프레임의 Animation Event에서 호출 (Relay 경유)
     public void OnGroundEnd() => ReturnToMovement();
 
     // --- PlayerCombat에서 호출 ---
     public void PlayAttackAnimation(string stateName) => PlayImmediate(stateName);
-    public void ReturnToMovement() => CrossFadeAll(AnimState.Movement, 0.1f);
+    public void ReturnToMovement() => CrossFadeAll(PlayerAnimStateNames.Movement, 0.1f);
 
     // 잠금 상태(공격 등)에서 벗어날 때 호출: 현재 물리 상태에 맞는 이동 모션으로 복귀
     public void ReturnToLocomotion()
     {
-        if (_controller.IsGrounded) CrossFadeAll(AnimState.Movement, 0.1f);
-        else CrossFadeAll(AnimState.JumpTree, 0.1f);
+        if (_controller.IsGrounded) CrossFadeAll(PlayerAnimStateNames.Movement, 0.1f);
+        else CrossFadeAll(PlayerAnimStateNames.JumpTree, 0.1f);
     }
 
     public void TriggerHitStop(float duration)
@@ -229,5 +249,19 @@ public class PlayerVisual : MonoBehaviour
     {
         foreach (var anim in _partAnimators)
             if (anim != null) anim.speed = speed;
+    }
+
+    // 연출용 컷신 재생
+    public void PlayCutscene(string bodyStateName, string faceStateName)
+    {
+        var appearance = GetComponent<CharacterAppearance>();
+        foreach (var anim in _partAnimators)
+        {
+            if (anim == null || !anim.gameObject.activeInHierarchy) continue;
+            bool isFace = appearance != null && appearance.GetSlot(anim) == BodyPartSlot.Face;
+
+            if (isFace && !string.IsNullOrEmpty(faceStateName)) anim.Play(faceStateName, -1, 0f);
+            else if (!isFace && !string.IsNullOrEmpty(bodyStateName)) anim.Play(bodyStateName, -1, 0f);
+        }
     }
 }

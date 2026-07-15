@@ -1,9 +1,22 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 
 // PlayableCharacter를 상속받는 1부 전용 주인공 '소라'
-public class SoraStats : PlayableCharacter
+public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSource
 {
+    [Header("Form Change (요정화)")] // 시즌 1에만 쓸지, 아님 다른 캐릭터도 해당하는가?
+    [Tooltip("기획 반영: 변신 딜레이 0.5초")]
+    public float formTransformDuration = 0.5f;
+
+    public int FormStage => fairyStage;
+    public bool IsFlightForm => fairyStage == 1; // 2단계 = 비행모드
+    public bool IsLocked => _isTransforming;      // IActionLockSource
+
+    public event Action OnFormTransformStarted;
+    public event Action<int> OnFormStageChanged;
+
+
     [Header("Sora Exclusives - Meta Stats")] //피로도, 정신력 스탯
     public int maxFatigue = 100;
     public int currentFatigue = 0;
@@ -74,14 +87,16 @@ public class SoraStats : PlayableCharacter
     {
         _isTransforming = true;
         isSuperArmor = true; // 변신 중 무적이나 슈퍼아머 처리 (원하는 대로 변경 가능)
+        OnFormTransformStarted?.Invoke();
 
         // 시각 효과 호출 (이펙트 등)
         Debug.Log("요정화 변신 시작...");
 
-        yield return new WaitForSeconds(1.0f); // 1초 딜레이
+        yield return new WaitForSeconds(formTransformDuration); // 변신 딜레이
 
         fairyStage = (fairyStage == 0) ? 1 : 0; // 0(1단계) <-> 1(2단계) 토글
         Debug.Log($"요정화 단계가 {fairyStage + 1}단계로 변경되었습니다.");
+        OnFormStageChanged?.Invoke(fairyStage);
 
         isSuperArmor = false;
         _isTransforming = false;
@@ -96,7 +111,7 @@ public class SoraStats : PlayableCharacter
     }
 
     // [기획 반영] 시간 속성의 소라는 역상성(예: Normal)에 맞으면 추가 피해 및 정신력 감소
-    public override void TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal)
+    public override void TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal, CharacterStats attacker = null)
     {
         int finalDamage = incomingDamage;
         if (fairyStage > 0 && attackElement == ElementType.Normal) // 기획에 따라 상성 정의 필요    //************* 추후 수정

@@ -6,6 +6,6 @@ AnimatorOverrideController:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Base_Animator
-  m_Controller: {fileID: 9100000, guid: c61d690c2abc7a84b8ab1ac9b9ced526, type: 2}
+  m_Name: Sora_Body_Stage0_Override
+  m_Controller: {fileID: 9100000, guid: 616c2d14e0e8b3144b0cfecdf34c4653, type: 2}
   m_Clips: []

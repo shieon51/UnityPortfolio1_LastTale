@@ -5,6 +5,16 @@ using UnityEngine;
 // 스킬의 성질(우선순위)을 Enum으로 관리
 public enum SkillPriority { Normal, Cancel, Ultimate }
 
+// 플레이어 상태 (땅, 점프 후 공중, 비행모드)
+public enum PlayerMovementContext { Grounded, Airborne, Flying }
+
+[System.Serializable]
+public struct SkillAnimVariant // 플레이어 상태에 따른 스킬 사용 모션 변경
+{
+    public PlayerMovementContext context;
+    public string animStateName;
+}
+
 // 모든 스킬의 기본이 되는 추상 클래스
 public abstract class SkillBase : ScriptableObject
 {
@@ -14,6 +24,14 @@ public abstract class SkillBase : ScriptableObject
     public string animStateName; // 재생할 애니메이션 State 이름 (예: "CloseAttack1")
     public float activeDuration = 0.15f; // 판정 지속 시간
     public SkillPriority priority = SkillPriority.Normal; // 캔슬 가능 여부 판단용
+
+    [Header("Combat Formula")]
+    [Tooltip("비워두면 CombatFormulaService의 기본 수식을 사용")]
+    public DamageFormulaSO customDamageFormula;
+
+    [Header("Context Variants")]
+    [Tooltip("공중/비행 등 특정 상황에서 다른 모션이 필요할 때만 등록. 안 하면 기본 animStateName 사용 (이펙트/판정 로직은 그대로 공유).")]
+    public List<SkillAnimVariant> contextVariants = new List<SkillAnimVariant>();
 
     [Header("Safety")]
     [Tooltip("OnAttackEnd 이벤트가 이 시간 안에 호출되지 않으면 강제 종료시키는 안전장치(초). 클립 전체 길이보다 넉넉하게 설정하세요.")]
@@ -29,4 +47,11 @@ public abstract class SkillBase : ScriptableObject
 
     // 공격 판정 (히트박스) 생성 등도 스킬마다 다를 수 있으니 가상 함수로 뺌
     public abstract IEnumerator ExecuteHitbox(PlayerCombat combat, Transform parentTransform, CharacterStats stats);
+
+    public string ResolveAnimStateName(PlayerMovementContext context)
+    {
+        foreach (var v in contextVariants)
+            if (v.context == context) return v.animStateName;
+        return animStateName;
+    }
 }

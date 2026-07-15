@@ -71,6 +71,10 @@ public class DialogueManager : Singleton<DialogueManager>
                 {
                     pendingBattleNPC = args[1]; // "Liel" 예약
                 }
+                //if (args[0] == "emote" && args.Length > 1)
+                //{
+                //    PlayerCutsceneAnimator.Instance.Play(args[1]); // 예: #emote:crossArms_shocked
+                //}
             }
             //// 태그를 읽어올 때 Split(':')을 사용
             //foreach (string tag in story.currentTags)

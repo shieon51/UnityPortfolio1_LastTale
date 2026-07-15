@@ -46,7 +46,7 @@ public class CharacterStats : MonoBehaviour
         currentMana = maxMana;
     }
 
-    public virtual void TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal)
+    public virtual void TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal, CharacterStats attacker = null) // 공격자 레벨차 보정 수식 필요 시 마지막 인자 채워넣기
     {
         // 무적 시간 체크: 마지막 맞은 시간 + 무적 시간보다 현재 시간이 커야만 데미지 인정
         if (Time.time < lastHitTime + invincibilityDuration)
@@ -57,24 +57,24 @@ public class CharacterStats : MonoBehaviour
         lastHitTime = Time.time; // 마지막 맞은 시간 갱신
 
 
-        int finalDamage = incomingDamage;
+        int finalDamage = ComputeFinalDamage(incomingDamage, attackElement, attacker);
 
-        // 1. 방어 태세(Guard) 계산
-        if (isGuarding)
-        {
-            // 방어 중일 땐 방어력의 효율이 증가 (예: 방어력의 2배 적용)
-            int effectiveDefense = defense.GetValue() * 2;
-            finalDamage = Mathf.Max(1, finalDamage - effectiveDefense); // (최소 1은 들어감)
-            Debug.Log($"[Guard] 방어 성공! 데미지 감소: {incomingDamage} -> {finalDamage}");
-        }
-        else
-        {
-            // 무방비 상태일 땐 일반 방어력 적용
-            finalDamage = Mathf.Max(1, finalDamage - defense.GetValue());
-        }
+        //// 1. 방어 태세(Guard) 계산
+        //if (isGuarding)
+        //{
+        //    // 방어 중일 땐 방어력의 효율이 증가 (예: 방어력의 2배 적용)
+        //    int effectiveDefense = defense.GetValue() * 2;
+        //    finalDamage = Mathf.Max(1, finalDamage - effectiveDefense); // (최소 1은 들어감)
+        //    Debug.Log($"[Guard] 방어 성공! 데미지 감소: {incomingDamage} -> {finalDamage}");
+        //}
+        //else
+        //{
+        //    // 무방비 상태일 땐 일반 방어력 적용
+        //    finalDamage = Mathf.Max(1, finalDamage - defense.GetValue());
+        //}
 
-        // 2. 원소 상성 연산 (추후 상성표에 따라 증감율 적용 가능)
-        // if (attackElement == ElementType.Water && currentElement == ElementType.Fire) finalDamage = (int)(finalDamage * 1.5f);
+        //// 2. 원소 상성 연산 (추후 상성표에 따라 증감율 적용 가능)
+        //// if (attackElement == ElementType.Water && currentElement == ElementType.Fire) finalDamage = (int)(finalDamage * 1.5f);
 
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
         OnHealthChanged?.Invoke();
@@ -85,6 +85,25 @@ public class CharacterStats : MonoBehaviour
         {
             Die();
         }
+    }
+
+    protected int ComputeFinalDamage(int incomingDamage, ElementType attackElement, CharacterStats attacker)
+    {
+        if (CombatFormulaService.Instance == null)
+        {
+            // 씬에 서비스가 없어도 게임이 죽지 않도록 하는 안전 폴백 (기존 로직과 동일)
+            int fallbackDefense = isGuarding ? defense.GetValue() * 2 : defense.GetValue();
+            return Mathf.Max(1, incomingDamage - fallbackDefense);
+        }
+
+        var ctx = new CombatContext
+        {
+            IncomingDamage = incomingDamage,
+            Attacker = attacker,
+            Defender = this,
+            AttackElement = attackElement
+        };
+        return CombatFormulaService.Instance.CalculateDamage(ctx);
     }
 
     // 체력 회복

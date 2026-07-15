@@ -4,7 +4,7 @@ using UnityEngine;
 using static UnityEngine.Rendering.DebugUI;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class PlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviour, IPlayerMotor
 {
     [Header("Movement Settings")]
     public float baseRunSpeed = 3f;
@@ -17,6 +17,9 @@ public class PlayerController : MonoBehaviour
     public float groundCheckHeight = 0.1f; // 바닥 체크용 박스 두께 조절 가능
     public LayerMask groundLayer; // Solid Ground + One-Way Platform 모두 포함
     public Vector3 groundCheckOffset = new Vector3(0, -0.5f, 0);
+
+    // 잠금 소스 자동 수집용
+    private IActionLockSource[] _lockSources;
 
     // 애니메이션 타이밍 제어
     public event Action OnJumpTriggered; // 점프
@@ -41,6 +44,9 @@ public class PlayerController : MonoBehaviour
             if (DialogueManager.Instance != null && DialogueManager.Instance.IsTalking) return true;
             if (_stats != null && _stats.isKnockedBack) return true;
             if (_playerCombat != null && _playerCombat.IsAttacking) return true;
+            if (_lockSources != null)
+                foreach (var source in _lockSources)
+                    if (source.IsLocked) return true;
             return false;
         }
     }
@@ -71,6 +77,8 @@ public class PlayerController : MonoBehaviour
 
         // 충돌 감지 방식을 Continuous로 설정
         _rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+
+        _lockSources = GetComponents<IActionLockSource>(); // SoraStats(변신 중) 등을 자동으로 주워담음
     }
 
     private void Update()

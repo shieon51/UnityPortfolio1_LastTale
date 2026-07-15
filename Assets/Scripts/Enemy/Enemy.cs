@@ -113,7 +113,7 @@ public class Enemy : CharacterStats
     }
 
     // 2. 데미지 받았을 때 처리 (CharacterStats 오버라이드)
-    public override void TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal)
+    public override void TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal, CharacterStats attacker = null)
     {
         int preHealth = currentHealth; // 맞기 전 체력 기억
         base.TakeDamage(incomingDamage, attackElement); // 부모의 데미지 계산 및 UI 갱신 로직

@@ -6,6 +6,9 @@ using System.Collections;
 [DefaultExecutionOrder(-10)] // PlayerController보다 항상 먼저 실행되어, 동시입력 시 공격이 우선권을 갖도록 보장
 public class PlayerCombat : MonoBehaviour
 {
+    private IPlayerMotor _motor;         // 5번에서 정의할 인터페이스 (지상/공중 판정용)
+    private IFormStageProvider _formProvider;
+
     private Rigidbody2D _rb;
     private CharacterStats _stats;
     private SoraStats _soraStats;
@@ -47,6 +50,8 @@ public class PlayerCombat : MonoBehaviour
         _soraStats = GetComponent<SoraStats>();
         _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         _playerVisual = GetComponentInChildren<PlayerVisual>();
+        _motor = GetComponent<IPlayerMotor>();
+        _formProvider = GetComponent<IFormStageProvider>(); // 없으면 null (정상)
     }
 
     private void Start()
@@ -140,12 +145,24 @@ public class PlayerCombat : MonoBehaviour
         _comboStepTracker[seq] = step + 1;
 
         // Visual 스크립트를 통해 모든 파츠(Body, Hair 등) 애니메이션 동시 재생!
-        if (_playerVisual != null) _playerVisual.PlayAttackAnimation(skillToPlay.animStateName);
+        if (_playerVisual != null)
+        {
+            var context = ResolveMovementContext();
+            _playerVisual.PlayAttackAnimation(skillToPlay.ResolveAnimStateName(context));
+        }
 
         _attackSessionId++;
         int sessionId = _attackSessionId;
         StartCoroutine(skillToPlay.ExecuteSkillBehavior(this, _rb, null, _stats));
         StartCoroutine(AttackWatchdogRoutine(sessionId, skillToPlay));
+    }
+
+    // 현재 땅인지, 공중인지, 비행인지에 따라 스킬 모션 결정
+    private PlayerMovementContext ResolveMovementContext()
+    {
+        if (_motor != null && _motor.IsGrounded) return PlayerMovementContext.Grounded;
+        if (_formProvider != null && _formProvider.IsFlightForm) return PlayerMovementContext.Flying;
+        return PlayerMovementContext.Airborne;
     }
 
     // 애니메이션 이벤트(OnAttackEnd)가 어떤 이유로든 호출되지 못했을 때를 대비한 최종 안전장치.

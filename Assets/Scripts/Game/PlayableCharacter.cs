@@ -90,7 +90,7 @@ public abstract class PlayableCharacter : CharacterStats
     //}
 
     // PlayableCharacter.cs 안에 추가 (기존 TakeDamage가 있다면 덮어씌우기)
-    public override void TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal)
+    public override void TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal, CharacterStats attacker = null)
     {
         base.TakeDamage(incomingDamage, attackElement);
 

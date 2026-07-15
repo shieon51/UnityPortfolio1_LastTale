@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ad3d7f777d17f24f82b7e9f699e7aa3, type: 3}
+  m_Name: Sora_VisualProfile
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterVisualProfile
+  characterId: Sora
+  formStages:
+  - {fileID: 11400000, guid: 9f9df2c266fd73c4dab2ad4428600ec1, type: 2}
+  - {fileID: 11400000, guid: 4ffb9a09ded61674c9882cc6a9642a67, type: 2}
+  - {fileID: 11400000, guid: e1fc14cc9af2b924194a824900eefd9e, type: 2}
