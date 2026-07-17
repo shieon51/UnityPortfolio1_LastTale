@@ -7,19 +7,11 @@ public class PlayerVisual : MonoBehaviour
 {
     private IFormStageProvider _formProvider; // 폼체인지 연출 반응 관련
 
-    //private SpriteRenderer _rootSpriteRenderer;
+    private SpriteRenderer[] _allSpriteRenderers; // Awake에서 한 번만 캐싱
+
     private IPlayerMotor _controller;
     private Animator _driverAnimator; // Body 파츠의 Animator. 이벤트/상태조회의 유일한 기준점.
     private Animator[] _partAnimators; // 자식으로 있는 모든 애니메이터를 싹 다 관리
-
-    // 상태 이름 오타 방지용 (에디터의 노드 이름과 정확히 일치해야 함)
-    //private static class AnimState
-    //{
-    //    public const string Movement = "Movement";
-    //    public const string JumpUp = "Player_JumpUp";
-    //    public const string JumpTree = "JumpTree";
-    //    public const string Ground = "Player_Ground";
-    //}
 
     private float _statSpeedMultiplier = 1f;
     private Coroutine _hitStopRoutine;
@@ -28,10 +20,10 @@ public class PlayerVisual : MonoBehaviour
 
     private void Awake()
     {
-        //_rootSpriteRenderer = GetComponent<SpriteRenderer>();
         _controller = GetComponentInParent<IPlayerMotor>();
         _partAnimators = GetComponentsInChildren<Animator>(true); // true를 넣으면 비활성화된 파츠(ex: 날개)의 애니메이터도 긁어옴
         _driverAnimator = ResolveDriverAnimator();
+        _allSpriteRenderers = GetComponentsInChildren<SpriteRenderer>(true);
 
         Debug.Log($"[PlayerVisual] 총 {_partAnimators.Length}개의 파츠 애니메이터를 동기화합니다.");
 
@@ -76,6 +68,7 @@ public class PlayerVisual : MonoBehaviour
         UpdateAnimations();
         UpdateSpriteDirection();
         UpdateAnimationSpeed();
+        ReconcileAirborneVisual();
     }
 
     private Animator ResolveDriverAnimator()
@@ -90,7 +83,7 @@ public class PlayerVisual : MonoBehaviour
     }
 
     // 폼체인지(요정화) 모션 관련
-    private void HandleFormTransformStarted() => PlayImmediate("Transform"); // 베이스 컨트롤러에 공용 "Transform" 상태 하나 추가 필요
+    private void HandleFormTransformStarted() => PlayImmediate(PlayerAnimStateNames.Transform); // 베이스 컨트롤러에 공용 "Transform" 상태 하나 추가 필요
     private void HandleFormStageChanged(int newStage) => ReturnToLocomotion();
 
     // 대화 시작 순간엔 강제로 Idle, 그리고 (모든 종류의) 잠금이 풀리는 순간엔
@@ -165,12 +158,11 @@ public class PlayerVisual : MonoBehaviour
         if (inputX != 0)
         {
             bool flip = inputX > 0; // 기존에 맞게 조정 (왼쪽/오른쪽)
-            
+
             // 모든 파츠의 SpriteRenderer를 찾아서 동시에 뒤집음
-            SpriteRenderer[] allRenderers = GetComponentsInChildren<SpriteRenderer>(true);
-            foreach (var sr in allRenderers)
+            foreach (var sr in _allSpriteRenderers) // 캐싱된 배열 재사용, 할당 없음
             {
-                sr.flipX = flip;
+                if (sr != null) sr.flipX = flip;
             }
         }
     }

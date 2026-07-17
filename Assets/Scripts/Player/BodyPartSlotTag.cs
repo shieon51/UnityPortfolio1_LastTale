@@ -5,6 +5,5 @@ using UnityEngine;
 public class BodyPartSlotTag : MonoBehaviour
 {
     public BodyPartSlot slot;
-    public Animator Animator { get; private set; }
-    private void Awake() => Animator = GetComponent<Animator>();
+    public Animator Animator => GetComponent<Animator>();
 }

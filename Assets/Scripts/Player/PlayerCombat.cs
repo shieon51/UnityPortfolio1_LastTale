@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using System.Collections;
 
+// 슬롯에 낀 스킬을 런타임에 교체 가능하게
+public enum SkillSlot { Q, W, E, R }
+
 [DefaultExecutionOrder(-10)] // PlayerController보다 항상 먼저 실행되어, 동시입력 시 공격이 우선권을 갖도록 보장
 public class PlayerCombat : MonoBehaviour
 {
@@ -224,6 +227,19 @@ public class PlayerCombat : MonoBehaviour
             _playerVisual.ResetAnimationSpeed();
             _playerVisual.ReturnToLocomotion();
         }
+    }
+
+    // 스킬 장착을 위한 함수 (** 추후 사용)
+    public void EquipSkill(SkillSlot slot, SkillSequenceData skill)
+    {
+        switch (slot)
+        {
+            case SkillSlot.Q: sequenceQ = skill; break;
+            case SkillSlot.W: sequenceW = skill; break;
+            case SkillSlot.E: sequenceE = skill; break;
+            case SkillSlot.R: sequenceR = skill; break;
+        }
+        _comboStepTracker.Remove(skill); // 새로 장착한 스킬은 항상 1타부터 시작하도록 초기화
     }
 
     // --- 헬퍼 함수 (SkillBase 자식 클래스들이 타격감/기즈모를 위해 호출) ---

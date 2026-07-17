@@ -57,8 +57,11 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
     private bool _isDashLatchedInAir = false; // 공중 대시 관성 유지를 위한 변수
     private float _lastJumpTime = 0f;
 
-    private int _groundedMismatchStreak = 0;
-    private const int GroundedConfirmFrames = 2; // 연속 몇 프레임 동안 같은 값이 나와야 착지/이탈로 확정할지
+    // 시간, 프레임 수 체크 - 같은 값이 나와야 착지/이탈로 확정할지
+    private float _groundedMismatchStartTime = -1f;
+    private int _groundedMismatchFrameCount = 0;
+    private const float GroundedConfirmDuration = 0.05f;
+    private const int GroundedConfirmMinFrames = 2;
 
     // --- 컴포넌트 캐싱 ---
     private Rigidbody2D _rb;
@@ -188,7 +191,7 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
         // 점프하는 순간 대시 중이었다면 상태를 기억함
         _isDashLatchedInAir = IsDashing;
         _lastJumpTime = Time.time;       // 점프 시간 기록
-        _groundedMismatchStreak = 0; // 점프는 디바운스 없이 즉시/확정적으로 반영
+        //_groundedMismatchStreak = 0; // 점프는 디바운스 없이 즉시/확정적으로 반영
 
         _rb.linearVelocity = new Vector2(_rb.linearVelocity.x, 0); // 기존 Y 낙하 관성 무시하고 점프
         _rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
@@ -314,20 +317,34 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
     {
         if (rawGrounded == IsGrounded)
         {
-            _groundedMismatchStreak = 0;
+            _groundedMismatchStartTime = -1f;
+            _groundedMismatchFrameCount = 0;
             return;
         }
 
-        _groundedMismatchStreak++;
-        if (_groundedMismatchStreak < GroundedConfirmFrames) return; // 순간적 흔들림일 수 있으므로 이전 상태 유지
+        if (_groundedMismatchStartTime < 0f)
+        {
+            _groundedMismatchStartTime = Time.time; // 불일치가 시작된 시점 기록
+            _groundedMismatchFrameCount = 1;
+            return;
+        }
 
-        _groundedMismatchStreak = 0;
+        _groundedMismatchFrameCount++;
+
+        bool durationPassed = Time.time - _groundedMismatchStartTime >= GroundedConfirmDuration;
+        bool framesPassed = _groundedMismatchFrameCount >= GroundedConfirmMinFrames;
+
+        if (!durationPassed || !framesPassed) return; // 렉 중 단발성 오판 방지: 시간·프레임 둘 다 필요
+
+        _groundedMismatchStartTime = -1f;
+        _groundedMismatchFrameCount = 0;
         ApplyGroundedChange(rawGrounded);
     }
 
     private void SetGroundedImmediate(bool grounded)
     {
-        _groundedMismatchStreak = 0;
+        _groundedMismatchStartTime = -1f;
+        _groundedMismatchFrameCount = 0; // 추가
         if (grounded == IsGrounded) return;
         ApplyGroundedChange(grounded);
     }

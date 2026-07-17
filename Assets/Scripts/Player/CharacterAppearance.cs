@@ -14,7 +14,11 @@ public class CharacterAppearance : MonoBehaviour
     {
         _parts = GetComponentsInChildren<BodyPartSlotTag>(true);
         _slotByAnimator = new Dictionary<Animator, BodyPartSlot>();
-        foreach (var p in _parts) _slotByAnimator[p.Animator] = p.slot;
+        foreach (var p in _parts)
+        {
+            if (p.Animator == null) continue; // 혹시 모를 누락 파츠는 조용히 건너뜀
+            _slotByAnimator[p.Animator] = p.slot;
+        }
 
         _formProvider = GetComponentInParent<IFormStageProvider>();
         ApplyFormStage(_formProvider?.FormStage ?? 0);

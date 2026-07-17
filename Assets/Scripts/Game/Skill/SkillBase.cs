@@ -29,6 +29,11 @@ public abstract class SkillBase : ScriptableObject
     [Tooltip("비워두면 CombatFormulaService의 기본 수식을 사용")]
     public DamageFormulaSO customDamageFormula;
 
+    // ** (지금은 0으로 둬도 무방, 나중에 단계 시스템 확정되면 채우면 됨)
+    [Header("Progression")]
+    [Tooltip("이 스킬을 쓰기 위한 최소 단계. 단계 시스템 확정 전까진 0으로 둬도 무방.")]
+    public int requiredStage = 0;
+
     [Header("Context Variants")]
     [Tooltip("공중/비행 등 특정 상황에서 다른 모션이 필요할 때만 등록. 안 하면 기본 animStateName 사용 (이펙트/판정 로직은 그대로 공유).")]
     public List<SkillAnimVariant> contextVariants = new List<SkillAnimVariant>();
