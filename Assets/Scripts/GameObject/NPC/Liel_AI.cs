@@ -2,7 +2,9 @@
 
 public class Liel_AI : NPC
 {
-    public enum LielCombatStyle { InjuredCommander, FallenAngel }
+    public enum BossDifficultyTier { Training, Normal, Hard } // 기획 문서의 축 (난이도)
+    public enum LielCombatStyle { InjuredCommander, FallenAngel } // 스토리 진행에 따른 축 (캐릭터성)
+    // ** 실제 전투 파라미터는 (difficultyTier, combatStyle, bossPhase) 세 값의 조합으로 결정
 
     [Header("Liel Specifics")]
     public LielCombatStyle currentCombatStyle = LielCombatStyle.InjuredCommander;
@@ -220,3 +222,10 @@ public class Liel_AI : NPC
     }
 
 }
+
+/*
+  Liel_AI의 보스 FSM에서:
+
+  페이즈 전환 조건 만족 시 → GetComponent<NPCFormStageController>().TransitionToStage(2);
+  스토리 분기(타락 여부)가 결정되는 시점 → GetComponent<CharacterAppearance>().SetProfile(isFallen ? _fallenProfile : _normalProfile);
+*/

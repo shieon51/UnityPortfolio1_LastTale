@@ -12,6 +12,9 @@ GameObject:
   - component: {fileID: 7079097833459111121}
   - component: {fileID: 2386597809401269983}
   - component: {fileID: 663565770948976550}
+  - component: {fileID: 5252269451691168382}
+  - component: {fileID: 782221379067580443}
+  - component: {fileID: 1836399676135930579}
   m_Layer: 9
   m_Name: Liel
   m_TagString: Untagged
@@ -144,6 +147,48 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: -0.8}
   m_Radius: 0.22594738
+--- !u!114 &5252269451691168382
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3566543744763902310}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40152a3234aa0f94aada0cd4051cb890, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterAppearance
+  _profile: {fileID: 11400000, guid: 2db24d5415c460246a459c58babacf94, type: 2}
+--- !u!114 &782221379067580443
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3566543744763902310}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 338b5a85428af24468f988271630355a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NPCFormStageController
+  transformDuration: 1
+--- !u!114 &1836399676135930579
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3566543744763902310}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 910f620045a26d642afe135fd763230e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CutsceneAnimationPlayer
+  _catalog: {fileID: 11400000, guid: b58b3feddcbd1744fa755871e1f8afbc, type: 2}
+  _bodyAnimators:
+  - {fileID: 4557298855416544362}
+  _faceAnimator: {fileID: 0}
 --- !u!1 &4103355609429672222
 GameObject:
   m_ObjectHideFlags: 0
@@ -259,6 +304,7 @@ GameObject:
   - component: {fileID: 4557298855416544362}
   - component: {fileID: 5837489318169250162}
   - component: {fileID: 5006085168637508929}
+  - component: {fileID: 3541392167384185828}
   m_Layer: 9
   m_Name: Visual
   m_TagString: Untagged
@@ -350,7 +396,7 @@ Animator:
   m_GameObject: {fileID: 6412499149747571638}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 66a5d762e378bd444a24d91ebc2a24bc, type: 2}
+  m_Controller: {fileID: 22100000, guid: 8a4267ee6d775d947970ae42397f4a6b, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -423,6 +469,19 @@ MonoBehaviour:
     knockbackPower: 20
   attack1ManaCost: 5
   showGizmos: 1
+--- !u!114 &3541392167384185828
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6412499149747571638}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8e37a5d59d0dd645b9ae4e553e57f39, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BodyPartSlotTag
+  slot: 0
 --- !u!1 &8544912074155934285
 GameObject:
   m_ObjectHideFlags: 0

@@ -63,7 +63,7 @@ public class Sora_Q_MeleeDashSkill : SkillBase
                 if (!alreadyHitEnemies.Contains(hit))
                 {
                     alreadyHitEnemies.Add(hit);
-                    CharacterStats enemyStats = hit.GetComponent<CharacterStats>();
+                    CharacterStats enemyStats = hit.GetComponentInParent<CharacterStats>();
                     if (enemyStats != null)
                     {
                         int finalDamage = (int)(stats.attack.GetValue() * damageMultiplier);

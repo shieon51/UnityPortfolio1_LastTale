@@ -1,14 +1,15 @@
 using System.Collections;
+using System.Linq;
 using UnityEngine;
 
-[RequireComponent(typeof(Animator), typeof(SpriteRenderer))]
+// 실제 렌더링/애니메이션은 전부 자식 파츠(Body, Face, Hair...)가 담당.
 public class PlayerVisual : MonoBehaviour
 {
     private IFormStageProvider _formProvider; // 폼체인지 연출 반응 관련
 
-    private SpriteRenderer _rootSpriteRenderer;
+    //private SpriteRenderer _rootSpriteRenderer;
     private IPlayerMotor _controller;
-    private Animator _rootAnimator; // Visual 자신의 Animator (이벤트가 실제로 걸려있는 대표 애니메이터)
+    private Animator _driverAnimator; // Body 파츠의 Animator. 이벤트/상태조회의 유일한 기준점.
     private Animator[] _partAnimators; // 자식으로 있는 모든 애니메이터를 싹 다 관리
 
     // 상태 이름 오타 방지용 (에디터의 노드 이름과 정확히 일치해야 함)
@@ -27,10 +28,11 @@ public class PlayerVisual : MonoBehaviour
 
     private void Awake()
     {
-        _rootSpriteRenderer = GetComponent<SpriteRenderer>();
+        //_rootSpriteRenderer = GetComponent<SpriteRenderer>();
         _controller = GetComponentInParent<IPlayerMotor>();
-        _rootAnimator = GetComponent<Animator>();
         _partAnimators = GetComponentsInChildren<Animator>(true); // true를 넣으면 비활성화된 파츠(ex: 날개)의 애니메이터도 긁어옴
+        _driverAnimator = ResolveDriverAnimator();
+
         Debug.Log($"[PlayerVisual] 총 {_partAnimators.Length}개의 파츠 애니메이터를 동기화합니다.");
 
         // Controller에서 보내는 '즉시 재생' 이벤트를 구독
@@ -76,6 +78,17 @@ public class PlayerVisual : MonoBehaviour
         UpdateAnimationSpeed();
     }
 
+    private Animator ResolveDriverAnimator()
+    {
+        var bodyTag = GetComponentsInChildren<BodyPartSlotTag>(true)
+            .FirstOrDefault(p => p.slot == BodyPartSlot.Body);
+
+        if (bodyTag != null) return bodyTag.Animator;
+
+        Debug.LogWarning("[PlayerVisual] Body 슬롯 태그를 찾지 못했습니다. 첫 파츠를 기준 Animator로 사용합니다.");
+        return _partAnimators.Length > 0 ? _partAnimators[0] : null;
+    }
+
     // 폼체인지(요정화) 모션 관련
     private void HandleFormTransformStarted() => PlayImmediate("Transform"); // 베이스 컨트롤러에 공용 "Transform" 상태 하나 추가 필요
     private void HandleFormStageChanged(int newStage) => ReturnToLocomotion();
@@ -94,28 +107,28 @@ public class PlayerVisual : MonoBehaviour
         bool isActionLocked = _controller.IsActionLocked;
         if (!isActionLocked && _wasActionLocked)
         {
-            SyncVisualToPhysicalState();
+            ReturnToLocomotion();   //SyncVisualToPhysicalState();
         }
         _wasActionLocked = isActionLocked;
     }
 
     // 잠금(넉백 등)이 풀리는 순간, 실제로 공중이라면 Fall로 바로잡는다.
     // (공격 종료는 OnAttackEnd에서 ReturnToLocomotion을 직접 호출하므로 여기선 지상 케이스는 건드리지 않음)
-    private void SyncVisualToPhysicalState()
-    {
-        if (!_controller.IsGrounded)
-        {
-            CrossFadeAll(PlayerAnimStateNames.JumpTree, 0.05f);
-        }
-    }
+    //private void SyncVisualToPhysicalState()
+    //{
+    //    if (!_controller.IsGrounded)
+    //    {
+    //        CrossFadeAll(PlayerAnimStateNames.JumpTree, 0.05f);
+    //    }
+    //}
 
     // 안전장치: 공중 + 비잠금 상태인데 화면상 상태가 Jump/Fall 계열이 아니면 강제로 바로잡는다.
     // (이벤트 유실 등 어떤 경로로 상태가 꼬이든 최종적으로 항상 여기서 걸러진다)
     private void ReconcileAirborneVisual()
     {
-        if (_controller.IsGrounded || _controller.IsActionLocked || _rootAnimator == null) return;
+        if (_controller.IsGrounded || _controller.IsActionLocked || _driverAnimator == null) return;
 
-        AnimatorStateInfo info = _rootAnimator.GetCurrentAnimatorStateInfo(0);
+        AnimatorStateInfo info = _driverAnimator.GetCurrentAnimatorStateInfo(0);
         bool isAirborneState = info.IsName(PlayerAnimStateNames.JumpUp) || info.IsName(PlayerAnimStateNames.JumpTree);
         if (!isAirborneState)
         {

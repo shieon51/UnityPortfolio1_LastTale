@@ -8,4 +8,24 @@ AnimatorOverrideController:
   m_PrefabAsset: {fileID: 0}
   m_Name: Sora_Body_Stage0_Override
   m_Controller: {fileID: 9100000, guid: 616c2d14e0e8b3144b0cfecdf34c4653, type: 2}
-  m_Clips: []
+  m_Clips:
+  - m_OriginalClip: {fileID: 7400000, guid: df5c8974e9f569e479ff5c7051f25b6c, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: df5c8974e9f569e479ff5c7051f25b6c, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 322389590c53bb8428ba40eed5b5320f, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 322389590c53bb8428ba40eed5b5320f, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: bfca8ac7eee6d4e4e8282c5a86f33c1b, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: bfca8ac7eee6d4e4e8282c5a86f33c1b, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 812b62d26c993cd4681a82d5205c4be8, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 812b62d26c993cd4681a82d5205c4be8, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 6bfbce3d3790c5f4db5c3029165c19e3, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 6bfbce3d3790c5f4db5c3029165c19e3, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 377cef97a4d74bc48819caad5459b5e2, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 377cef97a4d74bc48819caad5459b5e2, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: a1f578da75572c541bad99aa394e8700, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: a1f578da75572c541bad99aa394e8700, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: fac88f7ab44009d42820fe2f299fc06f, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: fac88f7ab44009d42820fe2f299fc06f, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: e6972742a0402e249818e84893e042cd, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: e6972742a0402e249818e84893e042cd, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 68647ebaab6c7c942b6174156852ef35, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 68647ebaab6c7c942b6174156852ef35, type: 2}

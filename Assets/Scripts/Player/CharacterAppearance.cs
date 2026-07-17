@@ -30,6 +30,14 @@ public class CharacterAppearance : MonoBehaviour
         if (_formProvider != null) _formProvider.OnFormStageChanged -= ApplyFormStage;
     }
 
+    // 어느 CharacterVisualProfile를 쓸지 런타임에서 바꿀 수 있도록 함
+    public void SetProfile(CharacterVisualProfile newProfile)
+    {
+        if (newProfile == null) return;
+        _profile = newProfile;
+        ApplyFormStage(_formProvider?.FormStage ?? 0); // 프로필 교체 즉시 현재 단계로 재적용
+    }
+
     public void ApplyFormStage(int stage)
     {
         var stageSet = _profile.GetStageSet(stage);

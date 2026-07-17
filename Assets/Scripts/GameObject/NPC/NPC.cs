@@ -4,6 +4,8 @@ using UnityEngine;
 // NPC 클래스 (추상)
 public abstract class NPC : CharacterStats
 {
+    private CutsceneAnimationPlayer _cutscenePlayer;
+
     // ** 디버깅 전용 **
     [Header("Debug Settings")]
     public TextMeshProUGUI statusText; // NPC 머리 위 TextMesh (World Space)
@@ -61,6 +63,8 @@ public abstract class NPC : CharacterStats
         animator = GetComponentInChildren<Animator>();
         rb = GetComponent<Rigidbody2D>();
         if (rb != null) originalGravity = rb.gravityScale;
+
+        _cutscenePlayer = GetComponent<CutsceneAnimationPlayer>(); // ?
 
         // 자식 오브젝트에 달려 있는 EventTrigger를 찾음
         myEventTrigger = GetComponentInChildren<EventTrigger>(true);
@@ -147,6 +151,7 @@ public abstract class NPC : CharacterStats
     {
         if (isKnockedBack || myData == null) return; // 넉백 중엔 행동 불가
         if (isTalking) return;                       // 대화 중일 때는 AI 판단(다가가기 등)을 멈춤
+        if (_cutscenePlayer != null && _cutscenePlayer.IsLocked) return; // 연출 중엔 AI 정지
 
         // 디버깅용 상태 출력
         if (statusText != null && StateMachine.CurrentState != null)

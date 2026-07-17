@@ -128,7 +128,7 @@ public class LielAttackCompo : MonoBehaviour
                 if (!alreadyHitEnemies.Contains(hit))
                 {
                     alreadyHitEnemies.Add(hit);
-                    CharacterStats playerStats = hit.GetComponent<CharacterStats>();
+                    CharacterStats playerStats = hit.GetComponentInParent<CharacterStats>();
                     if (playerStats != null)
                     {
                         int damage = lielAI.attack.GetValue();
