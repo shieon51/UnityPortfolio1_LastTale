@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using System.Collections;
+using System;
 
 // 슬롯에 낀 스킬을 런타임에 교체 가능하게
 public enum SkillSlot { Q, W, E, R }
@@ -17,6 +18,8 @@ public class PlayerCombat : MonoBehaviour
     private SoraStats _soraStats;
     private SpriteRenderer _spriteRenderer;
     private PlayerVisual _playerVisual; // 애니메이션 강제 동기화용
+
+    public event Action<SkillBase> OnSkillBlockedByMana; // UI 피드백(마나 부족 이펙트 등)용 훅
 
     public bool IsAttacking { get; private set; }
     private float _originalGravity;
@@ -116,8 +119,6 @@ public class PlayerCombat : MonoBehaviour
 
     private void TryExecuteSequence(SkillSequenceData seq)
     {
-        _isComboWindowOpen = false; // 새로운 스킬이 시작됐으니 콤보 창 닫음
-
         // 현재 이 슬롯(예: Q)이 몇 타째인지 가져옴 (없으면 0타)
         int step = _comboStepTracker.GetValueOrDefault(seq, 0);
 
@@ -128,15 +129,29 @@ public class PlayerCombat : MonoBehaviour
 
         // --- 마나/오버캐스트 연산 ---
         int actualManaCost = _stats.CalculateManaCost(skillToPlay.requiredMana);
-        if (_stats.currentMana < actualManaCost)
+        bool hasEnoughMana = _stats.currentMana >= actualManaCost;
+
+        // 마나가 부족한데 '차단' 정책이면 콤보 진행도, 애니메이션, 아무것도 건드리지 않고 그냥 무시
+        if (!hasEnoughMana && skillToPlay.manaCostPolicy == ManaCostPolicy.BlockIfInsufficient)
+        {
+            OnSkillBlockedByMana?.Invoke(skillToPlay);
+            return;
+        }
+
+        // ---------------------------------------------------------------------
+        _isComboWindowOpen = false; // 새로운 스킬이 시작됐으니 콤보 창 닫음
+
+        if (hasEnoughMana)
+        {
+            _stats.UseMana(actualManaCost);
+        }
+        else // OvercastWithHealth 정책이면서 실제로 마나가 부족한 경우에만 도달
         {
             int deficit = actualManaCost - _stats.currentMana;
             _stats.UseMana(_stats.currentMana);
-
             if (_soraStats != null) _soraStats.IncreaseFatigue(deficit * 2);
             _stats.TakeDamage(deficit, ElementType.Normal);
         }
-        else _stats.UseMana(actualManaCost);
 
         // --- 실행 ---
         IsAttacking = true;
