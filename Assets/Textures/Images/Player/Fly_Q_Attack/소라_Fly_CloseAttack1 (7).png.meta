@@ -1,0 +1,442 @@
+fileFormatVersion: 2
+guid: a94ec6902d5e87d4997f1a5b5eb39dc7
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 1903625086444111971
+    second: "\uC18C\uB77C_Fly_CloseAttack1 (7)_0"
+  - first:
+      213: 5032020257873529181
+    second: "\uC18C\uB77C_Fly_CloseAttack1 (7)_1"
+  - first:
+      213: -4121031311773201597
+    second: "\uC18C\uB77C_Fly_CloseAttack1 (7)_2"
+  - first:
+      213: 3878197139630917097
+    second: "\uC18C\uB77C_Fly_CloseAttack1 (7)_3"
+  - first:
+      213: 8179511689443191447
+    second: "\uC18C\uB77C_Fly_CloseAttack1 (7)_4"
+  - first:
+      213: 9139215838488137250
+    second: "\uC18C\uB77C_Fly_CloseAttack1 (7)_5"
+  - first:
+      213: -8295782496455785386
+    second: "\uC18C\uB77C_Fly_CloseAttack1 (7)_6"
+  - first:
+      213: -4935277326053131290
+    second: "\uC18C\uB77C_Fly_CloseAttack1 (7)_7"
+  - first:
+      213: 732915438740054503
+    second: "\uC18C\uB77C_Fly_CloseAttack1 (7)_8"
+  - first:
+      213: -3576754762056221145
+    second: "\uC18C\uB77C_Fly_CloseAttack1 (7)_9"
+  - first:
+      213: 7095291647015317535
+    second: "\uC18C\uB77C_Fly_CloseAttack1 (7)_10"
+  - first:
+      213: -1379462917218308310
+    second: "\uC18C\uB77C_Fly_CloseAttack1 (7)_11"
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_CloseAttack1 (7)_0"
+      rect:
+        serializedVersion: 2
+        x: 226
+        y: 198
+        width: 13
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 36806072ee80b6a10800000000000000
+      internalID: 1903625086444111971
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_CloseAttack1 (7)_1"
+      rect:
+        serializedVersion: 2
+        x: 247
+        y: 211
+        width: 16
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d590f1583c355d540800000000000000
+      internalID: 5032020257873529181
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_CloseAttack1 (7)_2"
+      rect:
+        serializedVersion: 2
+        x: 263
+        y: 15
+        width: 362
+        height: 231
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 34b0f792bd72fc6c0800000000000000
+      internalID: -4121031311773201597
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_CloseAttack1 (7)_3"
+      rect:
+        serializedVersion: 2
+        x: 242
+        y: 108
+        width: 60
+        height: 95
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9e503ac30cf12d530800000000000000
+      internalID: 3878197139630917097
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_CloseAttack1 (7)_4"
+      rect:
+        serializedVersion: 2
+        x: 486
+        y: 188
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 79aaa6d6b86738170800000000000000
+      internalID: 8179511689443191447
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_CloseAttack1 (7)_5"
+      rect:
+        serializedVersion: 2
+        x: 651
+        y: 186
+        width: 111
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 22e85ba226405de70800000000000000
+      internalID: 9139215838488137250
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_CloseAttack1 (7)_6"
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 170
+        width: 6
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 65489dcb5c57fdc80800000000000000
+      internalID: -8295782496455785386
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_CloseAttack1 (7)_7"
+      rect:
+        serializedVersion: 2
+        x: 204
+        y: 177
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6eb30909b6f528bb0800000000000000
+      internalID: -4935277326053131290
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_CloseAttack1 (7)_8"
+      rect:
+        serializedVersion: 2
+        x: 195
+        y: 88
+        width: 49
+        height: 57
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e1208855b6db2a00800000000000000
+      internalID: 732915438740054503
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_CloseAttack1 (7)_9"
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 60
+        width: 22
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72eb3fe8e70dc5ec0800000000000000
+      internalID: -3576754762056221145
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_CloseAttack1 (7)_10"
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 78
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f10f426192a877260800000000000000
+      internalID: 7095291647015317535
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_CloseAttack1 (7)_11"
+      rect:
+        serializedVersion: 2
+        x: 635
+        y: 15
+        width: 83
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a2fe06619c92bdce0800000000000000
+      internalID: -1379462917218308310
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      "\uC18C\uB77C_Fly_CloseAttack1 (7)_0": 1903625086444111971
+      "\uC18C\uB77C_Fly_CloseAttack1 (7)_1": 5032020257873529181
+      "\uC18C\uB77C_Fly_CloseAttack1 (7)_10": 7095291647015317535
+      "\uC18C\uB77C_Fly_CloseAttack1 (7)_11": -1379462917218308310
+      "\uC18C\uB77C_Fly_CloseAttack1 (7)_2": -4121031311773201597
+      "\uC18C\uB77C_Fly_CloseAttack1 (7)_3": 3878197139630917097
+      "\uC18C\uB77C_Fly_CloseAttack1 (7)_4": 8179511689443191447
+      "\uC18C\uB77C_Fly_CloseAttack1 (7)_5": 9139215838488137250
+      "\uC18C\uB77C_Fly_CloseAttack1 (7)_6": -8295782496455785386
+      "\uC18C\uB77C_Fly_CloseAttack1 (7)_7": -4935277326053131290
+      "\uC18C\uB77C_Fly_CloseAttack1 (7)_8": 732915438740054503
+      "\uC18C\uB77C_Fly_CloseAttack1 (7)_9": -3576754762056221145
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

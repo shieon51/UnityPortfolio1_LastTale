@@ -1,0 +1,390 @@
+fileFormatVersion: 2
+guid: 5f958a36276979749a7bfdfd9519cf95
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 1839947027726678188
+    second: "\uC18C\uB77C_Fly_run_Wing1 (2)_0"
+  - first:
+      213: 5778637666817514749
+    second: "\uC18C\uB77C_Fly_run_Wing1 (2)_1"
+  - first:
+      213: -319891537869830747
+    second: "\uC18C\uB77C_Fly_run_Wing1 (2)_2"
+  - first:
+      213: 5508295787673534161
+    second: "\uC18C\uB77C_Fly_run_Wing1 (2)_3"
+  - first:
+      213: -7113587720150500884
+    second: "\uC18C\uB77C_Fly_run_Wing1 (2)_4"
+  - first:
+      213: 1824227683153534876
+    second: "\uC18C\uB77C_Fly_run_Wing1 (2)_5"
+  - first:
+      213: 7463219199945341402
+    second: "\uC18C\uB77C_Fly_run_Wing1 (2)_6"
+  - first:
+      213: -8771668827382771222
+    second: "\uC18C\uB77C_Fly_run_Wing1 (2)_7"
+  - first:
+      213: 7484905827878261087
+    second: "\uC18C\uB77C_Fly_run_Wing1 (2)_8"
+  - first:
+      213: 7425733334391700176
+    second: "\uC18C\uB77C_Fly_run_Wing1 (2)_9"
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_run_Wing1 (2)_0"
+      rect:
+        serializedVersion: 2
+        x: 297
+        y: 345
+        width: 13
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ca83f21c21ec88910800000000000000
+      internalID: 1839947027726678188
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_run_Wing1 (2)_1"
+      rect:
+        serializedVersion: 2
+        x: 209
+        y: 325
+        width: 9
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dfc99586758d13050800000000000000
+      internalID: 5778637666817514749
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_run_Wing1 (2)_2"
+      rect:
+        serializedVersion: 2
+        x: 292
+        y: 31
+        width: 102
+        height: 302
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5a58d9657548f8bf0800000000000000
+      internalID: -319891537869830747
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_run_Wing1 (2)_3"
+      rect:
+        serializedVersion: 2
+        x: 529
+        y: 315
+        width: 11
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1debf0ea5d5617c40800000000000000
+      internalID: 5508295787673534161
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_run_Wing1 (2)_4"
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 46
+        width: 160
+        height: 270
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ce939dd68a5774d90800000000000000
+      internalID: -7113587720150500884
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_run_Wing1 (2)_5"
+      rect:
+        serializedVersion: 2
+        x: 470
+        y: 270
+        width: 58
+        height: 49
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c9fdcc3a965f05910800000000000000
+      internalID: 1824227683153534876
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_run_Wing1 (2)_6"
+      rect:
+        serializedVersion: 2
+        x: 570
+        y: 243
+        width: 9
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ad9fd9d025ea29760800000000000000
+      internalID: 7463219199945341402
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_run_Wing1 (2)_7"
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 56
+        width: 13
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae19b700da5c44680800000000000000
+      internalID: -8771668827382771222
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_run_Wing1 (2)_8"
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 41
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f515fe7913abfd760800000000000000
+      internalID: 7484905827878261087
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_run_Wing1 (2)_9"
+      rect:
+        serializedVersion: 2
+        x: 487
+        y: 30
+        width: 12
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0dab139df118d0760800000000000000
+      internalID: 7425733334391700176
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      "\uC18C\uB77C_Fly_run_Wing1 (2)_0": 1839947027726678188
+      "\uC18C\uB77C_Fly_run_Wing1 (2)_1": 5778637666817514749
+      "\uC18C\uB77C_Fly_run_Wing1 (2)_2": -319891537869830747
+      "\uC18C\uB77C_Fly_run_Wing1 (2)_3": 5508295787673534161
+      "\uC18C\uB77C_Fly_run_Wing1 (2)_4": -7113587720150500884
+      "\uC18C\uB77C_Fly_run_Wing1 (2)_5": 1824227683153534876
+      "\uC18C\uB77C_Fly_run_Wing1 (2)_6": 7463219199945341402
+      "\uC18C\uB77C_Fly_run_Wing1 (2)_7": -8771668827382771222
+      "\uC18C\uB77C_Fly_run_Wing1 (2)_8": 7484905827878261087
+      "\uC18C\uB77C_Fly_run_Wing1 (2)_9": 7425733334391700176
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

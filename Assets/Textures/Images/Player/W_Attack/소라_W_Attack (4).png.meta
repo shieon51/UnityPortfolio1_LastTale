@@ -1,0 +1,832 @@
+fileFormatVersion: 2
+guid: fd0c8a7dc3b2ed146a3c2eeb0676c73d
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 6504608764769097188
+    second: "\uC18C\uB77C_W_Attack (4)_0"
+  - first:
+      213: -3915093827913771058
+    second: "\uC18C\uB77C_W_Attack (4)_1"
+  - first:
+      213: -4439400990445072393
+    second: "\uC18C\uB77C_W_Attack (4)_2"
+  - first:
+      213: -43437899155600342
+    second: "\uC18C\uB77C_W_Attack (4)_3"
+  - first:
+      213: -279814005366065883
+    second: "\uC18C\uB77C_W_Attack (4)_4"
+  - first:
+      213: 4995416108566393133
+    second: "\uC18C\uB77C_W_Attack (4)_5"
+  - first:
+      213: 5691734664074672528
+    second: "\uC18C\uB77C_W_Attack (4)_6"
+  - first:
+      213: 4623886183614948010
+    second: "\uC18C\uB77C_W_Attack (4)_7"
+  - first:
+      213: 8929348752901209422
+    second: "\uC18C\uB77C_W_Attack (4)_8"
+  - first:
+      213: 2634857322715988613
+    second: "\uC18C\uB77C_W_Attack (4)_9"
+  - first:
+      213: -352630892893030498
+    second: "\uC18C\uB77C_W_Attack (4)_10"
+  - first:
+      213: -5741535103593802120
+    second: "\uC18C\uB77C_W_Attack (4)_11"
+  - first:
+      213: 2839197767707058574
+    second: "\uC18C\uB77C_W_Attack (4)_12"
+  - first:
+      213: -9098355671112059801
+    second: "\uC18C\uB77C_W_Attack (4)_13"
+  - first:
+      213: -5108061361717267000
+    second: "\uC18C\uB77C_W_Attack (4)_14"
+  - first:
+      213: 3716348014548005006
+    second: "\uC18C\uB77C_W_Attack (4)_15"
+  - first:
+      213: 6325143777889047542
+    second: "\uC18C\uB77C_W_Attack (4)_16"
+  - first:
+      213: -7334683931301196359
+    second: "\uC18C\uB77C_W_Attack (4)_17"
+  - first:
+      213: -3812213736523725655
+    second: "\uC18C\uB77C_W_Attack (4)_18"
+  - first:
+      213: -8844247029809573530
+    second: "\uC18C\uB77C_W_Attack (4)_19"
+  - first:
+      213: 6928614903195584098
+    second: "\uC18C\uB77C_W_Attack (4)_20"
+  - first:
+      213: -7410531189321075370
+    second: "\uC18C\uB77C_W_Attack (4)_21"
+  - first:
+      213: 4356778854448507556
+    second: "\uC18C\uB77C_W_Attack (4)_22"
+  - first:
+      213: 6392143066355680673
+    second: "\uC18C\uB77C_W_Attack (4)_23"
+  - first:
+      213: -4526641592160026534
+    second: "\uC18C\uB77C_W_Attack (4)_24"
+  - first:
+      213: 4619860492505230952
+    second: "\uC18C\uB77C_W_Attack (4)_25"
+  - first:
+      213: 3724990849183334167
+    second: "\uC18C\uB77C_W_Attack (4)_26"
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_0"
+      rect:
+        serializedVersion: 2
+        x: 284
+        y: 208
+        width: 15
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4e554fa6533054a50800000000000000
+      internalID: 6504608764769097188
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_1"
+      rect:
+        serializedVersion: 2
+        x: 295
+        y: 221
+        width: 35
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ec710e418eacaa9c0800000000000000
+      internalID: -3915093827913771058
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_2"
+      rect:
+        serializedVersion: 2
+        x: 297
+        y: 213
+        width: 17
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ff0105f1541462c0800000000000000
+      internalID: -4439400990445072393
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_3"
+      rect:
+        serializedVersion: 2
+        x: 326
+        y: 206
+        width: 23
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a2c8a0bf57da56ff0800000000000000
+      internalID: -43437899155600342
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_4"
+      rect:
+        serializedVersion: 2
+        x: 336
+        y: 221
+        width: 16
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 525f9f605a6ed1cf0800000000000000
+      internalID: -279814005366065883
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_5"
+      rect:
+        serializedVersion: 2
+        x: 353
+        y: 49
+        width: 143
+        height: 197
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d213d50eb78435540800000000000000
+      internalID: 4995416108566393133
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_6"
+      rect:
+        serializedVersion: 2
+        x: 401
+        y: 101
+        width: 118
+        height: 166
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 099b2f7558a1dfe40800000000000000
+      internalID: 5691734664074672528
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_7"
+      rect:
+        serializedVersion: 2
+        x: 278
+        y: 199
+        width: 8
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aa2a4305cf75b2040800000000000000
+      internalID: 4623886183614948010
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_8"
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 198
+        width: 9
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e4df04c816b6beb70800000000000000
+      internalID: 8929348752901209422
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_9"
+      rect:
+        serializedVersion: 2
+        x: 301
+        y: 183
+        width: 22
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 582c25266c4e09420800000000000000
+      internalID: 2634857322715988613
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_10"
+      rect:
+        serializedVersion: 2
+        x: 318
+        y: 209
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e97384c32143b1bf0800000000000000
+      internalID: -352630892893030498
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_11"
+      rect:
+        serializedVersion: 2
+        x: 356
+        y: 120
+        width: 104
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8761bd44e38f150b0800000000000000
+      internalID: -5741535103593802120
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_12"
+      rect:
+        serializedVersion: 2
+        x: 296
+        y: 59
+        width: 149
+        height: 148
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e81e247b35bd66720800000000000000
+      internalID: 2839197767707058574
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_13"
+      rect:
+        serializedVersion: 2
+        x: 317
+        y: 199
+        width: 12
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7647437e8b52cb180800000000000000
+      internalID: -9098355671112059801
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_14"
+      rect:
+        serializedVersion: 2
+        x: 263
+        y: 103
+        width: 23
+        height: 88
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8c5b1f351458c19b0800000000000000
+      internalID: -5108061361717267000
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_15"
+      rect:
+        serializedVersion: 2
+        x: 282
+        y: 188
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e80bcd444de139330800000000000000
+      internalID: 3716348014548005006
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_16"
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 121
+        width: 24
+        height: 65
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6f3595201cc67c750800000000000000
+      internalID: 6325143777889047542
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_17"
+      rect:
+        serializedVersion: 2
+        x: 291
+        y: 114
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9bdc60743d7f53a90800000000000000
+      internalID: -7334683931301196359
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_18"
+      rect:
+        serializedVersion: 2
+        x: 301
+        y: 121
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9a483aafdcb481bc0800000000000000
+      internalID: -3812213736523725655
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_19"
+      rect:
+        serializedVersion: 2
+        x: 270
+        y: 91
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 661956a6f2ce24580800000000000000
+      internalID: -8844247029809573530
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_20"
+      rect:
+        serializedVersion: 2
+        x: 277
+        y: 100
+        width: 11
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 266437a8b82672060800000000000000
+      internalID: 6928614903195584098
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_21"
+      rect:
+        serializedVersion: 2
+        x: 275
+        y: 73
+        width: 11
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 655709f5521882990800000000000000
+      internalID: -7410531189321075370
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_22"
+      rect:
+        serializedVersion: 2
+        x: 284
+        y: 92
+        width: 9
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4aa2650f843667c30800000000000000
+      internalID: 4356778854448507556
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_23"
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 84
+        width: 9
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a54b97704475b850800000000000000
+      internalID: 6392143066355680673
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_24"
+      rect:
+        serializedVersion: 2
+        x: 283
+        y: 16
+        width: 69
+        height: 63
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a500bc184732e21c0800000000000000
+      internalID: -4526641592160026534
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_25"
+      rect:
+        serializedVersion: 2
+        x: 292
+        y: 33
+        width: 147
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 86ea2af04aa0d1040800000000000000
+      internalID: 4619860492505230952
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_W_Attack (4)_26"
+      rect:
+        serializedVersion: 2
+        x: 304
+        y: 79
+        width: 12
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 71f37250173d1b330800000000000000
+      internalID: 3724990849183334167
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      "\uC18C\uB77C_W_Attack (4)_0": 6504608764769097188
+      "\uC18C\uB77C_W_Attack (4)_1": -3915093827913771058
+      "\uC18C\uB77C_W_Attack (4)_10": -352630892893030498
+      "\uC18C\uB77C_W_Attack (4)_11": -5741535103593802120
+      "\uC18C\uB77C_W_Attack (4)_12": 2839197767707058574
+      "\uC18C\uB77C_W_Attack (4)_13": -9098355671112059801
+      "\uC18C\uB77C_W_Attack (4)_14": -5108061361717267000
+      "\uC18C\uB77C_W_Attack (4)_15": 3716348014548005006
+      "\uC18C\uB77C_W_Attack (4)_16": 6325143777889047542
+      "\uC18C\uB77C_W_Attack (4)_17": -7334683931301196359
+      "\uC18C\uB77C_W_Attack (4)_18": -3812213736523725655
+      "\uC18C\uB77C_W_Attack (4)_19": -8844247029809573530
+      "\uC18C\uB77C_W_Attack (4)_2": -4439400990445072393
+      "\uC18C\uB77C_W_Attack (4)_20": 6928614903195584098
+      "\uC18C\uB77C_W_Attack (4)_21": -7410531189321075370
+      "\uC18C\uB77C_W_Attack (4)_22": 4356778854448507556
+      "\uC18C\uB77C_W_Attack (4)_23": 6392143066355680673
+      "\uC18C\uB77C_W_Attack (4)_24": -4526641592160026534
+      "\uC18C\uB77C_W_Attack (4)_25": 4619860492505230952
+      "\uC18C\uB77C_W_Attack (4)_26": 3724990849183334167
+      "\uC18C\uB77C_W_Attack (4)_3": -43437899155600342
+      "\uC18C\uB77C_W_Attack (4)_4": -279814005366065883
+      "\uC18C\uB77C_W_Attack (4)_5": 4995416108566393133
+      "\uC18C\uB77C_W_Attack (4)_6": 5691734664074672528
+      "\uC18C\uB77C_W_Attack (4)_7": 4623886183614948010
+      "\uC18C\uB77C_W_Attack (4)_8": 8929348752901209422
+      "\uC18C\uB77C_W_Attack (4)_9": 2634857322715988613
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
