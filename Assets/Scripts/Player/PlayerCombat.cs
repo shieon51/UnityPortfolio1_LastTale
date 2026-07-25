@@ -119,15 +119,17 @@ public class PlayerCombat : MonoBehaviour
 
     private void TryExecuteSequence(SkillSequenceData seq)
     {
-        // 현재 이 슬롯(예: Q)이 몇 타째인지 가져옴 (없으면 0타)
+        // 1. 현재 이 슬롯(예: Q)이 몇 타째인지 가져옴 (없으면 0타)
         int step = _comboStepTracker.GetValueOrDefault(seq, 0);
-
-        // 콤보가 끝났으면 0타로 리셋
-        if (step >= seq.comboSteps.Count) step = 0;
+        if (step >= seq.comboSteps.Count) step = 0; // 콤보가 끝났으면 0타로 리셋
 
         SkillBase skillToPlay = seq.comboSteps[step];
 
-        // --- 마나/오버캐스트 연산 ---
+        // 2. 발동 조건 실패 시(예: W인데 타겟이 없음) 마나도, 콤보 진행도, 애니메이션도 전혀 건드리지 않고 조용히 무시
+        if (!skillToPlay.CanExecute(this)) return;
+
+
+        // 3. --- 마나/오버캐스트 연산 ---
         int actualManaCost = _stats.CalculateManaCost(skillToPlay.requiredMana);
         bool hasEnoughMana = _stats.currentMana >= actualManaCost;
 

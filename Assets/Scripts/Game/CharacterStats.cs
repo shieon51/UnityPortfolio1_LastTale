@@ -30,6 +30,9 @@ public class CharacterStats : MonoBehaviour
     public float invincibilityDuration = 0.2f; // 맞은 후 0.2초간 무적
     protected float lastHitTime = -1f;
 
+    // 최근에 나를 공격한 대상 (W 스킬의 "최근 피격 대상 우선" 타겟팅에 사용)
+    public CharacterStats LastAttacker { get; private set; }
+
     // 부모에서 선언된 이벤트 (부모만 쏠 수 있음)
     public event Action OnHealthChanged;
     public event Action OnManaChanged;
@@ -56,6 +59,7 @@ public class CharacterStats : MonoBehaviour
 
         lastHitTime = Time.time; // 마지막 맞은 시간 갱신
 
+        if (attacker != null) LastAttacker = attacker;
 
         int finalDamage = ComputeFinalDamage(incomingDamage, attackElement, attacker);
 
@@ -104,6 +108,13 @@ public class CharacterStats : MonoBehaviour
             AttackElement = attackElement
         };
         return CombatFormulaService.Instance.CalculateDamage(ctx);
+    }
+
+    // 도착 순간처럼, '맞아서' 생기는 무적이 아니라 능동적으로 무적을 거는 경우를 위한 헬퍼.
+    // 기존 lastHitTime/invincibilityDuration 메커니즘을 그대로 재사용 (새 필드 없음).
+    public void GrantTemporaryInvincibility(float duration)
+    {
+        lastHitTime = Time.time + duration - invincibilityDuration;
     }
 
     // 체력 회복

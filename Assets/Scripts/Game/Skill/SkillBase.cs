@@ -1,67 +1,71 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// ½ºÅ³ÀÇ ¼ºÁú(¿ì¼±¼øÀ§)À» EnumÀ¸·Î °ü¸®
+// ìŠ¤í‚¬ì˜ ì„±ì§ˆ(ìš°ì„ ìˆœìœ„)ì„ Enumìœ¼ë¡œ ê´€ë¦¬
 public enum SkillPriority { Normal, Cancel, Ultimate }
 
-// ÇÃ·¹ÀÌ¾î »óÅÂ (¶¥, Á¡ÇÁ ÈÄ °øÁß, ºñÇà¸ğµå)
+// í”Œë ˆì´ì–´ ìƒíƒœ (ë•…, ì í”„ í›„ ê³µì¤‘, ë¹„í–‰ëª¨ë“œ)
 public enum PlayerMovementContext { Grounded, Airborne, Flying }
 
-// ½ºÅ³ »ç¿ë¿¡ ¿ÀÁ÷ ¸¶³ª¸¸ »ç¿ë°¡´ÉÇÑÁö or HPµµ ½ºÅ³¸¶³ª·Î ¶¯°Ü¾µ ¼ö ÀÖ´ÂÁö
+// ìŠ¤í‚¬ ì‚¬ìš©ì— ì˜¤ì§ ë§ˆë‚˜ë§Œ ì‚¬ìš©ê°€ëŠ¥í•œì§€ or HPë„ ìŠ¤í‚¬ë§ˆë‚˜ë¡œ ë•¡ê²¨ì“¸ ìˆ˜ ìˆëŠ”ì§€
 public enum ManaCostPolicy
 {
-    BlockIfInsufficient, // ±âº»°ª: ¸¶³ª ºÎÁ·ÇÏ¸é ¹ßµ¿ ÀÚÃ¼°¡ ¾È µÊ
-    OvercastWithHealth   // ±Ã±Ø±â µî Æ¯¼ö ½ºÅ³: ºÎÁ·ºĞÀ» HP·Î ´ë½Å ¼Ò¸ğ
+    BlockIfInsufficient, // ê¸°ë³¸ê°’: ë§ˆë‚˜ ë¶€ì¡±í•˜ë©´ ë°œë™ ìì²´ê°€ ì•ˆ ë¨
+    OvercastWithHealth   // ê¶ê·¹ê¸° ë“± íŠ¹ìˆ˜ ìŠ¤í‚¬: ë¶€ì¡±ë¶„ì„ HPë¡œ ëŒ€ì‹  ì†Œëª¨
 }
 
 [System.Serializable]
-public struct SkillAnimVariant // ÇÃ·¹ÀÌ¾î »óÅÂ¿¡ µû¸¥ ½ºÅ³ »ç¿ë ¸ğ¼Ç º¯°æ
+public struct SkillAnimVariant // í”Œë ˆì´ì–´ ìƒíƒœì— ë”°ë¥¸ ìŠ¤í‚¬ ì‚¬ìš© ëª¨ì…˜ ë³€ê²½
 {
     public PlayerMovementContext context;
     public string animStateName;
 }
 
-// ¸ğµç ½ºÅ³ÀÇ ±âº»ÀÌ µÇ´Â Ãß»ó Å¬·¡½º
+// ëª¨ë“  ìŠ¤í‚¬ì˜ ê¸°ë³¸ì´ ë˜ëŠ” ì¶”ìƒ í´ë˜ìŠ¤
 public abstract class SkillBase : ScriptableObject
 {
     [Header("Basic Info")]
     public string skillName;
     public int requiredMana;
-    public string animStateName; // Àç»ıÇÒ ¾Ö´Ï¸ŞÀÌ¼Ç State ÀÌ¸§ (¿¹: "CloseAttack1")
-    public float activeDuration = 0.15f; // ÆÇÁ¤ Áö¼Ó ½Ã°£
-    public SkillPriority priority = SkillPriority.Normal; // Äµ½½ °¡´É ¿©ºÎ ÆÇ´Ü¿ë
+    public string animStateName; // ì¬ìƒí•  ì• ë‹ˆë©”ì´ì…˜ State ì´ë¦„ (ì˜ˆ: "CloseAttack1")
+    public float activeDuration = 0.15f; // íŒì • ì§€ì† ì‹œê°„
+    public SkillPriority priority = SkillPriority.Normal; // ìº”ìŠ¬ ê°€ëŠ¥ ì—¬ë¶€ íŒë‹¨ìš©
 
     [Header("Combat Formula")]
-    [Tooltip("ºñ¿öµÎ¸é CombatFormulaServiceÀÇ ±âº» ¼ö½ÄÀ» »ç¿ë")]
+    [Tooltip("ë¹„ì›Œë‘ë©´ CombatFormulaServiceì˜ ê¸°ë³¸ ìˆ˜ì‹ì„ ì‚¬ìš©")]
     public DamageFormulaSO customDamageFormula;
 
-    // ** (Áö±İÀº 0À¸·Î µÖµµ ¹«¹æ, ³ªÁß¿¡ ´Ü°è ½Ã½ºÅÛ È®Á¤µÇ¸é Ã¤¿ì¸é µÊ)
+    // ** (ì§€ê¸ˆì€ 0ìœ¼ë¡œ ë‘¬ë„ ë¬´ë°©, ë‚˜ì¤‘ì— ë‹¨ê³„ ì‹œìŠ¤í…œ í™•ì •ë˜ë©´ ì±„ìš°ë©´ ë¨)
     [Header("Progression")]
-    [Tooltip("ÀÌ ½ºÅ³À» ¾²±â À§ÇÑ ÃÖ¼Ò ´Ü°è. ´Ü°è ½Ã½ºÅÛ È®Á¤ Àü±îÁø 0À¸·Î µÖµµ ¹«¹æ.")]
+    [Tooltip("ì´ ìŠ¤í‚¬ì„ ì“°ê¸° ìœ„í•œ ìµœì†Œ ë‹¨ê³„. ë‹¨ê³„ ì‹œìŠ¤í…œ í™•ì • ì „ê¹Œì§„ 0ìœ¼ë¡œ ë‘¬ë„ ë¬´ë°©.")]
     public int requiredStage = 0;
 
     [Header("Mana")]
     public ManaCostPolicy manaCostPolicy = ManaCostPolicy.BlockIfInsufficient;
 
     [Header("Context Variants")]
-    [Tooltip("°øÁß/ºñÇà µî Æ¯Á¤ »óÈ²¿¡¼­ ´Ù¸¥ ¸ğ¼ÇÀÌ ÇÊ¿äÇÒ ¶§¸¸ µî·Ï. ¾È ÇÏ¸é ±âº» animStateName »ç¿ë (ÀÌÆåÆ®/ÆÇÁ¤ ·ÎÁ÷Àº ±×´ë·Î °øÀ¯).")]
+    [Tooltip("ê³µì¤‘/ë¹„í–‰ ë“± íŠ¹ì • ìƒí™©ì—ì„œ ë‹¤ë¥¸ ëª¨ì…˜ì´ í•„ìš”í•  ë•Œë§Œ ë“±ë¡. ì•ˆ í•˜ë©´ ê¸°ë³¸ animStateName ì‚¬ìš© (ì´í™íŠ¸/íŒì • ë¡œì§ì€ ê·¸ëŒ€ë¡œ ê³µìœ ).")]
     public List<SkillAnimVariant> contextVariants = new List<SkillAnimVariant>();
 
     [Header("Safety")]
-    [Tooltip("OnAttackEnd ÀÌº¥Æ®°¡ ÀÌ ½Ã°£ ¾È¿¡ È£ÃâµÇÁö ¾ÊÀ¸¸é °­Á¦ Á¾·á½ÃÅ°´Â ¾ÈÀüÀåÄ¡(ÃÊ). Å¬¸³ ÀüÃ¼ ±æÀÌº¸´Ù ³Ë³ËÇÏ°Ô ¼³Á¤ÇÏ¼¼¿ä.")]
+    [Tooltip("OnAttackEnd ì´ë²¤íŠ¸ê°€ ì´ ì‹œê°„ ì•ˆì— í˜¸ì¶œë˜ì§€ ì•Šìœ¼ë©´ ê°•ì œ ì¢…ë£Œì‹œí‚¤ëŠ” ì•ˆì „ì¥ì¹˜(ì´ˆ). í´ë¦½ ì „ì²´ ê¸¸ì´ë³´ë‹¤ ë„‰ë„‰í•˜ê²Œ ì„¤ì •í•˜ì„¸ìš”.")]
     public float maxAnimationDuration = 2f;
 
-    // ¸ğµç ½ºÅ³ÀÌ È÷Æ®¹Ú½º¸¦ °¡Áú ¼ö ÀÖÀ¸¹Ç·Î º£ÀÌ½º·Î ¿Ã¸²
+    // ëª¨ë“  ìŠ¤í‚¬ì´ íˆíŠ¸ë°•ìŠ¤ë¥¼ ê°€ì§ˆ ìˆ˜ ìˆìœ¼ë¯€ë¡œ ë² ì´ìŠ¤ë¡œ ì˜¬ë¦¼
     [Header("Hitbox Setup")]
     public Vector2 hitboxSize = new Vector2(2.6f, 1.6f);
-    public Vector2 hitboxOffset = new Vector2(1.2f, 1.1f); // X´Â ¾ç¼ö·Î µÎ¸é ¾Ë¾Æ¼­ ¹İÀüµÊ
+    public Vector2 hitboxOffset = new Vector2(1.2f, 1.1f); // XëŠ” ì–‘ìˆ˜ë¡œ ë‘ë©´ ì•Œì•„ì„œ ë°˜ì „ë¨
 
-    // ½ºÅ³¸¶´Ù Å¸°İ°¨, ÀüÁø ¿©ºÎ, ¹ß»çÃ¼ »ı¼º µî ¿ÏÀüÈ÷ ´Ù¸¥ µ¿ÀÛÀ» ¼öÇàÇÏ±â À§ÇÑ °¡»ó ÇÔ¼ö
+    // ìŠ¤í‚¬ë§ˆë‹¤ íƒ€ê²©ê°, ì „ì§„ ì—¬ë¶€, ë°œì‚¬ì²´ ìƒì„± ë“± ì™„ì „íˆ ë‹¤ë¥¸ ë™ì‘ì„ ìˆ˜í–‰í•˜ê¸° ìœ„í•œ ê°€ìƒ í•¨ìˆ˜
     public abstract IEnumerator ExecuteSkillBehavior(PlayerCombat combat, Rigidbody2D rb, Animator anim, CharacterStats stats);
 
-    // °ø°İ ÆÇÁ¤ (È÷Æ®¹Ú½º) »ı¼º µîµµ ½ºÅ³¸¶´Ù ´Ù¸¦ ¼ö ÀÖÀ¸´Ï °¡»ó ÇÔ¼ö·Î »­
+    // ê³µê²© íŒì • (íˆíŠ¸ë°•ìŠ¤) ìƒì„± ë“±ë„ ìŠ¤í‚¬ë§ˆë‹¤ ë‹¤ë¥¼ ìˆ˜ ìˆìœ¼ë‹ˆ ê°€ìƒ í•¨ìˆ˜ë¡œ ëºŒ
     public abstract IEnumerator ExecuteHitbox(PlayerCombat combat, Transform parentTransform, CharacterStats stats);
+
+    // ìŠ¤í‚¬ì´ ì‹¤ì œë¡œ ë°œë™ ê°€ëŠ¥í•œ ìƒíƒœì¸ì§€ ì‚¬ì „ ê²€ì¦ (ì˜ˆ: ìœ íš¨í•œ íƒ€ê²Ÿì´ í•„ìš”í•œ ìŠ¤í‚¬ ë“±).
+    // ê¸°ë³¸ì€ í•­ìƒ trueì´ë©°, í•„ìš”í•œ ìŠ¤í‚¬ë§Œ ì˜¤ë²„ë¼ì´ë“œí•˜ë©´ ë¨ â€” ë‹¤ë¥¸ ìŠ¤í‚¬ì€ ì „í˜€ ì˜í–¥ ì—†ìŒ(OCP).
+    public virtual bool CanExecute(PlayerCombat combat) => true;
 
     public string ResolveAnimStateName(PlayerMovementContext context)
     {

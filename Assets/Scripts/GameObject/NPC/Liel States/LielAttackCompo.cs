@@ -132,7 +132,7 @@ public class LielAttackCompo : MonoBehaviour
                     if (playerStats != null)
                     {
                         int damage = lielAI.attack.GetValue();
-                        playerStats.TakeDamage(damage, lielAI.currentElement);
+                        playerStats.TakeDamage(damage, lielAI.currentElement, lielAI);
 
                         // 넉백 방향도 부모 위치 기준으로 계산
                         Vector2 knockbackDir = (hit.transform.position - lielAI.transform.position).normalized;

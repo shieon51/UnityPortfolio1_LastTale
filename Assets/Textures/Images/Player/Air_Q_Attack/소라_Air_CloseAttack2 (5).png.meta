@@ -76,8 +76,8 @@ TextureImporter:
   spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
-  alignment: 0
-  spritePivot: {x: 0.5, y: 0.5}
+  alignment: 7
+  spritePivot: {x: 0.5, y: 0}
   spritePixelsToUnits: 100
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
@@ -140,81 +140,15 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "\uC18C\uB77C_Air_CloseAttack2 (5)_0"
-      rect:
-        serializedVersion: 2
-        x: 158
-        y: 296
-        width: 22
-        height: 30
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 3108ae45a2c307e90800000000000000
-      internalID: -7030052865814396909
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: "\uC18C\uB77C_Air_CloseAttack2 (5)_1"
-      rect:
-        serializedVersion: 2
-        x: 184
-        y: 311
-        width: 27
-        height: 22
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: f88e17733f5bf5c30800000000000000
-      internalID: 4350395821275080847
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: "\uC18C\uB77C_Air_CloseAttack2 (5)_2"
-      rect:
-        serializedVersion: 2
-        x: 220
-        y: 308
-        width: 12
-        height: 16
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 683422a8ee0f5e9f0800000000000000
-      internalID: -439680481288371322
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
       name: "\uC18C\uB77C_Air_CloseAttack2 (5)_3"
       rect:
         serializedVersion: 2
-        x: 131
-        y: 40
-        width: 435
-        height: 258
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 0
+        y: 20
+        width: 768
+        height: 412
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -227,143 +161,11 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
-    - serializedVersion: 2
-      name: "\uC18C\uB77C_Air_CloseAttack2 (5)_4"
-      rect:
-        serializedVersion: 2
-        x: 193
-        y: 294
-        width: 10
-        height: 11
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 70f4cbf9d06e1b9d0800000000000000
-      internalID: -2760172150412521721
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: "\uC18C\uB77C_Air_CloseAttack2 (5)_5"
-      rect:
-        serializedVersion: 2
-        x: 208
-        y: 254
-        width: 56
-        height: 49
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 4b51b0d18b79e4140800000000000000
-      internalID: 4705865477665789364
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: "\uC18C\uB77C_Air_CloseAttack2 (5)_6"
-      rect:
-        serializedVersion: 2
-        x: 160
-        y: 256
-        width: 18
-        height: 37
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 7893165d831af94d0800000000000000
-      internalID: -3125602350901675641
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: "\uC18C\uB77C_Air_CloseAttack2 (5)_7"
-      rect:
-        serializedVersion: 2
-        x: 178
-        y: 233
-        width: 11
-        height: 15
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 3a02d50c194b1df20800000000000000
-      internalID: 3445733728005726371
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: "\uC18C\uB77C_Air_CloseAttack2 (5)_8"
-      rect:
-        serializedVersion: 2
-        x: 182
-        y: 221
-        width: 20
-        height: 13
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 1c293b90d76b6a3c0800000000000000
-      internalID: -4348587742029704511
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: "\uC18C\uB77C_Air_CloseAttack2 (5)_9"
-      rect:
-        serializedVersion: 2
-        x: 642
-        y: 22
-        width: 96
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 2c3b34c56015446a0800000000000000
-      internalID: -6465954077237595198
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
     outline: []
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
