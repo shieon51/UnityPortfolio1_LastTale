@@ -11,6 +11,7 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
 
     public int FormStage => fairyStage;
     public bool IsFlightForm => fairyStage == 1; // 2단계 = 비행모드
+    public bool IsTransforming => _isTransforming;
     public bool IsLocked => _isTransforming;      // IActionLockSource
 
     public event Action OnFormTransformStarted;

@@ -13,6 +13,7 @@ public interface IFormStageProvider
 {
     int FormStage { get; }        // 0=1단계, 1=2단계(비행), 2=3단계
     bool IsFlightForm { get; }    // 비행 관련 이동/모션 적용 여부
+    bool IsTransforming { get; } // 요정화 변신중
 
     event Action OnFormTransformStarted;  // 변신 시작 (연출 모션 트리거용)
     event Action<int> OnFormStageChanged; // 변신 완료 (파츠 교체용)

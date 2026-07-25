@@ -18,6 +18,15 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
     public LayerMask groundLayer; // Solid Ground + One-Way Platform 모두 포함
     public Vector3 groundCheckOffset = new Vector3(0, -0.5f, 0);
 
+    [Header("Form Change Movement")]
+    [Tooltip("변신 중 수평 속도가 감속되는 정도 (초당 감소 속도, 클수록 빨리 멈춤)")]
+    public float formTransformDeceleration = 20f; // ex. 달리기 속도 6 기준 0.3초 안에 정지함
+
+    private IFormStageProvider _formProvider;
+    private bool _isFormTransforming = false;
+    private bool _formTransformTargetIsFlight = false;
+    private float _originalGravity;
+
     // 잠금 소스 자동 수집용
     private IActionLockSource[] _lockSources;
 
@@ -32,6 +41,7 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
     public bool IsGrounded { get; private set; }
     public bool IsDashing { get; private set; }
     public bool CanFlip => !IsActionLocked; // 공격 중일 때 좌우 플립(방향 전환)을 막기 위한 프로퍼티
+    public bool IsKnockedBack => _stats != null && _stats.isKnockedBack;
     public bool IsDialogueLocked => DialogueManager.Instance != null && DialogueManager.Instance.IsTalking; // 대화 중일 때는 Idle로 모션 변경
     public float SpeedMultiplier => _stats != null ? _stats.GetSpeedMultiplier() : 1f; // 애니메이션 재생 속도 조절 (피로도 등)
 
@@ -82,6 +92,28 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
         _rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
         _lockSources = GetComponents<IActionLockSource>(); // SoraStats(변신 중) 등을 자동으로 주워담음
+
+        _formProvider = GetComponent<IFormStageProvider>(); // 없으면 null (정상, 폼체인지 없는 캐릭터)
+
+        if (_formProvider != null)
+        {
+            _formProvider.OnFormTransformStarted += HandleFormTransformStarted;
+            _formProvider.OnFormStageChanged += HandleFormStageChanged;
+        }
+    }
+
+    private void Start()
+    {
+        _originalGravity = _rb.gravityScale;
+    }
+
+    private void OnDestroy()
+    {
+        if (_formProvider != null)
+        {
+            _formProvider.OnFormTransformStarted -= HandleFormTransformStarted;
+            _formProvider.OnFormStageChanged -= HandleFormStageChanged;
+        }
     }
 
     private void Update()
@@ -104,6 +136,13 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
 
     private void FixedUpdate()
     {
+        // 요정화 변신 중이면 일반 잠금 처리(속도 즉시 0)보다 먼저 부드러운 감속 처리로 분기
+        if (_isFormTransforming)
+        {
+            ApplyFormTransformMovement();
+            return;
+        }
+
         // 4. 물리 이동 (FixedUpdate에서 처리하는 것이 정석)
         // - 대화 중이거나 락이 걸렸을 때 미끄러지지 않고 멈추도록 속도를 0으로 강제
         if (IsActionLocked)
@@ -378,6 +417,53 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
     //        return hit.collider.GetComponent<PlatformEffector2D>();
     //    return null;
     //}
+
+    // 변신을 시작하는 순간(날개가 나타나기 시작하는 시점) 호출됨.
+    // 목표 폼이 비행형인지 미리 계산해둬야, 낙하 속도를 감속시킬지 말지 판단 가능
+    // (이 시점엔 아직 fairyStage가 토글되기 전이라 IsFlightForm이 '변신 전' 값을 그대로 반영함).
+    private void HandleFormTransformStarted()
+    {
+        if (_formProvider == null) return;
+        _isFormTransforming = true;
+        _formTransformTargetIsFlight = !_formProvider.IsFlightForm;
+    }
+
+    // 변신이 완료된 순간(날개가 다 펴지거나 다 접힌 시점) 호출됨.
+    private void HandleFormStageChanged(int newStage)
+    {
+        _isFormTransforming = false;
+
+        if (_formProvider == null) return;
+
+        if (_formProvider.IsFlightForm)
+        {
+            // 비행형 완성: 완전한 공중부양 상태로 스냅 (중력 없음, 속도 없음)
+            _rb.gravityScale = 0f;
+            _rb.linearVelocity = Vector2.zero;
+        }
+        else
+        {
+            // 지상형 복귀: 중력을 되돌려 자연스럽게 다시 낙하가 재개되도록 함
+            _rb.gravityScale = _originalGravity;
+        }
+    }
+
+    // 변신 중(약 0.5초) 매 물리 프레임 호출됨.
+    // 수평 속도는 방향에 상관없이 항상 부드럽게 0으로 감속.
+    // 수직 속도는 '비행형으로 들어가는 중'일 때만 감속시켜 낙하가 서서히 멈추는 것처럼 보이게 함.
+    // (반대로 지상형으로 돌아가는 중엔 건드리지 않음 — 이미 공중부양 중이라 속도 0으로 안정적)
+    private void ApplyFormTransformMovement()
+    {
+        float newX = Mathf.MoveTowards(_rb.linearVelocity.x, 0f, formTransformDeceleration * Time.fixedDeltaTime);
+        float newY = _rb.linearVelocity.y;
+
+        if (_formTransformTargetIsFlight)
+        {
+            newY = Mathf.MoveTowards(_rb.linearVelocity.y, 0f, formTransformDeceleration * Time.fixedDeltaTime);
+        }
+
+        _rb.linearVelocity = new Vector2(newX, newY);
+    }
 
     private void Teleport()
     {

@@ -18,7 +18,11 @@ MonoBehaviour:
   activeDuration: 0.15
   priority: 0
   customDamageFormula: {fileID: 0}
-  contextVariants: []
+  requiredStage: 0
+  manaCostPolicy: 0
+  contextVariants:
+  - context: 1
+    animStateName: Air_CloseAttack2
   maxAnimationDuration: 2
   hitboxSize: {x: 3.8, y: 2.01}
   hitboxOffset: {x: -0.27, y: 0.39}

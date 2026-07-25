@@ -17,6 +17,7 @@ public class PlayerVisual : MonoBehaviour
     private Coroutine _hitStopRoutine;
     private bool _wasDialogueLocked = false;
     private bool _wasActionLocked = false;
+    private bool _wasKnockedBack = false;
 
     private void Awake()
     {
@@ -65,6 +66,7 @@ public class PlayerVisual : MonoBehaviour
         if (_controller == null) return;
 
         HandleLockTransitions();
+        HandleKnockbackTransition(); // ★ 추가
         UpdateAnimations();
         UpdateSpriteDirection();
         UpdateAnimationSpeed();
@@ -115,11 +117,29 @@ public class PlayerVisual : MonoBehaviour
     //    }
     //}
 
+    // 대화/공격 잠금과는 별개로, 순수하게 '넉백 시작/종료' 전이만 감지해서 Hit 모션을 넣고 뺀다.
+    private void HandleKnockbackTransition()
+    {
+        bool isKnockedBack = _controller.IsKnockedBack;
+
+        if (isKnockedBack && !_wasKnockedBack)
+        {
+            PlayImmediate(PlayerAnimStateNames.Hit);
+        }
+        else if (!isKnockedBack && _wasKnockedBack)
+        {
+            ReturnToLocomotion();
+        }
+
+        _wasKnockedBack = isKnockedBack;
+    }
+
     // 안전장치: 공중 + 비잠금 상태인데 화면상 상태가 Jump/Fall 계열이 아니면 강제로 바로잡는다.
     // (이벤트 유실 등 어떤 경로로 상태가 꼬이든 최종적으로 항상 여기서 걸러진다)
     private void ReconcileAirborneVisual()
     {
         if (_controller.IsGrounded || _controller.IsActionLocked || _driverAnimator == null) return;
+        if (_formProvider != null && _formProvider.IsFlightForm) return; // 비행형은 이 안전장치 대상이 아님
 
         AnimatorStateInfo info = _driverAnimator.GetCurrentAnimatorStateInfo(0);
         bool isAirborneState = info.IsName(PlayerAnimStateNames.JumpUp) || info.IsName(PlayerAnimStateNames.JumpTree);
@@ -186,16 +206,27 @@ public class PlayerVisual : MonoBehaviour
     private void HandleJumpTriggered()
     {
         if (_controller.IsActionLocked) return;
+        if (_formProvider != null && _formProvider.IsFlightForm) return; // 비행형은 별도 점프 연출 없음
         PlayImmediate(PlayerAnimStateNames.JumpUp);
     }
     private void HandleFallStarted()
     {
         if (_controller.IsActionLocked) return;
+        if (_formProvider != null && _formProvider.IsFlightForm)
+        {
+            CrossFadeAll(PlayerAnimStateNames.Movement, 0.1f);
+            return;
+        }
         CrossFadeAll(PlayerAnimStateNames.JumpTree, 0.05f);
     }
     private void HandleLanded()
     {
         if (_controller.IsActionLocked) return;
+        if (_formProvider != null && _formProvider.IsFlightForm)
+        {
+            CrossFadeAll(PlayerAnimStateNames.Movement, 0.1f);
+            return;
+        }
         PlayImmediate(PlayerAnimStateNames.Ground);
     }
 
@@ -212,6 +243,12 @@ public class PlayerVisual : MonoBehaviour
     // 잠금 상태(공격 등)에서 벗어날 때 호출: 현재 물리 상태에 맞는 이동 모션으로 복귀
     public void ReturnToLocomotion()
     {
+        if (_formProvider != null && _formProvider.IsFlightForm)
+        {
+            CrossFadeAll(PlayerAnimStateNames.Movement, 0.1f); // 비행형은 항상 Movement(호버/비행 블렌드트리)
+            return;
+        }
+
         if (_controller.IsGrounded) CrossFadeAll(PlayerAnimStateNames.Movement, 0.1f);
         else CrossFadeAll(PlayerAnimStateNames.JumpTree, 0.1f);
     }

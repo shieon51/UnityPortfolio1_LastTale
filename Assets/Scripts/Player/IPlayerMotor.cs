@@ -12,6 +12,7 @@ public interface IPlayerMotor
     bool CanFlip { get; }
     bool IsDialogueLocked { get; }
     bool IsActionLocked { get; }
+    bool IsKnockedBack { get; }
     float SpeedMultiplier { get; }
 
     event Action OnJumpTriggered;

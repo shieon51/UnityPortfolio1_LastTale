@@ -29,7 +29,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   arrivalOffsetFromTarget: 1.2
-  arrivalInvincibility: 0.15
+  arrivalInvincibility: 0.18
   arrivalPushForce: 6
   rippleRadius: 2.5
   damageMultiplier: 1
