@@ -29,11 +29,14 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   facingToleranceDegrees: 100
-  arrivalOffsetFromTarget: 1.2
+  arrivalOffsetFromTarget: 1.5
   warpDelay: 0
   matchTargetHeight: 0
   arrivalInvincibility: 0.18
   arrivalPushForce: 6
+  groundSnapLayer:
+    serializedVersion: 2
+    m_Bits: 1032
   damageMultiplier: 1
   knockbackPower: 5
   hitStopDuration: 0.08

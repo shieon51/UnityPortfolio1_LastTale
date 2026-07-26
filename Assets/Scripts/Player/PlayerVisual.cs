@@ -21,6 +21,8 @@ public class PlayerVisual : MonoBehaviour
     private bool _wasActionLocked = false;
     private bool _wasKnockedBack = false;
 
+    private string _lastCommandedState = PlayerAnimStateNames.Movement; 
+
     private void Awake()
     {
         _controller = GetComponentInParent<IPlayerMotor>();
@@ -36,7 +38,7 @@ public class PlayerVisual : MonoBehaviour
             _controller.OnJumpTriggered += HandleJumpTriggered;
             _controller.OnFallStarted += HandleFallStarted;
             //_controller.OnLandingAnticipated += HandleLandingAnticipated; // ★ OnLanded 대신 이걸 구독
-            _controller.OnLanded += HandleLandingAnticipated;
+            _controller.OnLanded += HandleLanded;
         }
 
         _formProvider = GetComponentInParent<IFormStageProvider>();
@@ -62,7 +64,7 @@ public class PlayerVisual : MonoBehaviour
             _controller.OnJumpTriggered -= HandleJumpTriggered;
             _controller.OnFallStarted -= HandleFallStarted;
             //_controller.OnLandingAnticipated -= HandleLandingAnticipated;
-            _controller.OnLanded -= HandleLandingAnticipated; //?
+            _controller.OnLanded -= HandleLanded; 
         }
 
         if (_formProvider != null)
@@ -175,15 +177,15 @@ public class PlayerVisual : MonoBehaviour
 
     // 안전장치: 공중 + 비잠금 상태인데 화면상 상태가 Jump/Fall 계열이 아니면 강제로 바로잡는다.
     // (이벤트 유실 등 어떤 경로로 상태가 꼬이든 최종적으로 항상 여기서 걸러진다)
+    // -> Animator에 재질문 대신 우리가 기록한 값으로 판단
     private void ReconcileAirborneVisual()
     {
-        if (_controller.IsGrounded || _controller.IsActionLocked || _driverAnimator == null) return;
+        if (_controller.IsGrounded || _controller.IsActionLocked) return; //|| _driverAnimator == null //?
         if (_formProvider != null && _formProvider.IsFlightForm) return; // 비행형은 이 안전장치 대상이 아님
 
-        AnimatorStateInfo info = _driverAnimator.GetCurrentAnimatorStateInfo(0);
-        bool isAcceptableAirborneState = info.IsName(PlayerAnimStateNames.JumpUp)
-        || info.IsName(PlayerAnimStateNames.JumpTree)
-        || info.IsName(PlayerAnimStateNames.Ground); // 착지 예고 중인 Ground 상태도 정상으로 인정
+        bool isAcceptableAirborneState = _lastCommandedState == PlayerAnimStateNames.JumpUp
+        || _lastCommandedState == PlayerAnimStateNames.JumpTree
+        || _lastCommandedState == PlayerAnimStateNames.Ground; // 착지 예고 중인 Ground 상태도 정상으로 인정
 
         if (!isAcceptableAirborneState)
         {
@@ -290,7 +292,7 @@ public class PlayerVisual : MonoBehaviour
     //}
 
     // 실제 접촉 전, 예고 시점에 착지 모션을 미리 재생
-    private void HandleLandingAnticipated()
+    private void HandleLanded()
     {
         if (_controller.IsActionLocked) return;
         if (_formProvider != null && _formProvider.IsFlightForm) return; // 비행형은 착지 모션 없음
@@ -343,12 +345,14 @@ public class PlayerVisual : MonoBehaviour
 
     private void PlayImmediate(string stateName, float normalizedTime = 0f)
     {
+        _lastCommandedState = stateName; // 명령을 내릴 때마다 기록
         foreach (var anim in _partAnimators)
             if (anim != null && anim.gameObject.activeInHierarchy)
                 anim.Play(stateName, -1, normalizedTime);
     }
     private void CrossFadeAll(string stateName, float duration)
     {
+        _lastCommandedState = stateName; // 여기도 동일
         foreach (var anim in _partAnimators)
             if (anim != null && anim.gameObject.activeInHierarchy)
                 anim.CrossFade(stateName, duration);

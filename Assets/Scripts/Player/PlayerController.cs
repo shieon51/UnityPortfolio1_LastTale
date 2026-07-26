@@ -36,7 +36,14 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
     public event Action OnFallStarted;   // 점프가 아닌 낙하(아래 지형 이동 등)
 
     // --- 상태 프로퍼티 (Visual이나 다른 스크립트에서 읽어갈 수 있게 열어둠) ---
-    public float CurrentSpeed => _goToUnder ? 0f : (Mathf.Abs(_horizontalInput) > 0 ? (IsDashing ? baseDashSpeed : baseRunSpeed) : 0f); // BT 파라미터를 위해 실제 속도(0, 3, 6)를 반환하도록 계산!
+    public float CurrentSpeed
+    {
+        get
+        {
+            if (_isFlying) return _rb.linearVelocity.magnitude; // 비행 중엔 실제 이동 속도를 그대로 반영
+            return _goToUnder ? 0f : (Mathf.Abs(_horizontalInput) > 0 ? (IsDashing ? baseDashSpeed : baseRunSpeed) : 0f);
+        }
+    }
     public float VelocityY => _rb.linearVelocity.y;
     public bool IsGrounded { get; private set; }
     public bool IsDashing { get; private set; }
@@ -73,6 +80,13 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
     private const float GroundedConfirmDuration = 0.05f;
     private const int GroundedConfirmMinFrames = 2;
 
+    // 비행 여부 체크
+    private bool _isFlying = false;
+
+    // 땅 착지 시 예외 관련 (모션) //?
+    private float _lastConfirmedGroundedTime = -10f;
+    private const float GroundedCoyoteGrace = 0.1f;
+
     // --- 컴포넌트 캐싱 ---
     private Rigidbody2D _rb;
     private Collider2D _groundCollider;
@@ -99,6 +113,7 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
         {
             _formProvider.OnFormTransformStarted += HandleFormTransformStarted;
             _formProvider.OnFormStageChanged += HandleFormStageChanged;
+            _formProvider.OnFormStageChanged += HandleFlightStateChanged;
         }
     }
 
@@ -113,11 +128,19 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
         {
             _formProvider.OnFormTransformStarted -= HandleFormTransformStarted;
             _formProvider.OnFormStageChanged -= HandleFormStageChanged;
+            _formProvider.OnFormStageChanged -= HandleFlightStateChanged;
         }
     }
 
     private void Update()
     {
+        // 비행 중인 경우
+        if (_isFlying)
+        {
+            _horizontalInput = 0f;
+            return; // 지상 이동/점프/착지 판정 자체를 아예 돌리지 않음
+        }
+
         // 1. 바닥 판정 (매 프레임)
         // 바닥 여부는 '물리적 사실'이므로 잠금 여부와 무관하게 항상 정확히 추적한다.
         // (대화/공격/넉백 중에도 실제로는 계속 낙하하다 착지할 수 있기 때문)
@@ -136,6 +159,8 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
 
     private void FixedUpdate()
     {
+        if (_isFlying) return; // 비행 물리는 PlayerFlightController가 전담
+
         // 요정화 변신 중이면 일반 잠금 처리(속도 즉시 0)보다 먼저 부드러운 감속 처리로 분기
         if (_isFormTransforming)
         {
@@ -343,13 +368,34 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
         Vector2 origin = transform.position + groundCheckOffset;
         Vector2 size = new Vector2(groundCheckWidth, groundCheckHeight);
         RaycastHit2D hit = Physics2D.BoxCast(origin, size, 0f, Vector2.down, groundCheckDistance, groundLayer);
-        if (hit.collider == null) return false;
 
-        // 원웨이 플랫폼을 '위로 관통 중'일 때만 이 히트를 무시 (경사로는 예외 대상 아님)
-        if (_rb.linearVelocity.y > 0.01f && _oneWayPlatform != null && _oneWayPlatform.IsOneWayPlatformLayer(hit.collider.gameObject.layer))
-            return false;
+        //if (hit.collider == null) return false;
 
-        return true;
+        //// 원웨이 플랫폼을 '위로 관통 중'일 때만 이 히트를 무시 (경사로는 예외 대상 아님)
+        //if (_rb.linearVelocity.y > 0.01f && _oneWayPlatform != null && _oneWayPlatform.IsOneWayPlatformLayer(hit.collider.gameObject.layer))
+        //    return false;
+
+        //return true;
+
+        //?
+        if (hit.collider != null)
+        {
+            bool isPassingThroughOneWay = _rb.linearVelocity.y > 0.01f
+                && _oneWayPlatform != null
+                && _oneWayPlatform.IsOneWayPlatformLayer(hit.collider.gameObject.layer);
+
+            if (!isPassingThroughOneWay)
+            {
+                _lastConfirmedGroundedTime = Time.time;
+                return true;
+            }
+        }
+
+        // 실제 접촉이 안 잡혀도, 방금까지 확실히 땅이었고 거의 정지해 있다면
+        // (미세한 파묻힘/지터로 인한 순간적 미검출 가능성) 짧게 착지 상태를 유지시켜 Fall에 갇히는 걸 방지
+        bool wasRecentlyGrounded = Time.time - _lastConfirmedGroundedTime < GroundedCoyoteGrace;
+        bool nearlyStill = Mathf.Abs(_rb.linearVelocity.y) < 0.5f;
+        return wasRecentlyGrounded && nearlyStill;
     }
 
     private void EvaluateGroundedWithDebounce(bool rawGrounded)
@@ -445,6 +491,16 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
         {
             // 지상형 복귀: 중력을 되돌려 자연스럽게 다시 낙하가 재개되도록 함
             _rb.gravityScale = _originalGravity;
+        }
+    }
+
+    private void HandleFlightStateChanged(int newStage)
+    {
+        _isFlying = _formProvider.IsFlightForm;
+        if (_isFlying)
+        {
+            SetGroundedImmediate(false);
+            IsDashing = false; // 비행 진입 시 지상 대시 상태 흔적 제거
         }
     }
 

@@ -388,6 +388,7 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1776417546}
   - {fileID: 952940775}
   - {fileID: 779744566}
   - {fileID: 372209332}
@@ -396,7 +397,6 @@ RectTransform:
   - {fileID: 769942997}
   - {fileID: 526570854}
   - {fileID: 1090285963}
-  - {fileID: 1776417546}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -2515,7 +2515,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uC2A4\uD0AC\uC744 \uC0AC\uC6A9\uD560 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4!"
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 50effb300c9227a46a5807f7a5d5f2bc, type: 2}
   m_sharedMaterial: {fileID: -4535954017539078341, guid: 50effb300c9227a46a5807f7a5d5f2bc, type: 2}
@@ -3827,6 +3827,24 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8541148022777094637, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
   m_PrefabInstance: {fileID: 2343543102763609701}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1988383331
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1004639415}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc27d3670fa1aa1468a59f704321eefe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerFlightController
+  flightMaxSpeed: 8
+  flightAcceleration: 30
+  flightDeceleration: 45
+  dashBurstSpeed: 16
+  dashBurstDuration: 0.15
+  verticalBurstSpeed: 14
 --- !u!1 &2007605301
 GameObject:
   m_ObjectHideFlags: 0
@@ -4238,6 +4256,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 2175800781653705386, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
+      propertyPath: groundCheckOffset.y
+      value: -1.03
+      objectReference: {fileID: 0}
+    - target: {fileID: 2175800781653705386, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
       propertyPath: landingAnticipationDistance
       value: 0.45
       objectReference: {fileID: 0}
@@ -4309,6 +4331,9 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6994465021518602846, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
+      insertIndex: 2
+      addedObject: {fileID: 1988383331}
     - targetCorrespondingSourceObject: {fileID: 4139004114050849789, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
       insertIndex: -1
       addedObject: {fileID: 664159969}

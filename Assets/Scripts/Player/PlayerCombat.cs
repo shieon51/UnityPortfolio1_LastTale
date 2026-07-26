@@ -192,8 +192,8 @@ public class PlayerCombat : MonoBehaviour
     // 현재 땅인지, 공중인지, 비행인지에 따라 스킬 모션 결정
     private PlayerMovementContext ResolveMovementContext()
     {
-        if (_motor != null && _motor.IsGrounded) return PlayerMovementContext.Grounded;
         if (_formProvider != null && _formProvider.IsFlightForm) return PlayerMovementContext.Flying;
+        if (_motor != null && _motor.IsGrounded) return PlayerMovementContext.Grounded;
         return PlayerMovementContext.Airborne;
     }
 
@@ -209,6 +209,28 @@ public class PlayerCombat : MonoBehaviour
         float normalizedTime = _playerVisual != null ? _playerVisual.GetCurrentNormalizedTime() : 0f;
         _playerVisual?.PlayAttackAnimation(groundedState, normalizedTime);
         CurrentSkillContext = PlayerMovementContext.Grounded;
+    }
+
+    // 순간이동형 스킬들이 공용으로 쓸 수 있는 안전 착지 헬퍼
+    public Vector2 ResolveSafeGroundedPosition(Vector2 desiredPos, LayerMask groundLayer, float maxSnapDistance = 3f)
+    {
+        if (groundLayer.value == 0)
+        {
+            Debug.LogWarning("[PlayerCombat] ResolveSafeGroundedPosition: groundLayer가 설정되지 않아 지형 스냅을 건너뜁니다. 스킬 애셋의 Ground Snap Layer를 확인하세요.");
+            return desiredPos; // 미설정 시엔 원래 목표 위치를 그대로 사용 — 스킬을 무력화시키지 않음
+        }
+
+        Vector2 rayStart = desiredPos + Vector2.up * 1.5f;
+        RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, maxSnapDistance, groundLayer);
+
+        if (hit.collider != null)
+        {
+            Collider2D myCol = GetComponent<Collider2D>();
+            float pivotToBottom = myCol != null ? (transform.position.y - myCol.bounds.min.y) : 0f;
+            return new Vector2(desiredPos.x, hit.point.y + pivotToBottom);
+        }
+
+        return (Vector2)transform.position; // 정말로 바닥이 없을 때만(=제대로 설정됐는데도 못 찾음) 현재 위치 유지
     }
 
     // 애니메이션 이벤트(OnAttackEnd)가 어떤 이유로든 호출되지 못했을 때를 대비한 최종 안전장치.
@@ -236,6 +258,7 @@ public class PlayerCombat : MonoBehaviour
         // 애니메이션에서 OnAttackCombo 프레임에 도달하면 콤보 창 개방
         // 이 순간 버퍼에 예약된 게 있으면 Update문에서 즉시 다음 스킬이 나감
         _isComboWindowOpen = true;
+        ResolveFacingAtComboWindow();
     }
 
     public void OnAttackEnd()
@@ -248,8 +271,11 @@ public class PlayerCombat : MonoBehaviour
 
         if (_rb != null)
         {
-            _rb.linearVelocity = new Vector2(0, _rb.linearVelocity.y);
-            _rb.gravityScale = _originalGravity;
+            if (CurrentSkillContext == PlayerMovementContext.Grounded)
+            {
+                _rb.linearVelocity = new Vector2(0, _rb.linearVelocity.y); // 지상 공격만 제자리 정지
+            }
+            _rb.gravityScale = ResolveRestingGravity(); // ★ 3번 버그 수정
         }
 
         if (_playerVisual != null) _playerVisual.ReturnToLocomotion();
@@ -264,12 +290,34 @@ public class PlayerCombat : MonoBehaviour
         _currentPlayingSkill = null;
         _inputBuffer.Clear();
 
-        if (_rb != null) _rb.gravityScale = _originalGravity;
+        if (_rb != null) _rb.gravityScale = ResolveRestingGravity();
         if (_playerVisual != null)
         {
             _playerVisual.ResetAnimationSpeed();
             _playerVisual.ReturnToLocomotion();
         }
+    }
+
+    // 콤보 창이 열리는 그 순간 방향키를 확인: 누르고 있으면 최우선 존중, 없으면 스킬이 추천하는 방향(W의 타겟 등)을 적용
+    private void ResolveFacingAtComboWindow()
+    {
+        if (_currentPlayingSkill == null) return;
+
+        float inputX = Input.GetAxisRaw("Horizontal");
+        if (Mathf.Abs(inputX) > 0.01f)
+        {
+            FaceDirection(inputX > 0f ? 1f : -1f);
+            return;
+        }
+
+        float? preferred = _currentPlayingSkill.GetPreferredFacingDirection();
+        if (preferred.HasValue) FaceDirection(preferred.Value);
+    }
+
+    // 비행 중이면 0, 아니면 원래 지상 중력값 — '무조건 _originalGravity로 되돌리던' 3번 버그의 근본 수정
+    private float ResolveRestingGravity()
+    {
+        return (_formProvider != null && _formProvider.IsFlightForm) ? 0f : _originalGravity;
     }
 
     // 스킬 장착을 위한 함수 (** 추후 사용)

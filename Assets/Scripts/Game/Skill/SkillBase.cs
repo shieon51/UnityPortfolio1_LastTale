@@ -63,6 +63,9 @@ public abstract class SkillBase : ScriptableObject
     [Tooltip("공중/비행 등 특정 상황에서 다른 모션이 필요할 때만 등록. 안 하면 기본 animStateName 사용 (이펙트/판정 로직은 그대로 공유).")]
     public List<SkillAnimVariant> contextVariants = new List<SkillAnimVariant>();
 
+    // 콤보 윈도우가 열리는 시점에 이 스킬이 '추천'하는 바라보는 방향(월드, +1/-1). 필요 없으면 null.
+    public virtual float? GetPreferredFacingDirection() => null;
+
     public string ResolveAnimStateName(PlayerMovementContext context)
     {
         foreach (var v in contextVariants)

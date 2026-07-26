@@ -24,10 +24,16 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
     [Tooltip("도착 지점에서 겹친 대상들을 밀어내는 힘")]
     public float arrivalPushForce = 6f;
 
+    [Header("Ground Safety")]
+    [Tooltip("도착 지점을 이 레이어들 기준으로 지형 위에 안전하게 스냅시킴 (Ground + OneWayPlatform)")]
+    public LayerMask groundSnapLayer;
+
     [Header("Hit (Q와 동일한 방식 — 도착 후 등 뒤 근접 히트박스)")]
     public float damageMultiplier = 1f;
     public float knockbackPower = 5f;
     public float hitStopDuration = 0.08f;
+
+    private float? _preferredFacingWorldDir;
 
     //[Header("Ripple (도착 파동)")]
     //public float rippleRadius = 2.5f;
@@ -37,6 +43,8 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
     // 이번 시전에서 CanExecute가 찾아낸 타겟을 ExecuteSkillBehavior까지 전달하기 위한 캐시.
     // (같은 애셋 인스턴스를 여러 캐릭터가 동시에 쓰지 않는다는 전제 하의 단순한 방식)
     private Transform _cachedTarget;
+
+    public override float? GetPreferredFacingDirection() => _preferredFacingWorldDir;
 
     // 사거리 내 유효 타겟이 없으면 아예 발동하지 않음 (마나도 소모되지 않음)
     public override bool CanExecute(PlayerCombat combat, out string failReason)
@@ -99,19 +107,24 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
         Transform target = _cachedTarget;
         if (target == null) yield break; // 안전장치 (CanExecute를 통과했다면 원래는 null이 아니어야 함)
 
-        // 타겟의 반대편(뒤쪽) 좌표 계산
-        float sideDir = (combat.transform.position.x < target.position.x) ? 1f : -1f;
+        // 타겟의 반대편(뒤쪽) 좌표 계산 
+        float sideDir = (combat.transform.position.x < target.position.x) ? 1f : -1f; 
         float arrivalY = matchTargetHeight ? target.position.y : rb.position.y; // ★ 기본은 현재 높이 유지 (파묻힘 방지)
         Vector2 arrivalPos = new Vector2(target.position.x + sideDir * arrivalOffsetFromTarget, arrivalY);
 
         if (warpDelay > 0f) yield return new WaitForSeconds(warpDelay);
 
-        rb.position = arrivalPos;
+        // 이동 위치
+        Vector2 desiredPos = new Vector2(target.position.x + sideDir * arrivalOffsetFromTarget, matchTargetHeight ? target.position.y : rb.position.y);
+        Vector2 safePos = combat.ResolveSafeGroundedPosition(desiredPos, groundSnapLayer); // ★ 절벽/경사면 안전 보정
+
+        rb.position = safePos;
+
         rb.linearVelocity = Vector2.zero; // 순간이동 직후 잔여 낙하/이동 관성 제거
         Physics2D.SyncTransforms();
 
-        // 도착 후 타겟을 바라보도록 방향 전환 → 이어지는 Q 콤보도 자연스럽게 타겟을 향하게 됨
-        combat.FaceDirection(-sideDir);
+        // 즉시 반영하지 않고 값만 저장 — 실제 적용은 OnAttackCombo 시점
+        _preferredFacingWorldDir = -sideDir;
 
         // 도착 순간 안전장치: 짧은 무적 + 겹친 대상 밀어내기
         stats.GrantTemporaryInvincibility(arrivalInvincibility);
