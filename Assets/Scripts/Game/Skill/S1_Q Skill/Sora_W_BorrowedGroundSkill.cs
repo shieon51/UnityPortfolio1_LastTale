@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "New Borrowed Ground Skill", menuName = "LastMarchan/Skills/Borrowed Ground (W)")]
@@ -8,57 +9,89 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
     [Tooltip("이 반경 안에 유효한 적이 없으면 아예 발동하지 않음")]
     public float targetSearchRadius = 6f;
     public LayerMask enemyLayer;
+    [Tooltip("바라보는 방향과 타겟 방향이 이 각도(도) 이내여야 유효한 타겟으로 인정")] 
+    public float facingToleranceDegrees = 100f;
 
     [Header("Warp")]
     [Tooltip("타겟 뒤쪽으로 이 거리만큼 떨어진 지점에 도착")]
     public float arrivalOffsetFromTarget = 1.2f;
+    [Tooltip("입력 후 실제로 워프하기까지의 짧은 선딜레이(초). 0이면 즉시.")]
+    public float warpDelay = 0f;
+    [Tooltip("체크하면 도착 시 타겟과 같은 높이로 맞춤. 끄면 지금 서 있는 높이를 그대로 유지 (지형 파묻힘 방지, 기본 권장)")]
+    public bool matchTargetHeight = false;
     [Tooltip("도착 순간 부여되는 무적 시간(초). 겹친 적 사이로 끼어드는 동안 피격 방지용")]
     public float arrivalInvincibility = 0.15f;
     [Tooltip("도착 지점에서 겹친 대상들을 밀어내는 힘")]
     public float arrivalPushForce = 6f;
 
-    [Header("Ripple (도착 파동)")]
-    public float rippleRadius = 2.5f;
+    [Header("Hit (Q와 동일한 방식 — 도착 후 등 뒤 근접 히트박스)")]
     public float damageMultiplier = 1f;
     public float knockbackPower = 5f;
+    public float hitStopDuration = 0.08f;
+
+    //[Header("Ripple (도착 파동)")]
+    //public float rippleRadius = 2.5f;
+    //public float damageMultiplier = 1f;
+    //public float knockbackPower = 5f;
 
     // 이번 시전에서 CanExecute가 찾아낸 타겟을 ExecuteSkillBehavior까지 전달하기 위한 캐시.
     // (같은 애셋 인스턴스를 여러 캐릭터가 동시에 쓰지 않는다는 전제 하의 단순한 방식)
     private Transform _cachedTarget;
 
     // 사거리 내 유효 타겟이 없으면 아예 발동하지 않음 (마나도 소모되지 않음)
-    public override bool CanExecute(PlayerCombat combat)
+    public override bool CanExecute(PlayerCombat combat, out string failReason)
     {
         _cachedTarget = FindTarget(combat);
-        return _cachedTarget != null;
+
+        if (_cachedTarget == null)
+        {
+            failReason = "타겟이 없거나 너무 멀리 있습니다";
+            return false;
+        }
+        failReason = null;
+        return true;
     }
 
+    // 우선순위: (바라보는 방향 안에 있는 대상만 후보) → 최근 나를 공격한 대상 > 체력이 적을수록 > 가까울수록
     private Transform FindTarget(PlayerCombat combat)
     {
         var stats = combat.GetComponent<CharacterStats>();
 
-        // 우선순위 1: 가장 최근 나를 공격한 대상 (사거리 안에 있고, 아직 살아있을 때만 유효)
-        if (stats.LastAttacker != null
-            && stats.LastAttacker.currentHealth > 0
-            && Vector2.Distance(combat.transform.position, stats.LastAttacker.transform.position) <= targetSearchRadius)
-        {
-            return stats.LastAttacker.transform;
-        }
+        // Q 스킬과 동일한 스프라이트 기본 방향 보정 (실제로 반대로 보이면 이 줄의 부호만 뒤집어서 조정하세요)
+        float worldFacing = combat.FacingDirection * -1f;
 
-        // 우선순위 2: 사거리 내 가장 가까운 적
         Collider2D[] hits = Physics2D.OverlapCircleAll(combat.transform.position, targetSearchRadius, enemyLayer);
-        Transform nearest = null;
-        float bestDist = float.MaxValue;
+
+        CharacterStats best = null;
+        float bestScore = float.MinValue;
+
         foreach (var hit in hits)
         {
-            float dist = Vector2.Distance(combat.transform.position, hit.transform.position);
-            if (dist < bestDist)
+            CharacterStats candidate = hit.GetComponentInParent<CharacterStats>();
+            if (candidate == null || candidate.currentHealth <= 0) continue;
+
+            Vector2 toTarget = (Vector2)candidate.transform.position - (Vector2)combat.transform.position;
+            if (toTarget.sqrMagnitude < 0.0001f) continue;
+
+            float angle = Vector2.Angle(new Vector2(worldFacing, 0f), toTarget);
+            if (angle > facingToleranceDegrees) continue; // 바라보는 방향 밖이면 후보 제외
+
+            float dist = toTarget.magnitude;
+            float hpRatio = candidate.maxHealth > 0 ? (float)candidate.currentHealth / candidate.maxHealth : 1f;
+
+            float score = 0f;
+            if (stats.LastAttacker == candidate) score += 1000f;   // 최우선: 최근 나를 공격한 대상
+            score += (1f - hpRatio) * 100f;                        // 체력이 적을수록 가산
+            score -= dist * 5f;                                    // 멀수록 감점
+
+            if (score > bestScore)
             {
-                bestDist = dist;
-                nearest = hit.transform;
+                bestScore = score;
+                best = candidate;
             }
         }
-        return nearest;
+
+        return best != null ? best.transform : null;
     }
 
     public override IEnumerator ExecuteSkillBehavior(PlayerCombat combat, Rigidbody2D rb, Animator anim, CharacterStats stats)
@@ -68,20 +101,31 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
 
         // 타겟의 반대편(뒤쪽) 좌표 계산
         float sideDir = (combat.transform.position.x < target.position.x) ? 1f : -1f;
-        Vector2 arrivalPos = (Vector2)target.position + new Vector2(sideDir * arrivalOffsetFromTarget, 0f);
+        float arrivalY = matchTargetHeight ? target.position.y : rb.position.y; // ★ 기본은 현재 높이 유지 (파묻힘 방지)
+        Vector2 arrivalPos = new Vector2(target.position.x + sideDir * arrivalOffsetFromTarget, arrivalY);
 
-        // 시전 텀 (애니메이션 선딜과 맞춤 — activeDuration 재사용)
-        yield return new WaitForSeconds(activeDuration);
+        if (warpDelay > 0f) yield return new WaitForSeconds(warpDelay);
 
         rb.position = arrivalPos;
+        rb.linearVelocity = Vector2.zero; // 순간이동 직후 잔여 낙하/이동 관성 제거
         Physics2D.SyncTransforms();
+
+        // 도착 후 타겟을 바라보도록 방향 전환 → 이어지는 Q 콤보도 자연스럽게 타겟을 향하게 됨
+        combat.FaceDirection(-sideDir);
 
         // 도착 순간 안전장치: 짧은 무적 + 겹친 대상 밀어내기
         stats.GrantTemporaryInvincibility(arrivalInvincibility);
         PushOverlappingColliders(arrivalPos, rb);
 
-        // 도착 파동
-        SpawnRipple(combat, stats, arrivalPos);
+        // --- '보라색 파동' 버전에서 쓰던 로직. 근접 히트박스 방식으로 변경하며 사용 중단.
+        //     나중에 다시 파동 방식으로 되돌릴 수도 있어 삭제하지 않고 주석 처리만 해둠. ---
+        // [Header("Ripple (도착 파동)")]
+        // public float rippleRadius = 2.5f;
+        // private void SpawnRipple(PlayerCombat combat, CharacterStats casterStats, Vector2 center)
+        // {
+        //     Collider2D[] hits = Physics2D.OverlapCircleAll(center, rippleRadius, enemyLayer);
+        //     foreach (var hit in hits) { ... TakeDamage / ApplyKnockback ... }
+        // }
     }
 
     private void PushOverlappingColliders(Vector2 center, Rigidbody2D selfRb)
@@ -97,30 +141,52 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
         }
     }
 
-    private void SpawnRipple(PlayerCombat combat, CharacterStats casterStats, Vector2 center)
+    // Q(Sora_Q_MeleeDashSkill)와 완전히 동일한 구조: 지속시간 동안 매 프레임 히트박스를 갱신하며 판정
+    public override IEnumerator ExecuteHitbox(PlayerCombat combat, Transform parentTransform, CharacterStats stats)
     {
-        combat.SetDebugHitbox(center, Vector2.one * rippleRadius);
+        float elapsed = 0f;
+        HashSet<Collider2D> alreadyHit = new HashSet<Collider2D>();
+        var (offset, size) = ResolveHitbox(combat.CurrentSkillContext); // 컨텍스트별 히트박스 오버라이드 반영
 
-        Collider2D[] hits = Physics2D.OverlapCircleAll(center, rippleRadius, enemyLayer);
-        foreach (var hit in hits)
+        while (elapsed < activeDuration)
         {
-            CharacterStats enemyStats = hit.GetComponentInParent<CharacterStats>();
-            if (enemyStats == null) continue;
+            float dir = combat.FacingDirection;
+            Vector2 currentOffset = new Vector2(offset.x * dir, offset.y);
+            Vector2 center = (Vector2)parentTransform.position + currentOffset;
 
-            int damage = Mathf.RoundToInt(casterStats.attack.GetValue() * damageMultiplier);
-            enemyStats.TakeDamage(damage, casterStats.currentElement, casterStats);
+            combat.SetDebugHitbox(center, size);
 
-            Vector2 knockbackDir = ((Vector2)hit.transform.position - center).normalized;
-            enemyStats.ApplyKnockback(knockbackDir, knockbackPower);
+            Collider2D[] hits = Physics2D.OverlapBoxAll(center, size, 0f, enemyLayer);
+            foreach (var hit in hits)
+            {
+                if (alreadyHit.Contains(hit)) continue;
+                alreadyHit.Add(hit);
+
+                CharacterStats enemyStats = hit.GetComponentInParent<CharacterStats>();
+                if (enemyStats == null) continue;
+
+                int damage = Mathf.RoundToInt(stats.attack.GetValue() * damageMultiplier);
+                enemyStats.TakeDamage(damage, stats.currentElement, stats);
+
+                Vector2 kbDir = ((Vector2) (hit.transform.position - parentTransform.position)).normalized; //? 
+                enemyStats.ApplyKnockback(kbDir, knockbackPower);
+
+                combat.TriggerHitStop(hitStopDuration);
+            }
+
+            elapsed += Time.deltaTime;
+            yield return null;
         }
 
         combat.ClearDebugHitbox();
-        // TODO: 보라색 원형 에너지파 VFX는 원거리 피격 이펙트와 동일하게 별도 이펙트 매니저에서 관리 예정
     }
 
-    // 파동은 ExecuteSkillBehavior 안에서 이미 즉시 처리되므로, 별도의 지속 히트박스는 필요 없음.
-    public override IEnumerator ExecuteHitbox(PlayerCombat combat, Transform parentTransform, CharacterStats stats)
+#if UNITY_EDITOR
+    // 5번 항목: 타겟 탐색 반경을 씬 뷰에서 바로 확인 가능 (보라색 원). 히트박스 자체는 SkillBase 기본 기즈모(SetDebugHitbox)로 이미 보임.
+    public override void DrawEditorGizmos(Vector3 basePos, float facingDir)
     {
-        yield break;
+        Gizmos.color = new Color(0.6f, 0.3f, 1f, 0.35f);
+        Gizmos.DrawWireSphere(basePos, targetSearchRadius);
     }
+#endif
 }

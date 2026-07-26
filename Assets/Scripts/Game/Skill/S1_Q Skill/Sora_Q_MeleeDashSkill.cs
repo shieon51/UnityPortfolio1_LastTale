@@ -49,13 +49,15 @@ public class Sora_Q_MeleeDashSkill : SkillBase
             // while 문 안에서 매 프레임마다 플레이어의 위치를 다시 가져오므로, 
             // 점프나 대시 중에도 히트박스가 플레이어를 완벽하게 따라다님
             float dir = combat.FacingDirection;
-            Vector2 currentOffset = new Vector2(hitboxOffset.x * dir, hitboxOffset.y);
+            var (offset, size) = ResolveHitbox(combat.CurrentSkillContext); // * 컨텍스트별 오버라이드가 있으면 그걸 사용
+
+            Vector2 currentOffset = new Vector2(offset.x * dir, offset.y);
             Vector2 center = (Vector2)parentTransform.position + currentOffset;
 
             // 기즈모 그리기 위해 최신 데이터 넘겨줌 (실시간 반영)
-            combat.SetDebugHitbox(center, hitboxSize);
+            combat.SetDebugHitbox(center, size);
 
-            Collider2D[] hits = Physics2D.OverlapBoxAll(center, hitboxSize, 0f, LayerMask.GetMask("Enemy"));
+            Collider2D[] hits = Physics2D.OverlapBoxAll(center, size, 0f, LayerMask.GetMask("Enemy"));
             bool hitSomething = false;
 
             foreach (var hit in hits)

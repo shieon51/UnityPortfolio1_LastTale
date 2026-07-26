@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!221 &22100000
+AnimatorOverrideController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Sora_Wings_Stage1_Override
+  m_Controller: {fileID: 9100000, guid: 616c2d14e0e8b3144b0cfecdf34c4653, type: 2}
+  m_Clips:
+  - m_OriginalClip: {fileID: 7400000, guid: 377cef97a4d74bc48819caad5459b5e2, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 13d1d5e05e0cb074bb1d658f97ffeef9, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: b4a67c1b82d6d8944a4e2a3dcab58e93, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 13d1d5e05e0cb074bb1d658f97ffeef9, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: f08291cfdcf32624db0f358379df35e3, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 13d1d5e05e0cb074bb1d658f97ffeef9, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: e6972742a0402e249818e84893e042cd, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 9b12108fc0832d240b52a2aea34baef8, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: bfca8ac7eee6d4e4e8282c5a86f33c1b, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 9b12108fc0832d240b52a2aea34baef8, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: df5c8974e9f569e479ff5c7051f25b6c, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: bb5daaaa598a65e41ba26e3d03adc1b0, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 322389590c53bb8428ba40eed5b5320f, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: ed163081b9292244b95c512d4a871af4, type: 2}

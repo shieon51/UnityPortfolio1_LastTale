@@ -17,16 +17,19 @@ MonoBehaviour:
   animStateName: CloseAttack1
   activeDuration: 0.15
   priority: 0
+  manaCostPolicy: 0
+  maxAnimationDuration: 1.2
   customDamageFormula: {fileID: 0}
   requiredStage: 0
-  manaCostPolicy: 0
+  hitboxSize: {x: 3.02, y: 1.59}
+  hitboxOffset: {x: -0.24, y: 0.19}
   contextVariants:
   - context: 1
     animStateName: Air_CloseAttack1
-  maxAnimationDuration: 2
-  hitboxSize: {x: 3.02, y: 1.59}
-  hitboxOffset: {x: -0.24, y: 0.19}
-  dashSpeed: 10
+    overrideHitbox: 0
+    hitboxOffsetOverride: {x: 0, y: 0}
+    hitboxSizeOverride: {x: 0, y: 0}
+  dashSpeed: 15
   dashDuration: 0.1
   hitStopDuration: 0.08
   damageMultiplier: 1

@@ -19,9 +19,8 @@ public class PlayerCombat : MonoBehaviour
     private SpriteRenderer _spriteRenderer;
     private PlayerVisual _playerVisual; // 애니메이션 강제 동기화용
 
-    public event Action<SkillBase> OnSkillBlockedByMana; // UI 피드백(마나 부족 이펙트 등)용 훅
-
     public bool IsAttacking { get; private set; }
+    public PlayerMovementContext CurrentSkillContext { get; private set; } // 히트박스 오버라이드/착지 전환에 사용
     private float _originalGravity;
 
     [Header("Skill Sequence Slots")] // 콤보 리스트가 담긴 Sequence 꾸러미를 받음
@@ -33,7 +32,6 @@ public class PlayerCombat : MonoBehaviour
     // --- 콤보 시스템 ---
     private Queue<SkillSequenceData> _inputBuffer = new Queue<SkillSequenceData>();
     private SkillBase _currentPlayingSkill;
-
     // 슬롯(Q,W,E,R)마다 현재 몇 타째인지 독립적으로 기억하는 딕셔너리
     private Dictionary<SkillSequenceData, int> _comboStepTracker = new Dictionary<SkillSequenceData, int>();
 
@@ -49,6 +47,8 @@ public class PlayerCombat : MonoBehaviour
     // ** 스킬 클래스(MeleeDashSkill 등)가 플레이어가 바라보는 방향을 쉽게 알 수 있도록 열어주는 프로퍼티
     public float FacingDirection => (_spriteRenderer != null && _spriteRenderer.flipX) ? -1f : 1f;
 
+    public event Action<SkillBase> OnSkillBlockedByMana; // UI 피드백(마나 부족 이펙트 등)용 훅
+
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
@@ -58,6 +58,13 @@ public class PlayerCombat : MonoBehaviour
         _playerVisual = GetComponentInChildren<PlayerVisual>();
         _motor = GetComponent<IPlayerMotor>();
         _formProvider = GetComponent<IFormStageProvider>(); // 없으면 null (정상)
+
+        if (_motor != null) _motor.OnLanded += HandleLandedDuringAttack; // ★ 8번: 공중 공격 중 착지 시 지상 모션으로 자연스럽게 전환
+    }
+
+    private void OnDestroy()
+    {
+        if (_motor != null) _motor.OnLanded -= HandleLandedDuringAttack;
     }
 
     private void Start()
@@ -125,9 +132,13 @@ public class PlayerCombat : MonoBehaviour
 
         SkillBase skillToPlay = seq.comboSteps[step];
 
-        // 2. 발동 조건 실패 시(예: W인데 타겟이 없음) 마나도, 콤보 진행도, 애니메이션도 전혀 건드리지 않고 조용히 무시
-        if (!skillToPlay.CanExecute(this)) return;
-
+        // 2. 발동 조건 실패(예: W인데 타겟 없음) → 마나/콤보/애니메이션 전혀 건드리지 않고 알리미만 띄움
+        if (!skillToPlay.CanExecute(this, out string failReason))
+        {
+            if (!string.IsNullOrEmpty(failReason))
+                NotificationManager.Instance?.Show(failReason, NotificationType.Warning);
+            return;
+        }
 
         // 3. --- 마나/오버캐스트 연산 ---
         int actualManaCost = _stats.CalculateManaCost(skillToPlay.requiredMana);
@@ -137,6 +148,7 @@ public class PlayerCombat : MonoBehaviour
         if (!hasEnoughMana && skillToPlay.manaCostPolicy == ManaCostPolicy.BlockIfInsufficient)
         {
             OnSkillBlockedByMana?.Invoke(skillToPlay);
+            NotificationManager.Instance?.Show("마나가 부족합니다", NotificationType.Warning);
             return;
         }
 
@@ -164,12 +176,12 @@ public class PlayerCombat : MonoBehaviour
         // 다음 콤보 스텝 미리 증가시켜두기
         _comboStepTracker[seq] = step + 1;
 
-        // Visual 스크립트를 통해 모든 파츠(Body, Hair 등) 애니메이션 동시 재생!
+        var context = ResolveMovementContext();
+        CurrentSkillContext = context;
+
+        // 비주얼 파츠 동시 재생
         if (_playerVisual != null)
-        {
-            var context = ResolveMovementContext();
             _playerVisual.PlayAttackAnimation(skillToPlay.ResolveAnimStateName(context));
-        }
 
         _attackSessionId++;
         int sessionId = _attackSessionId;
@@ -183,6 +195,20 @@ public class PlayerCombat : MonoBehaviour
         if (_motor != null && _motor.IsGrounded) return PlayerMovementContext.Grounded;
         if (_formProvider != null && _formProvider.IsFlightForm) return PlayerMovementContext.Flying;
         return PlayerMovementContext.Airborne;
+    }
+
+    //  공중 컨텍스트로 공격을 시작했는데, 그 도중에 실제로 착지했다면
+    //  같은 재생 시점(normalizedTime)을 유지한 채 지상 컨텍스트 클립으로 자연스럽게 바꿔치기.
+    //  (지상/공중 클립의 프레임 타이밍을 맞춰두셨기 때문에 끊김 없이 전환됩니다)
+    private void HandleLandedDuringAttack()
+    {
+        if (!IsAttacking || _currentPlayingSkill == null) return;
+        if (CurrentSkillContext == PlayerMovementContext.Grounded) return;
+
+        string groundedState = _currentPlayingSkill.ResolveAnimStateName(PlayerMovementContext.Grounded);
+        float normalizedTime = _playerVisual != null ? _playerVisual.GetCurrentNormalizedTime() : 0f;
+        _playerVisual?.PlayAttackAnimation(groundedState, normalizedTime);
+        CurrentSkillContext = PlayerMovementContext.Grounded;
     }
 
     // 애니메이션 이벤트(OnAttackEnd)가 어떤 이유로든 호출되지 못했을 때를 대비한 최종 안전장치.
@@ -259,6 +285,16 @@ public class PlayerCombat : MonoBehaviour
         _comboStepTracker.Remove(skill); // 새로 장착한 스킬은 항상 1타부터 시작하도록 초기화
     }
 
+    //  W 도착 후 등 특정 스킬이 방향을 강제로 맞춰야 할 때 호출
+    public void FaceDirection(float worldDir)
+    {
+        // ** 이 프로젝트의 스프라이트 기본 방향 관례상 flipX=true일 때 월드 오른쪽을 바라봅니다.
+        // 실제로 반대로 보이면 이 한 줄만 뒤집어서 조정하세요.
+        bool flipX = worldDir > 0f;
+        if (_spriteRenderer != null) _spriteRenderer.flipX = flipX;
+        _playerVisual?.SetFacingDirection(flipX);
+    }
+
     // --- 헬퍼 함수 (SkillBase 자식 클래스들이 타격감/기즈모를 위해 호출) ---
     public void SetDebugHitbox(Vector2 center, Vector2 size) { _showHitbox = true; _lastHitboxCenter = center; _lastHitboxSize = size; }
     public void ClearDebugHitbox() { _showHitbox = false; }
@@ -303,6 +339,8 @@ public class PlayerCombat : MonoBehaviour
 
                     Vector2 previewCenter = (Vector2)basePos + new Vector2(skill.hitboxOffset.x * dir, skill.hitboxOffset.y);
                     Gizmos.DrawWireCube(previewCenter, skill.hitboxSize);
+
+                    skill.DrawEditorGizmos(basePos, dir); // ★ 스킬별 커스텀 기즈모 훅 호출
                 }
             }
         }

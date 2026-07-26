@@ -17,20 +17,23 @@ MonoBehaviour:
   animStateName: W_Attack1
   activeDuration: 0.15
   priority: 0
+  manaCostPolicy: 0
+  maxAnimationDuration: 1.2
   customDamageFormula: {fileID: 0}
   requiredStage: 0
-  manaCostPolicy: 0
-  contextVariants: []
-  maxAnimationDuration: 2
   hitboxSize: {x: 3, y: 3}
   hitboxOffset: {x: 2.14, y: 0.77}
+  contextVariants: []
   targetSearchRadius: 6
   enemyLayer:
     serializedVersion: 2
     m_Bits: 128
+  facingToleranceDegrees: 100
   arrivalOffsetFromTarget: 1.2
+  warpDelay: 0
+  matchTargetHeight: 0
   arrivalInvincibility: 0.18
   arrivalPushForce: 6
-  rippleRadius: 2.5
   damageMultiplier: 1
   knockbackPower: 5
+  hitStopDuration: 0.08

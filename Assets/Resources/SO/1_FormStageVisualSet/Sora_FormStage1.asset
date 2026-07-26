@@ -15,3 +15,4 @@ MonoBehaviour:
   formStage: 1
   parts:
   - {fileID: 11400000, guid: 5d2eccaeeaf7f3142ac98f6faa967e63, type: 2}
+  - {fileID: 11400000, guid: d11033d6c9437a04cbed016f6406f8bd, type: 2}

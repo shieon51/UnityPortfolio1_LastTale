@@ -9,6 +9,8 @@ public class PlayerVisual : MonoBehaviour
 
     private SpriteRenderer[] _allSpriteRenderers; // Awake에서 한 번만 캐싱
 
+    private CharacterStats _stats;
+
     private IPlayerMotor _controller;
     private Animator _driverAnimator; // Body 파츠의 Animator. 이벤트/상태조회의 유일한 기준점.
     private Animator[] _partAnimators; // 자식으로 있는 모든 애니메이터를 싹 다 관리
@@ -33,7 +35,8 @@ public class PlayerVisual : MonoBehaviour
         {
             _controller.OnJumpTriggered += HandleJumpTriggered;
             _controller.OnFallStarted += HandleFallStarted;
-            _controller.OnLanded += HandleLanded;
+            //_controller.OnLandingAnticipated += HandleLandingAnticipated; // ★ OnLanded 대신 이걸 구독
+            _controller.OnLanded += HandleLandingAnticipated;
         }
 
         _formProvider = GetComponentInParent<IFormStageProvider>();
@@ -43,6 +46,13 @@ public class PlayerVisual : MonoBehaviour
             _formProvider.OnFormTransformStarted += HandleFormTransformStarted;
             _formProvider.OnFormStageChanged += HandleFormStageChanged;
         }
+
+        _stats = GetComponentInParent<CharacterStats>();
+
+        if (_stats != null)
+        {
+            _stats.OnKnockbackApplied += HandleKnockbackHit;
+        }
     }
 
     private void OnDestroy()
@@ -51,13 +61,19 @@ public class PlayerVisual : MonoBehaviour
         {
             _controller.OnJumpTriggered -= HandleJumpTriggered;
             _controller.OnFallStarted -= HandleFallStarted;
-            _controller.OnLanded -= HandleLanded;
+            //_controller.OnLandingAnticipated -= HandleLandingAnticipated;
+            _controller.OnLanded -= HandleLandingAnticipated; //?
         }
 
         if (_formProvider != null)
         {
             _formProvider.OnFormTransformStarted -= HandleFormTransformStarted;
             _formProvider.OnFormStageChanged -= HandleFormStageChanged;
+        }
+
+        if (_stats != null)
+        {
+            _stats.OnKnockbackApplied -= HandleKnockbackHit;
         }
     }
 
@@ -85,8 +101,48 @@ public class PlayerVisual : MonoBehaviour
     }
 
     // 폼체인지(요정화) 모션 관련
-    private void HandleFormTransformStarted() => PlayImmediate(PlayerAnimStateNames.Transform); // 베이스 컨트롤러에 공용 "Transform" 상태 하나 추가 필요
+    private void HandleFormTransformStarted()
+    {
+        if (_formProvider == null) { PlayImmediate(PlayerAnimStateNames.Transform); return; }
+
+        bool enteringFlight = !_formProvider.IsFlightForm; // 토글 전 시점이라 반대가 목표 방향
+        PlayImmediate(enteringFlight ? PlayerAnimStateNames.Transform : PlayerAnimStateNames.TransformOut);
+    }
     private void HandleFormStageChanged(int newStage) => ReturnToLocomotion();
+
+    // 맞을 때마다 무조건 재생 (연속으로 맞아도 매번 다시 틀어짐)
+    private void HandleKnockbackHit()
+    {
+        PlayImmediate(PlayerAnimStateNames.Hit);
+    }
+
+    // '완전히 넉백에서 풀렸을 때'만 이동 모션으로 복귀 (재생 트리거와는 분리)
+    //private void HandleKnockbackTransition()
+    //{
+    //    bool isKnockedBack = _controller.IsKnockedBack;
+    //    if (!isKnockedBack && _wasKnockedBack)
+    //    {
+    //        ReturnToLocomotion();
+    //    }
+    //    _wasKnockedBack = isKnockedBack;
+    //}
+
+    // 대화/공격 잠금과는 별개로, 순수하게 '넉백 시작/종료' 전이만 감지해서 Hit 모션을 넣고 뺀다.
+    private void HandleKnockbackTransition()
+    {
+        bool isKnockedBack = _controller.IsKnockedBack;
+
+        if (isKnockedBack && !_wasKnockedBack)
+        {
+            PlayImmediate(PlayerAnimStateNames.Hit);
+        }
+        else if (!isKnockedBack && _wasKnockedBack)
+        {
+            ReturnToLocomotion();
+        }
+
+        _wasKnockedBack = isKnockedBack;
+    }
 
     // 대화 시작 순간엔 강제로 Idle, 그리고 (모든 종류의) 잠금이 풀리는 순간엔
     // 그동안 억눌러뒀던 실제 물리 상태(공중/지상)와 화면을 다시 동기화한다.
@@ -117,23 +173,6 @@ public class PlayerVisual : MonoBehaviour
     //    }
     //}
 
-    // 대화/공격 잠금과는 별개로, 순수하게 '넉백 시작/종료' 전이만 감지해서 Hit 모션을 넣고 뺀다.
-    private void HandleKnockbackTransition()
-    {
-        bool isKnockedBack = _controller.IsKnockedBack;
-
-        if (isKnockedBack && !_wasKnockedBack)
-        {
-            PlayImmediate(PlayerAnimStateNames.Hit);
-        }
-        else if (!isKnockedBack && _wasKnockedBack)
-        {
-            ReturnToLocomotion();
-        }
-
-        _wasKnockedBack = isKnockedBack;
-    }
-
     // 안전장치: 공중 + 비잠금 상태인데 화면상 상태가 Jump/Fall 계열이 아니면 강제로 바로잡는다.
     // (이벤트 유실 등 어떤 경로로 상태가 꼬이든 최종적으로 항상 여기서 걸러진다)
     private void ReconcileAirborneVisual()
@@ -142,8 +181,11 @@ public class PlayerVisual : MonoBehaviour
         if (_formProvider != null && _formProvider.IsFlightForm) return; // 비행형은 이 안전장치 대상이 아님
 
         AnimatorStateInfo info = _driverAnimator.GetCurrentAnimatorStateInfo(0);
-        bool isAirborneState = info.IsName(PlayerAnimStateNames.JumpUp) || info.IsName(PlayerAnimStateNames.JumpTree);
-        if (!isAirborneState)
+        bool isAcceptableAirborneState = info.IsName(PlayerAnimStateNames.JumpUp)
+        || info.IsName(PlayerAnimStateNames.JumpTree)
+        || info.IsName(PlayerAnimStateNames.Ground); // 착지 예고 중인 Ground 상태도 정상으로 인정
+
+        if (!isAcceptableAirborneState)
         {
             CrossFadeAll(PlayerAnimStateNames.JumpTree, 0.05f);
         }
@@ -197,6 +239,23 @@ public class PlayerVisual : MonoBehaviour
             ApplyAnimatorSpeed(_statSpeedMultiplier);
     }
 
+    // 특정 정규화된 재생 시점부터 상태를 재생 (8번: 착지 순간 끊김 없이 지상 클립으로 전환할 때 사용)
+    public void PlayAttackAnimation(string stateName, float normalizedTime = 0f) => PlayImmediate(stateName, normalizedTime);
+
+    public float GetCurrentNormalizedTime()
+    {
+        if (_driverAnimator == null) return 0f;
+        var info = _driverAnimator.GetCurrentAnimatorStateInfo(0);
+        return info.normalizedTime % 1f; // 반복 횟수(정수부) 제거, 0~1 소수부만
+    }
+
+    public void SetFacingDirection(bool flipX)
+    {
+        foreach (var sr in _allSpriteRenderers)
+            if (sr != null) sr.flipX = flipX;
+    }
+
+
 
     // --- 점프/착지/낙하: Transition에 맡기지 않고 코드가 직접 상태를 강제 지정 ---
 
@@ -219,14 +278,22 @@ public class PlayerVisual : MonoBehaviour
         }
         CrossFadeAll(PlayerAnimStateNames.JumpTree, 0.05f);
     }
-    private void HandleLanded()
+    //private void HandleLanded()
+    //{
+    //    if (_controller.IsActionLocked) return;
+    //    if (_formProvider != null && _formProvider.IsFlightForm)
+    //    {
+    //        CrossFadeAll(PlayerAnimStateNames.Movement, 0.1f);
+    //        return;
+    //    }
+    //    PlayImmediate(PlayerAnimStateNames.Ground);
+    //}
+
+    // 실제 접촉 전, 예고 시점에 착지 모션을 미리 재생
+    private void HandleLandingAnticipated()
     {
         if (_controller.IsActionLocked) return;
-        if (_formProvider != null && _formProvider.IsFlightForm)
-        {
-            CrossFadeAll(PlayerAnimStateNames.Movement, 0.1f);
-            return;
-        }
+        if (_formProvider != null && _formProvider.IsFlightForm) return; // 비행형은 착지 모션 없음
         PlayImmediate(PlayerAnimStateNames.Ground);
     }
 
@@ -274,11 +341,11 @@ public class PlayerVisual : MonoBehaviour
         _hitStopRoutine = null;
     }
 
-    private void PlayImmediate(string stateName)
+    private void PlayImmediate(string stateName, float normalizedTime = 0f)
     {
         foreach (var anim in _partAnimators)
             if (anim != null && anim.gameObject.activeInHierarchy)
-                anim.Play(stateName, -1, 0f);
+                anim.Play(stateName, -1, normalizedTime);
     }
     private void CrossFadeAll(string stateName, float duration)
     {

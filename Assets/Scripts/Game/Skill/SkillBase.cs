@@ -20,6 +20,12 @@ public struct SkillAnimVariant // 플레이어 상태에 따른 스킬 사용 �
 {
     public PlayerMovementContext context;
     public string animStateName;
+
+    [Header("히트박스 오버라이드 (선택)")]
+    [Tooltip("체크하면 이 상황에서는 아래 오프셋/크기를 기본 hitboxOffset/hitboxSize 대신 사용함. 모션마다 팔다리 뻗는 정도가 달라 히트박스도 달라져야 할 때 사용.")]
+    public bool overrideHitbox;
+    public Vector2 hitboxOffsetOverride;
+    public Vector2 hitboxSizeOverride;
 }
 
 // 모든 스킬의 기본이 되는 추상 클래스
@@ -32,6 +38,13 @@ public abstract class SkillBase : ScriptableObject
     public float activeDuration = 0.15f; // 판정 지속 시간
     public SkillPriority priority = SkillPriority.Normal; // 캔슬 가능 여부 판단용
 
+    [Header("Mana")]
+    public ManaCostPolicy manaCostPolicy = ManaCostPolicy.BlockIfInsufficient;
+
+    [Header("Safety")]
+    [Tooltip("OnAttackEnd 이벤트가 이 시간 안에 호출되지 않으면 강제 종료시키는 안전장치(초). 클립 전체 길이보다 넉넉하게 설정하세요.")]
+    public float maxAnimationDuration = 1.2f;
+
     [Header("Combat Formula")]
     [Tooltip("비워두면 CombatFormulaService의 기본 수식을 사용")]
     public DamageFormulaSO customDamageFormula;
@@ -41,31 +54,14 @@ public abstract class SkillBase : ScriptableObject
     [Tooltip("이 스킬을 쓰기 위한 최소 단계. 단계 시스템 확정 전까진 0으로 둬도 무방.")]
     public int requiredStage = 0;
 
-    [Header("Mana")]
-    public ManaCostPolicy manaCostPolicy = ManaCostPolicy.BlockIfInsufficient;
-
-    [Header("Context Variants")]
-    [Tooltip("공중/비행 등 특정 상황에서 다른 모션이 필요할 때만 등록. 안 하면 기본 animStateName 사용 (이펙트/판정 로직은 그대로 공유).")]
-    public List<SkillAnimVariant> contextVariants = new List<SkillAnimVariant>();
-
-    [Header("Safety")]
-    [Tooltip("OnAttackEnd 이벤트가 이 시간 안에 호출되지 않으면 강제 종료시키는 안전장치(초). 클립 전체 길이보다 넉넉하게 설정하세요.")]
-    public float maxAnimationDuration = 2f;
-
     // 모든 스킬이 히트박스를 가질 수 있으므로 베이스로 올림
     [Header("Hitbox Setup")]
     public Vector2 hitboxSize = new Vector2(2.6f, 1.6f);
     public Vector2 hitboxOffset = new Vector2(1.2f, 1.1f); // X는 양수로 두면 알아서 반전됨
 
-    // 스킬마다 타격감, 전진 여부, 발사체 생성 등 완전히 다른 동작을 수행하기 위한 가상 함수
-    public abstract IEnumerator ExecuteSkillBehavior(PlayerCombat combat, Rigidbody2D rb, Animator anim, CharacterStats stats);
-
-    // 공격 판정 (히트박스) 생성 등도 스킬마다 다를 수 있으니 가상 함수로 뺌
-    public abstract IEnumerator ExecuteHitbox(PlayerCombat combat, Transform parentTransform, CharacterStats stats);
-
-    // 스킬이 실제로 발동 가능한 상태인지 사전 검증 (예: 유효한 타겟이 필요한 스킬 등).
-    // 기본은 항상 true이며, 필요한 스킬만 오버라이드하면 됨 — 다른 스킬은 전혀 영향 없음(OCP).
-    public virtual bool CanExecute(PlayerCombat combat) => true;
+    [Header("Context Variants")]
+    [Tooltip("공중/비행 등 특정 상황에서 다른 모션이 필요할 때만 등록. 안 하면 기본 animStateName 사용 (이펙트/판정 로직은 그대로 공유).")]
+    public List<SkillAnimVariant> contextVariants = new List<SkillAnimVariant>();
 
     public string ResolveAnimStateName(PlayerMovementContext context)
     {
@@ -73,4 +69,34 @@ public abstract class SkillBase : ScriptableObject
             if (v.context == context) return v.animStateName;
         return animStateName;
     }
+
+    // 컨텍스트별로 히트박스가 다를 때 사용. override 등록이 없으면 기본 hitboxOffset/hitboxSize를 반환.
+    public (Vector2 offset, Vector2 size) ResolveHitbox(PlayerMovementContext context)
+    {
+        foreach (var v in contextVariants)
+            if (v.context == context && v.overrideHitbox)
+                return (v.hitboxOffsetOverride, v.hitboxSizeOverride);
+        return (hitboxOffset, hitboxSize);
+    }
+
+    // 스킬이 실제로 발동 가능한 상태인지 사전 검증 (예: 유효한 타겟이 필요한 스킬 등).
+    // 실패 시 failReason에 사용자에게 보여줄 안내 문구를 채우면 PlayerCombat이 자동으로 알림을 띄운다.
+    public virtual bool CanExecute(PlayerCombat combat, out string failReason)
+    {
+        failReason = null;
+        return true;
+    }
+
+    // 스킬마다 타격감, 전진 여부, 발사체 생성 등 완전히 다른 동작을 수행하기 위한 가상 함수
+    public abstract IEnumerator ExecuteSkillBehavior(PlayerCombat combat, Rigidbody2D rb, Animator anim, CharacterStats stats);
+
+    // 공격 판정 (히트박스) 생성 등도 스킬마다 다를 수 있으니 가상 함수로 뺌
+    public abstract IEnumerator ExecuteHitbox(PlayerCombat combat, Transform parentTransform, CharacterStats stats);
+
+
+#if UNITY_EDITOR
+    // 에디터 프리뷰용 커스텀 기즈모 훅. 스킬마다 필요한 범위(타겟 탐색 반경 등)를 자유롭게 그릴 수 있음.
+    // 기본은 아무것도 안 그림 — 필요한 스킬만 오버라이드하면 됨 (OCP).
+    public virtual void DrawEditorGizmos(Vector3 basePos, float facingDir) { }
+#endif
 }

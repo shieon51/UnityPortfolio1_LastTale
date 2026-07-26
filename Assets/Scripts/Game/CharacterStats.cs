@@ -30,12 +30,21 @@ public class CharacterStats : MonoBehaviour
     public float invincibilityDuration = 0.2f; // 맞은 후 0.2초간 무적
     protected float lastHitTime = -1f;
 
+    [Header("Knockback")]
+    [Tooltip("피격 시 행동불능(넉백) 유지 시간(초). Hit 애니메이션 클립 길이에 맞춰 조정하세요.")]
+    public float knockbackStunDuration = 0.3f;
+
     // 최근에 나를 공격한 대상 (W 스킬의 "최근 피격 대상 우선" 타겟팅에 사용)
     public CharacterStats LastAttacker { get; private set; }
 
     // 부모에서 선언된 이벤트 (부모만 쏠 수 있음)
     public event Action OnHealthChanged;
     public event Action OnManaChanged;
+
+    // 맞을 때마다(중첩 포함) 매번 발행
+    public event Action OnKnockbackApplied;
+
+    private Coroutine _knockbackRoutine;
 
     // 넉백 상태인지 확인하는 변수 추가
     public bool isKnockedBack { get; protected set; } = false;
@@ -150,11 +159,15 @@ public class CharacterStats : MonoBehaviour
         return originalCost; 
     }
 
-    public virtual void ApplyKnockback(Vector2 direction, float knockbackPower, float knockbackTime = 0.2f)
+    public virtual void ApplyKnockback(Vector2 direction, float knockbackPower, float? knockbackTime = null)
     {
-        if (isSuperArmor) return; // 슈퍼아머(공격중)면 넉백 무시
+        if (isSuperArmor) return;
 
-        StartCoroutine(KnockbackRoutine(direction, knockbackPower, knockbackTime));
+        float duration = knockbackTime ?? knockbackStunDuration;
+        OnKnockbackApplied?.Invoke();
+
+        if (_knockbackRoutine != null) StopCoroutine(_knockbackRoutine); // 중첩 방지: 새 피격이 기존 경직을 갱신
+        _knockbackRoutine = StartCoroutine(KnockbackRoutine(direction, knockbackPower, duration));
     }
 
 
@@ -177,6 +190,7 @@ public class CharacterStats : MonoBehaviour
 
             isKnockedBack = false;
         }
+        _knockbackRoutine = null;
     }
 
     protected virtual void Die()

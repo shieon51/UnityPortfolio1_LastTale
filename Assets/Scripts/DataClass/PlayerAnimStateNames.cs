@@ -8,5 +8,6 @@ public static class PlayerAnimStateNames
     public const string JumpTree = "JumpTree";
     public const string Ground = "Player_Ground";
     public const string Transform = "Transform";
+    public const string TransformOut = "TransformOut";
     public const string Hit = "Hit";
 }
