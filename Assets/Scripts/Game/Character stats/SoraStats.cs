@@ -130,6 +130,18 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         return (currentFatigue >= 30) ? 0.5f : 1.0f; // 피로도 30 이상이면 이속 0.5배
     }
 
+    protected override void PrepareRigidbodyForKnockback(Rigidbody2D rb)
+    {
+        if (fairyStage == 1) rb.linearVelocity = Vector2.zero; // 비행 중엔 기존 비행 속도까지 완전히 리셋
+        else base.PrepareRigidbodyForKnockback(rb);
+    }
+
+    protected override Vector2 ComputeKnockbackForce(Vector2 direction, float power)
+    {
+        if (fairyStage == 1) return direction.normalized * power; // 순수하게 맞은 반대 방향으로만, 상승 편향 없음
+        return base.ComputeKnockbackForce(direction, power);
+    }
+
     #region 소라 고유 시스템 (시간결정체, 정신력, 피로도)
     public void CollectTimeCrystal()
     {

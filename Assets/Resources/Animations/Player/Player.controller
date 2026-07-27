@@ -46,7 +46,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 0}
+  m_Motion: {fileID: 7400000, guid: 68647ebaab6c7c942b6174156852ef35, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
@@ -63,10 +63,10 @@ AnimatorStateMachine:
   m_ChildStates:
   - serializedVersion: 1
     m_State: {fileID: -6487703784324338409}
-    m_Position: {x: 420, y: 70, z: 0}
+    m_Position: {x: 420, y: 0, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -761239486850057247}
-    m_Position: {x: 420, y: 130, z: 0}
+    m_Position: {x: 420, y: 60, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -470288305708072565}
     m_Position: {x: 420, y: -90, z: 0}
@@ -84,13 +84,13 @@ AnimatorStateMachine:
     m_Position: {x: 1030, y: -140, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 8264507079981937233}
-    m_Position: {x: 740, y: 110, z: 0}
+    m_Position: {x: 740, y: 40, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 999419397293304404}
-    m_Position: {x: 420, y: 210, z: 0}
+    m_Position: {x: 200, y: 0, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 1375724101169923470}
-    m_Position: {x: 420, y: 270, z: 0}
+    m_Position: {x: 200, y: 60, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -6061900463679376876}
     m_Position: {x: 1030, y: -80, z: 0}
@@ -257,13 +257,13 @@ AnimatorController:
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 9100000}
-  - m_Name: IsDash
+  - m_Name: IsGrounded
     m_Type: 4
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 9100000}
-  - m_Name: IsGrounded
+  - m_Name: IsDash
     m_Type: 4
     m_DefaultFloat: 0
     m_DefaultInt: 0

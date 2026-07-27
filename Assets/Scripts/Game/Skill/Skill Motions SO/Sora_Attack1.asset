@@ -29,7 +29,8 @@ MonoBehaviour:
     overrideHitbox: 0
     hitboxOffsetOverride: {x: 0, y: 0}
     hitboxSizeOverride: {x: 0, y: 0}
+  facingLockOverride: 1
   dashSpeed: 15
-  dashDuration: 0.1
+  dashDuration: 0.2
   hitStopDuration: 0.08
   damageMultiplier: 1

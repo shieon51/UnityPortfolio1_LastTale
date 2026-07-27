@@ -170,6 +170,16 @@ public class CharacterStats : MonoBehaviour
         _knockbackRoutine = StartCoroutine(KnockbackRoutine(direction, knockbackPower, duration));
     }
 
+    protected virtual void PrepareRigidbodyForKnockback(Rigidbody2D rb)
+    {
+        rb.linearVelocity = new Vector2(0, rb.linearVelocity.y); // 기본: X만 초기화
+    }
+
+    protected virtual Vector2 ComputeKnockbackForce(Vector2 direction, float power)
+    {
+        return new Vector2(direction.x, 0.5f).normalized * power; // 기본: 대각선 위로
+    }
+
 
     private IEnumerator KnockbackRoutine(Vector2 direction, float power, float duration)
     {
@@ -179,9 +189,11 @@ public class CharacterStats : MonoBehaviour
             isKnockedBack = true;
 
             // 초기 X축 속도를 초기화하고 밀어냄
-            rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
-            Vector2 force = new Vector2(direction.x, 0.5f).normalized * power;
-            rb.AddForce(force, ForceMode2D.Impulse);
+            //rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+            //Vector2 force = new Vector2(direction.x, 0.5f).normalized * power;
+            PrepareRigidbodyForKnockback(rb);
+            //rb.AddForce(force, ForceMode2D.Impulse);
+            rb.AddForce(ComputeKnockbackForce(direction, power), ForceMode2D.Impulse);
 
             yield return new WaitForSeconds(duration);
 

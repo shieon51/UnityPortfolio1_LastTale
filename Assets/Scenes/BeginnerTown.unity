@@ -381,8 +381,8 @@ TilemapRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: -2085444715
+  m_SortingLayer: 2
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_ChunkSize: {x: 32, y: 32, z: 32}
@@ -8934,6 +8934,14 @@ PrefabInstance:
     - target: {fileID: 5133003506074248451, guid: 40b8c6696a078b84e8b110d6e5fc3454, type: 3}
       propertyPath: m_ColliderPaths.Array.data[0].m_ColliderPaths.Array.data[4].Array.data[21].Y
       value: -90000000
+      objectReference: {fileID: 0}
+    - target: {fileID: 5425183203418210378, guid: 40b8c6696a078b84e8b110d6e5fc3454, type: 3}
+      propertyPath: m_SortingLayer
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5425183203418210378, guid: 40b8c6696a078b84e8b110d6e5fc3454, type: 3}
+      propertyPath: m_SortingLayerID
+      value: -992327035
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

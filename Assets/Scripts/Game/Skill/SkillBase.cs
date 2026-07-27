@@ -15,6 +15,9 @@ public enum ManaCostPolicy
     OvercastWithHealth   // 궁극기 등 특수 스킬: 부족분을 HP로 대신 소모
 }
 
+// 같은 시퀀스로 이어지는 콤보는 방향 고정, 다른 슬롯으로 전환되면 허용이 기본. (UseDefault)
+public enum FacingLockOverride { UseDefault, AlwaysLock, AlwaysAllow }
+
 [System.Serializable]
 public struct SkillAnimVariant // 플레이어 상태에 따른 스킬 사용 모션 변경
 {
@@ -63,6 +66,10 @@ public abstract class SkillBase : ScriptableObject
     [Tooltip("공중/비행 등 특정 상황에서 다른 모션이 필요할 때만 등록. 안 하면 기본 animStateName 사용 (이펙트/판정 로직은 그대로 공유).")]
     public List<SkillAnimVariant> contextVariants = new List<SkillAnimVariant>();
 
+    [Header("Combo Flow")]
+    [Tooltip("기본(UseDefault): 같은 시퀀스로 이어지는 콤보는 고정, 다른 슬롯으로 전환되면 허용. 특정 스킬만 예외로 강제하려면 여기서 지정.")]
+    public FacingLockOverride facingLockOverride = FacingLockOverride.UseDefault;
+
     // 콤보 윈도우가 열리는 시점에 이 스킬이 '추천'하는 바라보는 방향(월드, +1/-1). 필요 없으면 null.
     public virtual float? GetPreferredFacingDirection() => null;
 
@@ -99,7 +106,22 @@ public abstract class SkillBase : ScriptableObject
 
 #if UNITY_EDITOR
     // 에디터 프리뷰용 커스텀 기즈모 훅. 스킬마다 필요한 범위(타겟 탐색 반경 등)를 자유롭게 그릴 수 있음.
-    // 기본은 아무것도 안 그림 — 필요한 스킬만 오버라이드하면 됨 (OCP).
-    public virtual void DrawEditorGizmos(Vector3 basePos, float facingDir) { }
+    public virtual void DrawEditorGizmos(Vector3 basePos, float facingDir)
+    {
+        foreach (var variant in contextVariants)
+        {
+            if (!variant.overrideHitbox) continue;
+
+            Gizmos.color = variant.context switch
+            {
+                PlayerMovementContext.Airborne => new Color(0f, 0.8f, 1f, 0.6f),
+                PlayerMovementContext.Flying => new Color(1f, 0.5f, 0f, 0.6f),
+                _ => Color.white,
+            };
+
+            Vector2 center = (Vector2)basePos + new Vector2(variant.hitboxOffsetOverride.x * facingDir, variant.hitboxOffsetOverride.y);
+            Gizmos.DrawWireCube(center, variant.hitboxSizeOverride);
+        }
+    }
 #endif
 }

@@ -198,6 +198,7 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
     // 5번 항목: 타겟 탐색 반경을 씬 뷰에서 바로 확인 가능 (보라색 원). 히트박스 자체는 SkillBase 기본 기즈모(SetDebugHitbox)로 이미 보임.
     public override void DrawEditorGizmos(Vector3 basePos, float facingDir)
     {
+        base.DrawEditorGizmos(basePos, facingDir); // ★ 컨텍스트별 히트박스 미리보기 공통 로직 재사용
         Gizmos.color = new Color(0.6f, 0.3f, 1f, 0.35f);
         Gizmos.DrawWireSphere(basePos, targetSearchRadius);
     }

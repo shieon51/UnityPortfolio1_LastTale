@@ -29,6 +29,9 @@ public class PlayerCombat : MonoBehaviour
     public SkillSequenceData sequenceE;
     public SkillSequenceData sequenceR;
 
+    // 스킬 간 방향 고정 or 전환 허용 관련
+    private SkillSequenceData _currentPlayingSequence;
+
     // --- 콤보 시스템 ---
     private Queue<SkillSequenceData> _inputBuffer = new Queue<SkillSequenceData>();
     private SkillBase _currentPlayingSkill;
@@ -171,6 +174,7 @@ public class PlayerCombat : MonoBehaviour
         IsAttacking = true;
         _stats.isSuperArmor = true;
         _currentPlayingSkill = skillToPlay;
+        _currentPlayingSequence = seq;
         _lastAttackTime = Time.time;
 
         // 다음 콤보 스텝 미리 증가시켜두기
@@ -230,7 +234,7 @@ public class PlayerCombat : MonoBehaviour
             return new Vector2(desiredPos.x, hit.point.y + pivotToBottom);
         }
 
-        return (Vector2)transform.position; // 정말로 바닥이 없을 때만(=제대로 설정됐는데도 못 찾음) 현재 위치 유지
+        return desiredPos; // 근처에 바닥이 없어도(절벽/틈 너머) 이동 자체는 항상 실행 — 그 자리에서 그냥 떨어지면 됨
     }
 
     // 애니메이션 이벤트(OnAttackEnd)가 어떤 이유로든 호출되지 못했을 때를 대비한 최종 안전장치.
@@ -301,7 +305,7 @@ public class PlayerCombat : MonoBehaviour
     // 콤보 창이 열리는 그 순간 방향키를 확인: 누르고 있으면 최우선 존중, 없으면 스킬이 추천하는 방향(W의 타겟 등)을 적용
     private void ResolveFacingAtComboWindow()
     {
-        if (_currentPlayingSkill == null) return;
+        if (_currentPlayingSkill == null || !ShouldAllowFacingChange()) return;
 
         float inputX = Input.GetAxisRaw("Horizontal");
         if (Mathf.Abs(inputX) > 0.01f)
@@ -312,6 +316,18 @@ public class PlayerCombat : MonoBehaviour
 
         float? preferred = _currentPlayingSkill.GetPreferredFacingDirection();
         if (preferred.HasValue) FaceDirection(preferred.Value);
+    }
+
+    private bool ShouldAllowFacingChange()
+    {
+        switch (_currentPlayingSkill.facingLockOverride)
+        {
+            case FacingLockOverride.AlwaysLock: return false;
+            case FacingLockOverride.AlwaysAllow: return true;
+            default:
+                if (_inputBuffer.Count == 0) return true; // 아직 뭘 이어칠지 모르면 허용
+                return _inputBuffer.Peek() != _currentPlayingSequence; // 다음이 다른 슬롯이면 허용
+        }
     }
 
     // 비행 중이면 0, 아니면 원래 지상 중력값 — '무조건 _originalGravity로 되돌리던' 3번 버그의 근본 수정
@@ -374,23 +390,24 @@ public class PlayerCombat : MonoBehaviour
 
     private void DrawSequenceGizmo(SkillSequenceData seq, Vector3 basePos, float dir)
     {
-        if (!Application.isPlaying && seq != null && seq.comboSteps != null)
+        if (seq == null || seq.comboSteps == null) return;
+
+        for (int i = 0; i < seq.comboSteps.Count; i++)
         {
-            for (int i = 0; i < seq.comboSteps.Count; i++)
+            SkillBase skill = seq.comboSteps[i];
+            if (skill == null) continue;
+
+            if (!Application.isPlaying) // 콤보 단계별 색깔 박스는 에디트 모드에서만
             {
-                SkillBase skill = seq.comboSteps[i];
-                if (skill != null)
-                {
-                    if (i == 0) Gizmos.color = Color.cyan;
-                    else if (i == 1) Gizmos.color = Color.red;
-                    else Gizmos.color = Color.yellow;
+                if (i == 0) Gizmos.color = Color.cyan;
+                else if (i == 1) Gizmos.color = Color.red;
+                else Gizmos.color = Color.yellow;
 
-                    Vector2 previewCenter = (Vector2)basePos + new Vector2(skill.hitboxOffset.x * dir, skill.hitboxOffset.y);
-                    Gizmos.DrawWireCube(previewCenter, skill.hitboxSize);
-
-                    skill.DrawEditorGizmos(basePos, dir); // ★ 스킬별 커스텀 기즈모 훅 호출
-                }
+                Vector2 previewCenter = (Vector2)basePos + new Vector2(skill.hitboxOffset.x * dir, skill.hitboxOffset.y);
+                Gizmos.DrawWireCube(previewCenter, skill.hitboxSize);
             }
+
+            skill.DrawEditorGizmos(basePos, dir); // 플레이 중에도 항상 그림 — W 탐색 반경이 이제 실시간으로 보임
         }
     }
 #endif

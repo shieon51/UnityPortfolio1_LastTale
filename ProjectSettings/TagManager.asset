@@ -47,6 +47,9 @@ TagManager:
   - name: Ground
     uniqueID: 2209522581
     locked: 0
+  - name: OneWayPlatform
+    uniqueID: 3302640261
+    locked: 0
   - name: Player
     uniqueID: 2222305947
     locked: 0
