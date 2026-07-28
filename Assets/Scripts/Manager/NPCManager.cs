@@ -199,6 +199,8 @@ public class NPCManager : Singleton<NPCManager>
             {
                 npcScript.SwitchToAttackMode(); // NPC를 공격 모드로 전환
 
+                UIModeManager.Instance.SetMode(UIMode.Battle); // ** 전투 전용 ui 적용
+
                 // ** [임시 구현] 전투 시작 시 강제로 거리를 벌려줌 (카메라 연출용)
                 // (실제로는 맵마다 지정된 '보스전 시작 위치(Transform)'를 가져다 쓸 예정)
                 Transform player = PlayerManager.Instance.CurrentCharacter.transform;
