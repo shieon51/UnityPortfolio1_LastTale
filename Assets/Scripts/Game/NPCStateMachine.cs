@@ -36,13 +36,13 @@ public class StateMachine
 public abstract class NPCState : IState
 {
     protected NPC npc;
-    protected Animator animator;
+    protected NPCVisual visual;
     protected Transform player;
 
-    public NPCState(NPC npc, Animator animator, Transform player)
+    public NPCState(NPC npc, NPCVisual visual, Transform player)
     {
         this.npc = npc;
-        this.animator = animator;
+        this.visual = visual;
         this.player = player;
     }
 

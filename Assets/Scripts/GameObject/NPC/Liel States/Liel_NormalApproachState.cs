@@ -4,7 +4,7 @@ public class Liel_NormalApproachState : NPCState
 {
     private Liel_AI liel;
 
-    public Liel_NormalApproachState(Liel_AI npc, Animator anim, Transform p) : base(npc, anim, p)
+    public Liel_NormalApproachState(Liel_AI npc, NPCVisual visual, Transform p) : base(npc, visual, p)
     {
         liel = npc;
     }
@@ -13,7 +13,7 @@ public class Liel_NormalApproachState : NPCState
     {
         if (player == null || liel.CurrentRelationship < NPC.RelationshipTier.Friend)
         {
-            animator.SetBool("IsWalk", false);
+            visual.PlayIfChanged(NPCAnimStateNames.Idle);
             return;
         }
 
@@ -25,19 +25,19 @@ public class Liel_NormalApproachState : NPCState
 
             if (dist > liel.stopDistance)
             {
-                animator.SetBool("IsWalk", true);
+                visual.PlayIfChanged(NPCAnimStateNames.Walk);
                 float dir = (player.position.x > liel.transform.position.x) ? 1f : -1f;
                 liel.transform.position += new Vector3(dir * liel.walkSpeed * Time.deltaTime, 0, 0);
             }
             else
             {
-                animator.SetBool("IsWalk", false);
+                visual.PlayIfChanged(NPCAnimStateNames.Idle);
                 liel.hasApproached = true;
             }
         }
         else
         {
-            animator.SetBool("IsWalk", false);
+            visual.PlayIfChanged(NPCAnimStateNames.Idle);
             if (dist > liel.approachDistance * 1.5f) liel.hasApproached = false;
         }
     }

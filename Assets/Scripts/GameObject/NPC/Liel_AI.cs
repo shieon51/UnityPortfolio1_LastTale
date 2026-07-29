@@ -8,6 +8,7 @@ public class Liel_AI : NPC
 
     [Header("Liel Specifics")]
     public LielCombatStyle currentCombatStyle = LielCombatStyle.InjuredCommander;
+    public BossDifficultyTier currentDifficultyTier = BossDifficultyTier.Normal; 
     public int bossPhase = 1; // 타락 모드일 때 1~3페이즈 관리
 
     //[Header("Combat Settings")]
@@ -32,7 +33,15 @@ public class Liel_AI : NPC
     // LielAttackCompo 컴포넌트를 캐싱해둘 변수
     [HideInInspector] public LielAttackCompo attackCompo;
 
-
+    // 보스 HP바 UI가 조회할 페이즈 총 개수 (3번 BossHUDPanel.SetPhaseCount와 연결)
+    public int TotalPhaseCount => currentDifficultyTier switch
+    {
+        BossDifficultyTier.Training => 1,
+        BossDifficultyTier.Normal => 2,
+        BossDifficultyTier.Hard => 3,
+        _ => 1,
+    };
+    
     protected override void Awake()
     {
         base.Awake();
@@ -56,9 +65,9 @@ public class Liel_AI : NPC
 
         // 시작할 때 현재 모드에 맞춰 FSM 첫 상태를 꽂아줌
         if (CurrentMode == NPCMode.Normal)
-            StateMachine.Initialize(new Liel_NormalApproachState(this, animator, player));
+            StateMachine.Initialize(new Liel_NormalApproachState(this, visual, player));
         else
-            StateMachine.Initialize(new Liel_BattleIdleState(this, animator, player));
+            StateMachine.Initialize(new Liel_BattleIdleState(this, visual, player));
     }
 
     // NPC.cs에서 호출해주는 전투 모드 전환 함수 오버라이드
@@ -66,7 +75,7 @@ public class Liel_AI : NPC
     {
         base.SwitchToAttackMode();
         // 공격 모드 진입 시 전투 대기 상태로 강제 전환
-        StateMachine.ChangeState(new Liel_BattleIdleState(this, animator, player));
+        StateMachine.ChangeState(new Liel_BattleIdleState(this, visual, player));
     }
 
     // ==========================================

@@ -2,7 +2,7 @@
 using UnityEngine;
 
 // NPC 클래스 (추상)
-public abstract class NPC : CharacterStats
+public abstract class NPC : CharacterStats, ICombatTargetable
 {
     private CutsceneAnimationPlayer _cutscenePlayer;
 
@@ -43,7 +43,7 @@ public abstract class NPC : CharacterStats
 
     // 대화 상호작용을 위한 트리거 (NPC 프리팹 자식에 부착되어 있음)
     private EventTrigger myEventTrigger;
-    protected Animator animator;
+    protected NPCVisual visual;
     protected Transform player;
 
     // 중력 제어
@@ -60,7 +60,7 @@ public abstract class NPC : CharacterStats
     protected override void Awake()
     {
         base.Awake();
-        animator = GetComponentInChildren<Animator>();
+        visual = GetComponentInChildren<NPCVisual>();
         rb = GetComponent<Rigidbody2D>();
         if (rb != null) originalGravity = rb.gravityScale;
 
@@ -133,8 +133,7 @@ public abstract class NPC : CharacterStats
             LookAtPlayer(); // 플레이어를 쳐다봄
         }
 
-        // 걷고 있었다면 강제 정지
-        if (animator != null) animator.SetBool("IsWalk", false);
+        visual?.PlayIfChanged(NPCAnimStateNames.Idle); // animator.SetBool("IsWalk", false) 대체
     }
 
     // 대화 종료 시 호출됨
@@ -152,6 +151,8 @@ public abstract class NPC : CharacterStats
         if (isKnockedBack || myData == null) return; // 넉백 중엔 행동 불가
         if (isTalking) return;                       // 대화 중일 때는 AI 판단(다가가기 등)을 멈춤
         if (_cutscenePlayer != null && _cutscenePlayer.IsLocked) return; // 연출 중엔 AI 정지
+
+        if (currentMana < maxMana) RecoverMana(Mathf.CeilToInt(ManaRegenPerSecond * Time.deltaTime));
 
         // 디버깅용 상태 출력
         if (statusText != null && StateMachine.CurrentState != null)
@@ -196,6 +197,14 @@ public abstract class NPC : CharacterStats
     //    // 3. 내 호감도 (핸디캡 적용)
     //    // 위 요소를 종합해 점수를 매겨 (평타/돌진/마법/의도적 Miss) 중 하나를 선택해 실행
     //}
+
+    public bool IsValidCombatTarget(CharacterStats attacker)
+    {
+        if (myData != null && myData.currentMode == NPCMode.Attack) return true; // 보스전 중이면 무조건 유효
+
+        // 평상시엔 공격자가 '적대 상태'일 때만 유효 (기획 미확정 — 우선 훅만 열어둠) // **
+        return attacker is SoraStats sora && sora.IsHostileState;
+    }
 
     // 공격 모드로 진입하는 함수 (스토리나 특정 조건 만족 시 호출됨)
     public virtual void SwitchToAttackMode()
@@ -246,6 +255,9 @@ public abstract class NPC : CharacterStats
         
         LookAtTarget(player.position);
     }
+
+    protected virtual float ManaRegenPerSecond => 2f; // 자식 NPC가 필요시 오버라이드
+
 
     // 공통 기즈모 그리기 함수 (자식에서 호출 가능)
     protected virtual void OnDrawGizmosSelected()

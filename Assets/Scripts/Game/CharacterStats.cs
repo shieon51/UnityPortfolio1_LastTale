@@ -41,6 +41,9 @@ public class CharacterStats : MonoBehaviour
     public event Action OnHealthChanged;
     public event Action OnManaChanged;
 
+    // 총 데미지량 계산 관련 (보스전)
+    public event Action<int, CharacterStats> OnDamageTaken; // (데미지량, 공격자)
+
     // 맞을 때마다(중첩 포함) 매번 발행
     public event Action OnKnockbackApplied;
 
@@ -91,6 +94,7 @@ public class CharacterStats : MonoBehaviour
 
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
         OnHealthChanged?.Invoke();
+        OnDamageTaken?.Invoke(finalDamage, attacker);
 
         Debug.Log($"{gameObject.name}가 {finalDamage} 데미지를 받았습니다. (잔여 HP: {currentHealth})");
 

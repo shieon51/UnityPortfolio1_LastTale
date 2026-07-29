@@ -34,6 +34,8 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     public override float SpecialStatPercentage => (float)currentFatigue / maxFatigue;
     public override string SpecialStatText => $"{currentFatigue}/{maxFatigue}";
 
+    [Header("Hostility (실제 트리거 조건은 추후 스토리/정신력 시스템과 연동 예정)")]
+    public bool IsHostileState = false; // npc 공격 가능한지?
 
     protected override void Awake()
     {

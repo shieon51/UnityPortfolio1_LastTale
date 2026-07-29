@@ -8,7 +8,7 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
     [Header("Targeting")]
     [Tooltip("이 반경 안에 유효한 적이 없으면 아예 발동하지 않음")]
     public float targetSearchRadius = 6f;
-    public LayerMask enemyLayer;
+    public LayerMask targetableLayers;
     [Tooltip("바라보는 방향과 타겟 방향이 이 각도(도) 이내여야 유효한 타겟으로 인정")] 
     public float facingToleranceDegrees = 100f;
 
@@ -42,16 +42,16 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
 
     // 이번 시전에서 CanExecute가 찾아낸 타겟을 ExecuteSkillBehavior까지 전달하기 위한 캐시.
     // (같은 애셋 인스턴스를 여러 캐릭터가 동시에 쓰지 않는다는 전제 하의 단순한 방식)
-    private Transform _cachedTarget;
+    //private Transform _cachedTarget;
 
     public override float? GetPreferredFacingDirection() => _preferredFacingWorldDir;
 
     // 사거리 내 유효 타겟이 없으면 아예 발동하지 않음 (마나도 소모되지 않음)
     public override bool CanExecute(PlayerCombat combat, out string failReason)
     {
-        _cachedTarget = FindTarget(combat);
+        //_cachedTarget = FindTarget(combat);
 
-        if (_cachedTarget == null)
+        if (FindTarget(combat) == null)
         {
             failReason = "타겟이 없거나 너무 멀리 있습니다";
             return false;
@@ -68,7 +68,7 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
         // Q 스킬과 동일한 스프라이트 기본 방향 보정 (실제로 반대로 보이면 이 줄의 부호만 뒤집어서 조정하세요)
         float worldFacing = combat.FacingDirection * -1f;
 
-        Collider2D[] hits = Physics2D.OverlapCircleAll(combat.transform.position, targetSearchRadius, enemyLayer);
+        Collider2D[] hits = Physics2D.OverlapCircleAll(combat.transform.position, targetSearchRadius, targetableLayers);
 
         CharacterStats best = null;
         float bestScore = float.MinValue;
@@ -77,6 +77,7 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
         {
             CharacterStats candidate = hit.GetComponentInParent<CharacterStats>();
             if (candidate == null || candidate.currentHealth <= 0) continue;
+            if (candidate is ICombatTargetable targetable && !targetable.IsValidCombatTarget(stats)) continue; // ★ 평화로운 NPC 제외
 
             Vector2 toTarget = (Vector2)candidate.transform.position - (Vector2)combat.transform.position;
             if (toTarget.sqrMagnitude < 0.0001f) continue;
@@ -104,7 +105,7 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
 
     public override IEnumerator ExecuteSkillBehavior(PlayerCombat combat, Rigidbody2D rb, Animator anim, CharacterStats stats)
     {
-        Transform target = _cachedTarget;
+        Transform target = FindTarget(combat); // ★ 필드 캐시 대신 그 순간 다시 탐색 — 공유 상태 경쟁 자체를 제거
         if (target == null) yield break; // 안전장치 (CanExecute를 통과했다면 원래는 null이 아니어야 함)
 
         // 타겟의 반대편(뒤쪽) 좌표 계산 
@@ -169,7 +170,7 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
 
             combat.SetDebugHitbox(center, size);
 
-            Collider2D[] hits = Physics2D.OverlapBoxAll(center, size, 0f, enemyLayer);
+            Collider2D[] hits = Physics2D.OverlapBoxAll(center, size, 0f, targetableLayers);
             foreach (var hit in hits)
             {
                 if (alreadyHit.Contains(hit)) continue;

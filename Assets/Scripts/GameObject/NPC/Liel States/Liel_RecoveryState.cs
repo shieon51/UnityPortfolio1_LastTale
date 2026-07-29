@@ -7,7 +7,7 @@ public class Liel_RecoveryState : NPCState
     private float duration;
     private float timer;
 
-    public Liel_RecoveryState(Liel_AI npc, Animator anim, Transform p, float time) : base(npc, anim, p)
+    public Liel_RecoveryState(Liel_AI npc, NPCVisual visual, Transform p, float time) : base(npc, visual, p)
     {
         liel = npc;
         duration = time;
@@ -16,7 +16,7 @@ public class Liel_RecoveryState : NPCState
     public override void Enter()
     {
         timer = 0f;
-        animator.SetBool("IsWalk", false);
+        visual.PlayIfChanged(NPCAnimStateNames.Idle);
     }
 
     public override void Execute()
@@ -24,7 +24,7 @@ public class Liel_RecoveryState : NPCState
         timer += Time.deltaTime;
         if (timer >= duration)
         {
-            liel.StateMachine.ChangeState(new Liel_BattleIdleState(liel, animator, player));
+            liel.StateMachine.ChangeState(new Liel_BattleIdleState(liel, visual, player));
         }
     }
 }

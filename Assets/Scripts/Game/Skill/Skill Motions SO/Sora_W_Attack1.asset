@@ -24,10 +24,11 @@ MonoBehaviour:
   hitboxSize: {x: 3, y: 3}
   hitboxOffset: {x: 2.14, y: 0.77}
   contextVariants: []
+  facingLockOverride: 0
   targetSearchRadius: 8
-  enemyLayer:
+  targetableLayers:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 640
   facingToleranceDegrees: 100
   arrivalOffsetFromTarget: 2
   warpDelay: 0

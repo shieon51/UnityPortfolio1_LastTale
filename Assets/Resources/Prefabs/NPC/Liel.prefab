@@ -93,6 +93,7 @@ MonoBehaviour:
   currentElement: 0
   isGuarding: 0
   invincibilityDuration: 0.2
+  knockbackStunDuration: 0.3
   isSuperArmor: 0
   statusText: {fileID: 8281881456917337172}
   debugUnderstanding: 0
@@ -102,6 +103,7 @@ MonoBehaviour:
   originalCsvPos: {x: 0, y: 0}
   canRotate: 1
   currentCombatStyle: 0
+  currentDifficultyTier: 1
   bossPhase: 1
   teleportManaCost: 20
   ultimateManaCost: 40
@@ -305,6 +307,7 @@ GameObject:
   - component: {fileID: 5837489318169250162}
   - component: {fileID: 5006085168637508929}
   - component: {fileID: 3541392167384185828}
+  - component: {fileID: 5466603779581997271}
   m_Layer: 9
   m_Name: Visual
   m_TagString: Untagged
@@ -482,6 +485,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BodyPartSlotTag
   slot: 0
+--- !u!114 &5466603779581997271
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6412499149747571638}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a093edb910ca4646b56eef574a3e443, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NPCVisual
 --- !u!1 &8544912074155934285
 GameObject:
   m_ObjectHideFlags: 0
