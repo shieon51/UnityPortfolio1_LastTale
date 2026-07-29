@@ -250,6 +250,12 @@ public class PlayerCombat : MonoBehaviour
         }
     }
 
+    // 이펙트 재생 관련
+    public void PlaySwingTrailEffect(string vfxName)
+    {
+        VFXManager.Instance.Play(vfxName, transform.position, FacingDirection);
+    }
+
     // --- 애니메이션 이벤트 (PlayerAnimationRelay에서 전달) ---
     public void EnableAttackCollider()
     {

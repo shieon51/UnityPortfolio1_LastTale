@@ -23,4 +23,7 @@ public class PlayerAnimationRelay : MonoBehaviour
     // 이동/점프 관련
     public void OnJumpApex() => _visual.OnJumpApex();
     public void OnGroundEnd() => _visual.OnGroundEnd();
+
+    // 이펙트 관련
+    public void PlaySwingTrail(string vfxName) => _combat.PlaySwingTrailEffect(vfxName);
 }

@@ -70,6 +70,7 @@ public class Sora_Q_MeleeDashSkill : SkillBase
                     {
                         int finalDamage = (int)(stats.attack.GetValue() * damageMultiplier);
                         enemyStats.TakeDamage(finalDamage, stats.currentElement);
+                        //VFXManager.Instance.Play("HitSpark", hit.transform.position, Quaternion.identity);  // ** 이펙트 만들면 주석 해제하기
 
                         Vector2 knockbackDir = (hit.transform.position - parentTransform.position).normalized;
                         enemyStats.ApplyKnockback(knockbackDir, 5f);
