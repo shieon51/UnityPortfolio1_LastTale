@@ -204,9 +204,9 @@ public class NPCManager : Singleton<NPCManager>
                 // ** [임시 구현] 전투 시작 시 강제로 거리를 벌려줌 (카메라 연출용)
                 // (실제로는 맵마다 지정된 '보스전 시작 위치(Transform)'를 가져다 쓸 예정)
                 Transform player = PlayerManager.Instance.CurrentCharacter.transform;
-                FindObjectOfType<BossHUDPanel>()?.BindBoss(npcScript);
-                FindObjectOfType<BossHUDPanel>()?.SetPhaseCount(npcScript is Liel_AI liel ? liel.TotalPhaseCount : 1);
-                FindObjectOfType<BattleTimerDisplay>()?.StartTimer();
+                BossHUDPanel.Instance?.BindBoss(npcScript);
+                BossHUDPanel.Instance?.SetPhaseCount(npcScript is Liel_AI liel ? liel.TotalPhaseCount : 1);
+                BattleTimerDisplay.Instance?.StartTimer();
 
                 // 플레이어는 원래 위치, 보스는 플레이어 기준 오른쪽으로 5칸 뒤로 순간이동
                 Vector2 bossStartPos = new Vector2(player.position.x + 5f, player.position.y);

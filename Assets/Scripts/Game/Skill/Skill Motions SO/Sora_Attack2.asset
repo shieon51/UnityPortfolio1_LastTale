@@ -17,6 +17,9 @@ MonoBehaviour:
   animStateName: CloseAttack2
   activeDuration: 0.15
   priority: 0
+  targetableLayers:
+    serializedVersion: 2
+    m_Bits: 640
   manaCostPolicy: 0
   maxAnimationDuration: 1.2
   customDamageFormula: {fileID: 0}

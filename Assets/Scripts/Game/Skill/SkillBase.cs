@@ -41,6 +41,10 @@ public abstract class SkillBase : ScriptableObject
     public float activeDuration = 0.15f; // 판정 지속 시간
     public SkillPriority priority = SkillPriority.Normal; // 캔슬 가능 여부 판단용
 
+    [Header("Targeting")]
+    [Tooltip("이 스킬의 판정이 적용될 레이어들 (플레이어 스킬 → Enemy+NPC 체크)")]
+    public LayerMask targetableLayers;
+
     [Header("Mana")]
     public ManaCostPolicy manaCostPolicy = ManaCostPolicy.BlockIfInsufficient;
 

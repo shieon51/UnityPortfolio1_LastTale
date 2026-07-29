@@ -8,7 +8,6 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
     [Header("Targeting")]
     [Tooltip("이 반경 안에 유효한 적이 없으면 아예 발동하지 않음")]
     public float targetSearchRadius = 6f;
-    public LayerMask targetableLayers;
     [Tooltip("바라보는 방향과 타겟 방향이 이 각도(도) 이내여야 유효한 타겟으로 인정")] 
     public float facingToleranceDegrees = 100f;
 
@@ -75,7 +74,7 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
 
         foreach (var hit in hits)
         {
-            CharacterStats candidate = hit.GetComponentInParent<CharacterStats>();
+            if (!CombatTargetingUtility.TryGetValidTarget(hit, stats, out CharacterStats candidate)) continue; //?
             if (candidate == null || candidate.currentHealth <= 0) continue;
             if (candidate is ICombatTargetable targetable && !targetable.IsValidCombatTarget(stats)) continue; // ★ 평화로운 NPC 제외
 
@@ -174,15 +173,15 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
             foreach (var hit in hits)
             {
                 if (alreadyHit.Contains(hit)) continue;
+                if (!CombatTargetingUtility.TryGetValidTarget(hit, stats, out CharacterStats enemyStats)) continue; //?
                 alreadyHit.Add(hit);
 
-                CharacterStats enemyStats = hit.GetComponentInParent<CharacterStats>();
                 if (enemyStats == null) continue;
 
                 int damage = Mathf.RoundToInt(stats.attack.GetValue() * damageMultiplier);
                 enemyStats.TakeDamage(damage, stats.currentElement, stats);
 
-                Vector2 kbDir = ((Vector2) (hit.transform.position - parentTransform.position)).normalized; //? 
+                Vector2 kbDir = ((Vector2) (hit.transform.position - parentTransform.position)).normalized; 
                 enemyStats.ApplyKnockback(kbDir, knockbackPower);
 
                 combat.TriggerHitStop(hitStopDuration);

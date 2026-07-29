@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // BossHUDPanel.cs — Canvas > HUD_Battle 밑에 붙임
-public class BossHUDPanel : MonoBehaviour
+public class BossHUDPanel : Singleton<BossHUDPanel>
 {
     public Slider bossHealthBar, bossManaBar;
     public TextMeshProUGUI bossNameText;

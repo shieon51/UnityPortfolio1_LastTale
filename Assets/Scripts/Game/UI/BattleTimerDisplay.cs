@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 
 // BattleTimerDisplay.cs - 보스전 타이머
-public class BattleTimerDisplay : MonoBehaviour
+public class BattleTimerDisplay : Singleton<BattleTimerDisplay>
 {
     public TextMeshProUGUI timerText;
     private float _elapsed;

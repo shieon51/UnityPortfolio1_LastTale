@@ -13,10 +13,13 @@ MonoBehaviour:
   m_Name: Sora_W_Attack1
   m_EditorClassIdentifier: Assembly-CSharp::Sora_W_BorrowedGroundSkill
   skillName: 
-  requiredMana: 3
+  requiredMana: 2
   animStateName: W_Attack1
   activeDuration: 0.15
   priority: 0
+  targetableLayers:
+    serializedVersion: 2
+    m_Bits: 640
   manaCostPolicy: 0
   maxAnimationDuration: 1.2
   customDamageFormula: {fileID: 0}
@@ -26,9 +29,6 @@ MonoBehaviour:
   contextVariants: []
   facingLockOverride: 0
   targetSearchRadius: 8
-  targetableLayers:
-    serializedVersion: 2
-    m_Bits: 640
   facingToleranceDegrees: 100
   arrivalOffsetFromTarget: 2
   warpDelay: 0

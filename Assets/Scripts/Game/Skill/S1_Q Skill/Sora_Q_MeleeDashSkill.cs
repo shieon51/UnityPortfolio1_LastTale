@@ -57,26 +57,40 @@ public class Sora_Q_MeleeDashSkill : SkillBase
             // 기즈모 그리기 위해 최신 데이터 넘겨줌 (실시간 반영)
             combat.SetDebugHitbox(center, size);
 
-            Collider2D[] hits = Physics2D.OverlapBoxAll(center, size, 0f, LayerMask.GetMask("Enemy"));
+            Collider2D[] hits = Physics2D.OverlapBoxAll(center, size, 0f, targetableLayers);
             bool hitSomething = false;
+
+            //foreach (var hit in hits)
+            //{
+            //    if (!alreadyHitEnemies.Contains(hit))
+            //    {
+            //        alreadyHitEnemies.Add(hit);
+            //        CharacterStats enemyStats = hit.GetComponentInParent<CharacterStats>();
+            //        if (enemyStats != null)
+            //        {
+            //            int finalDamage = (int)(stats.attack.GetValue() * damageMultiplier);
+            //            enemyStats.TakeDamage(finalDamage, stats.currentElement);
+            //            //VFXManager.Instance.Play("HitSpark", hit.transform.position, Quaternion.identity);  // ** 이펙트 만들면 주석 해제하기
+
+            //            Vector2 knockbackDir = (hit.transform.position - parentTransform.position).normalized;
+            //            enemyStats.ApplyKnockback(knockbackDir, 5f);
+            //            hitSomething = true;
+            //        }
+            //    }
+            //}
 
             foreach (var hit in hits)
             {
-                if (!alreadyHitEnemies.Contains(hit))
-                {
-                    alreadyHitEnemies.Add(hit);
-                    CharacterStats enemyStats = hit.GetComponentInParent<CharacterStats>();
-                    if (enemyStats != null)
-                    {
-                        int finalDamage = (int)(stats.attack.GetValue() * damageMultiplier);
-                        enemyStats.TakeDamage(finalDamage, stats.currentElement);
-                        //VFXManager.Instance.Play("HitSpark", hit.transform.position, Quaternion.identity);  // ** 이펙트 만들면 주석 해제하기
+                if (alreadyHitEnemies.Contains(hit)) continue;
+                if (!CombatTargetingUtility.TryGetValidTarget(hit, stats, out CharacterStats enemyStats)) continue;
+                alreadyHitEnemies.Add(hit);
 
-                        Vector2 knockbackDir = (hit.transform.position - parentTransform.position).normalized;
-                        enemyStats.ApplyKnockback(knockbackDir, 5f);
-                        hitSomething = true;
-                    }
-                }
+                int finalDamage = (int)(stats.attack.GetValue() * damageMultiplier);
+                enemyStats.TakeDamage(finalDamage, stats.currentElement, stats);
+
+                Vector2 knockbackDir = (hit.transform.position - parentTransform.position).normalized;
+                enemyStats.ApplyKnockback(knockbackDir, 5f);
+                hitSomething = true;
             }
 
             if (hitSomething) combat.TriggerHitStop(hitStopDuration);
