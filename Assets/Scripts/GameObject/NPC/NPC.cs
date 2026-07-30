@@ -57,6 +57,10 @@ public abstract class NPC : CharacterStats, ICombatTargetable
     protected bool isTalking = false;
     private bool previousFlipX = false;
 
+    // 스킬 클래스들이 접근할 수 있도록 프로퍼티 공개
+    public SpriteRenderer SpriteRenderer => spriteRenderer;
+    public Rigidbody2D Rb => rb;
+
     protected override void Awake()
     {
         base.Awake();

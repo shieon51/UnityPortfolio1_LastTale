@@ -1,13 +1,6 @@
 using UnityEngine;
 
 // Utility AI 가중치 계산 관련
-public struct NPCDecisionContext
-{
-    public NPC Self;
-    public Transform Player;
-    public float DistanceToPlayer;
-    public bool PlayerIsAttacking;
-}
 
 public abstract class NPCActionScorerSO : ScriptableObject
 {

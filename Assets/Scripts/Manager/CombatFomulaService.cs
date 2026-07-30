@@ -6,6 +6,9 @@ public class CombatFormulaService : Singleton<CombatFormulaService>
     [Header("Default Formulas")]
     [SerializeField] private DamageFormulaSO _defaultDamageFormula;
 
+    [Header("Telegraph")]
+    [SerializeField] private BasicTelegraphFormula _telegraphFormula;
+
     // [Header("Defense / Parry")]  // 기획 확정 후 추가
     // [SerializeField] private DefenseJudgementFormulaSO _defaultDefenseFormula;
 
@@ -19,6 +22,12 @@ public class CombatFormulaService : Singleton<CombatFormulaService>
             ? ctx.Skill.customDamageFormula
             : _defaultDamageFormula;
         return formula.CalculateDamage(ctx);
+    }
+
+    public float CalculateTelegraphDuration(float baseDuration, CharacterStats attacker, CharacterStats defender)
+    {
+        if (_telegraphFormula == null) return baseDuration;
+        return _telegraphFormula.CalculateDuration(baseDuration, attacker.agility.GetValue(), defender.agility.GetValue());
     }
 
     // public DefenseResult JudgeDefense(CombatContext ctx) { ... }

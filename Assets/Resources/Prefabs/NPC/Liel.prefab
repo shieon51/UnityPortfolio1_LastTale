@@ -1,5 +1,90 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1035345108519355324
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8911972173483108805}
+  - component: {fileID: 6244031427134135221}
+  m_Layer: 5
+  m_Name: RadialFillIndicator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &8911972173483108805
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1035345108519355324}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5991719105580328937}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &6244031427134135221
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1035345108519355324}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b0c0e148e8549b4a9c8b2d3bef7d63d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RadialFillIndicator
+  fillImage: {fileID: 0}
+--- !u!1 &1232818342859612280
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5991719105580328937}
+  m_Layer: 5
+  m_Name: WorldSpaceTelegraphIndicator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &5991719105580328937
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1232818342859612280}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 8911972173483108805}
+  m_Father: {fileID: 2732902636394097088}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &3566543744763902310
 GameObject:
   m_ObjectHideFlags: 0
@@ -15,6 +100,7 @@ GameObject:
   - component: {fileID: 5252269451691168382}
   - component: {fileID: 782221379067580443}
   - component: {fileID: 1836399676135930579}
+  - component: {fileID: 952914202757107021}
   m_Layer: 9
   m_Name: Liel
   m_TagString: Untagged
@@ -105,6 +191,7 @@ MonoBehaviour:
   currentCombatStyle: 0
   currentDifficultyTier: 1
   bossPhase: 1
+  preferredEngageRange: 2
   teleportManaCost: 20
   ultimateManaCost: 40
   isGroggy: 0
@@ -112,7 +199,6 @@ MonoBehaviour:
   stopDistance: 2
   walkSpeed: 1.5
   hasApproached: 0
-  attackCompo: {fileID: 0}
 --- !u!58 &663565770948976550
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -191,6 +277,20 @@ MonoBehaviour:
   _bodyAnimators:
   - {fileID: 4557298855416544362}
   _faceAnimator: {fileID: 0}
+--- !u!114 &952914202757107021
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3566543744763902310}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8801ecc9dda3bd54db91eebcf436018d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NPCUtilityAI
+  availableSkills:
+  - {fileID: 11400000, guid: f3ac5e04017d91443a0b66fe65af7894, type: 2}
 --- !u!1 &4103355609429672222
 GameObject:
   m_ObjectHideFlags: 0
@@ -223,6 +323,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8322868725838105619}
+  - {fileID: 5991719105580328937}
   m_Father: {fileID: 604758761269354018}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -305,7 +406,6 @@ GameObject:
   - component: {fileID: 4695153608099272124}
   - component: {fileID: 4557298855416544362}
   - component: {fileID: 5837489318169250162}
-  - component: {fileID: 5006085168637508929}
   - component: {fileID: 3541392167384185828}
   - component: {fileID: 5466603779581997271}
   m_Layer: 9
@@ -448,30 +548,6 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 1.5799999}
   m_Size: {x: 0.99390984, y: 3.1190557}
   m_Direction: 0
---- !u!114 &5006085168637508929
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6412499149747571638}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7116cd3353c5885438fff076043e16f4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LielAttackCompo
-  minAttack1Range: 8
-  maxAttack1Range: 20
-  dash1:
-    burstSpeed: 50
-    slideDrag: 20
-  hitbox1:
-    size: {x: 12, y: 4.5}
-    offset: {x: -1, y: 1}
-    activeDuration: 0.3
-    knockbackPower: 20
-  attack1ManaCost: 5
-  showGizmos: 1
 --- !u!114 &3541392167384185828
 MonoBehaviour:
   m_ObjectHideFlags: 0

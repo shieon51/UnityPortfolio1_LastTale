@@ -10,6 +10,7 @@ public class Liel_AI : NPC
     public LielCombatStyle currentCombatStyle = LielCombatStyle.InjuredCommander;
     public BossDifficultyTier currentDifficultyTier = BossDifficultyTier.Normal; 
     public int bossPhase = 1; // 타락 모드일 때 1~3페이즈 관리
+    public float preferredEngageRange = 2f; // ★ attackCompo 참조 제거를 위한 기본 교전 거리
 
     //[Header("Combat Settings")]
     //public float attack1Range = 2f; // 공격 사거리
@@ -30,8 +31,8 @@ public class Liel_AI : NPC
     public float walkSpeed = 1.5f;        // 걷는 속도
     public bool hasApproached = false; // 상태 클래스에서 수정할 수 있게 public으로 변경 // 1회만 다가오게 하는 플래그
 
-    // LielAttackCompo 컴포넌트를 캐싱해둘 변수
-    [HideInInspector] public LielAttackCompo attackCompo;
+    //// LielAttackCompo 컴포넌트를 캐싱해둘 변수
+    //[HideInInspector] public LielAttackCompo attackCompo;
 
     // 보스 HP바 UI가 조회할 페이즈 총 개수 (3번 BossHUDPanel.SetPhaseCount와 연결)
     public int TotalPhaseCount => currentDifficultyTier switch
@@ -54,9 +55,9 @@ public class Liel_AI : NPC
         attack.AddBaseValue(500);
         agility.AddBaseValue(999); // 회피 Max
 
-        // 시작할 때 컴포넌트 찾아두기
-        attackCompo = GetComponent<LielAttackCompo>();
-        if (attackCompo == null) attackCompo = GetComponentInChildren<LielAttackCompo>();
+        //// 시작할 때 컴포넌트 찾아두기
+        //attackCompo = GetComponent<LielAttackCompo>();
+        //if (attackCompo == null) attackCompo = GetComponentInChildren<LielAttackCompo>();
     }
 
     protected override void Start()
@@ -67,7 +68,7 @@ public class Liel_AI : NPC
         if (CurrentMode == NPCMode.Normal)
             StateMachine.Initialize(new Liel_NormalApproachState(this, visual, player));
         else
-            StateMachine.Initialize(new Liel_BattleIdleState(this, visual, player));
+            StateMachine.Initialize(new Liel_UtilityDecisionState(this, visual, player));
     }
 
     // NPC.cs에서 호출해주는 전투 모드 전환 함수 오버라이드
@@ -75,7 +76,7 @@ public class Liel_AI : NPC
     {
         base.SwitchToAttackMode();
         // 공격 모드 진입 시 전투 대기 상태로 강제 전환
-        StateMachine.ChangeState(new Liel_BattleIdleState(this, visual, player));
+        StateMachine.ChangeState(new Liel_UtilityDecisionState(this, visual, player));
     }
 
     // ==========================================
