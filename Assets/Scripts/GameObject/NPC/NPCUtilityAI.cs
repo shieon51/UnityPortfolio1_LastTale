@@ -29,4 +29,15 @@ public class NPCUtilityAI : MonoBehaviour
         _lastUsedTime[skill] = Time.time;
         LastUsedSkill = skill;
     }
+
+    // 에디터 미리보기
+#if UNITY_EDITOR
+    private void OnDrawGizmosSelected()
+    {
+        var sr = GetComponentInChildren<SpriteRenderer>();
+        float dir = (sr != null && sr.flipX) ? -1f : 1f;
+        foreach (var skill in availableSkills)
+            if (skill != null) skill.DrawEditorGizmos(transform.position, dir);
+    }
+#endif
 }

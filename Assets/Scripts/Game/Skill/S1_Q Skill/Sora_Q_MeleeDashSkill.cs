@@ -9,7 +9,7 @@ public class Sora_Q_MeleeDashSkill : SkillBase
     public float dashSpeed = 10f;
     public float dashDuration = 0.1f;
     public float hitStopDuration = 0.08f;
-    public float damageMultiplier = 1f;
+    //public float damageMultiplier = 1f;
 
     // 앞으로 치고 나가는 동작
     public override IEnumerator ExecuteSkillBehavior(PlayerCombat combat, Rigidbody2D rb, Animator anim, CharacterStats stats)
@@ -60,32 +60,13 @@ public class Sora_Q_MeleeDashSkill : SkillBase
             Collider2D[] hits = Physics2D.OverlapBoxAll(center, size, 0f, targetableLayers);
             bool hitSomething = false;
 
-            //foreach (var hit in hits)
-            //{
-            //    if (!alreadyHitEnemies.Contains(hit))
-            //    {
-            //        alreadyHitEnemies.Add(hit);
-            //        CharacterStats enemyStats = hit.GetComponentInParent<CharacterStats>();
-            //        if (enemyStats != null)
-            //        {
-            //            int finalDamage = (int)(stats.attack.GetValue() * damageMultiplier);
-            //            enemyStats.TakeDamage(finalDamage, stats.currentElement);
-            //            //VFXManager.Instance.Play("HitSpark", hit.transform.position, Quaternion.identity);  // ** 이펙트 만들면 주석 해제하기
-
-            //            Vector2 knockbackDir = (hit.transform.position - parentTransform.position).normalized;
-            //            enemyStats.ApplyKnockback(knockbackDir, 5f);
-            //            hitSomething = true;
-            //        }
-            //    }
-            //}
-
             foreach (var hit in hits)
             {
                 if (alreadyHitEnemies.Contains(hit)) continue;
                 if (!CombatTargetingUtility.TryGetValidTarget(hit, stats, out CharacterStats enemyStats)) continue;
                 alreadyHitEnemies.Add(hit);
 
-                int finalDamage = (int)(stats.attack.GetValue() * damageMultiplier);
+                int finalDamage = (int)(stats.attack.GetValue() * GetDamageMultiplier(1));
                 enemyStats.TakeDamage(finalDamage, stats.currentElement, stats);
 
                 Vector2 knockbackDir = (hit.transform.position - parentTransform.position).normalized;

@@ -28,7 +28,6 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
     public LayerMask groundSnapLayer;
 
     [Header("Hit (Q와 동일한 방식 — 도착 후 등 뒤 근접 히트박스)")]
-    public float damageMultiplier = 1f;
     public float knockbackPower = 5f;
     public float hitStopDuration = 0.08f;
 
@@ -74,9 +73,7 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
 
         foreach (var hit in hits)
         {
-            if (!CombatTargetingUtility.TryGetValidTarget(hit, stats, out CharacterStats candidate)) continue; //?
-            if (candidate == null || candidate.currentHealth <= 0) continue;
-            if (candidate is ICombatTargetable targetable && !targetable.IsValidCombatTarget(stats)) continue; // ★ 평화로운 NPC 제외
+            if (!CombatTargetingUtility.TryGetValidTarget(hit, stats, out CharacterStats candidate)) continue; 
 
             Vector2 toTarget = (Vector2)candidate.transform.position - (Vector2)combat.transform.position;
             if (toTarget.sqrMagnitude < 0.0001f) continue;
@@ -122,6 +119,7 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
 
         rb.linearVelocity = Vector2.zero; // 순간이동 직후 잔여 낙하/이동 관성 제거
         Physics2D.SyncTransforms();
+        combat.PlayCurrentSkillVFX("arrival");
 
         // 즉시 반영하지 않고 값만 저장 — 실제 적용은 OnAttackCombo 시점
         _preferredFacingWorldDir = -sideDir;
@@ -176,9 +174,7 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
                 if (!CombatTargetingUtility.TryGetValidTarget(hit, stats, out CharacterStats enemyStats)) continue; //?
                 alreadyHit.Add(hit);
 
-                if (enemyStats == null) continue;
-
-                int damage = Mathf.RoundToInt(stats.attack.GetValue() * damageMultiplier);
+                int damage = Mathf.RoundToInt(stats.attack.GetValue() * GetDamageMultiplier(1));
                 enemyStats.TakeDamage(damage, stats.currentElement, stats);
 
                 Vector2 kbDir = ((Vector2) (hit.transform.position - parentTransform.position)).normalized; 

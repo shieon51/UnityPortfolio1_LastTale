@@ -29,7 +29,7 @@ public class Liel_ExecutingSkillState : NPCState
             yield return liel.StartCoroutine(WorldSpaceTelegraphIndicator.Instance.PlayCountdown(duration));
         }
 
-        liel.UseMana(_skill.manaCost);
+        liel.UseMana(_skill.GetManaCost(1));
         yield return liel.StartCoroutine(_skill.Execute(liel, visual, player));
 
         liel.GetComponent<NPCUtilityAI>().NotifyUsed(_skill);

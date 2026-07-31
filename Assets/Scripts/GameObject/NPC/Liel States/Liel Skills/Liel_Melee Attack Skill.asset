@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 974de4c6a9437d54880f03666f128f88, type: 3}
   m_Name: Liel_Melee Attack Skill
   m_EditorClassIdentifier: Assembly-CSharp::Liel_MeleeAttackSkill
+  skillId: 
   skillName: 
   animStateName: 
   manaCost: 0
@@ -21,13 +22,19 @@ MonoBehaviour:
   targetableLayers:
     serializedVersion: 2
     m_Bits: 64
-  minRange: 0.8
-  maxRange: 2
+  vfxCues:
+  - cueId: swing
+    vfxKey: Liel_Melee_Trail
+    spawnOffset: {x: 0, y: 0}
+    followCaster: 0
+    levelOverrides: []
+  minRange: 4
+  maxRange: 8
   dash:
-    burstSpeed: 30
-    slideDrag: 25
+    burstSpeed: 50
+    slideDrag: 40
   hitbox:
-    size: {x: 5, y: 5}
+    size: {x: 10.63, y: 4.83}
     offset: {x: 0, y: 0}
     activeDuration: 0.15
     knockbackPower: 5

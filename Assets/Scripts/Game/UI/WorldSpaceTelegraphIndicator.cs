@@ -2,14 +2,16 @@
 using UnityEngine;
 
 // WorldSpaceTelegraphIndicator.cs (신규) — RadialFillIndicator를 보스 머리 위에서 재사용
-public class WorldSpaceTelegraphIndicator : MonoBehaviour
+public class WorldSpaceTelegraphIndicator : Singleton<WorldSpaceTelegraphIndicator>
 {
-    public static WorldSpaceTelegraphIndicator Instance { get; private set; }
     public RadialFillIndicator radialFill;
     public Vector3 offset = new Vector3(0, 1.2f, 0);
     private Transform _followTarget;
 
-    private void Awake() { Instance = this; gameObject.SetActive(false); }
+    private void Awake() 
+    { 
+        gameObject.SetActive(false); 
+    }
 
     private void LateUpdate()
     {

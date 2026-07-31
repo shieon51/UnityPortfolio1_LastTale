@@ -144,7 +144,7 @@ public class PlayerCombat : MonoBehaviour
         }
 
         // 3. --- 마나/오버캐스트 연산 ---
-        int actualManaCost = _stats.CalculateManaCost(skillToPlay.requiredMana);
+        int actualManaCost = _stats.CalculateManaCost(skillToPlay.GetRequiredMana(1)); // 레벨 시스템 붙기 전까진 항상 1레벨 조회
         bool hasEnoughMana = _stats.currentMana >= actualManaCost;
 
         // 마나가 부족한데 '차단' 정책이면 콤보 진행도, 애니메이션, 아무것도 건드리지 않고 그냥 무시
@@ -251,9 +251,19 @@ public class PlayerCombat : MonoBehaviour
     }
 
     // 이펙트 재생 관련
-    public void PlaySwingTrailEffect(string vfxName)
+    public void PlayCurrentSkillVFX(string cueId)
     {
-        VFXManager.Instance.Play(vfxName, transform.position, FacingDirection);
+        if (_currentPlayingSkill == null) return;
+        var cue = _currentPlayingSkill.FindVFXCue(cueId);
+
+        if (cue == null) return;
+        string vfxKey = cue.ResolveVFXKey(1);
+
+        if (string.IsNullOrEmpty(vfxKey)) return;
+
+        Vector2 offset = new Vector2(cue.spawnOffset.x * FacingDirection, cue.spawnOffset.y);
+        Transform followParent = cue.followCaster ? transform : null;
+        VFXManager.Instance.Play(vfxKey, transform.position + (Vector3)offset, FacingDirection, PoolType.Global, followParent);
     }
 
     // --- 애니메이션 이벤트 (PlayerAnimationRelay에서 전달) ---

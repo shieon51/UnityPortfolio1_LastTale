@@ -34,6 +34,11 @@ public struct SkillAnimVariant // 플레이어 상태에 따른 스킬 사용 �
 // 모든 스킬의 기본이 되는 추상 클래스
 public abstract class SkillBase : ScriptableObject
 {
+    // ** 기존 requiredMana 필드는 CSV 없을 때 폴백으로 남겨둠 (안전망)
+    [Header("Data Table Link")]
+    [Tooltip("SkillTable.csv / SkillLevelTable.csv의 SkillID와 정확히 일치해야 함")]
+    public string skillId;
+
     [Header("Basic Info")]
     public string skillName;
     public int requiredMana;
@@ -69,6 +74,10 @@ public abstract class SkillBase : ScriptableObject
     [Header("Context Variants")]
     [Tooltip("공중/비행 등 특정 상황에서 다른 모션이 필요할 때만 등록. 안 하면 기본 animStateName 사용 (이펙트/판정 로직은 그대로 공유).")]
     public List<SkillAnimVariant> contextVariants = new List<SkillAnimVariant>();
+
+    [Header("VFX Cues")] // 이펙트
+    [Tooltip("Animation Event가 cueId로 호출하면, 여기 등록된 vfxKey로 이펙트가 재생됩니다.")]
+    public List<SkillVFXCue> vfxCues = new List<SkillVFXCue>();
 
     [Header("Combo Flow")]
     [Tooltip("기본(UseDefault): 같은 시퀀스로 이어지는 콤보는 고정, 다른 슬롯으로 전환되면 허용. 특정 스킬만 예외로 강제하려면 여기서 지정.")]
@@ -107,6 +116,15 @@ public abstract class SkillBase : ScriptableObject
     // 공격 판정 (히트박스) 생성 등도 스킬마다 다를 수 있으니 가상 함수로 뺌
     public abstract IEnumerator ExecuteHitbox(PlayerCombat combat, Transform parentTransform, CharacterStats stats);
 
+    public int GetRequiredMana(int level) => SkillDataManager.Instance?.GetLevelData(skillId, level)?.manaCost ?? requiredMana;
+    public float GetDamageMultiplier(int level) => SkillDataManager.Instance?.GetLevelData(skillId, level)?.damageMultiplier ?? 1f;
+
+    public SkillVFXCue FindVFXCue(string cueId)
+    {
+        foreach (var cue in vfxCues)
+            if (cue.cueId == cueId) return cue;
+        return null;
+    }
 
 #if UNITY_EDITOR
     // 에디터 프리뷰용 커스텀 기즈모 훅. 스킬마다 필요한 범위(타겟 탐색 반경 등)를 자유롭게 그릴 수 있음.
@@ -125,6 +143,15 @@ public abstract class SkillBase : ScriptableObject
 
             Vector2 center = (Vector2)basePos + new Vector2(variant.hitboxOffsetOverride.x * facingDir, variant.hitboxOffsetOverride.y);
             Gizmos.DrawWireCube(center, variant.hitboxSizeOverride);
+        }
+
+        // 이펙트 미리보기
+        foreach (var cue in vfxCues)
+        {
+            Vector2 pos = (Vector2)basePos + new Vector2(cue.spawnOffset.x * facingDir, cue.spawnOffset.y);
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(pos, 0.15f);
+            UnityEditor.Handles.Label(pos, cue.cueId);
         }
     }
 #endif

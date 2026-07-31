@@ -24,7 +24,7 @@ public class Liel_RecoveryState : NPCState
         timer += Time.deltaTime;
         if (timer >= duration)
         {
-            //liel.StateMachine.ChangeState(new Liel_BattleIdleState(liel, visual, player));
+            liel.StateMachine.ChangeState(new Liel_UtilityDecisionState(liel, visual, player)); //?
         }
     }
 }

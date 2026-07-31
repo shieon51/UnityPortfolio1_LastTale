@@ -40,6 +40,7 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
         rb.linearDamping = 0f;
         float dir = sr.flipX ? 1f : -1f;
         rb.linearVelocity = new Vector2(dir * dash.burstSpeed, 0f);
+        PlaySkillVFX("swing", self);
 
         yield return new WaitForSeconds(0.1f);
         rb.linearDamping = dash.slideDrag;
@@ -61,6 +62,7 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
 
         while (elapsed < hitbox.activeDuration)
         {
+            self.SetDebugHitbox(fixedCenter, hitbox.size); // ★ 추가
             Collider2D[] hits = Physics2D.OverlapBoxAll(fixedCenter, hitbox.size, 0f, targetableLayers);
             foreach (var hit in hits)
             {
@@ -68,7 +70,7 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
                 if (!CombatTargetingUtility.TryGetValidTarget(hit, self, out CharacterStats targetStats)) continue;
                 alreadyHit.Add(hit);
 
-                targetStats.TakeDamage(self.attack.GetValue(), self.currentElement, self);
+                targetStats.TakeDamage(Mathf.RoundToInt(self.attack.GetValue() * GetDamageMultiplier(1)), self.currentElement, self);
                 Vector2 kbDir = ((Vector2)hit.transform.position - (Vector2)self.transform.position).normalized;
                 targetStats.ApplyKnockback(kbDir, hitbox.knockbackPower);
             }
@@ -76,5 +78,20 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
             yield return null;
         }
         self.isSuperArmor = false;
+        self.ClearDebugHitbox(); // ★ 추가
     }
+
+#if UNITY_EDITOR
+    public override void DrawEditorGizmos(Vector3 basePos, float facingDir)
+    {
+        Gizmos.color = new Color(1f, 0.5f, 0f, 0.3f);
+        Gizmos.DrawWireSphere(basePos, maxRange);
+        Gizmos.color = new Color(1f, 0f, 0f, 0.2f);
+        Gizmos.DrawWireSphere(basePos, minRange);
+
+        Gizmos.color = Color.cyan;
+        Vector2 center = (Vector2)basePos + new Vector2(hitbox.offset.x * facingDir, hitbox.offset.y);
+        Gizmos.DrawWireCube(center, hitbox.size);
+    }
+#endif
 }

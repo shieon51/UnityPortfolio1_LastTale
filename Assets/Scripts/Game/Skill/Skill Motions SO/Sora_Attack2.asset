@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d7f1ee69f8820c4e87470f41fa942ae, type: 3}
   m_Name: Sora_Attack2
   m_EditorClassIdentifier: Assembly-CSharp::MeleeDashSkill
+  skillId: 
   skillName: 
   requiredMana: 1
   animStateName: CloseAttack2
@@ -32,8 +33,11 @@ MonoBehaviour:
     overrideHitbox: 0
     hitboxOffsetOverride: {x: 0, y: 0}
     hitboxSizeOverride: {x: 0, y: 0}
+  vfxCues:
+  - cueId: swing
+    vfxKey: Sora_Q2_Trail
+    followCaster: 1
   facingLockOverride: 1
   dashSpeed: 15
   dashDuration: 0.2
   hitStopDuration: 0.08
-  damageMultiplier: 1

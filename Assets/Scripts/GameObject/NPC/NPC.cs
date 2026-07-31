@@ -61,6 +61,12 @@ public abstract class NPC : CharacterStats, ICombatTargetable
     public SpriteRenderer SpriteRenderer => spriteRenderer;
     public Rigidbody2D Rb => rb;
 
+    // 플레이 중 실시간 기즈모 (PlayerCombat과 동일한 패턴)
+    private bool _showHitbox = false;
+    private Vector2 _lastHitboxCenter, _lastHitboxSize;
+    public void SetDebugHitbox(Vector2 center, Vector2 size) { _showHitbox = true; _lastHitboxCenter = center; _lastHitboxSize = size; }
+    public void ClearDebugHitbox() { _showHitbox = false; }
+
     protected override void Awake()
     {
         base.Awake();
@@ -268,4 +274,15 @@ public abstract class NPC : CharacterStats, ICombatTargetable
     {
         // 자식 클래스에서 오버라이드하여 각자의 범위를 그릴 예정
     }
+
+#if UNITY_EDITOR
+    private void OnDrawGizmos()
+    {
+        if (Application.isPlaying && _showHitbox)
+        {
+            Gizmos.color = new Color(1f, 0f, 0f, 0.4f);
+            Gizmos.DrawCube(_lastHitboxCenter, _lastHitboxSize);
+        }
+    }
+#endif
 }

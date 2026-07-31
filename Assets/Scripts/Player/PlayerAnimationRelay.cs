@@ -25,5 +25,5 @@ public class PlayerAnimationRelay : MonoBehaviour
     public void OnGroundEnd() => _visual.OnGroundEnd();
 
     // 이펙트 관련
-    public void PlaySwingTrail(string vfxName) => _combat.PlaySwingTrailEffect(vfxName);
+    public void PlaySkillVFX(string cueId) => _combat.PlayCurrentSkillVFX(cueId);
 }
