@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2d7f1ee69f8820c4e87470f41fa942ae, type: 3}
-  m_Name: Sora_Attack1
+  m_Name: Sora_Q_Attack2
   m_EditorClassIdentifier: Assembly-CSharp::MeleeDashSkill
   skillId: 
   skillName: 
   requiredMana: 1
-  animStateName: CloseAttack1
+  animStateName: CloseAttack2
   activeDuration: 0.15
   priority: 0
   targetableLayers:
@@ -25,18 +25,20 @@ MonoBehaviour:
   maxAnimationDuration: 1.2
   customDamageFormula: {fileID: 0}
   requiredStage: 0
-  hitboxSize: {x: 3.02, y: 1.59}
-  hitboxOffset: {x: -0.24, y: 0.19}
+  hitboxSize: {x: 3.8, y: 2.01}
+  hitboxOffset: {x: -0.27, y: 0.39}
   contextVariants:
   - context: 1
-    animStateName: Air_CloseAttack1
+    animStateName: Air_CloseAttack2
     overrideHitbox: 0
     hitboxOffsetOverride: {x: 0, y: 0}
     hitboxSizeOverride: {x: 0, y: 0}
   vfxCues:
   - cueId: swing
-    vfxKey: Sora_Q1_Trail
+    vfxKey: Sora_Q2_Trail
+    spawnOffset: {x: -0.28, y: 0.37}
     followCaster: 1
+    levelOverrides: []
   facingLockOverride: 1
   dashSpeed: 15
   dashDuration: 0.2

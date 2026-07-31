@@ -16,14 +16,20 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
     [Header("Hitbox")]
     public HitboxSettings hitbox;
 
+    [Header("Utility AI Weights")]
+    [Tooltip("사거리 안일 때 기본 점수")]
+    public float baseScore = 70f;
+    [Tooltip("직전에도 이 스킬을 썼을 때(연계) 추가되는 점수")]
+    public float comboBonusScore = 25f;
+
     public override float EvaluateScore(NPCDecisionContext ctx)
     {
-        if (ctx.Self.currentMana < manaCost) return 0f;
+        if (ctx.Self.currentMana < GetManaCost(1)) return 0f; // ★ CSV 연동
         bool inRange = ctx.DistanceToPlayer >= minRange && ctx.DistanceToPlayer <= maxRange;
         if (!inRange) return 0f;
 
-        float score = 70f;
-        if (ctx.LastUsedSkill == this) score += 25f; // 연계 선호 (기획서 "행동 큐" 반영)
+        float score = baseScore;
+        if (ctx.LastUsedSkill == this) score += comboBonusScore; // 연계 선호 (기획서 "행동 큐" 반영)
         return score;
     }
 

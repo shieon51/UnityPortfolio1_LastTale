@@ -26,7 +26,7 @@ public class Liel_UtilityDecisionState : NPCState
 
         // 마땅한 스킬이 없으면 기본 거리 유지 행동
         float dist = Vector2.Distance(liel.transform.position, player.position);
-        if (dist > liel.preferredEngageRange)
+        if (dist > liel.preferredEngageRange) // ?
         {
             visual.PlayIfChanged(NPCAnimStateNames.Walk);
             float dir = (player.position.x > liel.transform.position.x) ? 1f : -1f;

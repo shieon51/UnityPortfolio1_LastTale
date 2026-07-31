@@ -9,16 +9,13 @@ public class BattleTimerDisplay : Singleton<BattleTimerDisplay>
     private float _elapsed;
     private bool _running;
 
-    public void StartTimer() { _elapsed = 0f; _running = true; }
-    public void StopTimer() => _running = false;
-
-    private void Awake()
-    {
-        Hide();
-    }
+    private void Awake() => Hide();
 
     public void Show() { if (canvasGroup != null) { canvasGroup.alpha = 1f; canvasGroup.blocksRaycasts = true; } }
     public void Hide() { if (canvasGroup != null) { canvasGroup.alpha = 0f; canvasGroup.blocksRaycasts = false; } }
+
+    public void StartTimer() { _elapsed = 0f; _running = true; Show(); }
+    public void StopTimer() { _running = false; Hide(); }
 
     private void Update()
     {
@@ -26,6 +23,6 @@ public class BattleTimerDisplay : Singleton<BattleTimerDisplay>
         _elapsed += Time.deltaTime;
         int m = Mathf.FloorToInt(_elapsed / 60f);
         int s = Mathf.FloorToInt(_elapsed % 60f);
-        timerText.text = $"{m:00}:{s:00}";
+        if (timerText != null) timerText.text = $"{m:00}:{s:00}";
     }
 }

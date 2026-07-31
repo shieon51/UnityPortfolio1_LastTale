@@ -31,7 +31,9 @@ MonoBehaviour:
   vfxCues:
   - cueId: arrival
     vfxKey: Sora_W_Ripple
+    spawnOffset: {x: 2.14, y: 0.76}
     followCaster: 0
+    levelOverrides: []
   facingLockOverride: 0
   targetSearchRadius: 8
   facingToleranceDegrees: 100

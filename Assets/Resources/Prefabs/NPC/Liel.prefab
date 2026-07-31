@@ -99,7 +99,7 @@ MonoBehaviour:
   statusText: {fileID: 8281881456917337172}
   debugUnderstanding: 0
   debugHiddenAffection: 0
-  npcName: "\uB9AC\uC5D8"
+  npcName: Liel
   myPersonality: 0
   originalCsvPos: {x: 0, y: 0}
   canRotate: 1

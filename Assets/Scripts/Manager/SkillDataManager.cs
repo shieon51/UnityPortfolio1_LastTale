@@ -48,4 +48,20 @@ public class SkillDataManager : Singleton<SkillDataManager>
         Debug.LogWarning($"[SkillDataManager] {skillId} Lv.{level} 데이터가 없습니다. CSV를 확인하세요.");
         return null;
     }
+
+    /*
+     Play 모드 중에 SkillDataManager 오브젝트를 클릭 → 컴포넌트 우클릭 → "CSV 다시 로드"를 누르면, 
+    게임을 재시작 안 해도 CSV에서 수정한 숫자가 바로 반영됩니다. 밸런스 튜닝 속도가 크게 빨라집니다.
+    */
+#if UNITY_EDITOR
+    [ContextMenu("CSV 다시 로드")]
+    private void ReloadFromMenu()
+    {
+        IdentityDict.Clear();
+        // _levelDict도 private이니 같은 클래스 안이라 바로 접근 가능
+        LoadSkillTable();
+        LoadSkillLevelTable();
+        Debug.Log("[SkillDataManager] CSV 다시 로드 완료");
+    }
+#endif
 }

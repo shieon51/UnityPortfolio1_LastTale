@@ -1,17 +1,18 @@
 ﻿using System.Collections;
 using UnityEngine;
 
-// WorldSpaceTelegraphIndicator.cs (신규) — RadialFillIndicator를 보스 머리 위에서 재사용
+// WorldSpaceTelegraphIndicator.cs — RadialFillIndicator를 보스 머리 위에서 재사용
 public class WorldSpaceTelegraphIndicator : Singleton<WorldSpaceTelegraphIndicator>
 {
+    public CanvasGroup canvasGroup;
     public RadialFillIndicator radialFill;
     public Vector3 offset = new Vector3(0, 1.2f, 0);
     private Transform _followTarget;
 
-    private void Awake() 
-    { 
-        gameObject.SetActive(false); 
-    }
+    private void Awake() => Hide();
+
+    public void Show() { if (canvasGroup != null) { canvasGroup.alpha = 1f; canvasGroup.blocksRaycasts = true; } }
+    public void Hide() { if (canvasGroup != null) { canvasGroup.alpha = 0f; canvasGroup.blocksRaycasts = false; } }
 
     private void LateUpdate()
     {
@@ -22,8 +23,8 @@ public class WorldSpaceTelegraphIndicator : Singleton<WorldSpaceTelegraphIndicat
 
     public IEnumerator PlayCountdown(float duration)
     {
-        gameObject.SetActive(true);
+        Show();
         yield return radialFill.PlayCountdown(duration);
-        gameObject.SetActive(false);
+        Hide();
     }
 }

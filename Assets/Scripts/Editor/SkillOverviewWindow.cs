@@ -1,14 +1,24 @@
+// Assets/Scripts/Editor/SkillOverviewWindow.cs (전체 교체)
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
 
-// Assets/Scripts/Editor/SkillOverviewWindow.cs (신규, 반드시 Editor 폴더 안에)
 public class SkillOverviewWindow : EditorWindow
 {
+    private enum CharacterTab { Player, Liel } // 새 캐릭터 생기면 여기 추가
+    private CharacterTab _characterTab = CharacterTab.Player;
+
+    private enum SlotTab { All, Q, W, E, R }
+    private SlotTab _slotTab = SlotTab.All;
+
+    private string _searchText = "";
     private Vector2 _scroll;
+
     private List<SkillBase> _playerSkills;
     private List<NPCSkillBase> _npcSkills;
+    private Dictionary<Object, bool> _foldoutState = new();
+    private PoolManager _poolManager;
 
     [MenuItem("LastMarchan/Skill Overview")]
     public static void Open() => GetWindow<SkillOverviewWindow>("스킬 전체 관리");
@@ -18,45 +28,116 @@ public class SkillOverviewWindow : EditorWindow
     private void RefreshList()
     {
         _playerSkills = AssetDatabase.FindAssets("t:SkillBase")
-            .Select(guid => AssetDatabase.LoadAssetAtPath<SkillBase>(AssetDatabase.GUIDToAssetPath(guid)))
+            .Select(g => AssetDatabase.LoadAssetAtPath<SkillBase>(AssetDatabase.GUIDToAssetPath(g)))
             .OrderBy(s => s.name).ToList();
 
         _npcSkills = AssetDatabase.FindAssets("t:NPCSkillBase")
-            .Select(guid => AssetDatabase.LoadAssetAtPath<NPCSkillBase>(AssetDatabase.GUIDToAssetPath(guid)))
+            .Select(g => AssetDatabase.LoadAssetAtPath<NPCSkillBase>(AssetDatabase.GUIDToAssetPath(g)))
             .OrderBy(s => s.name).ToList();
+
+        _poolManager = FindObjectOfType<PoolManager>();
     }
 
     private void OnGUI()
     {
-        if (GUILayout.Button("새로고침")) RefreshList();
+        DrawToolbar();
+        EditorGUILayout.Space(6);
 
         _scroll = EditorGUILayout.BeginScrollView(_scroll);
-
-        EditorGUILayout.LabelField("플레이어 스킬 (Sora)", EditorStyles.boldLabel);
-        foreach (var skill in _playerSkills) DrawSkillRow(skill);
-
-        EditorGUILayout.Space(20);
-        EditorGUILayout.LabelField("NPC 스킬", EditorStyles.boldLabel);
-        foreach (var skill in _npcSkills) DrawSkillRow(skill);
-
+        if (_characterTab == CharacterTab.Player)
+            DrawSkillGroup(_playerSkills.Cast<Object>().ToList(), isPlayer: true);
+        else
+            DrawSkillGroup(_npcSkills.Cast<Object>().ToList(), isPlayer: false);
         EditorGUILayout.EndScrollView();
     }
 
-    private void DrawSkillRow(Object skill)
+    private void DrawToolbar()
     {
-        if (skill == null) return;
-        var so = new SerializedObject(skill);
-        so.Update();
+        EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+        if (GUILayout.Button("새로고침", EditorStyles.toolbarButton, GUILayout.Width(70))) RefreshList();
+        GUILayout.FlexibleSpace();
+        _searchText = EditorGUILayout.TextField(_searchText, EditorStyles.toolbarSearchField, GUILayout.Width(200));
+        EditorGUILayout.EndHorizontal();
+
+        _characterTab = (CharacterTab)GUILayout.Toolbar((int)_characterTab, new[] { "플레이어 (소라)", "리엘" });
+
+        if (_characterTab == CharacterTab.Player)
+            _slotTab = (SlotTab)GUILayout.Toolbar((int)_slotTab, new[] { "전체", "Q", "W", "E", "R" });
+    }
+
+    private void DrawSkillGroup(List<Object> skills, bool isPlayer)
+    {
+        foreach (var skill in skills)
+        {
+            if (skill == null) continue;
+            if (!string.IsNullOrEmpty(_searchText) && !skill.name.ToLower().Contains(_searchText.ToLower())) continue;
+            if (isPlayer && _slotTab != SlotTab.All && !MatchesSlot(skill.name, _slotTab)) continue;
+            DrawSkillFoldout(skill);
+        }
+    }
+
+    // 애셋 이름 규칙(Sora_Q1, Sora_W1...)으로 슬롯 필터링. 이름 규칙 바뀌면 여기만 고치면 됨.
+    private bool MatchesSlot(string assetName, SlotTab tab)
+    {
+        string t = tab.ToString();
+        return assetName.Contains("_" + t + "1") || assetName.Contains("_" + t + "2") || assetName.Contains("_" + t + "_");
+    }
+
+    private void DrawSkillFoldout(Object skill)
+    {
+        if (!_foldoutState.ContainsKey(skill)) _foldoutState[skill] = false;
 
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-        EditorGUILayout.LabelField(skill.name, EditorStyles.boldLabel);
+        _foldoutState[skill] = EditorGUILayout.InspectorTitlebar(_foldoutState[skill], skill);
 
-        var prop = so.GetIterator();
-        prop.NextVisible(true); // m_Script 필드는 건너뜀
-        while (prop.NextVisible(false))
-            EditorGUILayout.PropertyField(prop, true);
+        if (_foldoutState[skill])
+        {
+            var so = new SerializedObject(skill);
+            so.Update();
+            var prop = so.GetIterator();
+            prop.NextVisible(true);
+            while (prop.NextVisible(false))
+                EditorGUILayout.PropertyField(prop, true);
+            so.ApplyModifiedProperties();
 
-        so.ApplyModifiedProperties();
+            DrawVFXPreview(skill);
+        }
+
         EditorGUILayout.EndVertical();
+        EditorGUILayout.Space(4);
+    }
+
+    private void DrawVFXPreview(Object skill)
+    {
+        List<SkillVFXCue> cues = skill switch
+        {
+            SkillBase sb => sb.vfxCues,
+            NPCSkillBase nsb => nsb.vfxCues,
+            _ => null
+        };
+        if (cues == null || cues.Count == 0 || _poolManager == null) return;
+
+        EditorGUILayout.LabelField("VFX 미리보기", EditorStyles.boldLabel);
+        EditorGUILayout.BeginHorizontal();
+        foreach (var cue in cues)
+        {
+            var poolInfo = _poolManager.basePools.Find(p => p.poolName == cue.vfxKey);
+            EditorGUILayout.BeginVertical(GUILayout.Width(80));
+            EditorGUILayout.LabelField(cue.cueId, EditorStyles.miniLabel);
+
+            if (poolInfo != null && poolInfo.prefab != null)
+            {
+                var sr = poolInfo.prefab.GetComponentInChildren<SpriteRenderer>();
+                Texture preview = sr != null && sr.sprite != null ? AssetPreview.GetAssetPreview(sr.sprite) : null;
+                if (preview != null) GUILayout.Label(preview, GUILayout.Width(64), GUILayout.Height(64));
+                else GUILayout.Box("(프리뷰 로딩중)", GUILayout.Width(64), GUILayout.Height(64));
+            }
+            else
+            {
+                GUILayout.Box("(미등록: " + cue.vfxKey + ")", GUILayout.Width(64), GUILayout.Height(64));
+            }
+            EditorGUILayout.EndVertical();
+        }
+        EditorGUILayout.EndHorizontal();
     }
 }

@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class NPCManager : Singleton<NPCManager>
 {
+    // NPCManager.cs 에 추가 (private dict를 안전하게 읽기 전용으로 노출)
+    public IReadOnlyDictionary<string, NPCData> AllNPCData => npcDataDict;
+
+    // -------------------------------------------------------------------------------------------
     [Header("Ground Snap")]
     [Tooltip("NPC가 자동으로 안착할 바닥으로 인정할 레이어들 (Ground + OneWayPlatform 둘 다 체크)")]
     public LayerMask groundSnapLayer;

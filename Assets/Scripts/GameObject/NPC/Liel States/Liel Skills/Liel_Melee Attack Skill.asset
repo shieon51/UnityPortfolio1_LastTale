@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Liel_MeleeAttackSkill
   skillId: 
   skillName: 
-  animStateName: 
+  animStateName: Attack1
   manaCost: 0
   actionCooldown: 1.5
   hasTelegraph: 1
@@ -34,7 +34,9 @@ MonoBehaviour:
     burstSpeed: 50
     slideDrag: 40
   hitbox:
-    size: {x: 10.63, y: 4.83}
-    offset: {x: 0, y: 0}
+    size: {x: 10, y: 3.28}
+    offset: {x: 0, y: 0.57}
     activeDuration: 0.15
-    knockbackPower: 5
+    knockbackPower: 2
+  baseScore: 70
+  comboBonusScore: 25
