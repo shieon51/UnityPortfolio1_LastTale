@@ -37,6 +37,9 @@ public class GameStateOverviewWindow : EditorWindow
         EditorGUILayout.LabelField($"레벨: {c.level}   HP: {c.currentHealth}/{c.maxHealth}   MP: {c.currentMana}/{c.maxMana}");
         if (c is SoraStats sora)
         {
+            EditorGUI.BeginChangeCheck();
+            int newLoop = EditorGUILayout.IntField("회귀 횟수", sora.loopCount);
+            if (EditorGUI.EndChangeCheck()) sora.loopCount = newLoop;
             EditorGUILayout.LabelField($"피로도: {sora.currentFatigue}/{sora.maxFatigue}   정신력: {sora.currentMental}/{sora.maxMental}   요정화: {sora.fairyStage}단계");
             EditorGUILayout.LabelField($"시간결정체: {sora.timeCrystals}개");
         }
@@ -50,9 +53,21 @@ public class GameStateOverviewWindow : EditorWindow
 
         foreach (var kvp in NPCManager.Instance.AllNPCData)
         {
+            var data = kvp.Value;
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             EditorGUILayout.LabelField(kvp.Key, EditorStyles.boldLabel);
-            EditorGUILayout.LabelField($"이해도: {kvp.Value.understanding}   호감도: {kvp.Value.hiddenAffection}   모드: {kvp.Value.currentMode}");
+
+            EditorGUI.BeginChangeCheck();
+            int newU = EditorGUILayout.IntField("이해도", data.understanding);
+            int newA = EditorGUILayout.IntField("호감도", data.hiddenAffection);
+            if (EditorGUI.EndChangeCheck())
+            {
+                data.understanding = newU;
+                data.hiddenAffection = newA;
+                NPCManager.Instance.SaveNPCData(data);
+            }
+
+            EditorGUILayout.LabelField($"모드: {data.currentMode}   관계 등급: {data.GetRelationshipTier()}");
 
             var live = Object.FindObjectsOfType<NPC>().FirstOrDefault(n => n.npcName == kvp.Key);
             if (live != null)

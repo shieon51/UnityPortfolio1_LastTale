@@ -12,11 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 974de4c6a9437d54880f03666f128f88, type: 3}
   m_Name: Liel_Melee Attack Skill
   m_EditorClassIdentifier: Assembly-CSharp::Liel_MeleeAttackSkill
-  skillId: 
+  actionName: 
+  actionCooldown: 1.5
+  recoveryDuration: 0.5
+  eventTimeoutSeconds: 1
+  skillId: liel_melee1
   skillName: 
   animStateName: Attack1
-  manaCost: 0
-  actionCooldown: 1.5
+  manaCost: 3
+  timeToActive: 0.2
   hasTelegraph: 1
   baseTelegraphDuration: 0.8
   targetableLayers:
@@ -27,12 +31,14 @@ MonoBehaviour:
     vfxKey: Liel_Melee_Trail
     spawnOffset: {x: 0, y: 0}
     followCaster: 0
+    contextOverrides: []
     levelOverrides: []
   minRange: 4
   maxRange: 8
   dash:
     burstSpeed: 50
     slideDrag: 40
+    slideDuration: 0.2
   hitbox:
     size: {x: 10, y: 3.28}
     offset: {x: 0, y: 0.57}

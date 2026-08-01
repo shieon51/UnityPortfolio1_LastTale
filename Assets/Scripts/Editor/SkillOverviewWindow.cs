@@ -1,4 +1,3 @@
-// Assets/Scripts/Editor/SkillOverviewWindow.cs (전체 교체)
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
@@ -20,6 +19,8 @@ public class SkillOverviewWindow : EditorWindow
     private Dictionary<Object, bool> _foldoutState = new();
     private PoolManager _poolManager;
 
+    private List<SkillSequenceData> _sequences;
+
     [MenuItem("LastMarchan/Skill Overview")]
     public static void Open() => GetWindow<SkillOverviewWindow>("스킬 전체 관리");
 
@@ -35,6 +36,10 @@ public class SkillOverviewWindow : EditorWindow
             .Select(g => AssetDatabase.LoadAssetAtPath<NPCSkillBase>(AssetDatabase.GUIDToAssetPath(g)))
             .OrderBy(s => s.name).ToList();
 
+        _sequences = AssetDatabase.FindAssets("t:SkillSequenceData")
+            .Select(g => AssetDatabase.LoadAssetAtPath<SkillSequenceData>(AssetDatabase.GUIDToAssetPath(g)))
+            .OrderBy(s => s.name).ToList();
+
         _poolManager = FindObjectOfType<PoolManager>();
     }
 
@@ -45,7 +50,10 @@ public class SkillOverviewWindow : EditorWindow
 
         _scroll = EditorGUILayout.BeginScrollView(_scroll);
         if (_characterTab == CharacterTab.Player)
+        {
+            DrawSequenceSection();
             DrawSkillGroup(_playerSkills.Cast<Object>().ToList(), isPlayer: true);
+        }
         else
             DrawSkillGroup(_npcSkills.Cast<Object>().ToList(), isPlayer: false);
         EditorGUILayout.EndScrollView();
@@ -63,6 +71,30 @@ public class SkillOverviewWindow : EditorWindow
 
         if (_characterTab == CharacterTab.Player)
             _slotTab = (SlotTab)GUILayout.Toolbar((int)_slotTab, new[] { "전체", "Q", "W", "E", "R" });
+    }
+
+    private void DrawSequenceSection()
+    {
+        EditorGUILayout.LabelField("콤보 시퀀스 (Q/W/E/R)", EditorStyles.boldLabel);
+        foreach (var seq in _sequences)
+        {
+            if (seq == null) continue;
+            if (!string.IsNullOrEmpty(_searchText) && !seq.name.ToLower().Contains(_searchText.ToLower())) continue;
+
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField(seq.name, EditorStyles.boldLabel);
+
+            for (int i = 0; i < seq.comboSteps.Count; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField($"{i + 1}타:", GUILayout.Width(40));
+                EditorGUILayout.ObjectField(seq.comboSteps[i], typeof(SkillBase), false);
+                if (GUILayout.Button("바로가기", GUILayout.Width(60))) Selection.activeObject = seq.comboSteps[i];
+                EditorGUILayout.EndHorizontal();
+            }
+            EditorGUILayout.EndVertical();
+        }
+        EditorGUILayout.Space(10);
     }
 
     private void DrawSkillGroup(List<Object> skills, bool isPlayer)
@@ -109,35 +141,33 @@ public class SkillOverviewWindow : EditorWindow
 
     private void DrawVFXPreview(Object skill)
     {
-        List<SkillVFXCue> cues = skill switch
-        {
-            SkillBase sb => sb.vfxCues,
-            NPCSkillBase nsb => nsb.vfxCues,
-            _ => null
-        };
+        List<SkillVFXCue> cues = skill switch { SkillBase sb => sb.vfxCues, NPCSkillBase nsb => nsb.vfxCues, _ => null };
         if (cues == null || cues.Count == 0 || _poolManager == null) return;
 
         EditorGUILayout.LabelField("VFX 미리보기", EditorStyles.boldLabel);
-        EditorGUILayout.BeginHorizontal();
         foreach (var cue in cues)
         {
-            var poolInfo = _poolManager.basePools.Find(p => p.poolName == cue.vfxKey);
-            EditorGUILayout.BeginVertical(GUILayout.Width(80));
-            EditorGUILayout.LabelField(cue.cueId, EditorStyles.miniLabel);
-
-            if (poolInfo != null && poolInfo.prefab != null)
-            {
-                var sr = poolInfo.prefab.GetComponentInChildren<SpriteRenderer>();
-                Texture preview = sr != null && sr.sprite != null ? AssetPreview.GetAssetPreview(sr.sprite) : null;
-                if (preview != null) GUILayout.Label(preview, GUILayout.Width(64), GUILayout.Height(64));
-                else GUILayout.Box("(프리뷰 로딩중)", GUILayout.Width(64), GUILayout.Height(64));
-            }
-            else
-            {
-                GUILayout.Box("(미등록: " + cue.vfxKey + ")", GUILayout.Width(64), GUILayout.Height(64));
-            }
-            EditorGUILayout.EndVertical();
+            EditorGUILayout.LabelField($"[{cue.cueId}]", EditorStyles.miniBoldLabel);
+            EditorGUILayout.BeginHorizontal();
+            DrawVFXThumbnail("기본", cue.vfxKey);
+            foreach (var co in cue.contextOverrides) DrawVFXThumbnail(co.context.ToString(), co.vfxKey);
+            EditorGUILayout.EndHorizontal();
         }
-        EditorGUILayout.EndHorizontal();
+    }
+
+    private void DrawVFXThumbnail(string label, string vfxKey)
+    {
+        var poolInfo = _poolManager.basePools.Find(p => p.poolName == vfxKey);
+        EditorGUILayout.BeginVertical(GUILayout.Width(80));
+        EditorGUILayout.LabelField(label, EditorStyles.miniLabel);
+        if (poolInfo != null && poolInfo.prefab != null)
+        {
+            var sr = poolInfo.prefab.GetComponentInChildren<SpriteRenderer>();
+            Texture preview = sr != null && sr.sprite != null ? AssetPreview.GetAssetPreview(sr.sprite) : null;
+            if (preview != null) GUILayout.Label(preview, GUILayout.Width(64), GUILayout.Height(64));
+            else GUILayout.Box("로딩중", GUILayout.Width(64), GUILayout.Height(64));
+        }
+        else GUILayout.Box("(미등록)", GUILayout.Width(64), GUILayout.Height(64));
+        EditorGUILayout.EndVertical();
     }
 }

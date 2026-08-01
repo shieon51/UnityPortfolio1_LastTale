@@ -61,11 +61,17 @@ public abstract class NPC : CharacterStats, ICombatTargetable
     public SpriteRenderer SpriteRenderer => spriteRenderer;
     public Rigidbody2D Rb => rb;
 
+    // 마나 사용 관련
+    private float _manaRegenAccumulator = 0f; 
+
     // 플레이 중 실시간 기즈모 (PlayerCombat과 동일한 패턴)
     private bool _showHitbox = false;
     private Vector2 _lastHitboxCenter, _lastHitboxSize;
     public void SetDebugHitbox(Vector2 center, Vector2 size) { _showHitbox = true; _lastHitboxCenter = center; _lastHitboxSize = size; }
     public void ClearDebugHitbox() { _showHitbox = false; }
+
+    public NPCSkillBase CurrentPlayingSkill { get; set; } // Liel_ExecutingActionState가 실행 시작할 때 설정
+
 
     protected override void Awake()
     {
@@ -133,6 +139,24 @@ public abstract class NPC : CharacterStats, ICombatTargetable
         }
     }
 
+    // 지금 재생중인 스킬 알리기
+    public void NotifyActiveStart() => CurrentPlayingSkill?.OnActiveStart();
+    public void NotifyActiveEnd() => CurrentPlayingSkill?.OnActiveEnd();
+
+    public void PlayCurrentSkillVFX(string cueId)
+    {
+        if (CurrentPlayingSkill == null) return;
+        var cue = CurrentPlayingSkill.FindVFXCue(cueId);
+        if (cue == null) return;
+        string vfxKey = cue.ResolveVFXKey(1);
+        if (string.IsNullOrEmpty(vfxKey)) return;
+
+        float dir = SpriteRenderer.flipX ? -1f : 1f;
+        Vector2 offset = new Vector2(cue.spawnOffset.x * dir, cue.spawnOffset.y);
+        Transform followParent = cue.followCaster ? transform : null;
+        VFXManager.Instance.Play(vfxKey, (Vector2)transform.position + offset, dir, PoolType.Global, followParent);
+    }
+
     // 대화 시작 시 호출됨
     public void OnDialogueStart()
     {
@@ -162,7 +186,17 @@ public abstract class NPC : CharacterStats, ICombatTargetable
         if (isTalking) return;                       // 대화 중일 때는 AI 판단(다가가기 등)을 멈춤
         if (_cutscenePlayer != null && _cutscenePlayer.IsLocked) return; // 연출 중엔 AI 정지
 
-        if (currentMana < maxMana) RecoverMana(Mathf.CeilToInt(ManaRegenPerSecond * Time.deltaTime));
+        // ★ 프레임마다 조금씩 쌓아뒀다가, '1 이상' 모였을 때만 실제로 회복시킴
+        if (currentMana < maxMana)
+        {
+            _manaRegenAccumulator += ManaRegenPerSecond * Time.deltaTime;
+            if (_manaRegenAccumulator >= 1f)
+            {
+                int whole = Mathf.FloorToInt(_manaRegenAccumulator);
+                RecoverMana(whole);
+                _manaRegenAccumulator -= whole;
+            }
+        }
 
         // 디버깅용 상태 출력
         if (statusText != null && StateMachine.CurrentState != null)

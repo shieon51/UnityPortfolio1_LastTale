@@ -148,11 +148,26 @@ public abstract class SkillBase : ScriptableObject
         // 이펙트 미리보기
         foreach (var cue in vfxCues)
         {
-            Vector2 pos = (Vector2)basePos + new Vector2(cue.spawnOffset.x * facingDir, cue.spawnOffset.y);
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(pos, 0.15f);
-            UnityEditor.Handles.Label(pos, cue.cueId);
+            DrawVFXCueGizmo(basePos, facingDir, cue.spawnOffset, cue.cueId + " (기본)", Color.yellow);
+            foreach (var co in cue.contextOverrides)
+            {
+                Color c = co.context switch
+                {
+                    PlayerMovementContext.Airborne => new Color(0f, 0.8f, 1f),
+                    PlayerMovementContext.Flying => new Color(1f, 0.5f, 0f),
+                    _ => Color.white,
+                };
+                DrawVFXCueGizmo(basePos, facingDir, co.spawnOffset, $"{cue.cueId} ({co.context})", c);
+            }
         }
+    }
+
+    private void DrawVFXCueGizmo(Vector3 basePos, float facingDir, Vector2 offset, string label, Color color)
+    {
+        Vector2 pos = (Vector2)basePos + new Vector2(offset.x * facingDir, offset.y);
+        Gizmos.color = color;
+        Gizmos.DrawWireSphere(pos, 0.15f);
+        UnityEditor.Handles.Label(pos, label);
     }
 #endif
 }

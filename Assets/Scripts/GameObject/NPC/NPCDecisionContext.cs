@@ -9,5 +9,5 @@ public struct NPCDecisionContext
     public float SelfHealthPercent;
     public float SelfManaPercent;
     public bool PlayerIsAttacking;
-    public NPCSkillBase LastUsedSkill; // 행동 큐(콤보) 판단용
+    public NPCActionBase LastUsedAction; // 행동 큐(콤보) 판단용
 }

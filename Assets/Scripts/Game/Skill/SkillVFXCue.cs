@@ -1,29 +1,57 @@
-
-// SkillVFXCue.cs (SkillBase ¾È¿¡ Æ÷ÇÔµÉ µ¥ÀÌÅÍ)
+ï»¿
+// SkillVFXCue.cs (SkillBase ì•ˆì— í¬í•¨ë  ë°ì´í„°)
 using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
 public class SkillVFXCue
 {
-    public string cueId;  // Animation Event°¡ ºÎ¸¦ ÀÌ¸§ (¿¹: "swing", "impact")
-    [Tooltip("±âº» ÀÌÆåÆ® (·¹º§ ¿À¹ö¶óÀÌµå°¡ ¾øÀ» ¶§)")]
-    public string vfxKey; // PoolManager°¡ Ã£À» ½ÇÁ¦ Ç® ÀÌ¸§
-    [Tooltip("Ä³¸¯ÅÍ ±âÁØ »ó´ë À§Ä¡. È÷Æ®¹Ú½º ¿ÀÇÁ¼Â°ú °°Àº °³³ä")]
-    public Vector2 spawnOffset;
-    public bool followCaster; // true: ½ÃÀüÀÚ¸¦ µû¶ó´Ù´Ô(Q ±ËÀû), false: ½ºÆù À§Ä¡ °íÁ¤(W/NPC ÀÌÆåÆ®)
+    public string cueId;  // Animation Eventê°€ ë¶€ë¥¼ ì´ë¦„ (ì˜ˆ: "swing", "impact")
 
-    [Header("·¹º§º° ¿À¹ö¶óÀÌµå (¼±ÅÃ)")]
+    [Tooltip("ê¸°ë³¸ ì´í™íŠ¸ (ë ˆë²¨ ì˜¤ë²„ë¼ì´ë“œê°€ ì—†ì„ ë•Œ)")]
+    public string vfxKey; // PoolManagerê°€ ì°¾ì„ ì‹¤ì œ í’€ ì´ë¦„
+    [Tooltip("ìºë¦­í„° ê¸°ì¤€ ìƒëŒ€ ìœ„ì¹˜. íˆíŠ¸ë°•ìŠ¤ ì˜¤í”„ì…‹ê³¼ ê°™ì€ ê°œë…")]
+    public Vector2 spawnOffset;
+    public bool followCaster; // true: ì‹œì „ìë¥¼ ë”°ë¼ë‹¤ë‹˜(Q ê¶¤ì ), false: ìŠ¤í° ìœ„ì¹˜ ê³ ì •(W/NPC ì´í™íŠ¸)
+
+    [Header("ëª¨ì…˜(ì»¨í…ìŠ¤íŠ¸)ë³„ ì˜¤ë²„ë¼ì´ë“œ â€” íˆíŠ¸ë°•ìŠ¤ ì˜¤ë²„ë¼ì´ë“œì™€ ê°™ì€ ê°œë…")]
+    public List<SkillVFXContextOverride> contextOverrides = new();
+
+    [Header("ë ˆë²¨ë³„ ì˜¤ë²„ë¼ì´ë“œ (ì„ íƒ)")]
     public List<SkillVFXLevelOverride> levelOverrides = new();
 
-    public string ResolveVFXKey(int level)
+    public string ResolveVFXKey(int level = 1) => ResolveVFXKey(PlayerMovementContext.Grounded, level); // NPC ë“± ì»¨í…ìŠ¤íŠ¸ ê°œë…ì´ ì—†ëŠ” ê³³ì—ì„œ ì‚¬ìš©
+
+
+    // 1) ì»¨í…ìŠ¤íŠ¸ë¡œ 'ì´ ìƒí™©ì˜ ê¸°ë³¸í˜•'ì„ ë¨¼ì € ì •í•˜ê³ , 2) ê·¸ ìœ„ì— ë ˆë²¨ ì˜¤ë²„ë¼ì´ë“œë¥¼ ì–¹ìŒ
+    public string ResolveVFXKey(PlayerMovementContext context, int level = 1)
     {
-        string best = vfxKey;
+        string resolved = vfxKey;
+        foreach (var co in contextOverrides)
+            if (co.context == context) { resolved = co.vfxKey; break; }
+
+        string best = resolved;
         int bestMinLevel = -1;
-        foreach (var ov in levelOverrides)
-            if (ov.minLevel <= level && ov.minLevel > bestMinLevel) { best = ov.vfxKey; bestMinLevel = ov.minLevel; }
+        foreach (var lv in levelOverrides)
+            if (lv.minLevel <= level && lv.minLevel > bestMinLevel) { best = lv.vfxKey; bestMinLevel = lv.minLevel; }
+
         return best;
     }
+
+    public Vector2 ResolveSpawnOffset(PlayerMovementContext context)
+    {
+        foreach (var co in contextOverrides)
+            if (co.context == context) return co.spawnOffset;
+        return spawnOffset;
+    }
+}
+
+[System.Serializable]
+public class SkillVFXContextOverride
+{
+    public PlayerMovementContext context;
+    public string vfxKey;
+    public Vector2 spawnOffset;
 }
 
 [System.Serializable]

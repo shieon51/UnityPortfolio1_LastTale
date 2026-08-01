@@ -255,15 +255,15 @@ public class PlayerCombat : MonoBehaviour
     {
         if (_currentPlayingSkill == null) return;
         var cue = _currentPlayingSkill.FindVFXCue(cueId);
-
         if (cue == null) return;
-        string vfxKey = cue.ResolveVFXKey(1);
 
+        string vfxKey = cue.ResolveVFXKey(CurrentSkillContext, 1); // ★ 지상/공중/비행 반영
         if (string.IsNullOrEmpty(vfxKey)) return;
 
-        Vector2 offset = new Vector2(cue.spawnOffset.x * FacingDirection, cue.spawnOffset.y);
+        Vector2 offset = cue.ResolveSpawnOffset(CurrentSkillContext);
+        Vector2 worldOffset = new Vector2(offset.x * FacingDirection, offset.y);
         Transform followParent = cue.followCaster ? transform : null;
-        VFXManager.Instance.Play(vfxKey, transform.position + (Vector3)offset, FacingDirection, PoolType.Global, followParent);
+        VFXManager.Instance.Play(vfxKey, transform.position + (Vector3)worldOffset, FacingDirection, PoolType.Global, followParent);
     }
 
     // --- 애니메이션 이벤트 (PlayerAnimationRelay에서 전달) ---

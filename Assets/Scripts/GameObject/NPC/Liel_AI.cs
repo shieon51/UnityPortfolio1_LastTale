@@ -2,7 +2,6 @@
 
 public class Liel_AI : NPC
 {
-    public enum BossDifficultyTier { Training, Normal, Hard } // 기획 문서의 축 (난이도)
     public enum LielCombatStyle { InjuredCommander, FallenAngel } // 스토리 진행에 따른 축 (캐릭터성)
     // ** 실제 전투 파라미터는 (difficultyTier, combatStyle, bossPhase) 세 값의 조합으로 결정
 
@@ -10,7 +9,7 @@ public class Liel_AI : NPC
     public LielCombatStyle currentCombatStyle = LielCombatStyle.InjuredCommander;
     public BossDifficultyTier currentDifficultyTier = BossDifficultyTier.Normal; 
     public int bossPhase = 1; // 타락 모드일 때 1~3페이즈 관리
-    public float preferredEngageRange = 2f; // ★ attackCompo 참조 제거를 위한 기본 교전 거리
+    //public float preferredEngageRange = 2f; // ★ attackCompo 참조 제거를 위한 기본 교전 거리
 
     //[Header("Combat Settings")]
     //public float attack1Range = 2f; // 공격 사거리

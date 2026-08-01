@@ -4,30 +4,36 @@ using UnityEngine;
 // 선택 담당
 public class NPCUtilityAI : MonoBehaviour
 {
-    public List<NPCSkillBase> availableSkills;
-    private Dictionary<NPCSkillBase, float> _lastUsedTime = new();
-    public NPCSkillBase LastUsedSkill { get; private set; }
+    public List<NPCActionBase> availableActions;
+    private Dictionary<NPCActionBase, float> _lastUsedTime = new();
+    public NPCActionBase LastUsedAction { get; private set; }
 
-    public NPCSkillBase ChooseNextAction(NPCDecisionContext ctx)
+    public NPCActionBase ChooseNextAction(NPCDecisionContext ctx)
     {
-        NPCSkillBase best = null;
+        NPCActionBase best = null;
         float bestScore = float.MinValue;
 
-        foreach (var skill in availableSkills)
+        foreach (var action in availableActions)
         {
-            if (_lastUsedTime.TryGetValue(skill, out float lastTime) && Time.time - lastTime < skill.actionCooldown) continue;
+            if (_lastUsedTime.TryGetValue(action, out float lastTime) && Time.time - lastTime < action.actionCooldown) continue;
 
-            ctx.LastUsedSkill = LastUsedSkill;
-            float score = skill.EvaluateScore(ctx);
-            if (score > bestScore) { bestScore = score; best = skill; }
+            ctx.LastUsedAction = LastUsedAction;
+            float score = action.EvaluateScore(ctx);
+            if (score > bestScore) { bestScore = score; best = action; }
         }
-        return bestScore > 0f ? best : null; // 0점 이하면 아예 쓸 만한 게 없다는 뜻
+        return bestScore > 0f ? best : null;
     }
 
-    public void NotifyUsed(NPCSkillBase skill)
+    public void NotifyUsed(NPCActionBase action) { _lastUsedTime[action] = Time.time; LastUsedAction = action; }
+
+    // 보스 프로필 매니저가 페이즈 전환 시 행동 목록을 통째로 교체할 때 사용
+    public void ApplyActionList(List<NPCActionBase> actions) => availableActions = actions;
+
+    public void ApplyProfile(NPCBossProfile profile, int phaseNumber)
     {
-        _lastUsedTime[skill] = Time.time;
-        LastUsedSkill = skill;
+        if (profile == null) return;
+        var phase = profile.phases.Find(p => p.phaseNumber == phaseNumber);
+        if (phase != null) availableActions = phase.availableActions;
     }
 
     // 에디터 미리보기
@@ -36,8 +42,9 @@ public class NPCUtilityAI : MonoBehaviour
     {
         var sr = GetComponentInChildren<SpriteRenderer>();
         float dir = (sr != null && sr.flipX) ? -1f : 1f;
-        foreach (var skill in availableSkills)
-            if (skill != null) skill.DrawEditorGizmos(transform.position, dir);
+        if (availableActions == null) return;
+        foreach (var action in availableActions)
+            if (action != null) action.DrawEditorGizmos(transform.position, dir);
     }
 #endif
 }

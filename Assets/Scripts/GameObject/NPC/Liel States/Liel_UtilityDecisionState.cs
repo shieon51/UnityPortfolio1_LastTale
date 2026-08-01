@@ -17,20 +17,10 @@ public class Liel_UtilityDecisionState : NPCState
         if (player == null) return;
         liel.LookAtPlayer_Public();
 
-        NPCSkillBase chosen = ai.ChooseNextAction(BuildContext());
+        NPCActionBase chosen = ai.ChooseNextAction(BuildContext());
         if (chosen != null)
         {
-            liel.StateMachine.ChangeState(new Liel_ExecutingSkillState(liel, visual, player, chosen));
-            return;
-        }
-
-        // 마땅한 스킬이 없으면 기본 거리 유지 행동
-        float dist = Vector2.Distance(liel.transform.position, player.position);
-        if (dist > liel.preferredEngageRange) // ?
-        {
-            visual.PlayIfChanged(NPCAnimStateNames.Walk);
-            float dir = (player.position.x > liel.transform.position.x) ? 1f : -1f;
-            liel.transform.position += new Vector3(dir * 3f * Time.deltaTime, 0, 0);
+            liel.StateMachine.ChangeState(new Liel_ExecutingActionState(liel, visual, player, chosen));
         }
         else
         {

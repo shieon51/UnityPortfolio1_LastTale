@@ -106,7 +106,6 @@ MonoBehaviour:
   currentCombatStyle: 0
   currentDifficultyTier: 1
   bossPhase: 1
-  preferredEngageRange: 2
   teleportManaCost: 20
   ultimateManaCost: 40
   isGroggy: 0
@@ -204,7 +203,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8801ecc9dda3bd54db91eebcf436018d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NPCUtilityAI
-  availableSkills:
+  availableActions:
   - {fileID: 11400000, guid: f3ac5e04017d91443a0b66fe65af7894, type: 2}
 --- !u!1 &4103355609429672222
 GameObject:
@@ -322,6 +321,7 @@ GameObject:
   - component: {fileID: 5837489318169250162}
   - component: {fileID: 3541392167384185828}
   - component: {fileID: 5466603779581997271}
+  - component: {fileID: 7782875556755194962}
   m_Layer: 9
   m_Name: Visual
   m_TagString: Untagged
@@ -487,6 +487,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a093edb910ca4646b56eef574a3e443, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NPCVisual
+--- !u!114 &7782875556755194962
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6412499149747571638}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d97b1f4cb29cf184b8a6e06a4b70689c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NPCAnimationRelay
 --- !u!1 &8544912074155934285
 GameObject:
   m_ObjectHideFlags: 0

@@ -17,6 +17,8 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     public event Action OnFormTransformStarted;
     public event Action<int> OnFormStageChanged;
 
+    [Header("Time Loop")]
+    public int loopCount = 0; // 회귀 횟수 (나중에 실제 회귀 시스템과 연동)
 
     [Header("Sora Exclusives - Meta Stats")] //피로도, 정신력 스탯
     public int maxFatigue = 100;
