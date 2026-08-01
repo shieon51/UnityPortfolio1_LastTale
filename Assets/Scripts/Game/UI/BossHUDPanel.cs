@@ -8,7 +8,7 @@ public class BossHUDPanel : Singleton<BossHUDPanel>
     public CanvasGroup canvasGroup; // 이 오브젝트에 CanvasGroup 컴포넌트 추가
     public Slider bossHealthBar, bossManaBar;
     public TextMeshProUGUI bossNameText;
-    public Transform phaseMarkersContainer;
+    public RectTransform phaseMarkersContainer;
     public GameObject phaseMarkerPrefab; // 얇은 세로선 이미지 하나
     private NPC _currentBoss;
 
@@ -26,11 +26,11 @@ public class BossHUDPanel : Singleton<BossHUDPanel>
         _currentBoss = boss;
         if (_currentBoss == null) return;
 
-        if (bossNameText == null || bossHealthBar == null || bossManaBar == null)
-        {
-            Debug.LogError("[BossHUDPanel] UI 참조가 비어있습니다. 인스펙터에서 필드가 실제로 연결됐는지 확인하세요.");
-            return;
-        }
+        //if (bossNameText == null || bossHealthBar == null || bossManaBar == null)
+        //{
+        //    Debug.LogError("[BossHUDPanel] UI 참조가 비어있습니다. 인스펙터에서 필드가 실제로 연결됐는지 확인하세요.");
+        //    return;
+        //}
 
         Show(); // ★ 바인딩하는 순간 즉시 표시
         bossNameText.text = _currentBoss.npcName;
@@ -61,8 +61,15 @@ public class BossHUDPanel : Singleton<BossHUDPanel>
             return;
         }
 
-        foreach (Transform child in phaseMarkersContainer) Destroy(child.gameObject); //?
+        foreach (Transform child in phaseMarkersContainer) Destroy(child.gameObject);
         if (totalPhases <= 1) return;
+
+        // SOLID: 프리팹에 RectTransform 없으면 에러 대신 로그
+        if (phaseMarkerPrefab.GetComponent<RectTransform>() == null)
+        {
+            Debug.LogError("[BossHUDPanel] phaseMarkerPrefab에 RectTransform이 없습니다. UI > Image로 만들어주세요.");
+            return;
+        }
 
         for (int i = 1; i < totalPhases; i++)
         {
@@ -72,6 +79,7 @@ public class BossHUDPanel : Singleton<BossHUDPanel>
             rt.anchorMin = new Vector2(t, 0f);
             rt.anchorMax = new Vector2(t, 1f);
             rt.anchoredPosition = Vector2.zero;
+            rt.sizeDelta = new Vector2(2f, 0f); // 얇은 선
         }
     }
 }
