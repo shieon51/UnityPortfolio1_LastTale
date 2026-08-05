@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83867e6502c20524d8f231a0c2d62c73, type: 3}
   m_Name: Liel_Approach
   m_EditorClassIdentifier: Assembly-CSharp::NPCMovementAction
-  actionName: 
+  actionName: "\uC811\uADFC"
   actionCooldown: 0
-  recoveryDuration: 0.5
+  recoveryDuration: 0
   eventTimeoutSeconds: 1
   triggerBelowDistance: 0
-  triggerAboveDistance: 0
+  triggerAboveDistance: 8
   direction: 0
   moveSpeed: 3
-  duration: 0.5
+  maxDuration: 3
   baseScore: 40

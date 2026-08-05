@@ -12,10 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 974de4c6a9437d54880f03666f128f88, type: 3}
   m_Name: Liel_Melee Attack Skill
   m_EditorClassIdentifier: Assembly-CSharp::Liel_MeleeAttackSkill
-  actionName: 
+  actionName: "\uB9AC\uC5D8_\uCC0C\uB974\uAE30 \uACF5\uACA9"
   actionCooldown: 1.5
   recoveryDuration: 0.5
   eventTimeoutSeconds: 1
+  contextVariants: []
+  allowedContexts: 
   skillId: liel_melee1
   skillName: 
   animStateName: Attack1
@@ -36,9 +38,10 @@ MonoBehaviour:
   minRange: 4
   maxRange: 8
   dash:
-    burstSpeed: 50
-    slideDrag: 40
+    burstSpeed: 35
+    slideDrag: 14
     slideDuration: 0.2
+    accelRampDuration: 0
   hitbox:
     size: {x: 10, y: 3.28}
     offset: {x: 0, y: 0.57}
