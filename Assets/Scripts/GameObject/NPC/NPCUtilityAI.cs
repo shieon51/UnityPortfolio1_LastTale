@@ -21,6 +21,27 @@ public class NPCUtilityAI : MonoBehaviour
             float score = action.EvaluateScore(ctx);
             if (score > bestScore) { bestScore = score; best = action; }
         }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        DebugCombatLogPanel.Instance?.Log(best != null
+            ? $"[AI] {best.actionName} 선택 (점수 {bestScore:F1}, 거리 {ctx.DistanceToPlayer:F1})"
+            : $"[AI] 마땅한 행동 없음 (거리 {ctx.DistanceToPlayer:F1})");
+#endif
+        return bestScore > 0f ? best : null;
+    }
+
+    // 이동 행동만 후보로 삼는 버전 (대기 중 계속 움직이기 위해)
+    public NPCActionBase ChooseMovementOnly(NPCDecisionContext ctx)
+    {
+        NPCActionBase best = null;
+        float bestScore = float.MinValue;
+        foreach (var action in availableActions)
+        {
+            if (!(action is NPCMovementAction)) continue;
+            if (_lastUsedTime.TryGetValue(action, out float lastTime) && Time.time - lastTime < action.actionCooldown) continue;
+            float score = action.EvaluateScore(ctx);
+            if (score > bestScore) { bestScore = score; best = action; }
+        }
         return bestScore > 0f ? best : null;
     }
 

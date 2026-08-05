@@ -6,7 +6,9 @@ public class NPCAnimationRelay : MonoBehaviour
     private NPC _npc;
     private void Awake() => _npc = GetComponentInParent<NPC>();
 
-    public void AE_ActiveStart() => _npc.NotifyActiveStart(); // 선딜 끝, 진짜 판정/이동 시작
-    public void AE_ActiveEnd() => _npc.NotifyActiveEnd();     // 액티브 끝, 후딜(감속) 시작
+    public void AE_DashStart() => _npc.NotifyDashStart();     // 팍 치고 대시 시작
+    public void AE_HitboxStart() => _npc.NotifyHitboxStart(); // 한발 내밀며 찌르기 (판정 켜짐)
+    public void AE_SlideStart() => _npc.NotifySlideStart();   // 끼익 멈춤 시작
+    public void AE_ActionEnd() => _npc.NotifyActionEnd();     // 애니메이션 끝, 정리
     public void PlaySkillVFX(string cueId) => _npc.PlayCurrentSkillVFX(cueId);
 }

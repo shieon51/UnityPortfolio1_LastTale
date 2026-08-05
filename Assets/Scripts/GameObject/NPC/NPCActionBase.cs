@@ -13,24 +13,25 @@ public abstract class NPCActionBase : ScriptableObject
     [Tooltip("AE_ActiveStart/End 이벤트가 이 시간 안에 안 오면 강제로 진행 (이벤트 누락 시 무한 대기 방지)")]
     public float eventTimeoutSeconds = 1f;
 
-    private bool _activeStarted, _activeEnded;
-    public void OnActiveStart() => _activeStarted = true;
-    public void OnActiveEnd() => _activeEnded = true;
+    //private bool _activeStarted, _activeEnded;
+    private bool _dashStarted, _hitboxStarted, _slideStarted, _actionEnded;
 
-    protected IEnumerator WaitForActiveStart()
-    {
-        _activeStarted = false;
-        float t = 0f;
-        while (!_activeStarted && t < eventTimeoutSeconds) { t += Time.deltaTime; yield return null; }
-        if (!_activeStarted) Debug.LogWarning($"[{name}] AE_ActiveStart 타임아웃");
-    }
+    public void OnDashStart() => _dashStarted = true;
+    public void OnHitboxStart() => _hitboxStarted = true;
+    public void OnSlideStart() => _slideStarted = true;
+    public void OnActionEndEvent() => _actionEnded = true;
 
-    protected IEnumerator WaitForActiveEnd()
+    protected IEnumerator WaitForDashStart() => WaitForFlag(() => _dashStarted, v => _dashStarted = v, "AE_DashStart");
+    protected IEnumerator WaitForHitboxStart() => WaitForFlag(() => _hitboxStarted, v => _hitboxStarted = v, "AE_HitboxStart");
+    protected IEnumerator WaitForSlideStart() => WaitForFlag(() => _slideStarted, v => _slideStarted = v, "AE_SlideStart");
+    protected IEnumerator WaitForActionEndEvent() => WaitForFlag(() => _actionEnded, v => _actionEnded = v, "AE_ActionEnd");
+
+    private IEnumerator WaitForFlag(System.Func<bool> isSet, System.Action<bool> setFlag, string eventName)
     {
-        _activeEnded = false;
+        setFlag(false);
         float t = 0f;
-        while (!_activeEnded && t < eventTimeoutSeconds) { t += Time.deltaTime; yield return null; }
-        if (!_activeEnded) Debug.LogWarning($"[{name}] AE_ActiveEnd 타임아웃");
+        while (!isSet() && t < eventTimeoutSeconds) { t += Time.deltaTime; yield return null; }
+        if (!isSet()) Debug.LogWarning($"[{name}] {eventName} 이벤트가 {eventTimeoutSeconds}초 안에 안 와서 강제로 진행합니다.");
     }
 
     // 점수가 높을수록 이번 턴에 선택될 확률이 높음

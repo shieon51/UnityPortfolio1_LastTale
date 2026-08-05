@@ -6,7 +6,7 @@ using UnityEngine;
 public enum SkillPriority { Normal, Cancel, Ultimate }
 
 // 플레이어 상태 (땅, 점프 후 공중, 비행모드)
-public enum PlayerMovementContext { Grounded, Airborne, Flying }
+public enum MovementContext { Grounded, Airborne, Flying }
 
 // 스킬 사용에 오직 마나만 사용가능한지 or HP도 스킬마나로 땡겨쓸 수 있는지
 public enum ManaCostPolicy
@@ -21,7 +21,7 @@ public enum FacingLockOverride { UseDefault, AlwaysLock, AlwaysAllow }
 [System.Serializable]
 public struct SkillAnimVariant // 플레이어 상태에 따른 스킬 사용 모션 변경
 {
-    public PlayerMovementContext context;
+    public MovementContext context;
     public string animStateName;
 
     [Header("히트박스 오버라이드 (선택)")]
@@ -86,7 +86,7 @@ public abstract class SkillBase : ScriptableObject
     // 콤보 윈도우가 열리는 시점에 이 스킬이 '추천'하는 바라보는 방향(월드, +1/-1). 필요 없으면 null.
     public virtual float? GetPreferredFacingDirection() => null;
 
-    public string ResolveAnimStateName(PlayerMovementContext context)
+    public string ResolveAnimStateName(MovementContext context)
     {
         foreach (var v in contextVariants)
             if (v.context == context) return v.animStateName;
@@ -94,7 +94,7 @@ public abstract class SkillBase : ScriptableObject
     }
 
     // 컨텍스트별로 히트박스가 다를 때 사용. override 등록이 없으면 기본 hitboxOffset/hitboxSize를 반환.
-    public (Vector2 offset, Vector2 size) ResolveHitbox(PlayerMovementContext context)
+    public (Vector2 offset, Vector2 size) ResolveHitbox(MovementContext context)
     {
         foreach (var v in contextVariants)
             if (v.context == context && v.overrideHitbox)
@@ -136,8 +136,8 @@ public abstract class SkillBase : ScriptableObject
 
             Gizmos.color = variant.context switch
             {
-                PlayerMovementContext.Airborne => new Color(0f, 0.8f, 1f, 0.6f),
-                PlayerMovementContext.Flying => new Color(1f, 0.5f, 0f, 0.6f),
+                MovementContext.Airborne => new Color(0f, 0.8f, 1f, 0.6f),
+                MovementContext.Flying => new Color(1f, 0.5f, 0f, 0.6f),
                 _ => Color.white,
             };
 
@@ -153,8 +153,8 @@ public abstract class SkillBase : ScriptableObject
             {
                 Color c = co.context switch
                 {
-                    PlayerMovementContext.Airborne => new Color(0f, 0.8f, 1f),
-                    PlayerMovementContext.Flying => new Color(1f, 0.5f, 0f),
+                    MovementContext.Airborne => new Color(0f, 0.8f, 1f),
+                    MovementContext.Flying => new Color(1f, 0.5f, 0f),
                     _ => Color.white,
                 };
                 DrawVFXCueGizmo(basePos, facingDir, co.spawnOffset, $"{cue.cueId} ({co.context})", c);

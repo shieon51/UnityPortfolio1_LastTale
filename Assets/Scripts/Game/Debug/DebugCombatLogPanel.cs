@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 
 // DebugCombatLogPanel.cs — 개발/에디터 빌드에서만 컴파일됨 (출시 빌드엔 자동 제외)
-public class DebugCombatLogPanel : MonoBehaviour
+public class DebugCombatLogPanel : Singleton<DebugCombatLogPanel>
 {
     public CanvasGroup canvasGroup;
     public TextMeshProUGUI logText;
@@ -26,5 +26,12 @@ public class DebugCombatLogPanel : MonoBehaviour
     }
 
     public void ResetLog() { _lines.Clear(); _totalDamage = 0; if (logText != null) logText.text = ""; }
+
+    public void Log(string message)
+    {
+        _lines.Enqueue(message);
+        if (_lines.Count > maxLines) _lines.Dequeue();
+        if (logText != null) logText.text = string.Join("\n", _lines);
+    }
 }
 #endif

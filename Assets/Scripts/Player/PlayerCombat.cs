@@ -20,7 +20,7 @@ public class PlayerCombat : MonoBehaviour
     private PlayerVisual _playerVisual; // 애니메이션 강제 동기화용
 
     public bool IsAttacking { get; private set; }
-    public PlayerMovementContext CurrentSkillContext { get; private set; } // 히트박스 오버라이드/착지 전환에 사용
+    public MovementContext CurrentSkillContext { get; private set; } // 히트박스 오버라이드/착지 전환에 사용
     private float _originalGravity;
 
     [Header("Skill Sequence Slots")] // 콤보 리스트가 담긴 Sequence 꾸러미를 받음
@@ -194,11 +194,11 @@ public class PlayerCombat : MonoBehaviour
     }
 
     // 현재 땅인지, 공중인지, 비행인지에 따라 스킬 모션 결정
-    private PlayerMovementContext ResolveMovementContext()
+    private MovementContext ResolveMovementContext()
     {
-        if (_formProvider != null && _formProvider.IsFlightForm) return PlayerMovementContext.Flying;
-        if (_motor != null && _motor.IsGrounded) return PlayerMovementContext.Grounded;
-        return PlayerMovementContext.Airborne;
+        if (_formProvider != null && _formProvider.IsFlightForm) return MovementContext.Flying;
+        if (_motor != null && _motor.IsGrounded) return MovementContext.Grounded;
+        return MovementContext.Airborne;
     }
 
     //  공중 컨텍스트로 공격을 시작했는데, 그 도중에 실제로 착지했다면
@@ -207,12 +207,12 @@ public class PlayerCombat : MonoBehaviour
     private void HandleLandedDuringAttack()
     {
         if (!IsAttacking || _currentPlayingSkill == null) return;
-        if (CurrentSkillContext == PlayerMovementContext.Grounded) return;
+        if (CurrentSkillContext == MovementContext.Grounded) return;
 
-        string groundedState = _currentPlayingSkill.ResolveAnimStateName(PlayerMovementContext.Grounded);
+        string groundedState = _currentPlayingSkill.ResolveAnimStateName(MovementContext.Grounded);
         float normalizedTime = _playerVisual != null ? _playerVisual.GetCurrentNormalizedTime() : 0f;
         _playerVisual?.PlayAttackAnimation(groundedState, normalizedTime);
-        CurrentSkillContext = PlayerMovementContext.Grounded;
+        CurrentSkillContext = MovementContext.Grounded;
     }
 
     // 순간이동형 스킬들이 공용으로 쓸 수 있는 안전 착지 헬퍼
@@ -291,7 +291,7 @@ public class PlayerCombat : MonoBehaviour
 
         if (_rb != null)
         {
-            if (CurrentSkillContext == PlayerMovementContext.Grounded)
+            if (CurrentSkillContext == MovementContext.Grounded)
             {
                 _rb.linearVelocity = new Vector2(0, _rb.linearVelocity.y); // 지상 공격만 제자리 정지
             }

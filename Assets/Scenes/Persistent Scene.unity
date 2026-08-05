@@ -2949,7 +2949,7 @@ MonoBehaviour:
   bossManaBar: {fileID: 724542008}
   bossNameText: {fileID: 1880774319}
   phaseMarkersContainer: {fileID: 2093095093}
-  phaseMarkerPrefab: {fileID: 8516169342517129513, guid: 5ddcd1fc72247a14baa6d572e807e75f, type: 3}
+  phaseMarkerPrefab: {fileID: 5758058774620135310, guid: bdc1bafe9c52262408597a5be8ff5631, type: 3}
 --- !u!225 &863508488
 CanvasGroup:
   m_ObjectHideFlags: 0

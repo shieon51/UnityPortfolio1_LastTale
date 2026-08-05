@@ -15,6 +15,9 @@ public class DashSettings
 
     [Tooltip("마찰로 완전히 멈추기까지 걸리는 시간 (직접 조절)")]
     public float slideDuration = 0.2f; // ★ 신규
+
+    [Tooltip("최고 속도까지 가속하는 시간(초). 짧을수록 '확 밟는' 느낌. 0이면 예전처럼 즉시 스냅")]
+    public float accelRampDuration = 0.08f;
 }
 
 [System.Serializable]
@@ -48,7 +51,9 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
 
     public override float EvaluateScore(NPCDecisionContext ctx)
     {
-        if (ctx.Self.currentMana < GetManaCost(1)) return 0f; // ★ CSV 연동
+        if (!IsContextAllowed(ctx.Self.CurrentMovementContext)) return 0f;
+        if (ctx.Self.currentMana < GetManaCost(1)) return 0f; // CSV 연동
+
         bool inRange = ctx.DistanceToPlayer >= minRange && ctx.DistanceToPlayer <= maxRange;
         if (!inRange) return 0f;
 
@@ -61,48 +66,78 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
     {
         self.CurrentPlayingSkill = this; // ★ 릴레이가 이 스킬을 찾을 수 있게 등록
 
+        var context = self.CurrentMovementContext; // 지금은 항상 Grounded, 나중에 비행/점프 붙으면 자동 확장됨
+        string resolvedAnim = ResolveAnimStateName(context);
+        var (hitOffset, hitSize) = ResolveContextHitbox(context, hitbox.offset, hitbox.size);
+
         var rb = self.Rb;
         var sr = self.SpriteRenderer;
         float originalDrag = rb.linearDamping;
 
-        // 준비자세: 애니메이션만 재생, 물리적으로 완전 정지
-        visual.PlayImmediate(animStateName);
+        // 1. 준비동작
+        visual.PlayImmediate(resolvedAnim);
         rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
 
-        yield return WaitForActiveStart(); // AE_ActiveStart = 준비자세 끝, 팍 치고 나가는 순간
+        yield return WaitForDashStart(); // AE_DashStart
 
-        // 액티브: 순간 최고속도로 돌진
+        // 2. 팍 치고 대시 돌진 (가속 곡선)
         rb.linearDamping = 0f;
         float dir = sr.flipX ? 1f : -1f;
-        rb.linearVelocity = new Vector2(dir * dash.burstSpeed, 0f);
-        PlaySkillVFX("swing", self);
+        yield return self.StartCoroutine(BurstAccelerate(rb, dir));
 
-        yield return self.StartCoroutine(ActiveHitboxRoutine(self, sr));
+        yield return WaitForHitboxStart(); // AE_HitboxStart — 한발 내밀며 찌르기
 
-        yield return WaitForActiveEnd(); // AE_ActiveEnd = 돌진 끝, 마찰 감속 시작하는 순간
+        // 3. 찌르기: 판정 + 이펙트
+        PlaySkillVFX("stab", self);
+        var hitboxCoroutine = self.StartCoroutine(ActiveHitboxRoutine(self, hitOffset, hitSize, dir));
 
-        // 후딜: 마찰로 서서히 멈춤 (수치 조절 가능)
+        yield return WaitForSlideStart(); // AE_SlideStart — 끼익 멈춤 시작
+
+        // 4. 마찰 감속
         rb.linearDamping = dash.slideDrag;
-        yield return new WaitForSeconds(dash.slideDuration);
 
+        yield return WaitForActionEndEvent(); // AE_ActionEnd — 애니메이션 끝
+
+        yield return hitboxCoroutine; // 혹시 아직 안 끝났으면 마저 대기
+
+        // 5. 후딜: 원상복귀
         rb.linearDamping = originalDrag;
-        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y); // 완전 정지
+        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
         self.CurrentPlayingSkill = null;
     }
 
-    private IEnumerator ActiveHitboxRoutine(NPC self, SpriteRenderer sr)
+    // Ease-Out 곡선으로 초반에 급가속, 끝에서 매끄럽게 최고속도 도달
+    private IEnumerator BurstAccelerate(Rigidbody2D rb, float dir)
+    {
+        if (dash.accelRampDuration <= 0f)
+        {
+            rb.linearVelocity = new Vector2(dir * dash.burstSpeed, rb.linearVelocity.y);
+            yield break;
+        }
+
+        float elapsed = 0f;
+        while (elapsed < dash.accelRampDuration)
+        {
+            float t = elapsed / dash.accelRampDuration;
+            float eased = 1f - Mathf.Pow(1f - t, 3f); // ease-out cubic: 엑셀 확 밟는 느낌
+            rb.linearVelocity = new Vector2(dir * dash.burstSpeed * eased, rb.linearVelocity.y);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        rb.linearVelocity = new Vector2(dir * dash.burstSpeed, rb.linearVelocity.y);
+    }
+
+    private IEnumerator ActiveHitboxRoutine(NPC self, Vector2 offset, Vector2 size, float dir)
     {
         float elapsed = 0f;
         var alreadyHit = new HashSet<Collider2D>();
         self.isSuperArmor = true;
-
-        float dir = sr.flipX ? -1 : 1;
-        Vector2 fixedCenter = (Vector2)self.transform.position + new Vector2(hitbox.offset.x * dir, hitbox.offset.y);
+        Vector2 fixedCenter = (Vector2)self.transform.position + new Vector2(offset.x * dir, offset.y);
 
         while (elapsed < hitbox.activeDuration)
         {
-            self.SetDebugHitbox(fixedCenter, hitbox.size); // ★ 추가
-            Collider2D[] hits = Physics2D.OverlapBoxAll(fixedCenter, hitbox.size, 0f, targetableLayers);
+            self.SetDebugHitbox(fixedCenter, size);
+            Collider2D[] hits = Physics2D.OverlapBoxAll(fixedCenter, size, 0f, targetableLayers);
             foreach (var hit in hits)
             {
                 if (alreadyHit.Contains(hit)) continue;
@@ -117,7 +152,7 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
             yield return null;
         }
         self.isSuperArmor = false;
-        self.ClearDebugHitbox(); // ★ 추가
+        self.ClearDebugHitbox();
     }
 
 #if UNITY_EDITOR

@@ -61,6 +61,11 @@ public abstract class NPC : CharacterStats, ICombatTargetable
     public SpriteRenderer SpriteRenderer => spriteRenderer;
     public Rigidbody2D Rb => rb;
 
+    // 모션 컨택스트:
+    // 지금은 항상 Grounded, 나중에 NPC용 비행/점프 컨트롤러가 생기면 그쪽에서 SetMovementContext()를 호출해 갱신하도록 확장 가능
+    public MovementContext CurrentMovementContext { get; protected set; } = MovementContext.Grounded;
+    public void SetMovementContext(MovementContext context) => CurrentMovementContext = context;
+
     // 마나 사용 관련
     private float _manaRegenAccumulator = 0f; 
 
@@ -71,7 +76,6 @@ public abstract class NPC : CharacterStats, ICombatTargetable
     public void ClearDebugHitbox() { _showHitbox = false; }
 
     public NPCSkillBase CurrentPlayingSkill { get; set; } // Liel_ExecutingActionState가 실행 시작할 때 설정
-
 
     protected override void Awake()
     {
@@ -112,7 +116,6 @@ public abstract class NPC : CharacterStats, ICombatTargetable
         }
     }
 
-
     private void OnEnable()
     {
         // 혹시라도 데이터가 꼬여서 null이면 중단
@@ -140,8 +143,10 @@ public abstract class NPC : CharacterStats, ICombatTargetable
     }
 
     // 지금 재생중인 스킬 알리기
-    public void NotifyActiveStart() => CurrentPlayingSkill?.OnActiveStart();
-    public void NotifyActiveEnd() => CurrentPlayingSkill?.OnActiveEnd();
+    public void NotifyDashStart() => CurrentPlayingSkill?.OnDashStart();
+    public void NotifyHitboxStart() => CurrentPlayingSkill?.OnHitboxStart();
+    public void NotifySlideStart() => CurrentPlayingSkill?.OnSlideStart();
+    public void NotifyActionEnd() => CurrentPlayingSkill?.OnActionEndEvent();
 
     public void PlayCurrentSkillVFX(string cueId)
     {
@@ -232,16 +237,6 @@ public abstract class NPC : CharacterStats, ICombatTargetable
     protected abstract void HandleNormalModeAI();
     protected abstract void HandleAttackModeAI();
 
-    //// 전투 시(공격 모드) 보스 패턴
-    //private void HandleAttackModeAI()
-    //{
-    //    // [유틸리티 AI 뼈대]
-    //    // 1. 현재 내 체력 
-    //    // 2. 플레이어와의 거리
-    //    // 3. 내 호감도 (핸디캡 적용)
-    //    // 위 요소를 종합해 점수를 매겨 (평타/돌진/마법/의도적 Miss) 중 하나를 선택해 실행
-    //}
-
     public bool IsValidCombatTarget(CharacterStats attacker)
     {
         if (myData != null && myData.currentMode == NPCMode.Attack) return true; // 보스전 중이면 무조건 유효
@@ -299,6 +294,9 @@ public abstract class NPC : CharacterStats, ICombatTargetable
         
         LookAtTarget(player.position);
     }
+
+    protected override Vector2 ComputeKnockbackForce(Vector2 direction, float power) => direction.normalized * power; // 순수 반대 방향
+    protected override void PrepareRigidbodyForKnockback(Rigidbody2D rb) => rb.linearVelocity = Vector2.zero; // 기존 관성 완전 제거
 
     protected virtual float ManaRegenPerSecond => 2f; // 자식 NPC가 필요시 오버라이드
 

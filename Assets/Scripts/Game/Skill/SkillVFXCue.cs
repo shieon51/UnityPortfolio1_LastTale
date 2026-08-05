@@ -20,11 +20,11 @@ public class SkillVFXCue
     [Header("레벨별 오버라이드 (선택)")]
     public List<SkillVFXLevelOverride> levelOverrides = new();
 
-    public string ResolveVFXKey(int level = 1) => ResolveVFXKey(PlayerMovementContext.Grounded, level); // NPC 등 컨텍스트 개념이 없는 곳에서 사용
+    public string ResolveVFXKey(int level = 1) => ResolveVFXKey(MovementContext.Grounded, level); // NPC 등 컨텍스트 개념이 없는 곳에서 사용
 
 
     // 1) 컨텍스트로 '이 상황의 기본형'을 먼저 정하고, 2) 그 위에 레벨 오버라이드를 얹음
-    public string ResolveVFXKey(PlayerMovementContext context, int level = 1)
+    public string ResolveVFXKey(MovementContext context, int level = 1)
     {
         string resolved = vfxKey;
         foreach (var co in contextOverrides)
@@ -38,7 +38,7 @@ public class SkillVFXCue
         return best;
     }
 
-    public Vector2 ResolveSpawnOffset(PlayerMovementContext context)
+    public Vector2 ResolveSpawnOffset(MovementContext context)
     {
         foreach (var co in contextOverrides)
             if (co.context == context) return co.spawnOffset;
@@ -49,7 +49,7 @@ public class SkillVFXCue
 [System.Serializable]
 public class SkillVFXContextOverride
 {
-    public PlayerMovementContext context;
+    public MovementContext context;
     public string vfxKey;
     public Vector2 spawnOffset;
 }
