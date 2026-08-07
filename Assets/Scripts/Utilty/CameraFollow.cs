@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class CamaraFollow : MonoBehaviour
+public class CameraFollow : MonoBehaviour
 {
     public Transform target;  // 따라갈 대상 (플레이어)
     public float smoothSpeed = 5f;  // 카메라 이동 속도
