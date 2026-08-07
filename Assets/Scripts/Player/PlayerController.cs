@@ -61,6 +61,7 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
             if (DialogueManager.Instance != null && DialogueManager.Instance.IsTalking) return true;
             if (_stats != null && _stats.isKnockedBack) return true;
             if (_playerCombat != null && _playerCombat.IsAttacking) return true;
+            if (_stats != null && _stats.IsGroggy) return true;
             if (_lockSources != null)
                 foreach (var source in _lockSources)
                     if (source.IsLocked) return true;

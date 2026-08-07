@@ -23,8 +23,17 @@ public class CharacterStats : MonoBehaviour
     [Header("Attribute")] // 캐릭터 고유 원소 타입
     public ElementType currentElement = ElementType.Normal;
 
-    [Header("Combat States")]
+    [Header("Guard/Parry")]
     public bool isGuarding = false; // 현재 방어 키를 꾹 누르고 있는지 여부
+    [Tooltip("가드를 시작한 순간부터 이 시간(초) 안에 맞으면 완벽 방어(패링) 판정")]
+    public float parryWindowDuration = 0.15f;
+    private float _guardStartTime = -10f;
+
+    [Header("Groggy")] // 그로기
+    public bool IsGroggy { get; private set; }
+    public event System.Action OnGroggyStarted;
+    public event System.Action OnGroggyEnded;
+    private Coroutine _groggyRoutine;
 
     [Header("I-Frames")]
     public float invincibilityDuration = 0.2f; // 맞은 후 0.2초간 무적
@@ -44,6 +53,9 @@ public class CharacterStats : MonoBehaviour
     // 총 데미지량 계산 관련 (보스전)
     public event Action<int, CharacterStats> OnDamageTaken; // (데미지량, 공격자)
 
+    // 방어자 기준 이벤트 (누구를 막았는지)
+    public event Action<CharacterStats> OnParrySuccess;
+
     // 맞을 때마다(중첩 포함) 매번 발행
     public event Action OnKnockbackApplied;
 
@@ -55,6 +67,10 @@ public class CharacterStats : MonoBehaviour
     // 슈퍼아머 변수 추가 (공격 중일 때 true가 됨) -> 공격 모션 중에는 대미지는 받되 밀려나지 않는 상태
     public bool isSuperArmor = false;
 
+    public void StartGuard() { isGuarding = true; _guardStartTime = Time.time; }
+    public void StopGuard() => isGuarding = false;
+    private bool IsInParryWindow => isGuarding && (Time.time - _guardStartTime) <= parryWindowDuration;
+
     protected virtual void Awake()
     {
         currentHealth = maxHealth;
@@ -64,13 +80,19 @@ public class CharacterStats : MonoBehaviour
     public virtual void TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal, CharacterStats attacker = null) // 공격자 레벨차 보정 수식 필요 시 마지막 인자 채워넣기
     {
         // 무적 시간 체크: 마지막 맞은 시간 + 무적 시간보다 현재 시간이 커야만 데미지 인정
-        if (Time.time < lastHitTime + invincibilityDuration)
+        if (Time.time < lastHitTime + invincibilityDuration) return; // 무적 시간 중이면 데미지 무시
+
+        if (IsInParryWindow && attacker != null && TryResolveParry(attacker))
         {
-            return; // 무적 시간 중이면 데미지 무시
+            lastHitTime = Time.time;
+            OnParrySuccess?.Invoke(attacker);
+            float groggyDuration = CombatFormulaService.Instance.CalculateGroggyDuration(attacker, this);
+            attacker.ApplyGroggy(groggyDuration);
+            return; // 데미지 0, 완전 무효화
         }
 
-        lastHitTime = Time.time; // 마지막 맞은 시간 갱신
 
+        lastHitTime = Time.time; // 마지막 맞은 시간 갱신
         if (attacker != null) LastAttacker = attacker;
 
         int finalDamage = ComputeFinalDamage(incomingDamage, attackElement, attacker);
@@ -162,6 +184,27 @@ public class CharacterStats : MonoBehaviour
     { 
         return originalCost; 
     }
+
+    // 그로기
+    public void ApplyGroggy(float duration)
+    {
+        if (_groggyRoutine != null) StopCoroutine(_groggyRoutine);
+        _groggyRoutine = StartCoroutine(GroggyRoutine(duration));
+    }
+
+    private IEnumerator GroggyRoutine(float duration)
+    {
+        IsGroggy = true;
+        OnGroggyStarted?.Invoke();
+        yield return new WaitForSeconds(duration);
+        IsGroggy = false;
+        OnGroggyEnded?.Invoke();
+        _groggyRoutine = null;
+    }
+
+    // 기본(플레이어): 타이밍만 맞으면 항상 성공. NPC는 아래에서 확률 기반으로 오버라이드.
+    protected virtual bool TryResolveParry(CharacterStats attacker) => true;
+
 
     public virtual void ApplyKnockback(Vector2 direction, float knockbackPower, float? knockbackTime = null)
     {

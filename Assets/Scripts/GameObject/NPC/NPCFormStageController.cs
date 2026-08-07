@@ -7,6 +7,7 @@ using UnityEngine;
 public class NPCFormStageController : MonoBehaviour, IFormStageProvider
 {
     public int FormStage { get; private set; } = 0;
+    public int TargetFormStage { get; private set; } = 0;
     public bool IsFlightForm { get; private set; } = false;
 
     public event Action OnFormTransformStarted;
@@ -27,6 +28,7 @@ public class NPCFormStageController : MonoBehaviour, IFormStageProvider
     private IEnumerator TransformRoutine(int newStage, bool isFlightForm)
     {
         IsTransforming = true;
+        TargetFormStage = newStage; // ★ 전환 시작 전에 미리 세팅
         OnFormTransformStarted?.Invoke();
 
         yield return new WaitForSeconds(transformDuration);

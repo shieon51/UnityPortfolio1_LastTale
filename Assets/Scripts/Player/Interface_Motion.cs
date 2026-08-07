@@ -12,6 +12,7 @@ public interface IActionLockSource
 public interface IFormStageProvider
 {
     int FormStage { get; }        // 0=1단계, 1=2단계(비행), 2=3단계
+    int TargetFormStage { get; } // 지금 어디로 전환 중인지
     bool IsFlightForm { get; }    // 비행 관련 이동/모션 적용 여부
     bool IsTransforming { get; } // 요정화 변신중
 

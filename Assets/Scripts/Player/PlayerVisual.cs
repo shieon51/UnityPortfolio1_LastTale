@@ -55,6 +55,13 @@ public class PlayerVisual : MonoBehaviour
         {
             _stats.OnKnockbackApplied += HandleKnockbackHit;
         }
+
+        if (_stats != null)
+        {
+            _stats.OnKnockbackApplied += HandleKnockbackHit;
+            _stats.OnGroggyStarted += HandleGroggyStarted;
+            _stats.OnGroggyEnded += HandleGroggyEnded;
+        }
     }
 
     private void OnDestroy()
@@ -118,17 +125,6 @@ public class PlayerVisual : MonoBehaviour
         PlayImmediate(PlayerAnimStateNames.Hit);
     }
 
-    // '완전히 넉백에서 풀렸을 때'만 이동 모션으로 복귀 (재생 트리거와는 분리)
-    //private void HandleKnockbackTransition()
-    //{
-    //    bool isKnockedBack = _controller.IsKnockedBack;
-    //    if (!isKnockedBack && _wasKnockedBack)
-    //    {
-    //        ReturnToLocomotion();
-    //    }
-    //    _wasKnockedBack = isKnockedBack;
-    //}
-
     // 대화/공격 잠금과는 별개로, 순수하게 '넉백 시작/종료' 전이만 감지해서 Hit 모션을 넣고 뺀다.
     private void HandleKnockbackTransition()
     {
@@ -165,15 +161,10 @@ public class PlayerVisual : MonoBehaviour
         _wasActionLocked = isActionLocked;
     }
 
-    // 잠금(넉백 등)이 풀리는 순간, 실제로 공중이라면 Fall로 바로잡는다.
-    // (공격 종료는 OnAttackEnd에서 ReturnToLocomotion을 직접 호출하므로 여기선 지상 케이스는 건드리지 않음)
-    //private void SyncVisualToPhysicalState()
-    //{
-    //    if (!_controller.IsGrounded)
-    //    {
-    //        CrossFadeAll(PlayerAnimStateNames.JumpTree, 0.05f);
-    //    }
-    //}
+    // 그로기 상태
+    private void HandleGroggyStarted() => PlayImmediate(PlayerAnimStateNames.Groggy);
+    private void HandleGroggyEnded() => ReturnToLocomotion();
+
 
     // 안전장치: 공중 + 비잠금 상태인데 화면상 상태가 Jump/Fall 계열이 아니면 강제로 바로잡는다.
     // (이벤트 유실 등 어떤 경로로 상태가 꼬이든 최종적으로 항상 여기서 걸러진다)
@@ -308,6 +299,9 @@ public class PlayerVisual : MonoBehaviour
     // --- PlayerCombat에서 호출 ---
     public void PlayAttackAnimation(string stateName) => PlayImmediate(stateName);
     public void ReturnToMovement() => CrossFadeAll(PlayerAnimStateNames.Movement, 0.1f);
+
+    // PlayerGuard에서 호출
+    public void PlayState(string stateName) => PlayImmediate(stateName);
 
     // 잠금 상태(공격 등)에서 벗어날 때 호출: 현재 물리 상태에 맞는 이동 모션으로 복귀
     public void ReturnToLocomotion()

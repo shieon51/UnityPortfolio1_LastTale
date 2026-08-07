@@ -661,6 +661,8 @@ GameObject:
   - component: {fileID: 6480306007770481759}
   - component: {fileID: 4369010382915389579}
   - component: {fileID: 6044535541126225167}
+  - component: {fileID: 8855503883142654588}
+  - component: {fileID: 9077195953545014217}
   m_Layer: 6
   m_Name: Player_Sora
   m_TagString: Player
@@ -750,6 +752,7 @@ MonoBehaviour:
     baseValue: 5
   currentElement: 0
   isGuarding: 0
+  parryWindowDuration: 0.15
   invincibilityDuration: 0.2
   knockbackStunDuration: 0.3
   isSuperArmor: 0
@@ -757,11 +760,13 @@ MonoBehaviour:
   experienceToNextLevel: 100
   fairyStage: 0
   formTransformDuration: 0.8
+  loopCount: 0
   maxFatigue: 100
   currentFatigue: 0
   maxMental: 100
   currentMental: 100
   timeCrystals: 0
+  IsHostileState: 0
 --- !u!114 &6681634649405490063
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -876,6 +881,32 @@ MonoBehaviour:
   _bodyAnimators:
   - {fileID: 7133081614024549977}
   _faceAnimator: {fileID: 1257195906036866552}
+--- !u!114 &8855503883142654588
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6994465021518602846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28b6a32153d9bba40a3223f9c8636994, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerGuard
+  guardKey: 102
+  contextVariants: []
+--- !u!114 &9077195953545014217
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6994465021518602846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2643e8d6c2764e84f92616e714653df2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossPhaseTransitionLock
 --- !u!1 &7272255346937654363
 GameObject:
   m_ObjectHideFlags: 0

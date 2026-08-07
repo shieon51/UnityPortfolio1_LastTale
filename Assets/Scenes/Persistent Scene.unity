@@ -486,7 +486,7 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 103393415}
   m_Enabled: 1
-  m_Alpha: 1
+  m_Alpha: 0
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
@@ -1946,6 +1946,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90194aefc5e2f8f4e9732db3e1f8a206, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NPCManager
+  resultDialogueDelay: 1
   groundSnapLayer:
     serializedVersion: 2
     m_Bits: 1032
@@ -4676,6 +4677,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CombatFormulaService
   _defaultDamageFormula: {fileID: 11400000, guid: 9e4a28823b4463e488cf9c6136465ff0, type: 2}
   _telegraphFormula: {fileID: 11400000, guid: e98238ef2d1b1c74bbd35c51aa7cb562, type: 2}
+  _groggyFormula: {fileID: 11400000, guid: adfc3e7d1bec97647a3c55c5766fa0c1, type: 2}
+  _parryChanceFormula: {fileID: 11400000, guid: 6656b49be6d2e0c468d528c86d3547f2, type: 2}
 --- !u!1 &1418321288
 GameObject:
   m_ObjectHideFlags: 0
@@ -6570,10 +6573,6 @@ PrefabInstance:
     - target: {fileID: 6994465021518602846, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
       propertyPath: m_Name
       value: Player
-      objectReference: {fileID: 0}
-    - target: {fileID: 6994465021518602846, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8541148022777094637, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
       propertyPath: m_LocalPosition.x

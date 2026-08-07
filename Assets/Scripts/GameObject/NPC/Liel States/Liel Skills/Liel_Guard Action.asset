@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5229f23bccc940f4ca3d55238ce8ad37, type: 3}
+  m_Name: Liel_Guard Action
+  m_EditorClassIdentifier: Assembly-CSharp::NPCGuardAction
+  contextVariants: []
+  allowedContexts: 
+  actionName: 
+  actionCooldown: 0
+  recoveryDuration: 0.5
+  eventTimeoutSeconds: 1
+  triggerWithinDistance: 3
+  baseScore: 50
+  duration: 1
+  defaultAnimStateName: Guard

@@ -93,6 +93,7 @@ MonoBehaviour:
     baseValue: 5
   currentElement: 1
   isGuarding: 0
+  parryWindowDuration: 0.15
   invincibilityDuration: 0.2
   knockbackStunDuration: 0.3
   isSuperArmor: 0
@@ -105,7 +106,10 @@ MonoBehaviour:
   canRotate: 1
   currentCombatStyle: 0
   currentDifficultyTier: 1
-  bossPhase: 1
+  bossPhase: 3
+  phaseHealthThresholds:
+  - 0.6
+  - 0.3
   teleportManaCost: 20
   ultimateManaCost: 40
   isGroggy: 0
@@ -174,7 +178,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 338b5a85428af24468f988271630355a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NPCFormStageController
-  transformDuration: 1
+  transformDuration: 2
 --- !u!114 &1836399676135930579
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -207,6 +211,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f3ac5e04017d91443a0b66fe65af7894, type: 2}
   - {fileID: 11400000, guid: 53bd62abd2f8ca4469b3c7713c6fe7b0, type: 2}
   - {fileID: 11400000, guid: 96c360bce90fdfa4884954edd9390841, type: 2}
+  - {fileID: 11400000, guid: c7c6b381dca985b40a2e3f6421e590c1, type: 2}
 --- !u!1 &4103355609429672222
 GameObject:
   m_ObjectHideFlags: 0

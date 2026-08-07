@@ -9,10 +9,10 @@ public class Liel_AI : NPC
     public LielCombatStyle currentCombatStyle = LielCombatStyle.InjuredCommander;
     public BossDifficultyTier currentDifficultyTier = BossDifficultyTier.Normal; 
     public int bossPhase = 1; // 타락 모드일 때 1~3페이즈 관리
-    //public float preferredEngageRange = 2f; // ★ attackCompo 참조 제거를 위한 기본 교전 거리
 
-    //[Header("Combat Settings")]
-    //public float attack1Range = 2f; // 공격 사거리
+    [Header("Phase Thresholds")]
+    [Tooltip("체력 비율이 이 값 이하로 떨어지면 다음 페이즈로 전환 (인덱스0=2페이즈 진입점, 인덱스1=3페이즈 진입점)")]
+    public float[] phaseHealthThresholds = new float[] { 0.6f, 0.3f };
 
     [Header("Injured Mechanics (치명상 기믹)")]
     public int teleportManaCost = 20;
@@ -30,10 +30,8 @@ public class Liel_AI : NPC
     public float walkSpeed = 1.5f;        // 걷는 속도
     public bool hasApproached = false; // 상태 클래스에서 수정할 수 있게 public으로 변경 // 1회만 다가오게 하는 플래그
 
-    //public float minEngageRange = 0.8f; // 이보다 가까우면 후퇴
-
-    //// LielAttackCompo 컴포넌트를 캐싱해둘 변수
-    //[HideInInspector] public LielAttackCompo attackCompo;
+    // 페이즈 다음 단계 관련 이벤트
+    public event System.Action<int> OnPhaseChanged;
 
     // 보스 HP바 UI가 조회할 페이즈 총 개수 (3번 BossHUDPanel.SetPhaseCount와 연결)
     public int TotalPhaseCount => currentDifficultyTier switch
@@ -51,15 +49,18 @@ public class Liel_AI : NPC
         myPersonality = PersonalityTrait.Cold; // 리엘의 성향
         npcName = "Liel"; // NPCData와 매칭될 이름
 
-        // 세팅
+        // ** 세팅 임시
         level = 99;
-        attack.AddBaseValue(500);
+        attack.AddBaseValue(10);
         agility.AddBaseValue(999); // 회피 Max
     }
 
     protected override void Start()
     {
         base.Start(); // 부모의 Start(플레이어 캐싱) 실행
+
+        var formController = GetComponent<NPCFormStageController>();
+        if (formController != null) formController.OnFormStageChanged += stage => bossPhase = stage;
 
         // 시작할 때 현재 모드에 맞춰 FSM 첫 상태를 꽂아줌
         if (CurrentMode == NPCMode.Normal)
@@ -72,8 +73,29 @@ public class Liel_AI : NPC
     public override void SwitchToAttackMode()
     {
         base.SwitchToAttackMode();
+
         // 공격 모드 진입 시 전투 대기 상태로 강제 전환
         StateMachine.ChangeState(new Liel_UtilityDecisionState(this, visual, player));
+    }
+
+    // 페이즈 전환
+    public void CheckPhaseTransition()
+    {
+        var formController = GetComponent<NPCFormStageController>();
+        if (formController == null || formController.IsTransforming) return;
+
+        float hpPercent = maxHealth > 0 ? (float)currentHealth / maxHealth : 1f;
+        int targetPhase = 1;
+        for (int i = 0; i < phaseHealthThresholds.Length; i++)
+            if (hpPercent <= phaseHealthThresholds[i]) targetPhase = i + 2;
+
+        if (targetPhase != bossPhase && targetPhase <= TotalPhaseCount)
+        {
+            formController.TransitionToStage(targetPhase);
+            // TODO: 페이즈별로 실제 뭐가 달라질지(새 스킬 목록, 외형 변화 등)는
+            //       이 이벤트를 구독해서 나중에 채우시면 됩니다.
+            //       예: NPCUtilityAI.ApplyProfile(currentProfile, bossPhase);
+        }
     }
 
     // ==========================================
@@ -82,50 +104,6 @@ public class Liel_AI : NPC
     protected override void HandleNormalModeAI()
     {
         StateMachine.Update();
-
-        //if (player == null || myData == null) return;
-        //float dist = Vector2.Distance(transform.position, player.position);
-
-        //// 1. 친밀도 확인 (예: Friend 이상일 때만 반응하도록 설정)
-        //if (CurrentRelationship >= RelationshipTier.Friend)
-        //{
-        //    // 2. 감지 거리 안으로 들어왔고, 아직 다가간 적이 없다면?
-        //    if (dist <= approachDistance && !hasApproached)
-        //    {
-        //        LookAtPlayer(); // 방향 전환
-
-        //        // 코앞(stopDistance)까지 오지 않았다면 걷기
-        //        if (dist > stopDistance)
-        //        {
-        //            animator.SetBool("IsWalk", true); // 걷기 애니메이션 ON
-
-        //            float dir = (player.position.x > transform.position.x) ? 1f : -1f;
-        //            transform.position += new Vector3(dir * walkSpeed * Time.deltaTime, 0, 0);
-        //        }
-        //        else
-        //        {
-        //            // 코앞에 도착했으면 멈추고 1회 플래그 달성
-        //            animator.SetBool("IsWalk", false); // 걷기 애니메이션 OFF
-        //            hasApproached = true;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        // 다가가는 중이 아닐 때 (이미 다가왔거나, 아예 범위 밖일 때)
-        //        animator.SetBool("IsWalk", false);
-
-        //        // (플레이어가 멀리 떠나면 다시 다가올 수 있게 리셋해주면 자연스러움)
-        //        if (dist > approachDistance * 1.5f)
-        //        {
-        //            hasApproached = false;
-        //        }
-        //    }
-        //}
-        //else
-        //{
-        //    // 안 친할 때: 쳐다보지도 않고 가만히 있음
-        //    animator.SetBool("IsWalk", false);
-        //}
     }
 
     // ==========================================
@@ -135,32 +113,6 @@ public class Liel_AI : NPC
     {
         // 이제 여기서 if-else를 안 하고, stateMachine만 돌려주면 알아서 행동
         StateMachine.Update();
-
-
-        //// 유틸리티 AI 로직에서 핸디캡을 줄 때도 myData 활용
-        //// if (myData.hiddenAffection > 50) score -= 30f; (봐주기)
-
-        //// ... 보스 페이즈 관리도 myData 활용
-        //// if (hpPercent < 0.7f && myData.bossPhase == 1) { myData.bossPhase = 2; ... }
-
-        //if (player == null || Time.time < lastActionTime + actionCooldown) return;
-        //if (isGroggy)
-        //{
-        //    HandleGroggyState();
-        //    return;
-        //}
-
-        //// 전투 버전에 따라 아예 다른 AI 로직을 돌림
-        //if (currentCombatStyle == LielCombatStyle.InjuredCommander)
-        //{
-        //    ExecuteInjuredCommanderAI();
-        //}
-        //else if (currentCombatStyle == LielCombatStyle.FallenAngel)
-        //{
-        //    ExecuteFallenAngelAI();
-        //}
-
-        //lastActionTime = Time.time;
     }
 
     // 외부 상태 클래스에서 부모(NPC.cs)의 protected 함수를 쓰기 위한 Public 래퍼 함수

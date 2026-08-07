@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static EventManager;
 
 public class NPCManager : Singleton<NPCManager>
 {
@@ -8,6 +10,14 @@ public class NPCManager : Singleton<NPCManager>
     public IReadOnlyDictionary<string, NPCData> AllNPCData => npcDataDict;
 
     // -------------------------------------------------------------------------------------------
+    private NPC _activeBossBattle;
+
+    private string _pendingWinNode, _pendingLoseNode;
+
+    [Header("Battle End")]
+    [Tooltip("전투가 끝난 뒤 결과 대화가 뜨기까지의 짧은 정지 시간(초)")]
+    public float resultDialogueDelay = 1f;
+
     [Header("Ground Snap")]
     [Tooltip("NPC가 자동으로 안착할 바닥으로 인정할 레이어들 (Ground + OneWayPlatform 둘 다 체크)")]
     public LayerMask groundSnapLayer;
@@ -124,30 +134,7 @@ public class NPCManager : Singleton<NPCManager>
             npcScript.SetupCurrentEvent(data);
         }
 
-        npcObj.transform.position = ComputeSnappedPosition(npcObj, data.Position);
-
-        //// 바닥 자동 안착 기능
-        //float startOffset = 1.0f;
-        //float rayDistance = 3.0f;
-        //Vector2 rayStart = data.Position + Vector2.up * startOffset;
-
-        //RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, rayDistance, LayerMask.GetMask("Ground"));
-        //Debug.DrawRay(rayStart, Vector2.down * rayDistance, Color.magenta, 5f); // NPC는 보라색 레이저로 표시
-
-        //if (hit.collider != null)
-        //{
-        //    Collider2D col = npcObj.GetComponentInChildren<Collider2D>();
-        //    if (col != null)
-        //    {
-        //        Physics2D.SyncTransforms();
-        //        float pivotToBottom = npcObj.transform.position.y - col.bounds.min.y;
-        //        npcObj.transform.position = new Vector3(data.Position.x, hit.point.y + pivotToBottom, 0);
-        //    }
-        //}
-        //else
-        //{
-        //    npcObj.transform.position = data.Position;
-        //}
+        npcObj.transform.position = ComputeSnappedPosition(npcObj, data.Position); // 바닥 자동 안착 기능
     }
 
     // 기존 SpawnOrUpdateNPC()의 '바닥 자동 안착 기능' 블록과
@@ -191,52 +178,102 @@ public class NPCManager : Singleton<NPCManager>
     }
 
     // 나중에 보스전 진입 시 처리 (다이얼로그 매니저에서 호출)
-    public void TriggerBossBattle(string targetNpcName)
+    public void TriggerBossBattle(string targetNpcName, string winNode = null, string loseNode = null)
     {
+        if (_activeBossBattle != null) // ★ 중복 트리거 방지 (원래 없던 안전장치)
+        {
+            Debug.LogWarning($"[NPCManager] 이미 {_activeBossBattle.npcName}과 전투 중이라 {targetNpcName} 전투 시작을 무시합니다.");
+            return;
+        }
+
+        _pendingWinNode = !string.IsNullOrEmpty(winNode) ? winNode : $"{targetNpcName}_Battle_Win";
+        _pendingLoseNode = !string.IsNullOrEmpty(loseNode) ? loseNode : $"{targetNpcName}_Battle_Lose";
+
+
         NPCData targetData = GetNPCData(targetNpcName);
         targetData.currentMode = NPC.NPCMode.Attack;
 
-        if (npcPool.TryGetValue(targetNpcName, out GameObject npcObj) && npcObj != null)
+        if (!npcPool.TryGetValue(targetNpcName, out GameObject npcObj) || npcObj == null) return;
+
+        NPC npcScript = npcObj.GetComponent<NPC>();
+        if (npcScript == null) return; // ★ null이면 여기서 안전하게 반환 (기존엔 아래 구독부에서 크래시 위험)
+
+
+        npcScript.SwitchToAttackMode(); // NPC를 공격 모드로 전환
+        UIModeManager.Instance.SetMode(UIMode.Battle); // ** 전투 전용 ui 적용
+
+        // ** [임시 구현] 전투 시작 시 강제로 거리를 벌려줌 (카메라 연출용)
+        // (실제로는 맵마다 지정된 '보스전 시작 위치(Transform)'를 가져다 쓸 예정)
+        Transform player = PlayerManager.Instance.CurrentCharacter.transform;
+        BossHUDPanel.Instance?.BindBoss(npcScript);
+        BossHUDPanel.Instance?.SetPhaseCount(npcScript is Liel_AI liel ? liel.TotalPhaseCount : 1);
+        BattleTimerDisplay.Instance?.StartTimer();
+
+        // 플레이어는 원래 위치, 보스는 플레이어 기준 오른쪽으로 5칸 뒤로 순간이동
+        Vector2 bossStartPos = new Vector2(player.position.x + 5f, player.position.y);
+
+        // NPC 위치 보정 (바닥 레이캐스트 재활용)
+        npcObj.transform.position = ComputeSnappedPosition(npcObj, bossStartPos);
+
+        Debug.Log($"[전투 시작] {targetNpcName} 보스전 돌입! 거리를 벌립니다.");
+
+        // ★ null 체크를 이미 위에서 통과했으니, 이 블록은 항상 안전합니다 (기존엔 if 밖에 있어서 위험했음)
+        _activeBossBattle = npcScript;
+        npcScript.OnHealthChanged += HandleBossHealthChanged;
+        PlayerManager.Instance.CurrentCharacter.OnHealthChanged += HandlePlayerHealthChangedDuringBattle;
+
+        var bossFormProvider = npcObj.GetComponent<IFormStageProvider>();
+        if (bossFormProvider != null)
+            PlayerManager.Instance.CurrentCharacter.GetComponent<BossPhaseTransitionLock>()?.SetLockedNPC(bossFormProvider); //?
+    }
+
+    private void HandleBossHealthChanged()
+    {
+        if (_activeBossBattle == null || _activeBossBattle.currentHealth > 0) return;
+        EndBossBattle(win: true);
+    }
+
+    private void HandlePlayerHealthChangedDuringBattle()
+    {
+        var player = PlayerManager.Instance.CurrentCharacter;
+        if (_activeBossBattle == null || player.currentHealth > 0) return;
+        EndBossBattle(win: false);
+    }
+
+    // 전투 종료 처리
+    private void EndBossBattle(bool win)
+    {
+        if (_activeBossBattle == null) return;
+
+        _activeBossBattle.OnHealthChanged -= HandleBossHealthChanged;
+        PlayerManager.Instance.CurrentCharacter.OnHealthChanged -= HandlePlayerHealthChangedDuringBattle;
+
+        string bossName = _activeBossBattle.npcName;
+        _activeBossBattle.SwitchToNormalMode(); // ★ 데이터만이 아니라 NPC 스크립트 자체를 대칭적으로 복구
+        _activeBossBattle = null;
+
+        UIModeManager.Instance.SetMode(UIMode.Normal);
+        BattleTimerDisplay.Instance?.StopTimer();
+        BossHUDPanel.Instance?.UnbindBoss();
+
+        StartCoroutine(PlayBattleResultAfterDelay(bossName, win));
+
+        PlayerManager.Instance.CurrentCharacter.GetComponent<BossPhaseTransitionLock>()?.UnbindCurrent();
+    }
+
+    private IEnumerator PlayBattleResultAfterDelay(string bossName, bool win)
+    {
+        yield return new WaitForSeconds(resultDialogueDelay); // "그 자리에서 멈춘 후에"
+        StartNPCDialogue(bossName); // NPC를 '대화 중' 상태로 고정 → AI 판단 정지
+
+        var resultEvent = new EventData
         {
-            NPC npcScript = npcObj.GetComponent<NPC>();
-            if (npcScript != null)
-            {
-                npcScript.SwitchToAttackMode(); // NPC를 공격 모드로 전환
-
-                UIModeManager.Instance.SetMode(UIMode.Battle); // ** 전투 전용 ui 적용
-
-                // ** [임시 구현] 전투 시작 시 강제로 거리를 벌려줌 (카메라 연출용)
-                // (실제로는 맵마다 지정된 '보스전 시작 위치(Transform)'를 가져다 쓸 예정)
-                Transform player = PlayerManager.Instance.CurrentCharacter.transform;
-                BossHUDPanel.Instance?.BindBoss(npcScript);
-                BossHUDPanel.Instance?.SetPhaseCount(npcScript is Liel_AI liel ? liel.TotalPhaseCount : 1);
-                BattleTimerDisplay.Instance?.StartTimer();
-
-                // 플레이어는 원래 위치, 보스는 플레이어 기준 오른쪽으로 5칸 뒤로 순간이동
-                Vector2 bossStartPos = new Vector2(player.position.x + 5f, player.position.y);
-
-                // NPC 위치 보정 (바닥 레이캐스트 재활용)
-                npcObj.transform.position = ComputeSnappedPosition(npcObj, bossStartPos);
-
-                //RaycastHit2D hit = Physics2D.Raycast(bossStartPos + Vector2.up * 1f, Vector2.down, 3f, LayerMask.GetMask("Ground"));
-                //if (hit.collider != null)
-                //{
-                //    Collider2D col = npcObj.GetComponentInChildren<Collider2D>();
-                //    if (col != null)
-                //    {
-                //        float pivotToBottom = npcObj.transform.position.y - col.bounds.min.y;
-                //        npcObj.transform.position = new Vector3(bossStartPos.x, hit.point.y + pivotToBottom, 0);
-                //    }
-                //}
-                //else
-                //{
-                //    npcObj.transform.position = bossStartPos;
-                //}
-
-                Debug.Log($"[전투 시작] {targetNpcName} 보스전 돌입! 거리를 벌립니다.");
-
-                // TODO: UIManager.Instance.ShowBattleUI(); 등 보스전 전용 체력바 켜기
-            }
-        }
+            EventID = (int)EventID.NPC, // NPC 대역 ID로 지정해야 EventResult()가 정상 분기함
+            EventName = bossName,
+            InkNodeName = win ? _pendingWinNode : _pendingLoseNode, // ★ 1번에서 저장해둔 노드 사용
+            IsAnytime = true,
+            TimeTaken = 0, // 이 대화 자체로 시간 코인을 추가 소모하진 않음
+        };
+        DialogueManager.Instance.StartStory(resultEvent);
     }
 }

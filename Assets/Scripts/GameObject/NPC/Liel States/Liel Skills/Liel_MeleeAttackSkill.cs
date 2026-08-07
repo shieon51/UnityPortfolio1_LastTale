@@ -67,7 +67,7 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
         self.CurrentPlayingSkill = this; // ★ 릴레이가 이 스킬을 찾을 수 있게 등록
 
         var context = self.CurrentMovementContext; // 지금은 항상 Grounded, 나중에 비행/점프 붙으면 자동 확장됨
-        string resolvedAnim = ResolveAnimStateName(context);
+        string resolvedAnim = ResolveAnimStateName(context, animStateName);
         var (hitOffset, hitSize) = ResolveContextHitbox(context, hitbox.offset, hitbox.size);
 
         var rb = self.Rb;

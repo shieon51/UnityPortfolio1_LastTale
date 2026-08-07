@@ -142,6 +142,14 @@ public abstract class NPC : CharacterStats, ICombatTargetable
         }
     }
 
+    // 패링 확률 오버라이드
+    protected override bool TryResolveParry(CharacterStats attacker)
+    {
+        if (attacker == null) return false;
+        float chance = CombatFormulaService.Instance.CalculateParryChance(this, attacker);
+        return Random.value < chance;
+    }
+
     // 지금 재생중인 스킬 알리기
     public void NotifyDashStart() => CurrentPlayingSkill?.OnDashStart();
     public void NotifyHitboxStart() => CurrentPlayingSkill?.OnHitboxStart();
@@ -262,6 +270,26 @@ public abstract class NPC : CharacterStats, ICombatTargetable
         if (rb != null) rb.gravityScale = originalGravity;
 
         Debug.Log($"{gameObject.name}이(가) 공격 모드로 돌입했습니다!");
+    }
+
+    public virtual void SwitchToNormalMode()
+    {
+        if (myData == null) return;
+        myData.currentMode = NPCMode.Normal;
+
+        if (myEventTrigger != null)
+        {
+            myEventTrigger.gameObject.SetActive(true);
+            EventManager.Instance.RegisterDynamicTrigger(myEventTrigger);
+        }
+
+        if (rb != null)
+        {
+            rb.gravityScale = 0f; // 평시 모드 복귀 시 다시 물리 간섭 차단 (OnEnable과 동일)
+            rb.linearVelocity = Vector2.zero;
+        }
+
+        canRotate = true;
     }
 
     // 호감도 상승 등 이벤트가 발생하면 호출할 함수

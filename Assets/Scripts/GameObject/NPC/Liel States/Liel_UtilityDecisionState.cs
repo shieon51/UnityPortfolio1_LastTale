@@ -14,7 +14,19 @@ public class Liel_UtilityDecisionState : NPCState
 
     public override void Execute()
     {
+        var formController = liel.GetComponent<NPCFormStageController>();
+        if (formController != null && formController.IsTransforming) return; // 변신 연출은 NPCVisual이 이벤트로 이미 재생 중
+
         if (player == null) return;
+
+        if (liel.IsGroggy)
+        {
+            visual.PlayIfChanged(NPCAnimStateNames.Groggy);
+            return;
+        }
+
+        liel.CheckPhaseTransition(); // 페이즈 전환도 여기서 같이 체크 (아래)
+
         liel.LookAtPlayer_Public();
 
         NPCActionBase chosen = ai.ChooseNextAction(BuildContext());

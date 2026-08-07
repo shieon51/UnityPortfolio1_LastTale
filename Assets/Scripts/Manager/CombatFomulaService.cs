@@ -9,11 +9,11 @@ public class CombatFormulaService : Singleton<CombatFormulaService>
     [Header("Telegraph")]
     [SerializeField] private BasicTelegraphFormula _telegraphFormula;
 
-    // [Header("Defense / Parry")]  // 기획 확정 후 추가
-    // [SerializeField] private DefenseJudgementFormulaSO _defaultDefenseFormula;
+    [Header("Groggy")]
+    [SerializeField] private GroggyDurationFormula _groggyFormula;
 
-    // [Header("Telegraph Timing")]  // 기획 확정 후 추가
-    // [SerializeField] private TelegraphFormulaSO _defaultTelegraphFormula;
+    [Header("Parry")]
+    [SerializeField] private ParryChanceFormula _parryChanceFormula;
 
     public int CalculateDamage(CombatContext ctx)
     {
@@ -29,9 +29,11 @@ public class CombatFormulaService : Singleton<CombatFormulaService>
         if (_telegraphFormula == null) return baseDuration;
         return _telegraphFormula.CalculateDuration(baseDuration, attacker.agility.GetValue(), defender.agility.GetValue());
     }
+    public float CalculateGroggyDuration(CharacterStats groggyTarget, CharacterStats opponent)
+        => _groggyFormula != null ? _groggyFormula.CalculateDuration(groggyTarget.level, opponent.level) : 2f;
 
-    // public DefenseResult JudgeDefense(CombatContext ctx) { ... }
-    // public float CalculateTelegraphDelay(CombatContext ctx) { ... }
+    public float CalculateParryChance(CharacterStats defender, CharacterStats attacker)
+        => _parryChanceFormula != null ? _parryChanceFormula.CalculateChance(defender.agility.GetValue(), attacker.agility.GetValue()) : 0f;
 }
 
 /*

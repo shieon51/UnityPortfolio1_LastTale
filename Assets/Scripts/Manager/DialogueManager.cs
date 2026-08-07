@@ -19,6 +19,8 @@ public class DialogueManager : Singleton<DialogueManager>
     private bool isChoices = false; //선택지가 주어진 상태일 때 -> EventTrigger에서 엔터키 입력에 대한 예외처리
 
     private string pendingBattleNPC = ""; // 전투가 예약된 NPC 이름
+    private string pendingBattleWinNode = "";
+    private string pendingBattleLoseNode = "";
 
     public bool IsTalking
     { get { return isTalking; } }
@@ -69,7 +71,9 @@ public class DialogueManager : Singleton<DialogueManager>
                 string[] args = tag.Split(':');
                 if (args[0] == "battle" && args.Length > 1)
                 {
-                    pendingBattleNPC = args[1]; // "Liel" 예약
+                    pendingBattleNPC = args[1];
+                    pendingBattleWinNode = args.Length > 2 ? args[2] : $"{pendingBattleNPC}_Battle_Win";
+                    pendingBattleLoseNode = args.Length > 3 ? args[3] : $"{pendingBattleNPC}_Battle_Lose";
                 }
                 //if (args[0] == "emote" && args.Length > 1)
                 //{
@@ -133,8 +137,10 @@ public class DialogueManager : Singleton<DialogueManager>
         // 대화가 완전히 끝난 직후 예약된 전투가 있다면 실행
         if (!string.IsNullOrEmpty(pendingBattleNPC))
         {
-            NPCManager.Instance.TriggerBossBattle(pendingBattleNPC);
-            pendingBattleNPC = ""; // 초기화
+            NPCManager.Instance.TriggerBossBattle(pendingBattleNPC, pendingBattleWinNode, pendingBattleLoseNode);
+            pendingBattleNPC = "";
+            pendingBattleWinNode = "";
+            pendingBattleLoseNode = "";
         }
     }
 
