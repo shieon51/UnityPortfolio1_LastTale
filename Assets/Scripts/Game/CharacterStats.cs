@@ -86,11 +86,17 @@ public class CharacterStats : MonoBehaviour
         {
             lastHitTime = Time.time;
             OnParrySuccess?.Invoke(attacker);
+            FloatingTextManager.Instance?.ShowParry(transform.position + Vector3.up * 1f); // ★ 추가
             float groggyDuration = CombatFormulaService.Instance.CalculateGroggyDuration(attacker, this);
             attacker.ApplyGroggy(groggyDuration);
             return; // 데미지 0, 완전 무효화
         }
 
+        if (isGuarding)
+        {
+            FloatingTextManager.Instance?.ShowGuard(transform.position + Vector3.up * 1f); // ★ 추가
+                                                                                           // ... 기존 가드 경감 로직 ...
+        }
 
         lastHitTime = Time.time; // 마지막 맞은 시간 갱신
         if (attacker != null) LastAttacker = attacker;
@@ -117,6 +123,8 @@ public class CharacterStats : MonoBehaviour
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
         OnHealthChanged?.Invoke();
         OnDamageTaken?.Invoke(finalDamage, attacker);
+        // ... 최종 데미지 확정되는 곳에 ...
+        FloatingTextManager.Instance?.ShowDamage(finalDamage, transform.position + Vector3.up * 1f); // ★ 추가
 
         Debug.Log($"{gameObject.name}가 {finalDamage} 데미지를 받았습니다. (잔여 HP: {currentHealth})");
 
