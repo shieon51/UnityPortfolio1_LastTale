@@ -93,6 +93,7 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     {
         _isTransforming = true;
         isSuperArmor = true; // 변신 중 무적이나 슈퍼아머 처리 (원하는 대로 변경 가능)
+        TargetFormStage = (fairyStage == 0) ? 1 : 0; // ★ 추가 — NPCFormStageController와 동일한 패턴 //?
         OnFormTransformStarted?.Invoke();
 
         // 시각 효과 호출 (이펙트 등)

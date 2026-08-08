@@ -79,6 +79,10 @@ public abstract class SkillBase : ScriptableObject
     [Tooltip("Animation Event가 cueId로 호출하면, 여기 등록된 vfxKey로 이펙트가 재생됩니다.")]
     public List<SkillVFXCue> vfxCues = new List<SkillVFXCue>();
 
+    [Header("Camera Cues")]
+    public List<CameraCue> cameraCues = new();
+    public CameraCue FindCameraCue(string cueId) => cameraCues.Find(c => c.cueId == cueId);
+
     [Header("Combo Flow")]
     [Tooltip("기본(UseDefault): 같은 시퀀스로 이어지는 콤보는 고정, 다른 슬롯으로 전환되면 허용. 특정 스킬만 예외로 강제하려면 여기서 지정.")]
     public FacingLockOverride facingLockOverride = FacingLockOverride.UseDefault;

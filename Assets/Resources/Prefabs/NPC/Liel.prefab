@@ -329,6 +329,7 @@ GameObject:
   - component: {fileID: 3541392167384185828}
   - component: {fileID: 5466603779581997271}
   - component: {fileID: 7782875556755194962}
+  - component: {fileID: 2351226278032771924}
   m_Layer: 9
   m_Name: Visual
   m_TagString: Untagged
@@ -506,6 +507,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d97b1f4cb29cf184b8a6e06a4b70689c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NPCAnimationRelay
+--- !u!114 &2351226278032771924
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6412499149747571638}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7bd7da624e28aaa479166899e2b84b06, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlashController
+  flashDuration: 0.1
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &8544912074155934285
 GameObject:
   m_ObjectHideFlags: 0

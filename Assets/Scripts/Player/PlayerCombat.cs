@@ -260,11 +260,18 @@ public class PlayerCombat : MonoBehaviour
         string vfxKey = cue.ResolveVFXKey(CurrentSkillContext, 1); // ★ 지상/공중/비행 반영
         if (string.IsNullOrEmpty(vfxKey)) return;
 
+        // 이펙트 사운드 
+        if (!string.IsNullOrEmpty(cue.sfxKey)) 
+            SoundManager.Instance?.PlaySFX(cue.sfxKey); //?
+
         Vector2 offset = cue.ResolveSpawnOffset(CurrentSkillContext);
         Vector2 worldOffset = new Vector2(offset.x * FacingDirection, offset.y);
         Transform followParent = cue.followCaster ? transform : null;
         VFXManager.Instance.Play(vfxKey, transform.position + (Vector3)worldOffset, FacingDirection, PoolType.Global, followParent);
     }
+
+    // 스킬 사용 시 카메라 효과
+    public void PlayCurrentSkillCamera(string cueId) => CameraDirector.Instance?.PlayCue(_currentPlayingSkill?.FindCameraCue(cueId));
 
     // --- 애니메이션 이벤트 (PlayerAnimationRelay에서 전달) ---
     public void EnableAttackCollider()

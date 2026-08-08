@@ -13,6 +13,7 @@ public class SkillVFXCue
     [Tooltip("캐릭터 기준 상대 위치. 히트박스 오프셋과 같은 개념")]
     public Vector2 spawnOffset;
     public bool followCaster; // true: 시전자를 따라다님(Q 궤적), false: 스폰 위치 고정(W/NPC 이펙트)
+    public string sfxKey; // 비워두면 소리 없음
 
     [Header("모션(컨텍스트)별 오버라이드 — 히트박스 오버라이드와 같은 개념")]
     public List<SkillVFXContextOverride> contextOverrides = new();

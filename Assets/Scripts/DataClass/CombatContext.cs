@@ -6,4 +6,5 @@ public struct CombatContext
     public CharacterStats Defender;
     public ElementType AttackElement;
     public SkillBase Skill;
+    public bool IsGuarding;
 }

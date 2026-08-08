@@ -170,6 +170,8 @@ public abstract class NPC : CharacterStats, ICombatTargetable
         VFXManager.Instance.Play(vfxKey, (Vector2)transform.position + offset, dir, PoolType.Global, followParent);
     }
 
+    public void PlayCurrentSkillCamera(string cueId) => CameraDirector.Instance?.PlayCue(CurrentPlayingSkill?.FindCameraCue(cueId)); //?
+
     // 대화 시작 시 호출됨
     public void OnDialogueStart()
     {

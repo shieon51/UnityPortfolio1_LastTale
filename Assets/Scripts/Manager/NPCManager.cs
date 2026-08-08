@@ -214,6 +214,7 @@ public class NPCManager : Singleton<NPCManager>
 
         // NPC 위치 보정 (바닥 레이캐스트 재활용)
         npcObj.transform.position = ComputeSnappedPosition(npcObj, bossStartPos);
+        CameraDirector.Instance?.SetSecondaryTarget(npcObj.transform); // 카메라 조정
 
         Debug.Log($"[전투 시작] {targetNpcName} 보스전 돌입! 거리를 벌립니다.");
 
@@ -259,6 +260,8 @@ public class NPCManager : Singleton<NPCManager>
         StartCoroutine(PlayBattleResultAfterDelay(bossName, win));
 
         PlayerManager.Instance.CurrentCharacter.GetComponent<BossPhaseTransitionLock>()?.UnbindCurrent();
+
+        CameraDirector.Instance?.ClearSecondaryTarget(); //?
     }
 
     private IEnumerator PlayBattleResultAfterDelay(string bossName, bool win)

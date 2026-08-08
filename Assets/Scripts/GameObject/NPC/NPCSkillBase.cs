@@ -27,6 +27,10 @@ public abstract class NPCSkillBase : NPCActionBase
     [Tooltip("Animation Event가 cueId로 호출하면, 여기 등록된 vfxKey로 이펙트가 재생됩니다.")]
     public List<SkillVFXCue> vfxCues = new List<SkillVFXCue>();
 
+    [Header("Camera Cues")]
+    public List<CameraCue> cameraCues = new();
+    public CameraCue FindCameraCue(string cueId) => cameraCues.Find(c => c.cueId == cueId);
+
     public int GetManaCost(int level) => SkillDataManager.Instance?.GetLevelData(skillId, level)?.manaCost ?? manaCost;
     public float GetDamageMultiplier(int level) => SkillDataManager.Instance?.GetLevelData(skillId, level)?.damageMultiplier ?? 1f;
 
@@ -50,6 +54,10 @@ public abstract class NPCSkillBase : NPCActionBase
         if (cue == null) return;
         string vfxKey = cue.ResolveVFXKey(self.CurrentMovementContext, 1); // ★ 컨텍스트 반영
         if (string.IsNullOrEmpty(vfxKey)) return;
+
+        // 이펙트 사운드
+        if (!string.IsNullOrEmpty(cue.sfxKey)) 
+            SoundManager.Instance?.PlaySFX(cue.sfxKey);
 
         float dir = self.SpriteRenderer.flipX ? -1f : 1f;
         Vector2 offset = cue.ResolveSpawnOffset(self.CurrentMovementContext);

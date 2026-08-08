@@ -78,6 +78,13 @@ public class Liel_AI : NPC
         StateMachine.ChangeState(new Liel_UtilityDecisionState(this, visual, player));
     }
 
+    // 일반 모드로 돌아오기
+    public override void SwitchToNormalMode()
+    {
+        base.SwitchToNormalMode();
+        StateMachine.ChangeState(new Liel_NormalApproachState(this, visual, player)); 
+    }
+
     // 페이즈 전환
     public void CheckPhaseTransition()
     {

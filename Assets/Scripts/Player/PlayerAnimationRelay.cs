@@ -26,4 +26,7 @@ public class PlayerAnimationRelay : MonoBehaviour
 
     // 이펙트 관련
     public void PlaySkillVFX(string cueId) => _combat.PlayCurrentSkillVFX(cueId);
+
+    // 카메라 관련
+    public void PlayCameraCue(string cueId) => _combat.PlayCurrentSkillCamera(cueId); // 또는 NPC 버전
 }
