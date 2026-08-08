@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 448481275149366322}
   - component: {fileID: 3786929188984520244}
   - component: {fileID: 5086155897034054547}
+  - component: {fileID: 3944619142628811623}
   m_Layer: 7
   m_Name: Visual
   m_TagString: Untagged
@@ -114,6 +115,20 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &3944619142628811623
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5080323969052193148}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7bd7da624e28aaa479166899e2b84b06, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlashController
+  flashDuration: 0.1
+  flashColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &7628004311223390980
 GameObject:
   m_ObjectHideFlags: 0
@@ -201,7 +216,10 @@ MonoBehaviour:
     baseValue: 5
   currentElement: 0
   isGuarding: 0
+  parryWindowDuration: 0.15
   invincibilityDuration: 0.2
+  knockbackStunDuration: 0.3
+  isSuperArmor: 0
   attackPower: 0
   currentState: 0
   patrolMoveSpeed: 1

@@ -1,25 +1,26 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 [CreateAssetMenu(menuName = "LastMarchan/Combat/Formulas/Guard Mitigation Damage")]
 public class GuardMitigationDamageFormula : DamageFormulaSO
 {
-    [Tooltip("¹æ¾î(Guard) ÁßÀÏ ¶§ ¹æ¾î·Â¿¡ °öÇØÁö´Â ¹èÀ²")]
+    [Tooltip("ë°©ì–´(Guard) ì¤‘ì¼ ë•Œ ë°©ì–´ë ¥ì— ê³±í•´ì§€ëŠ” ë°°ìœ¨")]
     public float guardDefenseMultiplier = 2f;
-    [Tooltip("°ø°İ·ÂÀÌ ¹æ¾î·ÂÀÇ ÀÌ ¹èÀ²À» ³ÑÀ¸¸é ¹æ¾î °üÅë")]
+    [Tooltip("ê³µê²©ë ¥ì´ ë°©ì–´ë ¥ì˜ ì´ ë°°ìœ¨ì„ ë„˜ìœ¼ë©´ ë°©ì–´ ê´€í†µ")]
     public float guardBreakAttackRatio = 3f;
     [Range(0f, 1f)] public float guardBreakDamageRatio = 0.3f;
 
     public override int CalculateDamage(CombatContext ctx)
     {
-        int attackerAtk = ctx.Attacker != null ? ctx.Attacker.attack.GetValue() : ctx.IncomingDamage;
         int defenderDef = ctx.Defender.defense.GetValue();
 
         if (ctx.IsGuarding)
         {
-            if (attackerAtk >= defenderDef * guardBreakAttackRatio)
-                return Mathf.Max(1, Mathf.RoundToInt(ctx.IncomingDamage * guardBreakDamageRatio)); // °üÅë
+            bool guardBroken = defenderDef <= 0 || ctx.IncomingDamage >= defenderDef * guardBreakDamageRatio;
 
-            return Mathf.Max(1, ctx.IncomingDamage - Mathf.RoundToInt(defenderDef * guardDefenseMultiplier));
+            if (!guardBroken) return 0; // â˜… ì™„ë²½ ë°©ì–´ â€” ë°ë¯¸ì§€ ì—†ìŒ
+
+            int guardDef = Mathf.RoundToInt(defenderDef * guardDefenseMultiplier);
+            return Mathf.Max(1, ctx.IncomingDamage - guardDef); // ê´€í†µì€ ê·¸ë˜ë„ ì¼ë¶€ ê²½ê°
         }
 
         return Mathf.Max(1, ctx.IncomingDamage - defenderDef);

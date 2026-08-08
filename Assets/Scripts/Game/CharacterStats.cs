@@ -86,16 +86,11 @@ public class CharacterStats : MonoBehaviour
         {
             lastHitTime = Time.time;
             OnParrySuccess?.Invoke(attacker);
-            FloatingTextManager.Instance?.ShowParry(transform.position + Vector3.up * 1f); // ★ 추가
+            FloatingTextManager.Instance?.ShowParry(transform.position + Vector3.up * 1f); 
+            SoundManager.Instance?.PlaySFX("parry_success"); // **
             float groggyDuration = CombatFormulaService.Instance.CalculateGroggyDuration(attacker, this);
             attacker.ApplyGroggy(groggyDuration);
             return; // 데미지 0, 완전 무효화
-        }
-
-        if (isGuarding)
-        {
-            FloatingTextManager.Instance?.ShowGuard(transform.position + Vector3.up * 1f); // ★ 추가
-                                                                                           // ... 기존 가드 경감 로직 ...
         }
 
         lastHitTime = Time.time; // 마지막 맞은 시간 갱신
@@ -103,30 +98,24 @@ public class CharacterStats : MonoBehaviour
 
         int finalDamage = ComputeFinalDamage(incomingDamage, attackElement, attacker);
 
-        //// 1. 방어 태세(Guard) 계산
-        //if (isGuarding)
-        //{
-        //    // 방어 중일 땐 방어력의 효율이 증가 (예: 방어력의 2배 적용)
-        //    int effectiveDefense = defense.GetValue() * 2;
-        //    finalDamage = Mathf.Max(1, finalDamage - effectiveDefense); // (최소 1은 들어감)
-        //    Debug.Log($"[Guard] 방어 성공! 데미지 감소: {incomingDamage} -> {finalDamage}");
-        //}
-        //else
-        //{
-        //    // 무방비 상태일 땐 일반 방어력 적용
-        //    finalDamage = Mathf.Max(1, finalDamage - defense.GetValue());
-        //}
+        if (isGuarding && finalDamage <= 0)
+        {
+            FloatingTextManager.Instance?.ShowGuard(transform.position + Vector3.up * 1f);
+            SoundManager.Instance?.PlaySFX("guard_perfect");
+            return; // ★ 완벽 방어 — 체력/이펙트 전부 스킵
+        }
 
-        //// 2. 원소 상성 연산 (추후 상성표에 따라 증감율 적용 가능)
-        //// if (attackElement == ElementType.Water && currentElement == ElementType.Fire) finalDamage = (int)(finalDamage * 1.5f);
+        // --- 3. 실제로 데미지가 들어가는 모든 경우 (방어 관통 포함) ---
+        if (isGuarding)
+            SoundManager.Instance?.PlaySFX("guard_break"); // ★ 사운드 위치 ③ (방어했지만 뚫림)
+        else
+            SoundManager.Instance?.PlaySFX("hit_generic"); // ★ 사운드 위치 ④ (무방비로 맞음)
 
+        GetComponentInChildren<HitFlashController>()?.Flash();
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
         OnHealthChanged?.Invoke();
         OnDamageTaken?.Invoke(finalDamage, attacker);
-
-        // ... 최종 데미지 확정되는 곳에 ...
-        FloatingTextManager.Instance?.ShowDamage(finalDamage, transform.position + Vector3.up * 1f); // ★ 추가 //?
-        GetComponentInChildren<HitFlashController>()?.Flash(); //?
+        FloatingTextManager.Instance?.ShowDamage(finalDamage, transform.position + Vector3.up * 1f); 
 
         Debug.Log($"{gameObject.name}가 {finalDamage} 데미지를 받았습니다. (잔여 HP: {currentHealth})");
 

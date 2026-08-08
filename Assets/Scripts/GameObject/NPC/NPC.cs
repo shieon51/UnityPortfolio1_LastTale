@@ -277,6 +277,11 @@ public abstract class NPC : CharacterStats, ICombatTargetable
     public virtual void SwitchToNormalMode()
     {
         if (myData == null) return;
+
+        StopAllCoroutines(); // ★ 핵심: 진행 중이던 공격/이동 코루틴을 완전히 중단.
+                             //   (Unity는 StopCoroutine으로 중단된 코루틴의 finally 블록을 실행하지 않으므로,
+                             //    이후 아무도 뒤늦게 상태를 되돌릴 수 없게 됩니다)
+
         myData.currentMode = NPCMode.Normal;
 
         if (myEventTrigger != null)
@@ -292,6 +297,8 @@ public abstract class NPC : CharacterStats, ICombatTargetable
         }
 
         canRotate = true;
+        isSuperArmor = false;
+        CurrentPlayingSkill = null;
     }
 
     // 호감도 상승 등 이벤트가 발생하면 호출할 함수

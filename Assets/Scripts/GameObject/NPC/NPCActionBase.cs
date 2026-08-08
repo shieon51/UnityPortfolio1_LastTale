@@ -10,6 +10,8 @@ public abstract class NPCActionBase : ScriptableObject
     {
         public MovementContext context;
         public string animStateName;
+
+        [Header("히트박스 오버라이드 (스킬 전용 — 이동/가드 액션은 이 필드들을 그냥 안 씀)")]
         public bool overrideHitbox;
         public Vector2 hitboxOffsetOverride;
         public Vector2 hitboxSizeOverride;

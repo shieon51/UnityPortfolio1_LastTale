@@ -14,6 +14,10 @@ public class Liel_AI : NPC
     [Tooltip("체력 비율이 이 값 이하로 떨어지면 다음 페이즈로 전환 (인덱스0=2페이즈 진입점, 인덱스1=3페이즈 진입점)")]
     public float[] phaseHealthThresholds = new float[] { 0.6f, 0.3f };
 
+    [Header("Battle Start")]
+    [Tooltip("전투 시작 직후, 플레이어가 반응할 시간을 주기 위한 유예시간(초)")]
+    public float battleStartGracePeriod = 2f;
+
     [Header("Injured Mechanics (치명상 기믹)")]
     public int teleportManaCost = 20;
     public int ultimateManaCost = 40;
@@ -74,8 +78,8 @@ public class Liel_AI : NPC
     {
         base.SwitchToAttackMode();
 
-        // 공격 모드 진입 시 전투 대기 상태로 강제 전환
-        StateMachine.ChangeState(new Liel_UtilityDecisionState(this, visual, player));
+        // 공격 모드 진입 시 전투 대기 상태로 전환
+        StateMachine.ChangeState(new Liel_RecoveryState(this, visual, player, battleStartGracePeriod)); // ★ 바로 판단 대신 유예
     }
 
     // 일반 모드로 돌아오기

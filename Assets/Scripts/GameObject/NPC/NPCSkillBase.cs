@@ -52,12 +52,13 @@ public abstract class NPCSkillBase : NPCActionBase
     {
         var cue = FindVFXCue(cueId);
         if (cue == null) return;
-        string vfxKey = cue.ResolveVFXKey(self.CurrentMovementContext, 1); // ★ 컨텍스트 반영
-        if (string.IsNullOrEmpty(vfxKey)) return;
 
         // 이펙트 사운드
         if (!string.IsNullOrEmpty(cue.sfxKey)) 
             SoundManager.Instance?.PlaySFX(cue.sfxKey);
+
+        string vfxKey = cue.ResolveVFXKey(self.CurrentMovementContext, 1); // ★ 컨텍스트 반영
+        if (string.IsNullOrEmpty(vfxKey)) return;
 
         float dir = self.SpriteRenderer.flipX ? -1f : 1f;
         Vector2 offset = cue.ResolveSpawnOffset(self.CurrentMovementContext);

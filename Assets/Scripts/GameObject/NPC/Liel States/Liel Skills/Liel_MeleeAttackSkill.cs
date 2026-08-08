@@ -65,6 +65,7 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
     public override IEnumerator Execute(NPC self, NPCVisual visual, Transform target)
     {
         self.CurrentPlayingSkill = this; // ★ 릴레이가 이 스킬을 찾을 수 있게 등록
+        self.isSuperArmor = true; // ★ 처음부터 슈퍼아머 — 돌진 중 맞아서 넉백당해 멈추는 것 방지
 
         var context = self.CurrentMovementContext; // 지금은 항상 Grounded, 나중에 비행/점프 붙으면 자동 확장됨
         string resolvedAnim = ResolveAnimStateName(context, animStateName);
@@ -95,7 +96,6 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
 
         // 4. 마찰 감속
         rb.linearDamping = dash.slideDrag;
-
         yield return WaitForActionEndEvent(); // AE_ActionEnd — 애니메이션 끝
 
         yield return hitboxCoroutine; // 혹시 아직 안 끝났으면 마저 대기
@@ -103,6 +103,7 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
         // 5. 후딜: 원상복귀
         rb.linearDamping = originalDrag;
         rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+        self.isSuperArmor = false; // ★ 여기서 해제
         self.CurrentPlayingSkill = null;
     }
 
@@ -131,7 +132,7 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
     {
         float elapsed = 0f;
         var alreadyHit = new HashSet<Collider2D>();
-        self.isSuperArmor = true;
+        //self.isSuperArmor = true;
         Vector2 fixedCenter = (Vector2)self.transform.position + new Vector2(offset.x * dir, offset.y);
 
         while (elapsed < hitbox.activeDuration)
@@ -151,7 +152,7 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
             elapsed += Time.deltaTime;
             yield return null;
         }
-        self.isSuperArmor = false;
+        //self.isSuperArmor = false;
         self.ClearDebugHitbox();
     }
 

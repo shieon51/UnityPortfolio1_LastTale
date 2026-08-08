@@ -192,6 +192,13 @@ public class EventManager : Singleton<EventManager>
 
     private void UpdateNearestEvent() //가장 가까운 트리거 찾기
     {
+        if (DialogueManager.Instance.IsTalking) // ★ 대화 중엔 근접 판정 자체를 건너뜀
+        {
+            closest?.ShowInteractionButton(false);
+            canInteract = false;
+            return;
+        }
+
         float minDistance = Mathf.Infinity;
         EventTrigger temp = closest;
         closest = null;
@@ -270,6 +277,8 @@ public class EventManager : Singleton<EventManager>
         {
             new DefaultEventBehavior().Execute(eventData); // 매핑 안 된 일반 NPC 대화 등
         }
+
+        UpdateEventTriggers(); // ★ 대화 종료 시점마다 현재 시각 기준으로 NPC 위치·상태 재동기화
     }
 
     private void OnDrawGizmos()

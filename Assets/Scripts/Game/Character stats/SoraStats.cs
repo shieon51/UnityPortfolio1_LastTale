@@ -5,6 +5,16 @@ using UnityEngine;
 // PlayableCharacter를 상속받는 1부 전용 주인공 '소라'
 public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSource
 {
+    // ===============================================================
+    // 요정화 변신 관련 변수 정리
+    // ===============================================================
+    // fairyStage      : "지금 확정된" 단계 (0=1단계, 1=2단계/비행형). 변신 연출이 끝나야 바뀜.
+    // TargetFormStage : "지금 전환하려는 목표" 단계. 변신 시작 순간 바로 세팅되고,
+    //                    연출 재생 중(=아직 fairyStage는 안 바뀐 상태)에 참고용으로 쓰임
+    //                    (예: 나중에 요정화 2→3단계 변신 클립이 여러 개면, 이 값 보고 어느 클립을 고를지 결정)
+    // _isTransforming : 지금 변신 연출 재생 중인지. true인 동안 IActionLockSource로 조작 잠김.
+    // ===============================================================
+
     [Header("Form Change (요정화)")] // 시즌 1에만 쓸지, 아님 다른 캐릭터도 해당하는가?
     [Tooltip("기획 반영: 변신 딜레이 0.5초")]
     public float formTransformDuration = 0.5f;
@@ -91,22 +101,22 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     // [기획 반영] 1초의 변신 딜레이
     private IEnumerator FairyTransformRoutine()
     {
-        _isTransforming = true;
-        isSuperArmor = true; // 변신 중 무적이나 슈퍼아머 처리 (원하는 대로 변경 가능)
-        TargetFormStage = (fairyStage == 0) ? 1 : 0; // ★ 추가 — NPCFormStageController와 동일한 패턴 //?
-        OnFormTransformStarted?.Invoke();
+        _isTransforming = true;  // 조작 잠금 시작
+        isSuperArmor = true;     // 변신 중 무적이나 슈퍼아머 처리 (원하는 대로 변경 가능)
+
+        TargetFormStage = (fairyStage == 0) ? 1 : 0; // 목표 단계 미리 확정 (fairyStage 자체는 아직 그대로)
+        OnFormTransformStarted?.Invoke();             // 이 시점에 구독자가 TargetFormStage를 참고해 연출 준비 가능
 
         // 시각 효과 호출 (이펙트 등)
         Debug.Log("요정화 변신 시작...");
-
         yield return new WaitForSeconds(formTransformDuration); // 변신 딜레이
 
-        fairyStage = (fairyStage == 0) ? 1 : 0; // 0(1단계) <-> 1(2단계) 토글
+        fairyStage = (fairyStage == 0) ? 1 : 0; // 0(1단계) <-> 1(2단계) 토글 ★ 여기서 비로소 "확정" 단계가 바뀜
         Debug.Log($"요정화 단계가 {fairyStage + 1}단계로 변경되었습니다.");
-        OnFormStageChanged?.Invoke(fairyStage);
+        OnFormStageChanged?.Invoke(fairyStage); // 확정된 단계를 알림
 
         isSuperArmor = false;
-        _isTransforming = false;
+        _isTransforming = false;  // 조작 잠금 해제
     }
 
     // [기획 반영] 폼체인지 시 마나 사용 효율 증가
