@@ -40,6 +40,10 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     [Header("Sora Exclusives - Time Loop")] // 시간결정체
     public int timeCrystals = 0;
 
+    [Header("Form Change (요정화)")] // 변신 후 쿨타임
+    public float formToggleCooldown = 0.3f;
+    private float _lastTransformEndTime = -10f;
+
     private bool _isTransforming = false; // 변신 딜레이 중인지 체크
 
     // 소라의 특수 스탯은 '피로도'임을 UI에게 알려줌
@@ -73,8 +77,8 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     // 소라만의 고유 업데이트 로직 (마나 리젠, 요정화 패널티)
     protected override void HandleSpecialMechanics()
     {
-        // [추가됨] Tab 키를 누르면 1단계 <-> 2단계 변신 (3단계는 강제 발동이므로 2단계까지만 토글)
-        if (Input.GetKeyDown(KeyCode.Tab) && !_isTransforming && !isKnockedBack)
+        // Tab 키를 누르면 1단계 <-> 2단계 변신 (3단계는 강제 발동이므로 2단계까지만 토글)
+        if (Input.GetKeyDown(KeyCode.Tab) && !_isTransforming && !isKnockedBack && Time.time >= _lastTransformEndTime + formToggleCooldown)
         {
             StartCoroutine(FairyTransformRoutine());
         }
@@ -117,6 +121,7 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
 
         isSuperArmor = false;
         _isTransforming = false;  // 조작 잠금 해제
+        _lastTransformEndTime = Time.time;
     }
 
     // [기획 반영] 폼체인지 시 마나 사용 효율 증가

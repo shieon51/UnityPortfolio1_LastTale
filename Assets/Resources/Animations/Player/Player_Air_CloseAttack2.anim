@@ -30,7 +30,7 @@ AnimationClip:
       value: {fileID: 5743129961551933871, guid: 8c456ec15ea45934c8de10ae01096fd3, type: 3}
     - time: 0.23333333
       value: {fileID: -6016720202416345005, guid: e567f03f78c021948b911159deccd13d, type: 3}
-    - time: 0.28333333
+    - time: 0.26666668
       value: {fileID: 8197818756800112521, guid: 06d69054c7065a742824601a4aa9edae, type: 3}
     - time: 0.31666666
       value: {fileID: 7194756542813723116, guid: 9cb1d47c1258dfe48a3cf01da237d458, type: 3}
@@ -96,6 +96,13 @@ AnimationClip:
   m_Events:
   - time: 0.1
     functionName: EnableAttackCollider
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 0.3
+    functionName: OnAttackCombo
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0

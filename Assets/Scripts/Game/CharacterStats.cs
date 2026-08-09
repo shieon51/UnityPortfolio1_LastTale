@@ -26,7 +26,7 @@ public class CharacterStats : MonoBehaviour
     [Header("Guard/Parry")]
     public bool isGuarding = false; // 현재 방어 키를 꾹 누르고 있는지 여부
     [Tooltip("가드를 시작한 순간부터 이 시간(초) 안에 맞으면 완벽 방어(패링) 판정")]
-    public float parryWindowDuration = 0.15f;
+    public float parryWindowDuration = 0.25f;
     private float _guardStartTime = -10f;
 
     [Header("Groggy")] // 그로기
@@ -82,12 +82,14 @@ public class CharacterStats : MonoBehaviour
         // 무적 시간 체크: 마지막 맞은 시간 + 무적 시간보다 현재 시간이 커야만 데미지 인정
         if (Time.time < lastHitTime + invincibilityDuration) return; // 무적 시간 중이면 데미지 무시
 
+        // --- 1. 패링 판정 ---
         if (IsInParryWindow && attacker != null && TryResolveParry(attacker))
         {
             lastHitTime = Time.time;
             OnParrySuccess?.Invoke(attacker);
             FloatingTextManager.Instance?.ShowParry(transform.position + Vector3.up * 1f); 
             SoundManager.Instance?.PlaySFX("parry_success"); // **
+            ScreenFlashOverlay.Instance?.Flash(new Color(1f, 0.9f, 0.3f), 0.15f); // ★ 9번: 패링 성공 시 화면 반짝
             float groggyDuration = CombatFormulaService.Instance.CalculateGroggyDuration(attacker, this);
             attacker.ApplyGroggy(groggyDuration);
             return; // 데미지 0, 완전 무효화
@@ -98,19 +100,27 @@ public class CharacterStats : MonoBehaviour
 
         int finalDamage = ComputeFinalDamage(incomingDamage, attackElement, attacker);
 
+        // --- 2. 완벽 방어 (데미지가 방어력에 완전히 흡수됨) ---
         if (isGuarding && finalDamage <= 0)
         {
             FloatingTextManager.Instance?.ShowGuard(transform.position + Vector3.up * 1f);
             SoundManager.Instance?.PlaySFX("guard_perfect");
-            return; // ★ 완벽 방어 — 체력/이펙트 전부 스킵
+            return; // 체력/카메라/플래시 전부 건드리지 않음
         }
 
         // --- 3. 실제로 데미지가 들어가는 모든 경우 (방어 관통 포함) ---
-        if (isGuarding)
-            SoundManager.Instance?.PlaySFX("guard_break"); // ★ 사운드 위치 ③ (방어했지만 뚫림)
-        else
-            SoundManager.Instance?.PlaySFX("hit_generic"); // ★ 사운드 위치 ④ (무방비로 맞음)
+        if (isGuarding) //방어했지만 관통
+        {
+            FloatingTextManager.Instance?.ShowGuardedDamage(finalDamage, transform.position + Vector3.up * 1f); // ★ 5번: "방어! 12" 형태로 함께 표시
+            SoundManager.Instance?.PlaySFX("guard_break");
+        }
+        else // 무방비 상태
+        {
+            FloatingTextManager.Instance?.ShowDamage(finalDamage, transform.position + Vector3.up * 1f);
+            SoundManager.Instance?.PlaySFX("hit_generic");
+        }
 
+        CameraDirector.Instance?.Shake(0.1f, 0.1f); // ★ 2번: 모든 피격에 기본 흔들림
         GetComponentInChildren<HitFlashController>()?.Flash();
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
         OnHealthChanged?.Invoke();
@@ -130,7 +140,13 @@ public class CharacterStats : MonoBehaviour
         if (CombatFormulaService.Instance == null)
         {
             // 씬에 서비스가 없어도 게임이 죽지 않도록 하는 안전 폴백 (기존 로직과 동일)
-            int fallbackDefense = isGuarding ? defense.GetValue() * 2 : defense.GetValue();
+            int fallbackDefense = defense.GetValue();
+            if (isGuarding)
+            {
+                int guardDef = fallbackDefense * 2;
+                if (incomingDamage < guardDef) return 0; // ★ 폴백 경로에도 완벽 방어 반영
+                return Mathf.Max(1, incomingDamage - guardDef);
+            }
             return Mathf.Max(1, incomingDamage - fallbackDefense);
         }
 
@@ -208,7 +224,7 @@ public class CharacterStats : MonoBehaviour
 
     public virtual void ApplyKnockback(Vector2 direction, float knockbackPower, float? knockbackTime = null)
     {
-        if (isSuperArmor) return;
+        if (isSuperArmor || currentHealth <= 0) return; // ★ 이미 죽은 대상은 넉백 자체를 무시
 
         float duration = knockbackTime ?? knockbackStunDuration;
         OnKnockbackApplied?.Invoke();

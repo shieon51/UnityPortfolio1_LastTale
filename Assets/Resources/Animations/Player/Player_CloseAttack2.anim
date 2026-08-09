@@ -58,7 +58,7 @@ AnimationClip:
         inWeight: 0.33333334
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 0.28333333
+        time: 0.26666668
         value: 0.9
         inSlope: 0
         outSlope: 0
@@ -151,7 +151,7 @@ AnimationClip:
         inWeight: 0.33333334
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 0.28333333
+        time: 0.26666668
         value: 1.2
         inSlope: 0
         outSlope: 0
@@ -244,7 +244,7 @@ AnimationClip:
         inWeight: 0.33333334
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 0.28333333
+        time: 0.26666668
         value: 1.92
         inSlope: 0
         outSlope: 0
@@ -309,7 +309,7 @@ AnimationClip:
       value: {fileID: 21300000, guid: 655b027519e609143ae9748be42168c0, type: 3}
     - time: 0.23333333
       value: {fileID: 21300000, guid: 292155cceef7f8944a5ca034bd8a679f, type: 3}
-    - time: 0.28333333
+    - time: 0.26666668
       value: {fileID: 21300000, guid: 61e980c10ab133f41a52f91148c51fb3, type: 3}
     - time: 0.31666666
       value: {fileID: 21300000, guid: 1edaf9e13a96c0e439b3495dcf5dc662, type: 3}
@@ -446,7 +446,7 @@ AnimationClip:
         inWeight: 0.33333334
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 0.28333333
+        time: 0.26666668
         value: 0.9
         inSlope: 0
         outSlope: 0
@@ -539,7 +539,7 @@ AnimationClip:
         inWeight: 0.33333334
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 0.28333333
+        time: 0.26666668
         value: 1.2
         inSlope: 0
         outSlope: 0
@@ -632,7 +632,7 @@ AnimationClip:
         inWeight: 0.33333334
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 0.28333333
+        time: 0.26666668
         value: 1.92
         inSlope: 0
         outSlope: 0
@@ -690,6 +690,13 @@ AnimationClip:
   m_Events:
   - time: 0.1
     functionName: EnableAttackCollider
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 0.3
+    functionName: OnAttackCombo
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0

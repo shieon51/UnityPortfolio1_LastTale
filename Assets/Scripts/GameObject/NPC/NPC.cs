@@ -293,7 +293,9 @@ public abstract class NPC : CharacterStats, ICombatTargetable
         if (rb != null)
         {
             rb.gravityScale = 0f; // 평시 모드 복귀 시 다시 물리 간섭 차단 (OnEnable과 동일)
+            rb.angularVelocity = 0f;
             rb.linearVelocity = Vector2.zero;
+            rb.Sleep(); // ★ 추가 — 물리 상태를 완전히 재워서 보간으로 인한 잔여 미끄러짐까지 확실히 제거
         }
 
         canRotate = true;

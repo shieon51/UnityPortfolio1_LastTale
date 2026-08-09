@@ -18,6 +18,7 @@ public class Liel_UtilityDecisionState : NPCState
         if (formController != null && formController.IsTransforming) return; // 변신 연출은 NPCVisual이 이벤트로 이미 재생 중
 
         if (player == null) return;
+        liel.CheckPhaseTransition();
 
         if (liel.IsGroggy)
         {

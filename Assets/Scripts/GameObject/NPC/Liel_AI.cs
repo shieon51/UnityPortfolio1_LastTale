@@ -64,7 +64,11 @@ public class Liel_AI : NPC
         base.Start(); // 부모의 Start(플레이어 캐싱) 실행
 
         var formController = GetComponent<NPCFormStageController>();
-        if (formController != null) formController.OnFormStageChanged += stage => bossPhase = stage;
+        if (formController != null)
+        {
+            bossPhase = formController.FormStage + 1; // ★ 시작할 때부터 정확히 동기화 (0-인덱스 ↔ 1-인덱스)
+            formController.OnFormStageChanged += stage => bossPhase = stage + 1; // ★ 이후도 +1 보정
+        }
 
         // 시작할 때 현재 모드에 맞춰 FSM 첫 상태를 꽂아줌
         if (CurrentMode == NPCMode.Normal)
@@ -102,7 +106,7 @@ public class Liel_AI : NPC
 
         if (targetPhase != bossPhase && targetPhase <= TotalPhaseCount)
         {
-            formController.TransitionToStage(targetPhase);
+            formController.TransitionToStage(targetPhase - 1); // ★ 1-인덱스(phase) → 0-인덱스(FormStage) 변환
             // TODO: 페이즈별로 실제 뭐가 달라질지(새 스킬 목록, 외형 변화 등)는
             //       이 이벤트를 구독해서 나중에 채우시면 됩니다.
             //       예: NPCUtilityAI.ApplyProfile(currentProfile, bossPhase);

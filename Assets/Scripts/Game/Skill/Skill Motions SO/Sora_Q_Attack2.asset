@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MeleeDashSkill
   skillId: 
   skillName: 
-  requiredMana: 1
+  requiredMana: 0
   animStateName: CloseAttack2
   activeDuration: 0.15
   priority: 0
@@ -38,7 +38,10 @@ MonoBehaviour:
     vfxKey: Sora_Q2_Trail
     spawnOffset: {x: -0.28, y: 0.37}
     followCaster: 1
+    sfxKey: 
+    contextOverrides: []
     levelOverrides: []
+  cameraCues: []
   facingLockOverride: 1
   dashSpeed: 15
   dashDuration: 0.2

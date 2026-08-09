@@ -110,6 +110,7 @@ MonoBehaviour:
   phaseHealthThresholds:
   - 0.6
   - 0.3
+  battleStartGracePeriod: 2
   teleportManaCost: 20
   ultimateManaCost: 40
   isGroggy: 0
@@ -520,7 +521,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitFlashController
   flashDuration: 0.1
-  flashColor: {r: 1, g: 1, b: 1, a: 1}
+  flashColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!1 &8544912074155934285
 GameObject:
   m_ObjectHideFlags: 0

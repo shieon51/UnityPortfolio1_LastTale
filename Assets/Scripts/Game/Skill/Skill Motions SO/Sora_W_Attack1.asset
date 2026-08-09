@@ -33,8 +33,11 @@ MonoBehaviour:
     vfxKey: Sora_W_Ripple
     spawnOffset: {x: 2.14, y: 0.76}
     followCaster: 0
+    sfxKey: 
+    contextOverrides: []
     levelOverrides: []
-  facingLockOverride: 0
+  cameraCues: []
+  facingLockOverride: 2
   targetSearchRadius: 8
   facingToleranceDegrees: 100
   arrivalOffsetFromTarget: 2

@@ -64,7 +64,7 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
             if (_stats != null && _stats.IsGroggy) return true;
             if (_lockSources != null)
                 foreach (var source in _lockSources)
-                    if (source.IsLocked) return true;
+                    if (source.IsLocked) { Debug.Log($"[잠금 원인] {source.GetType().Name}"); return true; } // ** 
             return false;
         }
     }

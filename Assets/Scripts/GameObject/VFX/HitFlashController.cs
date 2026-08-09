@@ -8,27 +8,31 @@ public class HitFlashController : MonoBehaviour
     public Color flashColor = Color.white;
 
     private SpriteRenderer[] _renderers;
-    private Color[] _originalColors;
-    private Coroutine _routine;
+    private float _flashTimer = 0f;
+    private bool _isFlashing = false;
 
     private void Awake()
     {
         _renderers = GetComponentsInChildren<SpriteRenderer>(true);
-        _originalColors = new Color[_renderers.Length];
-        for (int i = 0; i < _renderers.Length; i++) _originalColors[i] = _renderers[i].color;
     }
 
     public void Flash()
     {
-        if (_routine != null) StopCoroutine(_routine);
-        _routine = StartCoroutine(FlashRoutine());
+        Debug.Log("[HitFlashController] Flash() 호출됨"); // ★ 임시 — 원인 확인 후 지우세요 //**
+        _flashTimer = flashDuration;
+        _isFlashing = true;
     }
 
-    private IEnumerator FlashRoutine()
+    // ★ LateUpdate = Animator가 그 프레임의 색상 갱신을 끝낸 '이후'에 실행됨.
+    //   Animator가 색상 커브를 갖고 있어도, 이 코드가 매 프레임 다시 덮어써서 항상 이깁니다.
+    private void LateUpdate()
     {
-        foreach (var r in _renderers) if (r != null) r.color = flashColor;
-        yield return new WaitForSeconds(flashDuration);
-        for (int i = 0; i < _renderers.Length; i++) if (_renderers[i] != null) _renderers[i].color = _originalColors[i];
-        _routine = null;
+        if (!_isFlashing) return;
+
+        foreach (var r in _renderers)
+            if (r != null) r.color = flashColor;
+
+        _flashTimer -= Time.deltaTime;
+        if (_flashTimer <= 0f) _isFlashing = false; // 종료되면 더 이상 색을 안 건드림 (원래 상태로 자연 복귀)
     }
 }

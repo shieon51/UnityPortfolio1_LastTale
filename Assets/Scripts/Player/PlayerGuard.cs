@@ -1,4 +1,4 @@
-// PlayerGuard.cs (�ű�)
+﻿// PlayerGuard.cs (신규)
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -27,18 +27,20 @@ public class PlayerGuard : MonoBehaviour
 
     private void Update()
     {
-        if (_motor != null && _motor.IsActionLocked) return;
-        if (_combat != null && _combat.IsAttacking) return;
+        // 조작 자체가 완전히 잠긴 경우(대화, 넉백 등)만 막고, '공격 중'은 더 이상 막지 않음
+        if (_motor != null && _motor.IsActionLocked && !(_combat != null && _combat.IsAttacking)) return;
 
         if (Input.GetKeyDown(guardKey))
         {
-            _stats.StartGuard();
-            _visual?.PlayState(ResolveContextState());
+            _stats.StartGuard(); // ★ 항상 반응 — 데미지 계산이 이 값만 보므로 공격 중이어도 패링/방어가 실제로 작동함
+            if (_combat == null || !_combat.IsAttacking)
+                _visual?.PlayState(ResolveContextState()); // 자세 전환은 공격 애니메이션과 안 겹치게 공격 중이 아닐 때만
         }
         else if (Input.GetKeyUp(guardKey))
         {
             _stats.StopGuard();
-            _visual?.ReturnToLocomotion();
+            if (_combat == null || !_combat.IsAttacking)
+                _visual?.ReturnToLocomotion();
         }
     }
 

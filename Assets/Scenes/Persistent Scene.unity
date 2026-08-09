@@ -1336,8 +1336,8 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 63.27
-  orthographic: 0
-  orthographic size: 5
+  orthographic: 1
+  orthographic size: 6
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -1382,13 +1382,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   primaryTarget: {fileID: 1988383330}
   secondaryTarget: {fileID: 0}
-  smoothSpeed: 5
+  positionSmoothSpeed: 5
   offset: {x: 0, y: 0, z: -10}
-  framingPadding: 2
-  minOrthoSize: 4
+  deadzoneWidthRatio: 0.5
+  lookAheadDistance: 2
+  lookAheadSmoothSpeed: 2
+  secondaryBiasStrength: 0.5
+  maxTrackingDistance: 20
+  minOrthoSize: 7
   maxOrthoSize: 10
-  maxFramingDistance: 20
-  biasTowardSecondary: 0.3
+  useBounds: 0
+  minX: 0
+  maxX: 0
+  minY: 0
+  maxY: 0
 --- !u!1 &526570851
 GameObject:
   m_ObjectHideFlags: 0
@@ -6816,6 +6823,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 7120806328908484250, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
+      propertyPath: flashColor.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7120806328908484250, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
+      propertyPath: flashColor.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7120806328908484250, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
+      propertyPath: flashColor.r
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8541148022777094637, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
       propertyPath: m_LocalPosition.x
       value: 5.08
@@ -6855,6 +6874,10 @@ PrefabInstance:
     - target: {fileID: 8541148022777094637, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8950616784466513857, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
+      propertyPath: parryWindowDuration
+      value: 0.25
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
