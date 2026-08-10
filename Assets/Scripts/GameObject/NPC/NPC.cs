@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System.Collections;
+using TMPro;
 using UnityEngine;
 
 // NPC 클래스 (추상)
@@ -67,7 +68,12 @@ public abstract class NPC : CharacterStats, ICombatTargetable
     public void SetMovementContext(MovementContext context) => CurrentMovementContext = context;
 
     // 마나 사용 관련
-    private float _manaRegenAccumulator = 0f; 
+    private float _manaRegenAccumulator = 0f;
+
+    // 지형 벗어남 예외처리 (리스폰)
+    private Vector2 _lastGroundedPosition;
+    private float _groundCheckTimer = 0f;
+    private const float GroundCheckInterval = 0.5f;
 
     // 플레이 중 실시간 기즈모 (PlayerCombat과 동일한 패턴)
     private bool _showHitbox = false;
@@ -241,6 +247,14 @@ public abstract class NPC : CharacterStats, ICombatTargetable
         {
             HandleAttackModeAI(); // ** 여기에 1/2/3 페이즈 유틸리티 AI (가중치 계산) 적용 예정
         }
+
+        // 예기치 못한 경우 리스폰
+        _groundCheckTimer += Time.deltaTime;
+        if (_groundCheckTimer >= GroundCheckInterval)
+        {
+            _groundCheckTimer = 0f;
+            CheckFailsafeRespawn();
+        }
     }
 
     // 자식 클래스(Liel, Gaon 등)가 무조건 각자의 방식으로 오버라이드(구현)해야 하는 함수들
@@ -296,11 +310,18 @@ public abstract class NPC : CharacterStats, ICombatTargetable
             rb.angularVelocity = 0f;
             rb.linearVelocity = Vector2.zero;
             rb.Sleep(); // ★ 추가 — 물리 상태를 완전히 재워서 보간으로 인한 잔여 미끄러짐까지 확실히 제거
+            StartCoroutine(ForceZeroVelocityNextFixedUpdate(rb)); // ★ 추가 — 이미 큐잉된 힘이 한 스텝 뒤에 뒤늦게 반영되는 경우까지 대비
         }
 
         canRotate = true;
         isSuperArmor = false;
         CurrentPlayingSkill = null;
+    }
+
+    private IEnumerator ForceZeroVelocityNextFixedUpdate(Rigidbody2D rb)
+    {
+        yield return new WaitForFixedUpdate();
+        if (rb != null) { rb.linearVelocity = Vector2.zero; rb.Sleep(); }
     }
 
     // 호감도 상승 등 이벤트가 발생하면 호출할 함수
@@ -311,6 +332,23 @@ public abstract class NPC : CharacterStats, ICombatTargetable
         myData.hiddenAffection += amount;
         NPCManager.Instance.SaveNPCData(myData); // 변경된 내 기억을 매니저에게 저장하라고 보냄
         Debug.Log($"[{npcName}] 호감도 상승! (현재: {myData.hiddenAffection})");
+    }
+
+    // 예외처리 (리스폰)
+    private void CheckFailsafeRespawn()
+    {
+        if (SceneBoundsManager.Instance == null || !SceneBoundsManager.Instance.HasBounds) return;
+
+        if (SceneBoundsManager.Instance.IsWellWithinBounds(transform.position))
+        {
+            _lastGroundedPosition = transform.position; // 정상 범위 안이면 계속 갱신
+        }
+        else
+        {
+            Debug.LogWarning($"[{npcName}] 지형 바깥으로 벗어나 마지막 정상 위치로 리스폰합니다.");
+            transform.position = _lastGroundedPosition;
+            if (rb != null) rb.linearVelocity = Vector2.zero;
+        }
     }
 
     // ==========================================

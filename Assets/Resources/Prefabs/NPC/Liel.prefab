@@ -105,7 +105,7 @@ MonoBehaviour:
   originalCsvPos: {x: 0, y: 0}
   canRotate: 1
   currentCombatStyle: 0
-  currentDifficultyTier: 1
+  currentDifficultyTier: 0
   bossPhase: 3
   phaseHealthThresholds:
   - 0.6

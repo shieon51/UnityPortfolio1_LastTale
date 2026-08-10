@@ -40,7 +40,8 @@ public class SoundManager : Singleton<SoundManager>
         }
         var src = _sfxPool.Dequeue();
         _sfxPool.Enqueue(src);
-        src.PlayOneShot(clip, volumeScale);
+        float finalVolume = volumeScale * (GameSettings.Instance?.SFXVolume ?? 1f); // 볼륨 조절 설정
+        src.PlayOneShot(clip, finalVolume);
     }
 
     public void PlayBGM(AudioClip clip) => StartCoroutine(CrossfadeBGM(clip));

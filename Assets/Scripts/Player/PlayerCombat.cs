@@ -79,6 +79,7 @@ public class PlayerCombat : MonoBehaviour
     private void Update()
     {
         if (_stats.isKnockedBack || DialogueManager.Instance.IsTalking) return;
+        if (_motor != null && _motor.IsActionLocked) return;
 
         // 키 입력 
         if (Input.GetKeyDown(KeyCode.Q)) HandleInput(sequenceQ);
@@ -218,6 +219,9 @@ public class PlayerCombat : MonoBehaviour
     // 순간이동형 스킬들이 공용으로 쓸 수 있는 안전 착지 헬퍼
     public Vector2 ResolveSafeGroundedPosition(Vector2 desiredPos, LayerMask groundLayer, float maxSnapDistance = 3f)
     {
+        if (SceneBoundsManager.Instance != null && SceneBoundsManager.Instance.HasBounds)
+            desiredPos = SceneBoundsManager.Instance.ClampToBounds(desiredPos); // 범위 바깥으로 이동하지 못하도록 제한
+
         if (groundLayer.value == 0)
         {
             Debug.LogWarning("[PlayerCombat] ResolveSafeGroundedPosition: groundLayer가 설정되지 않아 지형 스냅을 건너뜁니다. 스킬 애셋의 Ground Snap Layer를 확인하세요.");

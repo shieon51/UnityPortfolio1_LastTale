@@ -9,6 +9,8 @@ public class ScreenFlashOverlay : Singleton<ScreenFlashOverlay>
 
     public void Flash(Color color, float duration)
     {
+        if (GameSettings.Instance != null && !GameSettings.Instance.FlashEffectsEnabled) return; // 번쩍임 설정 끈 경우 return
+
         StopAllCoroutines();
         StartCoroutine(FlashRoutine(color, duration));
     }

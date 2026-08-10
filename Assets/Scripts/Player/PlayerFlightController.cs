@@ -103,6 +103,7 @@ public class PlayerFlightController : MonoBehaviour
 
     private void StartDashBurst(Vector2 velocity)
     {
+        _playerCombat.GetComponent<AfterimageEffect>()?.Play(dashBurstDuration);
         _isDashBursting = true;
         _dashBurstTimer = 0f;
         _dashBurstVelocity = velocity;
@@ -120,7 +121,12 @@ public class PlayerFlightController : MonoBehaviour
         {
             _rb.linearVelocity = _dashBurstVelocity;
             _dashBurstTimer += Time.fixedDeltaTime;
-            if (_dashBurstTimer >= dashBurstDuration) _isDashBursting = false;
+            if (_dashBurstTimer >= dashBurstDuration)
+            {
+                _playerCombat.GetComponent<AfterimageEffect>()?.Stop();
+                _isDashBursting = false;
+            }
+
             return;
         }
 

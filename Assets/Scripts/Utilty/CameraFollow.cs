@@ -1,35 +1,40 @@
-﻿// CameraFollow.cs 전체 교체
+﻿// CameraFollow.cs 전체 교체 (최종본)
 using UnityEngine;
 
 public class CameraFollow : MonoBehaviour
 {
     [Header("Targets")]
-    public Transform primaryTarget;   // 플레이어
-    public Transform secondaryTarget; // 보스 (전투 중에만)
+    public Transform primaryTarget;
+    public Transform secondaryTarget;
 
     [Header("Follow")]
     public float positionSmoothSpeed = 5f;
     public Vector3 offset = new Vector3(0, 0, -10);
+    [Tooltip("플레이어를 화면 세로 중앙에서 얼마나 위/아래로 옮길지")]
+    public float verticalOffset = 0f; // ★ 3번: 세로 오프셋
 
-    [Header("Deadzone (화면 4등분 시 1~3번째 선 사이)")]
-    [Tooltip("화면 절반 너비 대비, 플레이어가 치우칠 수 있는 최대 비율")]
+    [Header("Deadzone — 이 폭 안에서는 카메라가 안 움직임")]
     [Range(0.05f, 0.6f)] public float deadzoneWidthRatio = 0.15f;
+    private float _cameraTargetX;
 
-    [Header("Look-Ahead (마리오 스타일 — 방향 전환 즉시 안 따라가고 서서히 따라붙음)")]
+    [Header("Look-Ahead")]
     public float lookAheadDistance = 2f;
     public float lookAheadSmoothSpeed = 2f;
     private float _currentLookAhead = 0f;
-    private float _cameraTargetX;
+    private Rigidbody2D _targetRb; // 입력이 아니라 '실제로 움직이고 있는지'를 속도로 판단
 
-    [Header("Secondary Target Bias (보스전 전용, secondaryTarget이 있을 때만 추가 적용)")]
+    [Header("Secondary Target Bias (보스전)")]
     [Range(0f, 1f)] public float secondaryBiasStrength = 0.5f;
-    public float maxTrackingDistance = 20f; // 이 거리 넘으면 깨끗이 포기, 플레이어 위주 복귀
+    public float maxTrackingDistance = 20f;
+    public float framingPadding = 2f;
+    private float _currentSecondaryBiasX = 0f; // ★ 편향값 자체를 서서히 보간 — "휙" 방지
+    private float _currentTrackingSize; // ★ 줌도 서서히 보간
 
     [Header("Zoom")]
     public float minOrthoSize = 4f;
     public float maxOrthoSize = 10f;
 
-    [Header("Bounds (지형 예외처리 완성되면 SetBounds()로 연결)")]
+    [Header("Bounds")]
     public bool useBounds = false;
     public float minX, maxX, minY, maxY;
 
@@ -40,7 +45,12 @@ public class CameraFollow : MonoBehaviour
     private void Awake()
     {
         _camera = GetComponent<Camera>();
-        if (primaryTarget != null) _cameraTargetX = primaryTarget.position.x;
+        if (primaryTarget != null)
+        {
+            _cameraTargetX = primaryTarget.position.x;
+            _targetRb = primaryTarget.GetComponent<Rigidbody2D>();
+        }
+        _currentTrackingSize = minOrthoSize;
     }
 
     public void SnapToNextFollowPosition() => _instantSnapNextFrame = true;
@@ -57,11 +67,14 @@ public class CameraFollow : MonoBehaviour
         if (primaryTarget == null) return;
 
         UpdateLookAhead();
-        UpdateDeadzone(); // ★ 평시/전투 공통 — 여기서 secondaryTarget 여부를 안 가림
+        UpdateDeadzone();
 
-        float desiredX = _cameraTargetX + _currentLookAhead;
-        float desiredY = primaryTarget.position.y;
-        float desiredSize = minOrthoSize;
+        float baseX = _cameraTargetX + _currentLookAhead;
+        float desiredY = primaryTarget.position.y + verticalOffset;
+
+        // --- 보조 타겟(보스) 편향 — 목표값만 계산하고, 실제 반영은 서서히 ---
+        float targetBiasX = 0f;
+        float targetTrackingSize = minOrthoSize;
 
         if (secondaryTarget != null)
         {
@@ -70,24 +83,37 @@ public class CameraFollow : MonoBehaviour
             {
                 float dirToSecondary = Mathf.Sign(secondaryTarget.position.x - primaryTarget.position.x);
                 float screenHalfWidth = _camera != null ? _camera.orthographicSize * _camera.aspect : 8f;
-                desiredX += dirToSecondary * screenHalfWidth * 0.5f * secondaryBiasStrength; // 데드존 위에 추가로 얹는 편향
-                desiredSize = Mathf.Clamp(dist / 2f + 2f, minOrthoSize, maxOrthoSize);
+                targetBiasX = dirToSecondary * screenHalfWidth * 0.5f * secondaryBiasStrength;
+                targetTrackingSize = Mathf.Clamp(dist / 2f + framingPadding, minOrthoSize, maxOrthoSize);
             }
         }
 
-        Vector3 desiredPosition = new Vector3(desiredX, desiredY, 0) + offset;
+        // ★ 편향값/줌 크기 자체를 매 프레임 서서히 따라가게 — 부호가 뒤집혀도 순간이동하듯 안 튐
+        _currentSecondaryBiasX = Mathf.Lerp(_currentSecondaryBiasX, targetBiasX, positionSmoothSpeed * Time.deltaTime);
+        _currentTrackingSize = Mathf.Lerp(_currentTrackingSize, targetTrackingSize, positionSmoothSpeed * Time.deltaTime);
 
+        baseX += _currentSecondaryBiasX;
+        float desiredSize = _currentTrackingSize;
+
+        Vector3 desiredPosition = new Vector3(baseX, desiredY, 0) + offset;
+
+        // --- 지형 경계: 카메라 '중심'이 아니라 '화면 가장자리'가 넘어가지 않게 ---
         if (useBounds)
         {
-            desiredPosition.x = Mathf.Clamp(desiredPosition.x, minX, maxX);
-            desiredPosition.y = Mathf.Clamp(desiredPosition.y, minY, maxY);
+            float halfWidth = desiredSize * (_camera != null ? _camera.aspect : 1.78f);
+            float halfHeight = desiredSize;
+
+            float clampMinX = minX + halfWidth, clampMaxX = maxX - halfWidth;
+            float clampMinY = minY + halfHeight, clampMaxY = maxY - halfHeight;
+
+            desiredPosition.x = clampMinX <= clampMaxX ? Mathf.Clamp(desiredPosition.x, clampMinX, clampMaxX) : (minX + maxX) / 2f;
+            desiredPosition.y = clampMinY <= clampMaxY ? Mathf.Clamp(desiredPosition.y, clampMinY, clampMaxY) : (minY + maxY) / 2f;
         }
 
         ApplyPosition(desiredPosition, desiredSize);
-        transform.position += _shakeOffset; // ★ 흔들림은 Lerp 밖에서 마지막에 직접 더해져서 뭉개지지 않음
+        transform.position += _shakeOffset;
     }
 
-    // 플레이어가 데드존을 벗어나야만 카메라의 추적 기준점(_cameraTargetX)이 따라 움직임
     private void UpdateDeadzone()
     {
         float screenHalfWidth = _camera != null ? _camera.orthographicSize * _camera.aspect : 8f;
@@ -98,10 +124,11 @@ public class CameraFollow : MonoBehaviour
         else if (diff < -deadzoneHalfWidth) _cameraTargetX = primaryTarget.position.x + deadzoneHalfWidth;
     }
 
+    // 키 입력이 아니라 '실제 속도'로 판단 — lock 걸려서 실제로 안 움직이면 룩어헤드도 자동으로 0 (5번 버그와 연결)
     private void UpdateLookAhead()
     {
-        float inputX = Input.GetAxisRaw("Horizontal");
-        float targetLookAhead = inputX * lookAheadDistance;
+        float velX = _targetRb != null ? _targetRb.linearVelocity.x : 0f;
+        float targetLookAhead = Mathf.Abs(velX) > 0.1f ? Mathf.Sign(velX) * lookAheadDistance : 0f; //** Mathf.Sign(velX) 앞에 마이너스(-)만 붙이시면 정확히 반대로 뒤집힙 
         _currentLookAhead = Mathf.Lerp(_currentLookAhead, targetLookAhead, lookAheadSmoothSpeed * Time.deltaTime);
     }
 

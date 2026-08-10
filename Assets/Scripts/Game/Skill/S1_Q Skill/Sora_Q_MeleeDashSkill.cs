@@ -27,6 +27,8 @@ public class Sora_Q_MeleeDashSkill : SkillBase
         while (elapsed < dashDuration)
         {
             if (stats.isKnockedBack) { rb.gravityScale = originalGravity; yield break; }
+
+            combat.GetComponent<AfterimageEffect>()?.Play(dashDuration); //?
             float currentSpeed = Mathf.Lerp(dashSpeed, 0f, elapsed / dashDuration);
             // 바라보는 방향(dir)으로 전진
             rb.linearVelocity = new Vector2(dir * currentSpeed, 0f);
@@ -34,6 +36,7 @@ public class Sora_Q_MeleeDashSkill : SkillBase
             yield return null;
         }
 
+        combat.GetComponent<AfterimageEffect>()?.Stop(); //?
         rb.gravityScale = originalGravity;
         rb.linearVelocity = savedVelocity;
     }

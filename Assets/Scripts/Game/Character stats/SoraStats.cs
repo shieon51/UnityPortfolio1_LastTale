@@ -15,6 +15,8 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     // _isTransforming : 지금 변신 연출 재생 중인지. true인 동안 IActionLockSource로 조작 잠김.
     // ===============================================================
 
+    private IPlayerMotor _motor;
+
     [Header("Form Change (요정화)")] // 시즌 1에만 쓸지, 아님 다른 캐릭터도 해당하는가?
     [Tooltip("기획 반영: 변신 딜레이 0.5초")]
     public float formTransformDuration = 0.5f;
@@ -59,6 +61,7 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         base.Awake();
         currentElement = ElementType.Spacetime; // 소라 전용 속성
         currentMental = maxMental;
+        _motor = GetComponent<IPlayerMotor>();
     }
 
     // 플레이어가 소라를 조종하기 시작할 때 호출됨 (빙의)
@@ -78,7 +81,9 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     protected override void HandleSpecialMechanics()
     {
         // Tab 키를 누르면 1단계 <-> 2단계 변신 (3단계는 강제 발동이므로 2단계까지만 토글)
-        if (Input.GetKeyDown(KeyCode.Tab) && !_isTransforming && !isKnockedBack && Time.time >= _lastTransformEndTime + formToggleCooldown)
+        if (Input.GetKeyDown(KeyCode.Tab) && !_isTransforming && !isKnockedBack
+             && Time.time >= _lastTransformEndTime + formToggleCooldown
+             && (_motor == null || !_motor.IsActionLocked))
         {
             StartCoroutine(FairyTransformRoutine());
         }

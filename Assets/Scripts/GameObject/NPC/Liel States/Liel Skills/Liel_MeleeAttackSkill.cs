@@ -90,6 +90,7 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
 
         // 3. 찌르기: 판정 + 이펙트
         PlaySkillVFX("stab", self);
+        CameraDirector.Instance?.DirectionalShake(0.2f, 0.15f, new Vector2(dir, 0)); // 카메라 흔들림
         var hitboxCoroutine = self.StartCoroutine(ActiveHitboxRoutine(self, hitOffset, hitSize, dir));
 
         yield return WaitForSlideStart(); // AE_SlideStart — 끼익 멈춤 시작
