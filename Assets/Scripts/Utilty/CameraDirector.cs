@@ -19,15 +19,14 @@ public class CameraDirector : Singleton<CameraDirector>
     private IEnumerator ShakeRoutine(float duration, float intensity)
     {
         if (follow == null) yield break;
-        Vector3 originalOffset = follow.offset;
         float elapsed = 0f;
         while (elapsed < duration)
         {
-            follow.offset = originalOffset + (Vector3)(Random.insideUnitCircle * intensity);
+            follow.ApplyShakeOffset((Vector3)(Random.insideUnitCircle * intensity));
             elapsed += Time.deltaTime;
             yield return null;
         }
-        follow.offset = originalOffset;
+        follow.ApplyShakeOffset(Vector3.zero);
     }
 
     public void PlayCue(CameraCue cue)

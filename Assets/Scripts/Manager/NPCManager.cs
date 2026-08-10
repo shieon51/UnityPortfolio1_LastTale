@@ -215,6 +215,7 @@ public class NPCManager : Singleton<NPCManager>
         // NPC 위치 보정 (바닥 레이캐스트 재활용)
         npcObj.transform.position = ComputeSnappedPosition(npcObj, bossStartPos);
         CameraDirector.Instance?.SetSecondaryTarget(npcObj.transform); // 카메라 조정
+        PortalManager.Instance?.SetPortalsActive(false); // 포탈 비활성화
 
         Debug.Log($"[전투 시작] {targetNpcName} 보스전 돌입! 거리를 벌립니다.");
 
@@ -250,18 +251,28 @@ public class NPCManager : Singleton<NPCManager>
         PlayerManager.Instance.CurrentCharacter.OnHealthChanged -= HandlePlayerHealthChangedDuringBattle;
 
         string bossName = _activeBossBattle.npcName;
-        _activeBossBattle.SwitchToNormalMode(); // ★ 데이터만이 아니라 NPC 스크립트 자체를 대칭적으로 복구
+        var bossStats = _activeBossBattle;
+
+        bossStats.SwitchToNormalMode();
+        bossStats.Heal(bossStats.maxHealth);       // ★ 보스 체력 원상복구
+        bossStats.RecoverMana(bossStats.maxMana);  // ★ 보스 마나 원상복구
+
+        if (!win && bossStats is Liel_AI liel && liel.currentDifficultyTier == BossDifficultyTier.Training)
+        {
+            PlayerManager.Instance.CurrentCharacter.Heal(1); // ★ 훈련모드는 봐주는 대련 — 패배해도 완전히 죽지 않고 1HP로
+        }
+
         _activeBossBattle = null;
 
         UIModeManager.Instance.SetMode(UIMode.Normal);
         BattleTimerDisplay.Instance?.StopTimer();
         BossHUDPanel.Instance?.UnbindBoss();
+        PortalManager.Instance?.SetPortalsActive(true); // 포탈 재활성화
 
         StartCoroutine(PlayBattleResultAfterDelay(bossName, win));
 
         PlayerManager.Instance.CurrentCharacter.GetComponent<BossPhaseTransitionLock>()?.UnbindCurrent();
-
-        CameraDirector.Instance?.ClearSecondaryTarget(); //?
+        CameraDirector.Instance?.ClearSecondaryTarget();
     }
 
     private IEnumerator PlayBattleResultAfterDelay(string bossName, bool win)

@@ -18,10 +18,17 @@ public class CombatFormulaService : Singleton<CombatFormulaService>
     public int CalculateDamage(CombatContext ctx)
     {
         // 스킬에 전용 수식이 지정되어 있으면 그걸 우선 사용, 없으면 기본 수식
-        var formula = ctx.Skill != null && ctx.Skill.customDamageFormula != null
-            ? ctx.Skill.customDamageFormula
-            : _defaultDamageFormula;
-        return formula.CalculateDamage(ctx);
+        DamageFormulaSO formula = ctx.Skill != null && ctx.Skill.customDamageFormula != null
+       ? ctx.Skill.customDamageFormula
+       : _defaultDamageFormula; // 인스펙터에 연결하신 그 필드
+
+        if (formula == null)
+        {
+            Debug.LogWarning("[CombatFormulaService] 사용할 데미지 수식이 없습니다.");
+            return Mathf.Max(1, ctx.IncomingDamage - ctx.Defender.defense.GetValue());
+        }
+
+        return formula.CalculateDamage(ctx); // ★ 이 줄이 있는지가 핵심
     }
 
     public float CalculateTelegraphDuration(float baseDuration, CharacterStats attacker, CharacterStats defender)

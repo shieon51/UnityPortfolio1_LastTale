@@ -27,20 +27,27 @@ public class PlayerGuard : MonoBehaviour
 
     private void Update()
     {
-        // 조작 자체가 완전히 잠긴 경우(대화, 넉백 등)만 막고, '공격 중'은 더 이상 막지 않음
-        if (_motor != null && _motor.IsActionLocked && !(_combat != null && _combat.IsAttacking)) return;
+        bool wantsGuard = Input.GetKey(guardKey); // ★ Down/Up 엣지 대신, 지금 눌려있는지 그 자체를 매 프레임 확인
 
-        if (Input.GetKeyDown(guardKey))
+        if (_motor != null && _motor.IsActionLocked && !(_combat != null && _combat.IsAttacking))
         {
-            _stats.StartGuard(); // ★ 항상 반응 — 데미지 계산이 이 값만 보므로 공격 중이어도 패링/방어가 실제로 작동함
-            if (_combat == null || !_combat.IsAttacking)
-                _visual?.PlayState(ResolveContextState()); // 자세 전환은 공격 애니메이션과 안 겹치게 공격 중이 아닐 때만
+            // 완전히 잠긴 상태에서도 데이터(isGuarding)만큼은 실제 키 상태와 항상 일치시켜서, 놓친 프레임이 있어도 즉시 자가 교정
+            if (_stats.isGuarding != wantsGuard)
+            {
+                if (wantsGuard) _stats.StartGuard(); else _stats.StopGuard();
+            }
+            return;
         }
-        else if (Input.GetKeyUp(guardKey))
+
+        if (wantsGuard && !_stats.isGuarding)
+        {
+            _stats.StartGuard();
+            if (_combat == null || !_combat.IsAttacking) _visual?.PlayState(ResolveContextState());
+        }
+        else if (!wantsGuard && _stats.isGuarding)
         {
             _stats.StopGuard();
-            if (_combat == null || !_combat.IsAttacking)
-                _visual?.ReturnToLocomotion();
+            if (_combat == null || !_combat.IsAttacking) _visual?.ReturnToLocomotion();
         }
     }
 

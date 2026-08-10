@@ -119,6 +119,138 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1001 &697317127
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 22
+      objectReference: {fileID: 0}
+    - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5878339629118349954, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
+      propertyPath: m_Name
+      value: Marker_10003_Liel
+      objectReference: {fileID: 0}
+    - target: {fileID: 7036105444891270491, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
+      propertyPath: Day
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7036105444891270491, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
+      propertyPath: EndTime
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 7036105444891270491, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
+      propertyPath: EventID
+      value: 10003
+      objectReference: {fileID: 0}
+    - target: {fileID: 7036105444891270491, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
+      propertyPath: SceneID
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7036105444891270491, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
+      propertyPath: EventName
+      value: Liel
+      objectReference: {fileID: 0}
+    - target: {fileID: 7036105444891270491, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
+      propertyPath: StartTime
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 7036105444891270491, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
+      propertyPath: InkNodeName
+      value: Liel_Day2_001
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
+--- !u!1 &1031562768
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1031562770}
+  - component: {fileID: 1031562769}
+  m_Layer: 0
+  m_Name: SceneBounds
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1031562769
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1031562768}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45263c3a78ac1484eb21f988342636c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SceneBounds
+  min: {x: -9.071746, y: -10.62821}
+  max: {x: 45.784645, y: 32.414886}
+  wallThickness: 1
+--- !u!4 &1031562770
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1031562768}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 17.71701, y: 7.49705, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1141845308
 GameObject:
   m_ObjectHideFlags: 0
@@ -256,7 +388,7 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
---- !u!1001 &2091523857
+--- !u!1001 &1645257777
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -339,91 +471,6 @@ PrefabInstance:
     - target: {fileID: 7036105444891270491, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
       propertyPath: InkNodeName
       value: Liel_Day1_001
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
---- !u!1001 &2094571574
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 22
-      objectReference: {fileID: 0}
-    - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5878339629118349954, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
-      propertyPath: m_Name
-      value: Marker_10003_Liel
-      objectReference: {fileID: 0}
-    - target: {fileID: 7036105444891270491, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
-      propertyPath: Day
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 7036105444891270491, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
-      propertyPath: EndTime
-      value: 12
-      objectReference: {fileID: 0}
-    - target: {fileID: 7036105444891270491, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
-      propertyPath: EventID
-      value: 10003
-      objectReference: {fileID: 0}
-    - target: {fileID: 7036105444891270491, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
-      propertyPath: SceneID
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 7036105444891270491, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
-      propertyPath: EventName
-      value: Liel
-      objectReference: {fileID: 0}
-    - target: {fileID: 7036105444891270491, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
-      propertyPath: StartTime
-      value: 7
-      objectReference: {fileID: 0}
-    - target: {fileID: 7036105444891270491, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
-      propertyPath: InkNodeName
-      value: Liel_Day2_001
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -5028,6 +5075,7 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1141845311}
+  - {fileID: 1031562770}
   - {fileID: 7169576368824581206}
-  - {fileID: 2091523857}
-  - {fileID: 2094571574}
+  - {fileID: 1645257777}
+  - {fileID: 697317127}

@@ -15,6 +15,8 @@ public class PortalManager : Singleton<PortalManager>
     // 2. 길찾기용 그래프 (BFS용)
     private Dictionary<int, SceneNode> _sceneGraph = new Dictionary<int, SceneNode>();
 
+    private List<Portal> _spawnedPortals = new List<Portal>();
+
     // Manager가 가장 먼저 초기화되어야 함
     private void Awake()
     {
@@ -106,12 +108,20 @@ public class PortalManager : Singleton<PortalManager>
                 if (portalScript != null)
                 {
                     portalScript.Init(data.portalID);
+                    if (portalScript != null) _spawnedPortals.Add(portalScript);
                 }
 
                 // (선택) 하이어라키에서 보기 좋게 이름 변경
                 go.name = $"Portal_{data.portalID}";
             }
         }
+    }
+
+    // 포탈 활성화 여부
+    public void SetPortalsActive(bool active)
+    {
+        foreach (var portal in _spawnedPortals)
+            if (portal != null) portal.gameObject.SetActive(active);
     }
 
     //public void ShowGuideArrow(List<int> path)  //++ 길찾기 테스트
