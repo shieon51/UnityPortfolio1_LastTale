@@ -23,20 +23,25 @@ public class Sora_Q_MeleeDashSkill : SkillBase
         // 공중에서 공격할 때 떨어지지 않게 체공
         rb.gravityScale = 0f;
 
+        combat.GetComponent<AfterimageEffect>()?.Play(dashDuration); // ★ 루프 밖으로, 딱 한 번만
+
         float elapsed = 0f;
         while (elapsed < dashDuration)
         {
-            if (stats.isKnockedBack) { rb.gravityScale = originalGravity; yield break; }
-
-            combat.GetComponent<AfterimageEffect>()?.Play(dashDuration); //?
+            if (stats.isKnockedBack)
+            {
+                rb.gravityScale = originalGravity;
+                combat.GetComponent<AfterimageEffect>()?.Stop(); // ★ 조기 종료 시에도 반드시 꺼줌 (빠져있었습니다)
+                yield break;
+            }
             float currentSpeed = Mathf.Lerp(dashSpeed, 0f, elapsed / dashDuration);
-            // 바라보는 방향(dir)으로 전진
+            // 바라보는 방향으로 전진
             rb.linearVelocity = new Vector2(dir * currentSpeed, 0f);
             elapsed += Time.deltaTime;
             yield return null;
         }
 
-        combat.GetComponent<AfterimageEffect>()?.Stop(); //?
+        combat.GetComponent<AfterimageEffect>()?.Stop(); 
         rb.gravityScale = originalGravity;
         rb.linearVelocity = savedVelocity;
     }

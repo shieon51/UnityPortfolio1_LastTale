@@ -69,6 +69,22 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
         }
     }
 
+    // PlayerCombat 자신의 IsAttacking으로 인한 순환 잠금을 피하기 위해,
+    // '내가 공격 중이라서 잠김'을 제외한 나머지 잠금 소스만 검사합니다.
+    public bool IsExternallyLocked
+    {
+        get
+        {
+            if (DialogueManager.Instance != null && DialogueManager.Instance.IsTalking) return true;
+            if (_stats != null && _stats.isKnockedBack) return true;
+            if (_stats != null && _stats.IsGroggy) return true;
+            if (_lockSources != null)
+                foreach (var source in _lockSources)
+                    if (source.IsLocked) return true;
+            return false;
+        }
+    }
+
     private float _horizontalInput;
     private bool _goToUnder = false; // 아래 지형 이동키 눌렀을 시
     private float _lastTeleportTime = 0f;
@@ -264,7 +280,7 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
 
         // Visual 스크립트에게 '점프 트리거 터트려라'고 알림
         OnJumpTriggered?.Invoke();
-        Debug.Log($"[PlayerController] Space 점프 발동! 점프력: {jumpForce}, 대시점프 유지: {_isDashLatchedInAir}");
+        //Debug.Log($"[PlayerController] Space 점프 발동! 점프력: {jumpForce}, 대시점프 유지: {_isDashLatchedInAir}");
     }
 
     private void GoUnderGround()

@@ -120,7 +120,8 @@ public class CharacterStats : MonoBehaviour
             SoundManager.Instance?.PlaySFX("hit_generic");
         }
 
-        CameraDirector.Instance?.Shake(0.1f, 0.1f); // ★ 2번: 모든 피격에 기본 흔들림
+        if (attacker is NPC || this is NPC) // ★ NPC(보스/스토리 캐릭터) 관련 전투에만 흔들림
+            CameraDirector.Instance?.Shake(0.1f, 0.1f);
         GetComponentInChildren<HitFlashController>()?.Flash();
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
         OnHealthChanged?.Invoke();

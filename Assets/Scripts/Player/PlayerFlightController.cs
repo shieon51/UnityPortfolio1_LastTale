@@ -28,6 +28,8 @@ public class PlayerFlightController : MonoBehaviour
     private float _dashBurstTimer = 0f;
     private Vector2 _dashBurstVelocity;
 
+    public float afterimageTailDuration = 0.2f; // 대시 끝나고 감속하는 동안에도 잔상이 조금 더 남게
+
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
@@ -103,7 +105,7 @@ public class PlayerFlightController : MonoBehaviour
 
     private void StartDashBurst(Vector2 velocity)
     {
-        _playerCombat.GetComponent<AfterimageEffect>()?.Play(dashBurstDuration);
+        _playerCombat.GetComponent<AfterimageEffect>()?.Play(dashBurstDuration + afterimageTailDuration); // ★ 감속 꼬리까지 커버
         _isDashBursting = true;
         _dashBurstTimer = 0f;
         _dashBurstVelocity = velocity;
@@ -123,7 +125,6 @@ public class PlayerFlightController : MonoBehaviour
             _dashBurstTimer += Time.fixedDeltaTime;
             if (_dashBurstTimer >= dashBurstDuration)
             {
-                _playerCombat.GetComponent<AfterimageEffect>()?.Stop();
                 _isDashBursting = false;
             }
 

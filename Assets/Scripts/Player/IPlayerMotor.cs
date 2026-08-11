@@ -12,6 +12,7 @@ public interface IPlayerMotor
     bool CanFlip { get; }
     bool IsDialogueLocked { get; }
     bool IsActionLocked { get; }
+    bool IsExternallyLocked { get; }  // 내가 스스로 공격 중이라서 잠긴 것은 무시하고 그 외의 진짜 외부 잠금
     bool IsKnockedBack { get; }
     float SpeedMultiplier { get; }
 

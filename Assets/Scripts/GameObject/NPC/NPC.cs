@@ -295,6 +295,7 @@ public abstract class NPC : CharacterStats, ICombatTargetable
         StopAllCoroutines(); // ★ 핵심: 진행 중이던 공격/이동 코루틴을 완전히 중단.
                              //   (Unity는 StopCoroutine으로 중단된 코루틴의 finally 블록을 실행하지 않으므로,
                              //    이후 아무도 뒤늦게 상태를 되돌릴 수 없게 됩니다)
+        ClearDebugHitbox(); // ★ 진행 중이던 히트박스 기즈모도 강제로 끔 (코루틴이 중간에 끊겨 자연 종료 못하는 경우 대비)
 
         myData.currentMode = NPCMode.Normal;
 
