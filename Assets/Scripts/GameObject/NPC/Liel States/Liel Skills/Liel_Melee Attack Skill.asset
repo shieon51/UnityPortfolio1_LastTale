@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 974de4c6a9437d54880f03666f128f88, type: 3}
   m_Name: Liel_Melee Attack Skill
   m_EditorClassIdentifier: Assembly-CSharp::Liel_MeleeAttackSkill
+  contextVariants: []
+  allowedContexts: 
   actionName: "\uB9AC\uC5D8_\uCC0C\uB974\uAE30 \uACF5\uACA9"
   actionCooldown: 1.5
   recoveryDuration: 0.5
   eventTimeoutSeconds: 1
-  contextVariants: []
-  allowedContexts: 
   skillId: liel_melee1
   skillName: 
   animStateName: Attack1
@@ -33,8 +33,10 @@ MonoBehaviour:
     vfxKey: Liel_Melee_Trail
     spawnOffset: {x: 0, y: 0}
     followCaster: 0
+    sfxKey: 
     contextOverrides: []
     levelOverrides: []
+  cameraCues: []
   minRange: 4
   maxRange: 8
   dash:
@@ -46,6 +48,6 @@ MonoBehaviour:
     size: {x: 10, y: 3.28}
     offset: {x: 0, y: 0.57}
     activeDuration: 0.15
-    knockbackPower: 2
+    knockbackPower: 5
   baseScore: 70
   comboBonusScore: 25

@@ -278,6 +278,10 @@ public class NPCManager : Singleton<NPCManager>
     private IEnumerator PlayBattleResultAfterDelay(string bossName, bool win)
     {
         yield return new WaitForSeconds(resultDialogueDelay); // "그 자리에서 멈춘 후에"
+
+        if (npcPool.TryGetValue(bossName, out GameObject npcObj) && npcObj != null)
+            npcObj.GetComponent<NPC>()?.RestorePreBattleFacing(); // ★ StartNPCDialogue 바로 직전에 복원
+
         StartNPCDialogue(bossName); // NPC를 '대화 중' 상태로 고정 → AI 판단 정지
 
         var resultEvent = new EventData

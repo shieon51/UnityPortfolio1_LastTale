@@ -65,6 +65,7 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
     public override IEnumerator Execute(NPC self, NPCVisual visual, Transform target)
     {
         self.CurrentPlayingSkill = this; // ★ 릴레이가 이 스킬을 찾을 수 있게 등록
+        visual.SetEyesVisible(false); // ** 모든 공격 모션 앞에 넣을 것
         self.isSuperArmor = true; // ★ 처음부터 슈퍼아머 — 돌진 중 맞아서 넉백당해 멈추는 것 방지
 
         var context = self.CurrentMovementContext; // 지금은 항상 Grounded, 나중에 비행/점프 붙으면 자동 확장됨
@@ -105,6 +106,7 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
         rb.linearDamping = originalDrag;
         rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
         self.isSuperArmor = false; // ★ 여기서 해제
+        visual.SetEyesVisible(true); // **
         self.CurrentPlayingSkill = null;
     }
 

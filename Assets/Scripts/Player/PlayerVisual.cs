@@ -15,6 +15,13 @@ public class PlayerVisual : MonoBehaviour
     private Animator _driverAnimator; // Body 파츠의 Animator. 이벤트/상태조회의 유일한 기준점.
     private Animator[] _partAnimators; // 자식으로 있는 모든 애니메이터를 싹 다 관리
 
+    // 좌우 방향 별 모션
+    private DirectionalPart[] _directionalParts;
+    private DirectionalSprite[] _directionalSprites;
+
+    // 눈깜빡임 모션
+    private EyeBlinkController _eyeBlink;
+
     private float _statSpeedMultiplier = 1f;
     private Coroutine _hitStopRoutine;
     private bool _wasDialogueLocked = false;
@@ -29,6 +36,9 @@ public class PlayerVisual : MonoBehaviour
         _partAnimators = GetComponentsInChildren<Animator>(true); // true를 넣으면 비활성화된 파츠(ex: 날개)의 애니메이터도 긁어옴
         _driverAnimator = ResolveDriverAnimator();
         _allSpriteRenderers = GetComponentsInChildren<SpriteRenderer>(true);
+        _directionalParts = GetComponentsInChildren<DirectionalPart>(true);
+        _directionalSprites = GetComponentsInChildren<DirectionalSprite>(true);
+        _eyeBlink = GetComponentInChildren<EyeBlinkController>(true);
 
         Debug.Log($"[PlayerVisual] 총 {_partAnimators.Length}개의 파츠 애니메이터를 동기화합니다.");
 
@@ -233,7 +243,11 @@ public class PlayerVisual : MonoBehaviour
     }
 
     // 특정 정규화된 재생 시점부터 상태를 재생 (8번: 착지 순간 끊김 없이 지상 클립으로 전환할 때 사용)
-    public void PlayAttackAnimation(string stateName, float normalizedTime = 0f) => PlayImmediate(stateName, normalizedTime);
+    public void PlayAttackAnimation(string stateName, float normalizedTime = 0f)
+    {
+        _eyeBlink?.SetVisible(false); // ★ 공격 시작 시 눈 숨김 (Face 자체 그림에 이미 포함되어 있으므로)
+        PlayImmediate(stateName, normalizedTime);
+    }
 
     public float GetCurrentNormalizedTime()
     {
@@ -246,6 +260,10 @@ public class PlayerVisual : MonoBehaviour
     {
         foreach (var sr in _allSpriteRenderers)
             if (sr != null) sr.flipX = flipX;
+
+        bool facingRight = flipX; // 기존 컨벤션: flipX=true → 오른쪽
+        foreach (var part in _directionalParts) part.ApplyFacing(facingRight);
+        foreach (var s in _directionalSprites) s.ApplyFacing(facingRight);
     }
 
 
@@ -297,7 +315,7 @@ public class PlayerVisual : MonoBehaviour
     public void OnGroundEnd() => ReturnToMovement();
 
     // --- PlayerCombat에서 호출 ---
-    public void PlayAttackAnimation(string stateName) => PlayImmediate(stateName);
+    public void PlayAttackAnimation(string stateName) => PlayAttackAnimation(stateName, 0f); // ★ 눈 숨김 로직이 항상 같이 실행됨
     public void ReturnToMovement() => CrossFadeAll(PlayerAnimStateNames.Movement, 0.1f);
 
     // PlayerGuard에서 호출
@@ -306,6 +324,8 @@ public class PlayerVisual : MonoBehaviour
     // 잠금 상태(공격 등)에서 벗어날 때 호출: 현재 물리 상태에 맞는 이동 모션으로 복귀
     public void ReturnToLocomotion()
     {
+        _eyeBlink?.SetVisible(true); // ★ 공격 끝나면 다시 표시
+
         if (_formProvider != null && _formProvider.IsFlightForm)
         {
             CrossFadeAll(PlayerAnimStateNames.Movement, 0.1f); // 비행형은 항상 Movement(호버/비행 블렌드트리)

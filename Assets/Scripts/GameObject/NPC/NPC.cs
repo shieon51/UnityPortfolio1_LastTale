@@ -52,7 +52,10 @@ public abstract class NPC : CharacterStats, ICombatTargetable
     private float originalGravity; // 보스전 돌입 시 돌려줄 원래 중력
 
     // 방향 전환 가능 여부 플래그 (보스전)
-    public bool canRotate = true; 
+    public bool canRotate = true;
+
+    // 일반 상태 -> 보스전 상태 전환 시 이전 npc 방향 기억
+    private bool _preBattleFlipX;
 
     // 대화 관련 변수들
     protected bool isTalking = false;
@@ -273,6 +276,7 @@ public abstract class NPC : CharacterStats, ICombatTargetable
     public virtual void SwitchToAttackMode()
     {
         if (myData == null) return;
+        _preBattleFlipX = spriteRenderer != null && spriteRenderer.flipX; // ★ 전투 시작 전 방향 캐싱
 
         myData.currentMode = NPCMode.Attack;
 
@@ -295,6 +299,7 @@ public abstract class NPC : CharacterStats, ICombatTargetable
         StopAllCoroutines(); // ★ 핵심: 진행 중이던 공격/이동 코루틴을 완전히 중단.
                              //   (Unity는 StopCoroutine으로 중단된 코루틴의 finally 블록을 실행하지 않으므로,
                              //    이후 아무도 뒤늦게 상태를 되돌릴 수 없게 됩니다)
+        WorldSpaceTelegraphIndicator.Instance?.Hide(); // ★ 예고 도중 전투가 끝나도 확실히 꺼짐
         ClearDebugHitbox(); // ★ 진행 중이던 히트박스 기즈모도 강제로 끔 (코루틴이 중간에 끊겨 자연 종료 못하는 경우 대비)
 
         myData.currentMode = NPCMode.Normal;
@@ -323,6 +328,12 @@ public abstract class NPC : CharacterStats, ICombatTargetable
     {
         yield return new WaitForFixedUpdate();
         if (rb != null) { rb.linearVelocity = Vector2.zero; rb.Sleep(); }
+    }
+
+    // 일반->전투모드 전환 시 이전 방향 기억
+    public void RestorePreBattleFacing()
+    {
+        if (spriteRenderer != null) spriteRenderer.flipX = _preBattleFlipX;
     }
 
     // 호감도 상승 등 이벤트가 발생하면 호출할 함수

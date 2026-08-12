@@ -37,6 +37,8 @@ public class Portal : MonoBehaviour
 
     void Update()
     {
+        if (DialogueManager.Instance != null && DialogueManager.Instance.IsTalking) return; // 대화중일 땐 포탈 이동 불가
+
         // 플레이어가 범위 안에 있고 윗키 누르면 이동
         if (playerInRange && Input.GetKeyDown(KeyCode.UpArrow))
         {

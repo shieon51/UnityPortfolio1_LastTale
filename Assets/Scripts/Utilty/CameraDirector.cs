@@ -64,4 +64,6 @@ public class CameraDirector : Singleton<CameraDirector>
         if (cue.shake) Shake(cue.shakeDuration, cue.shakeIntensity);
         if (cue.flash) ScreenFlashOverlay.Instance?.Flash(cue.flashColor, cue.flashDuration);
     }
+
+    public void TriggerRecenter(float duration = -1f) => follow?.TriggerRecenter(duration);
 }

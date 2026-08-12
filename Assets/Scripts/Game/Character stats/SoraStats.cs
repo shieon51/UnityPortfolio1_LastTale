@@ -148,7 +148,7 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
             Debug.Log("[상성 피해] 요정화 상태에서 역상성 공격을 받아 피해가 증가합니다!");
         }
 
-        base.TakeDamage(finalDamage, attackElement);
+        base.TakeDamage(finalDamage, attackElement, attacker); // ?
     }
 
     public override float GetSpeedMultiplier()
@@ -158,13 +158,14 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
 
     protected override void PrepareRigidbodyForKnockback(Rigidbody2D rb)
     {
-        if (fairyStage == 1) rb.linearVelocity = Vector2.zero; // 비행 중엔 기존 비행 속도까지 완전히 리셋
+        if (fairyStage == 1 || LastAttacker is NPC) rb.linearVelocity = Vector2.zero; // 비행 중엔 기존 비행 속도까지 완전히 리셋
         else base.PrepareRigidbodyForKnockback(rb);
     }
 
     protected override Vector2 ComputeKnockbackForce(Vector2 direction, float power)
     {
-        if (fairyStage == 1) return direction.normalized * power; // 순수하게 맞은 반대 방향으로만, 상승 편향 없음
+        Debug.Log($"[넉백 진단] LastAttacker = {(LastAttacker != null ? LastAttacker.GetType().Name : "null")}");
+        if (fairyStage == 1 || LastAttacker is NPC) return direction.normalized * power; // 순수하게 맞은 반대 방향으로만, 상승 편향 없음
         return base.ComputeKnockbackForce(direction, power);
     }
 
