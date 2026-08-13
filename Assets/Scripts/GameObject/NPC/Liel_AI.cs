@@ -82,6 +82,8 @@ public class Liel_AI : NPC
     {
         base.SwitchToAttackMode();
 
+        GetComponent<NPCUtilityAI>()?.ResetState(); // ★ 추가
+
         // 공격 모드 진입 시 전투 대기 상태로 전환
         StateMachine.ChangeState(new Liel_RecoveryState(this, visual, player, battleStartGracePeriod)); // ★ 바로 판단 대신 유예
     }

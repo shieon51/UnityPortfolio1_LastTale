@@ -77,63 +77,66 @@ public class CharacterStats : MonoBehaviour
         currentMana = maxMana;
     }
 
-    public virtual void TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal, CharacterStats attacker = null) // 공격자 레벨차 보정 수식 필요 시 마지막 인자 채워넣기
+    public virtual bool TakeDamage(
+         int incomingDamage,
+         ElementType attackElement = ElementType.Normal,
+         CharacterStats attacker = null,
+         Vector2? knockbackDirection = null,
+         float knockbackPower = 0f)
     {
-        // 무적 시간 체크: 마지막 맞은 시간 + 무적 시간보다 현재 시간이 커야만 데미지 인정
-        if (Time.time < lastHitTime + invincibilityDuration) return; // 무적 시간 중이면 데미지 무시
+        if (Time.time < lastHitTime + invincibilityDuration) return false; // 무적 중 — 넉백 포함 아무 효과 없음
 
-        // --- 1. 패링 판정 ---
         if (IsInParryWindow && attacker != null && TryResolveParry(attacker))
         {
             lastHitTime = Time.time;
             OnParrySuccess?.Invoke(attacker);
-            FloatingTextManager.Instance?.ShowParry(transform.position + Vector3.up * 1f); 
-            SoundManager.Instance?.PlaySFX("parry_success"); // **
-            ScreenFlashOverlay.Instance?.Flash(new Color(1f, 0.9f, 0.3f), 0.15f); // ★ 9번: 패링 성공 시 화면 반짝
+            FloatingTextManager.Instance?.ShowParry(transform.position + Vector3.up * 1f);
+            SoundManager.Instance?.PlaySFX("parry_success");
+            ScreenFlashOverlay.Instance?.Flash(new Color(1f, 0.9f, 0.3f), 0.15f);
             float groggyDuration = CombatFormulaService.Instance.CalculateGroggyDuration(attacker, this);
             attacker.ApplyGroggy(groggyDuration);
-            return; // 데미지 0, 완전 무효화
+            return false; // 패링 성공 — 넉백 포함 완전 무효화
         }
 
-        lastHitTime = Time.time; // 마지막 맞은 시간 갱신
+        lastHitTime = Time.time;
         if (attacker != null) LastAttacker = attacker;
 
         int finalDamage = ComputeFinalDamage(incomingDamage, attackElement, attacker);
 
-        // --- 2. 완벽 방어 (데미지가 방어력에 완전히 흡수됨) ---
         if (isGuarding && finalDamage <= 0)
         {
             FloatingTextManager.Instance?.ShowGuard(transform.position + Vector3.up * 1f);
             SoundManager.Instance?.PlaySFX("guard_perfect");
-            return; // 체력/카메라/플래시 전부 건드리지 않음
+            return false; // 완벽 방어 — 넉백 포함 아무 효과 없음
         }
 
-        // --- 3. 실제로 데미지가 들어가는 모든 경우 (방어 관통 포함) ---
-        if (isGuarding) //방어했지만 관통
+        if (isGuarding)
         {
-            FloatingTextManager.Instance?.ShowGuardedDamage(finalDamage, transform.position + Vector3.up * 1f); // ★ 5번: "방어! 12" 형태로 함께 표시
+            FloatingTextManager.Instance?.ShowGuardedDamage(finalDamage, transform.position + Vector3.up * 1f);
             SoundManager.Instance?.PlaySFX("guard_break");
         }
-        else // 무방비 상태
+        else
         {
             FloatingTextManager.Instance?.ShowDamage(finalDamage, transform.position + Vector3.up * 1f);
             SoundManager.Instance?.PlaySFX("hit_generic");
         }
 
-        if (attacker is NPC || this is NPC) // ★ NPC(보스/스토리 캐릭터) 관련 전투에만 흔들림
+        if (attacker is NPC || this is NPC)
             CameraDirector.Instance?.Shake(0.1f, 0.1f);
         GetComponentInChildren<HitFlashController>()?.Flash();
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
         OnHealthChanged?.Invoke();
         OnDamageTaken?.Invoke(finalDamage, attacker);
-        FloatingTextManager.Instance?.ShowDamage(finalDamage, transform.position + Vector3.up * 1f); 
 
         Debug.Log($"{gameObject.name}가 {finalDamage} 데미지를 받았습니다. (잔여 HP: {currentHealth})");
 
-        if (currentHealth <= 0)
-        {
-            Die();
-        }
+        // ★ 넉백은 실제로 데미지가 "적용된" 이 지점, 한 곳에서만 트리거됨
+        if (knockbackDirection.HasValue && knockbackPower > 0f)
+            ApplyKnockback(knockbackDirection.Value, knockbackPower);
+
+        if (currentHealth <= 0) Die();
+
+        return true;
     }
 
     protected int ComputeFinalDamage(int incomingDamage, ElementType attackElement, CharacterStats attacker)

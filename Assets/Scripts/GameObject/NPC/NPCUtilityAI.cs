@@ -8,6 +8,12 @@ public class NPCUtilityAI : MonoBehaviour
     private Dictionary<NPCActionBase, float> _lastUsedTime = new();
     public NPCActionBase LastUsedAction { get; private set; }
 
+    public void ResetState()
+    {
+        _lastUsedTime.Clear();
+        LastUsedAction = null;
+    }
+
     public NPCActionBase ChooseNextAction(NPCDecisionContext ctx)
     {
         NPCActionBase best = null;

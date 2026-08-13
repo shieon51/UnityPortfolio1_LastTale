@@ -177,10 +177,9 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
                 alreadyHit.Add(hit);
 
                 int damage = Mathf.RoundToInt(stats.attack.GetValue() * GetDamageMultiplier(1));
-                enemyStats.TakeDamage(damage, stats.currentElement, stats);
+                Vector2 kbDir = ((Vector2)(hit.transform.position - parentTransform.position)).normalized;
 
-                Vector2 kbDir = ((Vector2) (hit.transform.position - parentTransform.position)).normalized; 
-                enemyStats.ApplyKnockback(kbDir, knockbackPower);
+                enemyStats.TakeDamage(damage, stats.currentElement, stats, kbDir, knockbackPower); // ★ 한 줄로 통합
 
                 combat.TriggerHitStop(hitStopDuration);
             }

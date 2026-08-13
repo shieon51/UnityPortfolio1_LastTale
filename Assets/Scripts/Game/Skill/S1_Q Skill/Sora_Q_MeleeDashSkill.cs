@@ -75,10 +75,11 @@ public class Sora_Q_MeleeDashSkill : SkillBase
                 alreadyHitEnemies.Add(hit);
 
                 int finalDamage = (int)(stats.attack.GetValue() * GetDamageMultiplier(1));
-                enemyStats.TakeDamage(finalDamage, stats.currentElement, stats);
-
                 Vector2 knockbackDir = (hit.transform.position - parentTransform.position).normalized;
-                enemyStats.ApplyKnockback(knockbackDir, 5f);
+
+                enemyStats.TakeDamage(finalDamage, stats.currentElement, stats, knockbackDir, 5f); // ★ 한 줄로 통합
+
+
                 hitSomething = true;
             }
 

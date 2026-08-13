@@ -99,11 +99,10 @@ public class Enemy : CharacterStats
                 {
                     // 기본 공격력 * 배율 적용(0.5 임시)
                     int contactDamage = Mathf.RoundToInt(attack.GetValue() * contactDamageMultiplier);
-                    playerStats.TakeDamage(contactDamage, currentElement);
 
                     // 플레이어 살짝 밀쳐내기
                     Vector2 knockbackDir = (collision.transform.position - transform.position).normalized;
-                    playerStats.ApplyKnockback(knockbackDir, 3f);
+                    playerStats.TakeDamage(contactDamage, currentElement, this, knockbackDir, 3f); // ★ attacker=this 추가
 
                     lastContactTime = Time.time;
                     Debug.Log($"[Enemy] 몸통 박치기! 데미지: {contactDamage}");
@@ -113,18 +112,24 @@ public class Enemy : CharacterStats
     }
 
     // 2. 데미지 받았을 때 처리 (CharacterStats 오버라이드)
-    public override void TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal, CharacterStats attacker = null)
+    public override bool TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal, CharacterStats attacker = null, Vector2? knockbackDirection = null, float knockbackPower = 0f)
     {
-        int preHealth = currentHealth; // 맞기 전 체력 기억
-        base.TakeDamage(incomingDamage, attackElement); // 부모의 데미지 계산 및 UI 갱신 로직
+        if (player == null) player = GameObject.FindGameObjectWithTag("Player").transform;
 
-        // 체력이 진짜로 깎였을 때만 (무적시간 통과 시에만) 처리
-        if (currentHealth < preHealth)
+        // 호출부가 별도 넉백을 안 넘겼으면 Enemy 고유의 "플레이어 반대방향" 룰 적용
+        if (!knockbackDirection.HasValue && player != null)
         {
-            // 1. 체력바 풀링 요청 및 갱신
+            float dir = Mathf.Sign(transform.position.x - player.position.x);
+            knockbackDirection = new Vector2(dir, 0.5f);
+            knockbackPower = 5f;
+        }
+
+        bool applied = base.TakeDamage(incomingDamage, attackElement, attacker, knockbackDirection, knockbackPower); // ★ attacker 누락 수정
+
+        if (applied)
+        {
             if (activeHealthBar == null || !activeHealthBar.gameObject.activeInHierarchy)
             {
-                // PoolManager에서 체력바 하나 꺼내오기! (이름은 풀에 등록한 프리팹 이름과 같아야 함)
                 GameObject hbObj = PoolManager.Instance.SpawnFromPool("EnemyHealthBar", transform.position, Quaternion.identity, PoolType.Global);
                 if (hbObj != null)
                 {
@@ -134,25 +139,17 @@ public class Enemy : CharacterStats
             }
             else
             {
-                // 이미 머리 위에 떠있으면 체력만 갱신 (시간 연장)
                 activeHealthBar.UpdateHealth(currentHealth);
             }
 
-            // 2. 넉백 로직 (자식에서 하던 걸 안전한 이곳으로 이동)
-            if (player == null) player = GameObject.FindGameObjectWithTag("Player").transform;
-            if (player != null)
-            {
-                float dir = Mathf.Sign(transform.position.x - player.position.x);
-                ApplyKnockback(new Vector2(dir, 0.5f), 5f);
-            }
-
-            // 3. 사망 체크
             if (currentHealth <= 0 && currentState != EnemyState.Die)
             {
                 currentState = EnemyState.Die;
                 Die();
             }
         }
+
+        return applied;
     }
 
     protected override void Die()

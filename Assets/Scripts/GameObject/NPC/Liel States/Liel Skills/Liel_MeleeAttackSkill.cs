@@ -135,7 +135,6 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
     {
         float elapsed = 0f;
         var alreadyHit = new HashSet<Collider2D>();
-        //self.isSuperArmor = true;
         Vector2 fixedCenter = (Vector2)self.transform.position + new Vector2(offset.x * dir, offset.y);
 
         while (elapsed < hitbox.activeDuration)
@@ -148,14 +147,12 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
                 if (!CombatTargetingUtility.TryGetValidTarget(hit, self, out CharacterStats targetStats)) continue;
                 alreadyHit.Add(hit);
 
-                targetStats.TakeDamage(Mathf.RoundToInt(self.attack.GetValue() * GetDamageMultiplier(1)), self.currentElement, self);
                 Vector2 kbDir = ((Vector2)hit.transform.position - (Vector2)self.transform.position).normalized;
-                targetStats.ApplyKnockback(kbDir, hitbox.knockbackPower);
+                targetStats.TakeDamage(Mathf.RoundToInt(self.attack.GetValue() * GetDamageMultiplier(1)), self.currentElement, self, kbDir, hitbox.knockbackPower);
             }
             elapsed += Time.deltaTime;
             yield return null;
         }
-        //self.isSuperArmor = false;
         self.ClearDebugHitbox();
     }
 

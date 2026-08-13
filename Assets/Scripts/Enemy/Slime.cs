@@ -184,11 +184,10 @@ public class Slime : Enemy
             {
                 // 스킬 공격은 기본 공격력 100% (또는 그 이상) 적용
                 int skillDamage = attack.GetValue();
-                playerStats.TakeDamage(skillDamage, currentElement);
 
                 // 스킬 공격은 넉백이 더 강함
                 Vector2 knockback = (hit.transform.position - transform.position).normalized;
-                playerStats.ApplyKnockback(knockback, 7f);
+                playerStats.TakeDamage(skillDamage, currentElement, this, knockback, 7f); // ★ attacker=this 추가
 
                 Debug.Log($"[Slime] 스킬 공격 명중! 데미지: {skillDamage}");
             }

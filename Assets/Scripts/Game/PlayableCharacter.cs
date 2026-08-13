@@ -90,25 +90,17 @@ public abstract class PlayableCharacter : CharacterStats
     //}
 
     // PlayableCharacter.cs 안에 추가 (기존 TakeDamage가 있다면 덮어씌우기)
-    public override void TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal, CharacterStats attacker = null)
+    public override bool TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal, CharacterStats attacker = null, Vector2? knockbackDirection = null, float knockbackPower = 0f)
     {
-        base.TakeDamage(incomingDamage, attackElement);
+        bool applied = base.TakeDamage(incomingDamage, attackElement, attacker, knockbackDirection, knockbackPower); // ★ attacker/넉백 반드시 그대로 전달
 
-        // 만약 방금 맞아서 넉백 상태(isKnockedBack)가 되었다면 공격 모션 강제 취소
-        if (isKnockedBack)
+        if (applied && isKnockedBack)
         {
-            PlayerCombat combatScript = GetComponentInChildren<PlayerCombat>();
-            if (combatScript != null)
-            {
-                combatScript.CancelAttack();
-            }
-
-            // 플레이어 피격 애니메이션 트리거 (필요 시)
-            // Animator anim = GetComponentInChildren<Animator>();
-            // if (anim != null) anim.SetTrigger("Hit");
+            GetComponentInChildren<PlayerCombat>()?.CancelAttack();
         }
 
-        CallProgressionChanged(); // UI 갱신 헬퍼
+        if (applied) CallProgressionChanged();
+        return applied;
     }
 
 }
