@@ -21,6 +21,7 @@ public class DialogueManager : Singleton<DialogueManager>
     private string pendingBattleNPC = ""; // 전투가 예약된 NPC 이름
     private string pendingBattleWinNode = "";
     private string pendingBattleLoseNode = "";
+    private BossDifficultyTier pendingBattleDifficulty = BossDifficultyTier.Training; // ★ 추가
 
     public bool IsTalking
     { get { return isTalking; } }
@@ -74,6 +75,9 @@ public class DialogueManager : Singleton<DialogueManager>
                     pendingBattleNPC = args[1];
                     pendingBattleWinNode = args.Length > 2 ? args[2] : $"{pendingBattleNPC}_Battle_Win";
                     pendingBattleLoseNode = args.Length > 3 ? args[3] : $"{pendingBattleNPC}_Battle_Lose";
+                    pendingBattleDifficulty = (args.Length > 4 && Enum.TryParse(args[4], out BossDifficultyTier parsedTier))
+                        ? parsedTier
+                        : BossDifficultyTier.Training; // ★ 추가 — 태그에 없으면 훈련모드
                 }
                 //if (args[0] == "emote" && args.Length > 1)
                 //{
@@ -137,10 +141,11 @@ public class DialogueManager : Singleton<DialogueManager>
         // 대화가 완전히 끝난 직후 예약된 전투가 있다면 실행
         if (!string.IsNullOrEmpty(pendingBattleNPC))
         {
-            NPCManager.Instance.TriggerBossBattle(pendingBattleNPC, pendingBattleWinNode, pendingBattleLoseNode);
+            NPCManager.Instance.TriggerBossBattle(pendingBattleNPC, pendingBattleDifficulty, pendingBattleWinNode, pendingBattleLoseNode); 
             pendingBattleNPC = "";
             pendingBattleWinNode = "";
             pendingBattleLoseNode = "";
+            pendingBattleDifficulty = BossDifficultyTier.Training;
         }
     }
 

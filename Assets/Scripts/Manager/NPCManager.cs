@@ -178,7 +178,7 @@ public class NPCManager : Singleton<NPCManager>
     }
 
     // 나중에 보스전 진입 시 처리 (다이얼로그 매니저에서 호출)
-    public void TriggerBossBattle(string targetNpcName, string winNode = null, string loseNode = null)
+    public void TriggerBossBattle(string targetNpcName, BossDifficultyTier difficulty = BossDifficultyTier.Training, string winNode = null, string loseNode = null)
     {
         if (_activeBossBattle != null) // ★ 중복 트리거 방지 (원래 없던 안전장치)
         {
@@ -198,6 +198,7 @@ public class NPCManager : Singleton<NPCManager>
         NPC npcScript = npcObj.GetComponent<NPC>();
         if (npcScript == null) return; // ★ null이면 여기서 안전하게 반환 (기존엔 아래 구독부에서 크래시 위험)
 
+        if (npcScript is Liel_AI liel) liel.currentDifficultyTier = difficulty; // ★ SwitchToAttackMode보다 반드시 먼저 — TotalPhaseCount가 여기 의존함
 
         npcScript.SwitchToAttackMode(); // NPC를 공격 모드로 전환
         UIModeManager.Instance.SetMode(UIMode.Battle); // ** 전투 전용 ui 적용
@@ -206,7 +207,7 @@ public class NPCManager : Singleton<NPCManager>
         // (실제로는 맵마다 지정된 '보스전 시작 위치(Transform)'를 가져다 쓸 예정)
         Transform player = PlayerManager.Instance.CurrentCharacter.transform;
         BossHUDPanel.Instance?.BindBoss(npcScript);
-        BossHUDPanel.Instance?.SetPhaseCount(npcScript is Liel_AI liel ? liel.TotalPhaseCount : 1);
+        BossHUDPanel.Instance?.SetPhaseCount(npcScript is Liel_AI liel_ai ? liel_ai.TotalPhaseCount : 1);
         BattleTimerDisplay.Instance?.StartTimer();
 
         // 플레이어는 원래 위치, 보스는 플레이어 기준 오른쪽으로 5칸 뒤로 순간이동

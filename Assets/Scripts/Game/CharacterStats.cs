@@ -172,6 +172,14 @@ public class CharacterStats : MonoBehaviour
         lastHitTime = Time.time + duration - invincibilityDuration;
     }
 
+    // 체력 풀 자체를 재설정할 때 사용 (힐/데미지 계산 없이 강제로 세팅). 보스 난이도 프로필 전환 등에서 사용.
+    protected void SetHealthDirect(int newMax, int newCurrent)
+    {
+        maxHealth = newMax;
+        currentHealth = Mathf.Clamp(newCurrent, 0, maxHealth);
+        OnHealthChanged?.Invoke(); // ★ CharacterStats 안에서 발행하는 거라 문제없음
+    }
+
     // 체력 회복
     public virtual void Heal(int amount)
     {

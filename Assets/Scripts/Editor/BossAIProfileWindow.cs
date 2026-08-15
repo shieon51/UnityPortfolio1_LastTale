@@ -1,17 +1,21 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
+using static UnityEngine.Rendering.DebugUI.MessageBox;
 
 // Assets/Scripts/Editor/BossAIProfileWindow.cs 
 public class BossAIProfileWindow : EditorWindow
 {
     [MenuItem("LastMarchan/Boss AI Profile Manager")]
-    public static void Open() => GetWindow<BossAIProfileWindow>("º¸½º AI ÇÁ·ÎÇÊ °ü¸®");
+    public static void Open() => GetWindow<BossAIProfileWindow>("ë³´ìŠ¤ AI í”„ë¡œí•„ ê´€ë¦¬");
 
     private List<NPCBossProfile> _profiles;
     private string _npcFilter = "";
     private Vector2 _scroll;
+
+    private Dictionary<NPCBossProfile, Liel_AI.LielCombatStyle> _previewStyle = new();
+
 
     private void OnEnable() => Refresh();
 
@@ -25,10 +29,17 @@ public class BossAIProfileWindow : EditorWindow
     private void OnGUI()
     {
         EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-        if (GUILayout.Button("»õ·Î°íÄ§", EditorStyles.toolbarButton, GUILayout.Width(70))) Refresh();
+        if (GUILayout.Button("ìƒˆë¡œê³ ì¹¨", EditorStyles.toolbarButton, GUILayout.Width(70))) Refresh();
         GUILayout.FlexibleSpace();
         _npcFilter = EditorGUILayout.TextField(_npcFilter, EditorStyles.toolbarSearchField, GUILayout.Width(150));
         EditorGUILayout.EndHorizontal();
+
+        if (Application.isPlaying)
+        {
+            var liveLiel = Object.FindObjectsOfType<Liel_AI>().FirstOrDefault();
+            if (liveLiel != null)
+                EditorGUILayout.HelpBox($"í˜„ì¬ ì”¬: {liveLiel.currentDifficultyTier} / {liveLiel.currentCombatStyle} / Phase {liveLiel.bossPhase}", MessageType.Info);
+        }
 
         _scroll = EditorGUILayout.BeginScrollView(_scroll);
 
@@ -48,32 +59,39 @@ public class BossAIProfileWindow : EditorWindow
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
         EditorGUILayout.LabelField($"{profile.difficultyTier}  ({profile.name})", EditorStyles.boldLabel);
         if (!string.IsNullOrEmpty(profile.storyBranchNote))
-            EditorGUILayout.LabelField("¸Ş¸ğ: " + profile.storyBranchNote, EditorStyles.miniLabel);
+            EditorGUILayout.LabelField("ë©”ëª¨: " + profile.storyBranchNote, EditorStyles.miniLabel);
 
         var so = new SerializedObject(profile);
         so.Update();
-        EditorGUILayout.PropertyField(so.FindProperty("phases"), true);
+        EditorGUILayout.PropertyField(so.FindProperty("phases"), true); // styleOverrides/agilityModifier ìë™ìœ¼ë¡œ ê°™ì´ ë³´ì„
         so.ApplyModifiedProperties();
+
+        if (!_previewStyle.ContainsKey(profile)) _previewStyle[profile] = Liel_AI.LielCombatStyle.InjuredCommander;
+        _previewStyle[profile] = (Liel_AI.LielCombatStyle)EditorGUILayout.EnumPopup("í…ŒìŠ¤íŠ¸í•  ìŠ¤íƒ€ì¼", _previewStyle[profile]);
+
 
         using (new EditorGUI.DisabledScope(!Application.isPlaying))
         {
-            if (GUILayout.Button("¢º Áö±İ ÀÌ ÇÁ·ÎÇÊ·Î Áï½Ã Å×½ºÆ® (Play ¸ğµå Àü¿ë)"))
-                ApplyProfileToLiveNPC(profile);
+            if (GUILayout.Button("â–¶ ì§€ê¸ˆ ì´ í”„ë¡œí•„ë¡œ ì¦‰ì‹œ í…ŒìŠ¤íŠ¸ (Play ëª¨ë“œ ì „ìš©)"))
+                ApplyProfileToLiveNPC(profile, _previewStyle[profile]);
         }
 
         EditorGUILayout.EndVertical();
     }
 
-    private void ApplyProfileToLiveNPC(NPCBossProfile profile)
+    private void ApplyProfileToLiveNPC(NPCBossProfile profile, Liel_AI.LielCombatStyle style)
     {
-        var liveNpc = Object.FindObjectsOfType<NPC>().FirstOrDefault(n => n.npcName == profile.npcName);
-        if (liveNpc == null) { Debug.LogWarning($"¾À¿¡¼­ {profile.npcName}À» Ã£À» ¼ö ¾ø½À´Ï´Ù."); return; }
+        var target = Object.FindObjectsOfType<NPC>()
+            .FirstOrDefault(n => n.npcName == profile.npcName) as IBossProfileTarget; // â˜… NPCë¡œ ì´ë¦„ ì°¾ê³ , ì¸í„°í˜ì´ìŠ¤ë¡œ ë‹¤ë£¸
 
-        var ai = liveNpc.GetComponent<NPCUtilityAI>();
-        if (ai == null) { Debug.LogWarning($"{profile.npcName}¿¡ NPCUtilityAI°¡ ¾ø½À´Ï´Ù."); return; }
+        if (target == null) { Debug.LogWarning($"ì”¬ì—ì„œ {profile.npcName}ì— í•´ë‹¹í•˜ëŠ” IBossProfileTargetì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤."); return; }
 
-        int currentPhase = (liveNpc as Liel_AI)?.bossPhase ?? 1;
-        ai.ApplyProfile(profile, currentPhase);
-        Debug.Log($"[BossAIProfileWindow] {profile.npcName}¿¡ '{profile.difficultyTier}' ÇÁ·ÎÇÊ(ÆäÀÌÁî {currentPhase})À» Áï½Ã Àû¿ëÇß½À´Ï´Ù.");
+        target.CurrentDifficultyTier = profile.difficultyTier;
+
+        if (target is Liel_AI liel) liel.currentCombatStyle = style; // â˜… ìŠ¤íƒ€ì¼ ì¶•ì€ ì•„ì§ ë¦¬ì—˜ ì „ìš©ì´ë¼ ì—¬ê¸°ì„œë§Œ ë¶„ê¸° (ë‚˜ì¤‘ì— ë‘ ë²ˆì§¸ ë³´ìŠ¤ ìƒê¸°ë©´ ì—¬ê¸°ë§Œ í™•ì¥)
+
+        target.ApplyResolvedProfile(profile, isBattleStart: true);
+
+        Debug.Log($"[BossAIProfileWindow] {profile.npcName}ì— '{profile.difficultyTier}' í”„ë¡œí•„(í˜ì´ì¦ˆ {target.BossPhase})ì„ ì¦‰ì‹œ ì ìš©í–ˆìŠµë‹ˆë‹¤.");
     }
 }

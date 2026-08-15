@@ -104,6 +104,10 @@ MonoBehaviour:
   myPersonality: 0
   originalCsvPos: {x: 0, y: 0}
   canRotate: 1
+  bossProfiles:
+  - {fileID: 11400000, guid: ab6c06790f126984f907b2ac344c2ce0, type: 2}
+  - {fileID: 11400000, guid: 68887713901ee9143b598aca0a6d33cc, type: 2}
+  - {fileID: 11400000, guid: af180214d72735041b87e2d3d056e26f, type: 2}
   currentCombatStyle: 0
   currentDifficultyTier: 0
   bossPhase: 3

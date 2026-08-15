@@ -1,7 +1,13 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
-public class Liel_AI : NPC
+public class Liel_AI : NPC, IBossProfileTarget
 {
+    [Header("AI Profiles (인스펙터에서 직접 연결 — 런타임 빌드에서 AssetDatabase 못 씀)")]
+    public List<NPCBossProfile> bossProfiles = new();
+
+    private int _appliedAgilityModifier = 0; // 직전에 적용해둔 오버라이드 (재적용 시 누적 방지)
+
     public enum LielCombatStyle { InjuredCommander, FallenAngel } // 스토리 진행에 따른 축 (캐릭터성)
     // ** 실제 전투 파라미터는 (difficultyTier, combatStyle, bossPhase) 세 값의 조합으로 결정
 
@@ -17,6 +23,15 @@ public class Liel_AI : NPC
     [Header("Battle Start")]
     [Tooltip("전투 시작 직후, 플레이어가 반응할 시간을 주기 위한 유예시간(초)")]
     public float battleStartGracePeriod = 2f;
+
+    // 보스 난이도 인터페이스 구현 (기존 필드를 그대로 감싸기만 함 — 인스펙터 노출은 필드가 유지하니까 그대로)
+    public BossDifficultyTier CurrentDifficultyTier
+    {
+        get => currentDifficultyTier;
+        set => currentDifficultyTier = value;
+    }
+    public int BossPhase => bossPhase;
+    public List<NPCBossProfile> BossProfiles => bossProfiles;
 
     [Header("Injured Mechanics (치명상 기믹)")]
     public int teleportManaCost = 20;
@@ -46,6 +61,8 @@ public class Liel_AI : NPC
         _ => 1,
     };
     
+    private int _baseMaxHealth; // 프리팹에 세팅된 "진짜" 체력 (10000 등) — 최초 1회만 캐싱
+
     protected override void Awake()
     {
         base.Awake();
@@ -53,10 +70,12 @@ public class Liel_AI : NPC
         myPersonality = PersonalityTrait.Cold; // 리엘의 성향
         npcName = "Liel"; // NPCData와 매칭될 이름
 
-        // ** 세팅 임시
+        //** 세팅 임시
         level = 99;
         attack.AddBaseValue(10);
-        agility.AddBaseValue(999); // 회피 Max
+        // agility.AddBaseValue(999); ← ★ 삭제. 이제 난이도별 agilityModifier가 이 역할을 대신함
+
+        _baseMaxHealth = maxHealth; // ★ 추가
     }
 
     protected override void Start()
@@ -67,7 +86,11 @@ public class Liel_AI : NPC
         if (formController != null)
         {
             bossPhase = formController.FormStage + 1; // ★ 시작할 때부터 정확히 동기화 (0-인덱스 ↔ 1-인덱스)
-            formController.OnFormStageChanged += stage => bossPhase = stage + 1; // ★ 이후도 +1 보정
+            formController.OnFormStageChanged += stage =>
+            {
+                bossPhase = stage + 1;
+                ApplyResolvedProfile(FindProfile(currentDifficultyTier)); // ★ 변신이 진짜 끝난 뒤에만 스킬/스탯/외형이 바뀜
+            };
         }
 
         // 시작할 때 현재 모드에 맞춰 FSM 첫 상태를 꽂아줌
@@ -77,12 +100,53 @@ public class Liel_AI : NPC
             StateMachine.Initialize(new Liel_UtilityDecisionState(this, visual, player));
     }
 
+    public NPCBossProfile FindProfile(BossDifficultyTier tier)
+    => bossProfiles.Find(p => p.difficultyTier == tier);
+
+    public void ApplyResolvedProfile(NPCBossProfile profile, bool isBattleStart = false)
+    {
+        if (profile == null) return;
+
+        if (isBattleStart) // ★ 전투 "시작" 시점에만 체력 재설정. 페이즈 전환/스타일 변경 시엔 건드리지 않음
+        {
+            int targetMax = profile.maxHealthOverride > 0 ? profile.maxHealthOverride : _baseMaxHealth;
+            SetHealthDirect(targetMax, targetMax);
+        }
+
+        var phase = profile.phases.Find(p => p.phaseNumber == bossPhase);
+        if (phase == null) return;
+
+        var styleOverride = phase.styleOverrides.Find(s => s.style == currentCombatStyle);
+
+        var actions = (styleOverride != null && styleOverride.availableActionsOverride.Count > 0)
+            ? styleOverride.availableActionsOverride
+            : phase.availableActions;
+        GetComponent<NPCUtilityAI>()?.ApplyActionList(actions);
+
+        if (_appliedAgilityModifier != 0) agility.RemoveModifier(_appliedAgilityModifier);
+        _appliedAgilityModifier = phase.agilityModifier;
+        if (_appliedAgilityModifier != 0) agility.AddModifier(_appliedAgilityModifier);
+
+        var appearanceProfile = styleOverride?.appearanceOverride;
+        if (appearanceProfile != null)
+            GetComponentInChildren<CharacterAppearance>()?.SetProfile(appearanceProfile); // ★ CharacterAppearance가 자식에 붙어있을 가능성이 높아서 InChildren으로 씀 — 실제 위치 확인 부탁
+
+        GetComponent<NPCUtilityAI>()?.ResetState(); // 지난번 만든 리셋도 같이 (전투/페이즈 전환 시 콤보·쿨다운 꼬임 방지)
+    }
+
+    // 스토리 이벤트에서 나중에 호출할 진입점 (지금은 빈 훅만)
+    public void SetCombatStyle(LielCombatStyle style)
+    {
+        currentCombatStyle = style;
+        ApplyResolvedProfile(FindProfile(currentDifficultyTier)); // 전투 중 스타일이 바뀌는 경우 즉시 재적용
+    }
+
     // NPC.cs에서 호출해주는 전투 모드 전환 함수 오버라이드
     public override void SwitchToAttackMode()
     {
         base.SwitchToAttackMode();
 
-        GetComponent<NPCUtilityAI>()?.ResetState(); // ★ 추가
+        ApplyResolvedProfile(FindProfile(currentDifficultyTier), isBattleStart: true); // 전투 시작 시 1페이즈 기준 최초 적용
 
         // 공격 모드 진입 시 전투 대기 상태로 전환
         StateMachine.ChangeState(new Liel_RecoveryState(this, visual, player, battleStartGracePeriod)); // ★ 바로 판단 대신 유예
@@ -108,10 +172,7 @@ public class Liel_AI : NPC
 
         if (targetPhase != bossPhase && targetPhase <= TotalPhaseCount)
         {
-            formController.TransitionToStage(targetPhase - 1); // ★ 1-인덱스(phase) → 0-인덱스(FormStage) 변환
-            // TODO: 페이즈별로 실제 뭐가 달라질지(새 스킬 목록, 외형 변화 등)는
-            //       이 이벤트를 구독해서 나중에 채우시면 됩니다.
-            //       예: NPCUtilityAI.ApplyProfile(currentProfile, bossPhase);
+            formController.TransitionToStage(targetPhase - 1); // ★ 변신 연출만 시작. bossPhase 갱신과 스킬/스탯 적용은 연출 끝난 뒤 OnFormStageChanged에서.
         }
     }
 
