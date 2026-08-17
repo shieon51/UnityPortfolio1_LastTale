@@ -36,6 +36,10 @@ public class CombatFormulaService : Singleton<CombatFormulaService>
         if (_telegraphFormula == null) return baseDuration;
         return _telegraphFormula.CalculateDuration(baseDuration, attacker.agility.GetValue(), defender.agility.GetValue());
     }
+
+    public float CalculateTelegraphOverflow(float baseDuration, CharacterStats attacker, CharacterStats defender)
+    => _telegraphFormula != null ? _telegraphFormula.CalculateOverflow(baseDuration, attacker.agility.GetValue(), defender.agility.GetValue()) : 0f;
+
     public float CalculateGroggyDuration(CharacterStats groggyTarget, CharacterStats opponent)
         => _groggyFormula != null ? _groggyFormula.CalculateDuration(groggyTarget.level, opponent.level) : 2f;
 

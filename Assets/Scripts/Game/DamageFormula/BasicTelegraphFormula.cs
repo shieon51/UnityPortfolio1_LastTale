@@ -1,17 +1,22 @@
-// BasicTelegraphFormula.cs (½Å±Ô)
+ï»¿// BasicTelegraphFormula.cs (ì‹ ê·œ)
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "LastMarchan/Combat/Formulas/Basic Telegraph Timing")]
 public class BasicTelegraphFormula : ScriptableObject
 {
-    [Tooltip("AGI 1´ç ¿¹°í½Ã°£ º¯È­ ºñÀ²")]
+    [Tooltip("AGI 1ë‹¹ ì˜ˆê³ ì‹œê°„ ë³€í™” ë¹„ìœ¨")]
     public float agiScalingPerPoint = 0.02f;
-    public float minTelegraphDuration = 0.25f;
 
-    public float CalculateDuration(float baseDuration, int attackerAgi, int defenderAgi)
+    private float CalculateRaw(float baseDuration, int attackerAgi, int defenderAgi)
     {
-        int diff = defenderAgi - attackerAgi; // ¹æ¾îÀÚ°¡ ¹ÎÃ¸ÇÒ¼ö·Ï ¿¹°í°¡ ´õ ¿©À¯ÀÖ°Ô(±æ°Ô) ¶ä
+        int diff = defenderAgi - attackerAgi; // ë°©ì–´ìžê°€ ë¯¼ì²©í• ìˆ˜ë¡ ì–‘ìˆ˜(ì˜ˆê³  ëŠ˜ì–´ë‚¨)
         float modifier = 1f + diff * agiScalingPerPoint;
-        return Mathf.Max(minTelegraphDuration, baseDuration * modifier);
+        return baseDuration * modifier;
     }
+    public float CalculateDuration(float baseDuration, int attackerAgi, int defenderAgi)
+        => Mathf.Clamp(CalculateRaw(baseDuration, attackerAgi, defenderAgi), NPCCombatTuning.Instance.MinTelegraphLeadTime, NPCCombatTuning.Instance.MaxTelegraphLeadTime);
+
+    // â˜… ì‹ ê·œ â€” ìƒí•œì„ ì–¼ë§ˆë‚˜ ë„˜ì–´ì„°ëŠ”ì§€(ì´ˆ ë‹¨ìœ„). ìŠ¬ë¡œìš°ëª¨ì…˜ ê°•ë„ ê³„ì‚°ìš©
+    public float CalculateOverflow(float baseDuration, int attackerAgi, int defenderAgi)
+        => Mathf.Max(0f, CalculateRaw(baseDuration, attackerAgi, defenderAgi) - NPCCombatTuning.Instance.MaxTelegraphLeadTime);
 }

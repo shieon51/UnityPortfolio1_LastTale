@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5311ab29b234099409ad37d7c0ade304, type: 3}
   m_Name: Liel_Hard
   m_EditorClassIdentifier: Assembly-CSharp::NPCBossProfile
-  npcName: 
-  difficultyTier: 0
+  npcName: Liel
+  difficultyTier: 2
   storyBranchNote: 
   maxHealthOverride: 0
   phases: []

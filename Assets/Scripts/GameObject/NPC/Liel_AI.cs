@@ -60,7 +60,11 @@ public class Liel_AI : NPC, IBossProfileTarget
         BossDifficultyTier.Hard => 3,
         _ => 1,
     };
-    
+
+    // 화면 연출(플래시/흑백/잔상 등)을 나중에 붙일 자리 — 지금은 아무도 구독 안 해도 무해함
+    public event System.Action<float, float> OnAttackSlowmoTriggered; // (강도 0~1, 지속시간)
+    public void RaiseAttackSlowmo(float intensity, float duration) => OnAttackSlowmoTriggered?.Invoke(intensity, duration);
+
     private int _baseMaxHealth; // 프리팹에 세팅된 "진짜" 체력 (10000 등) — 최초 1회만 캐싱
 
     protected override void Awake()

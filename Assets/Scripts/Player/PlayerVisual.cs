@@ -1,25 +1,26 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Linq;
 using UnityEngine;
 
-// ½ÇÁ¦ ·»´õ¸µ/¾Ö´Ï¸ŞÀÌ¼ÇÀº ÀüºÎ ÀÚ½Ä ÆÄÃ÷(Body, Face, Hair...)°¡ ´ã´ç.
+[DefaultExecutionOrder(20)] // â˜… PlayerCombat(-10), PlayerController(ê¸°ë³¸ 0)ê°€ ì´ë²ˆ í”„ë ˆì„ ìƒíƒœë¥¼ ë‹¤ í™•ì •í•œ ë’¤, ë§¨ ë§ˆì§€ë§‰ì— ì½ê³  ê·¸ë¦¬ë„ë¡ ë³´ì¥
+// ì‹¤ì œ ë Œë”ë§/ì• ë‹ˆë©”ì´ì…˜ì€ ì „ë¶€ ìì‹ íŒŒì¸ (Body, Face, Hair...)ê°€ ë‹´ë‹¹.
 public class PlayerVisual : MonoBehaviour
 {
-    private IFormStageProvider _formProvider; // ÆûÃ¼ÀÎÁö ¿¬Ãâ ¹İÀÀ °ü·Ã
+    private IFormStageProvider _formProvider; // í¼ì²´ì¸ì§€ ì—°ì¶œ ë°˜ì‘ ê´€ë ¨
 
-    private SpriteRenderer[] _allSpriteRenderers; // Awake¿¡¼­ ÇÑ ¹ø¸¸ Ä³½Ì
+    private SpriteRenderer[] _allSpriteRenderers; // Awakeì—ì„œ í•œ ë²ˆë§Œ ìºì‹±
 
     private CharacterStats _stats;
 
     private IPlayerMotor _controller;
-    private Animator _driverAnimator; // Body ÆÄÃ÷ÀÇ Animator. ÀÌº¥Æ®/»óÅÂÁ¶È¸ÀÇ À¯ÀÏÇÑ ±âÁØÁ¡.
-    private Animator[] _partAnimators; // ÀÚ½ÄÀ¸·Î ÀÖ´Â ¸ğµç ¾Ö´Ï¸ŞÀÌÅÍ¸¦ ½Ï ´Ù °ü¸®
+    private Animator _driverAnimator; // Body íŒŒì¸ ì˜ Animator. ì´ë²¤íŠ¸/ìƒíƒœì¡°íšŒì˜ ìœ ì¼í•œ ê¸°ì¤€ì .
+    private Animator[] _partAnimators; // ìì‹ìœ¼ë¡œ ìˆëŠ” ëª¨ë“  ì• ë‹ˆë©”ì´í„°ë¥¼ ì‹¹ ë‹¤ ê´€ë¦¬
 
-    // ÁÂ¿ì ¹æÇâ º° ¸ğ¼Ç
+    // ì¢Œìš° ë°©í–¥ ë³„ ëª¨ì…˜
     private DirectionalPart[] _directionalParts;
     private DirectionalSprite[] _directionalSprites;
 
-    // ´«±ôºıÀÓ ¸ğ¼Ç
+    // ëˆˆê¹œë¹¡ì„ ëª¨ì…˜
     private EyeBlinkController _eyeBlink;
 
     private float _statSpeedMultiplier = 1f;
@@ -33,21 +34,21 @@ public class PlayerVisual : MonoBehaviour
     private void Awake()
     {
         _controller = GetComponentInParent<IPlayerMotor>();
-        _partAnimators = GetComponentsInChildren<Animator>(true); // true¸¦ ³ÖÀ¸¸é ºñÈ°¼ºÈ­µÈ ÆÄÃ÷(ex: ³¯°³)ÀÇ ¾Ö´Ï¸ŞÀÌÅÍµµ ±Ü¾î¿È
+        _partAnimators = GetComponentsInChildren<Animator>(true); // trueë¥¼ ë„£ìœ¼ë©´ ë¹„í™œì„±í™”ëœ íŒŒì¸ (ex: ë‚ ê°œ)ì˜ ì• ë‹ˆë©”ì´í„°ë„ ê¸ì–´ì˜´
         _driverAnimator = ResolveDriverAnimator();
         _allSpriteRenderers = GetComponentsInChildren<SpriteRenderer>(true);
         _directionalParts = GetComponentsInChildren<DirectionalPart>(true);
         _directionalSprites = GetComponentsInChildren<DirectionalSprite>(true);
         _eyeBlink = GetComponentInChildren<EyeBlinkController>(true);
 
-        Debug.Log($"[PlayerVisual] ÃÑ {_partAnimators.Length}°³ÀÇ ÆÄÃ÷ ¾Ö´Ï¸ŞÀÌÅÍ¸¦ µ¿±âÈ­ÇÕ´Ï´Ù.");
+        Debug.Log($"[PlayerVisual] ì´ {_partAnimators.Length}ê°œì˜ íŒŒì¸  ì• ë‹ˆë©”ì´í„°ë¥¼ ë™ê¸°í™”í•©ë‹ˆë‹¤.");
 
-        // Controller¿¡¼­ º¸³»´Â 'Áï½Ã Àç»ı' ÀÌº¥Æ®¸¦ ±¸µ¶
+        // Controllerì—ì„œ ë³´ë‚´ëŠ” 'ì¦‰ì‹œ ì¬ìƒ' ì´ë²¤íŠ¸ë¥¼ êµ¬ë…
         if (_controller != null)
         {
             _controller.OnJumpTriggered += HandleJumpTriggered;
             _controller.OnFallStarted += HandleFallStarted;
-            //_controller.OnLandingAnticipated += HandleLandingAnticipated; // ¡Ú OnLanded ´ë½Å ÀÌ°É ±¸µ¶
+            //_controller.OnLandingAnticipated += HandleLandingAnticipated; // â˜… OnLanded ëŒ€ì‹  ì´ê±¸ êµ¬ë…
             _controller.OnLanded += HandleLanded;
         }
 
@@ -101,11 +102,12 @@ public class PlayerVisual : MonoBehaviour
         if (_controller == null) return;
 
         HandleLockTransitions();
-        HandleKnockbackTransition(); // ¡Ú Ãß°¡
+        HandleKnockbackTransition(); 
         UpdateAnimations();
         UpdateSpriteDirection();
         UpdateAnimationSpeed();
         ReconcileAirborneVisual();
+        ReconcileStuckState();
     }
 
     private Animator ResolveDriverAnimator()
@@ -115,27 +117,27 @@ public class PlayerVisual : MonoBehaviour
 
         if (bodyTag != null) return bodyTag.Animator;
 
-        Debug.LogWarning("[PlayerVisual] Body ½½·Ô ÅÂ±×¸¦ Ã£Áö ¸øÇß½À´Ï´Ù. Ã¹ ÆÄÃ÷¸¦ ±âÁØ Animator·Î »ç¿ëÇÕ´Ï´Ù.");
+        Debug.LogWarning("[PlayerVisual] Body ìŠ¬ë¡¯ íƒœê·¸ë¥¼ ì°¾ì§€ ëª»í–ˆìŠµë‹ˆë‹¤. ì²« íŒŒì¸ ë¥¼ ê¸°ì¤€ Animatorë¡œ ì‚¬ìš©í•©ë‹ˆë‹¤.");
         return _partAnimators.Length > 0 ? _partAnimators[0] : null;
     }
 
-    // ÆûÃ¼ÀÎÁö(¿äÁ¤È­) ¸ğ¼Ç °ü·Ã
+    // í¼ì²´ì¸ì§€(ìš”ì •í™”) ëª¨ì…˜ ê´€ë ¨
     private void HandleFormTransformStarted()
     {
         if (_formProvider == null) { PlayImmediate(PlayerAnimStateNames.Transform); return; }
 
-        bool enteringFlight = !_formProvider.IsFlightForm; // Åä±Û Àü ½ÃÁ¡ÀÌ¶ó ¹İ´ë°¡ ¸ñÇ¥ ¹æÇâ
+        bool enteringFlight = !_formProvider.IsFlightForm; // í† ê¸€ ì „ ì‹œì ì´ë¼ ë°˜ëŒ€ê°€ ëª©í‘œ ë°©í–¥
         PlayImmediate(enteringFlight ? PlayerAnimStateNames.Transform : PlayerAnimStateNames.TransformOut);
     }
     private void HandleFormStageChanged(int newStage) => ReturnToLocomotion();
 
-    // ¸ÂÀ» ¶§¸¶´Ù ¹«Á¶°Ç Àç»ı (¿¬¼ÓÀ¸·Î ¸Â¾Æµµ ¸Å¹ø ´Ù½Ã Æ²¾îÁü)
+    // ë§ì„ ë•Œë§ˆë‹¤ ë¬´ì¡°ê±´ ì¬ìƒ (ì—°ì†ìœ¼ë¡œ ë§ì•„ë„ ë§¤ë²ˆ ë‹¤ì‹œ í‹€ì–´ì§)
     private void HandleKnockbackHit()
     {
         PlayImmediate(PlayerAnimStateNames.Hit);
     }
 
-    // ´ëÈ­/°ø°İ Àá±İ°ú´Â º°°³·Î, ¼ø¼öÇÏ°Ô '³Ë¹é ½ÃÀÛ/Á¾·á' ÀüÀÌ¸¸ °¨ÁöÇØ¼­ Hit ¸ğ¼ÇÀ» ³Ö°í »«´Ù.
+    // ëŒ€í™”/ê³µê²© ì ê¸ˆê³¼ëŠ” ë³„ê°œë¡œ, ìˆœìˆ˜í•˜ê²Œ 'ë„‰ë°± ì‹œì‘/ì¢…ë£Œ' ì „ì´ë§Œ ê°ì§€í•´ì„œ Hit ëª¨ì…˜ì„ ë„£ê³  ëº€ë‹¤.
     private void HandleKnockbackTransition()
     {
         bool isKnockedBack = _controller.IsKnockedBack;
@@ -152,8 +154,8 @@ public class PlayerVisual : MonoBehaviour
         _wasKnockedBack = isKnockedBack;
     }
 
-    // ´ëÈ­ ½ÃÀÛ ¼ø°£¿£ °­Á¦·Î Idle, ±×¸®°í (¸ğµç Á¾·ùÀÇ) Àá±İÀÌ Ç®¸®´Â ¼ø°£¿£
-    // ±×µ¿¾È ¾ï´­·¯µ×´ø ½ÇÁ¦ ¹°¸® »óÅÂ(°øÁß/Áö»ó)¿Í È­¸éÀ» ´Ù½Ã µ¿±âÈ­ÇÑ´Ù.
+    // ëŒ€í™” ì‹œì‘ ìˆœê°„ì—” ê°•ì œë¡œ Idle, ê·¸ë¦¬ê³  (ëª¨ë“  ì¢…ë¥˜ì˜) ì ê¸ˆì´ í’€ë¦¬ëŠ” ìˆœê°„ì—”
+    // ê·¸ë™ì•ˆ ì–µëˆŒëŸ¬ë’€ë˜ ì‹¤ì œ ë¬¼ë¦¬ ìƒíƒœ(ê³µì¤‘/ì§€ìƒ)ì™€ í™”ë©´ì„ ë‹¤ì‹œ ë™ê¸°í™”í•œë‹¤.
     private void HandleLockTransitions()
     {
         bool isDialogueLocked = _controller.IsDialogueLocked;
@@ -171,22 +173,22 @@ public class PlayerVisual : MonoBehaviour
         _wasActionLocked = isActionLocked;
     }
 
-    // ±×·Î±â »óÅÂ
+    // ê·¸ë¡œê¸° ìƒíƒœ
     private void HandleGroggyStarted() => PlayImmediate(PlayerAnimStateNames.Groggy);
     private void HandleGroggyEnded() => ReturnToLocomotion();
 
 
-    // ¾ÈÀüÀåÄ¡: °øÁß + ºñÀá±İ »óÅÂÀÎµ¥ È­¸é»ó »óÅÂ°¡ Jump/Fall °è¿­ÀÌ ¾Æ´Ï¸é °­Á¦·Î ¹Ù·ÎÀâ´Â´Ù.
-    // (ÀÌº¥Æ® À¯½Ç µî ¾î¶² °æ·Î·Î »óÅÂ°¡ ²¿ÀÌµç ÃÖÁ¾ÀûÀ¸·Î Ç×»ó ¿©±â¼­ °É·¯Áø´Ù)
-    // -> Animator¿¡ ÀçÁú¹® ´ë½Å ¿ì¸®°¡ ±â·ÏÇÑ °ªÀ¸·Î ÆÇ´Ü
+    // ì•ˆì „ì¥ì¹˜: ê³µì¤‘ + ë¹„ì ê¸ˆ ìƒíƒœì¸ë° í™”ë©´ìƒ ìƒíƒœê°€ Jump/Fall ê³„ì—´ì´ ì•„ë‹ˆë©´ ê°•ì œë¡œ ë°”ë¡œì¡ëŠ”ë‹¤.
+    // (ì´ë²¤íŠ¸ ìœ ì‹¤ ë“± ì–´ë–¤ ê²½ë¡œë¡œ ìƒíƒœê°€ ê¼¬ì´ë“  ìµœì¢…ì ìœ¼ë¡œ í•­ìƒ ì—¬ê¸°ì„œ ê±¸ëŸ¬ì§„ë‹¤)
+    // -> Animatorì— ì¬ì§ˆë¬¸ ëŒ€ì‹  ìš°ë¦¬ê°€ ê¸°ë¡í•œ ê°’ìœ¼ë¡œ íŒë‹¨
     private void ReconcileAirborneVisual()
     {
         if (_controller.IsGrounded || _controller.IsActionLocked) return; //|| _driverAnimator == null //?
-        if (_formProvider != null && _formProvider.IsFlightForm) return; // ºñÇàÇüÀº ÀÌ ¾ÈÀüÀåÄ¡ ´ë»óÀÌ ¾Æ´Ô
+        if (_formProvider != null && _formProvider.IsFlightForm) return; // ë¹„í–‰í˜•ì€ ì´ ì•ˆì „ì¥ì¹˜ ëŒ€ìƒì´ ì•„ë‹˜
 
         bool isAcceptableAirborneState = _lastCommandedState == PlayerAnimStateNames.JumpUp
         || _lastCommandedState == PlayerAnimStateNames.JumpTree
-        || _lastCommandedState == PlayerAnimStateNames.Ground; // ÂøÁö ¿¹°í ÁßÀÎ Ground »óÅÂµµ Á¤»óÀ¸·Î ÀÎÁ¤
+        || _lastCommandedState == PlayerAnimStateNames.Ground; // ì°©ì§€ ì˜ˆê³  ì¤‘ì¸ Ground ìƒíƒœë„ ì •ìƒìœ¼ë¡œ ì¸ì •
 
         if (!isAcceptableAirborneState)
         {
@@ -196,13 +198,13 @@ public class PlayerVisual : MonoBehaviour
 
     private void UpdateAnimations()
     {
-        //  Idle °­Á¦´Â '´ëÈ­ Áß'ÀÏ ¶§¸¸. °ø°İ/³Ë¹é Áß¿£ ½ÇÁ¦ ¼Óµµ¸¦ ±×´ë·Î ¹İ¿µ
-        //  (°ø°İ Áß¿£ ¾îÂ÷ÇÇ PlayAttackAnimationÀÌ º°µµ »óÅÂ¸¦ Á÷Á¢ Àç»ıÇØ¼­ Speed ÆÄ¶ó¹ÌÅÍ ÀÚÃ¼°¡ ¿µÇâ ¾øÀ½)
+        //  Idle ê°•ì œëŠ” 'ëŒ€í™” ì¤‘'ì¼ ë•Œë§Œ. ê³µê²©/ë„‰ë°± ì¤‘ì—” ì‹¤ì œ ì†ë„ë¥¼ ê·¸ëŒ€ë¡œ ë°˜ì˜
+        //  (ê³µê²© ì¤‘ì—” ì–´ì°¨í”¼ PlayAttackAnimationì´ ë³„ë„ ìƒíƒœë¥¼ ì§ì ‘ ì¬ìƒí•´ì„œ Speed íŒŒë¼ë¯¸í„° ìì²´ê°€ ì˜í–¥ ì—†ìŒ)
         bool forceIdle = _controller.IsDialogueLocked;
         float displaySpeed = forceIdle ? 0f : _controller.CurrentSpeed;
         bool displayDash = !forceIdle && _controller.IsDashing && displaySpeed > 0f;
 
-        // ¸ğµç ÆÄÃ÷¿¡ µ¿½Ã¿¡ °°Àº ÆÄ¶ó¹ÌÅÍ¸¦ ½ô
+        // ëª¨ë“  íŒŒì¸ ì— ë™ì‹œì— ê°™ì€ íŒŒë¼ë¯¸í„°ë¥¼ ì¨
         foreach (var anim in _partAnimators)
         {
             if (anim == null || !anim.gameObject.activeInHierarchy) continue;
@@ -216,36 +218,36 @@ public class PlayerVisual : MonoBehaviour
 
     private void UpdateSpriteDirection()
     {
-        // °ø°İ ÁßÀÌ°Å³ª ´ëÈ­ ÁßÀÏ ¶© ÁÂ¿ì ¹İÀü(flip) Àá±İ
+        // ê³µê²© ì¤‘ì´ê±°ë‚˜ ëŒ€í™” ì¤‘ì¼ ë• ì¢Œìš° ë°˜ì „(flip) ì ê¸ˆ
         if (!_controller.CanFlip) return;
 
         float inputX = Input.GetAxisRaw("Horizontal");
         if (inputX != 0)
         {
-            bool flip = inputX > 0; // ±âÁ¸¿¡ ¸Â°Ô Á¶Á¤ (¿ŞÂÊ/¿À¸¥ÂÊ)
+            bool flip = inputX > 0; // ê¸°ì¡´ì— ë§ê²Œ ì¡°ì • (ì™¼ìª½/ì˜¤ë¥¸ìª½)
 
-            // ¸ğµç ÆÄÃ÷ÀÇ SpriteRenderer¸¦ Ã£¾Æ¼­ µ¿½Ã¿¡ µÚÁıÀ½
-            foreach (var sr in _allSpriteRenderers) // Ä³½ÌµÈ ¹è¿­ Àç»ç¿ë, ÇÒ´ç ¾øÀ½
+            // ëª¨ë“  íŒŒì¸ ì˜ SpriteRendererë¥¼ ì°¾ì•„ì„œ ë™ì‹œì— ë’¤ì§‘ìŒ
+            foreach (var sr in _allSpriteRenderers) // ìºì‹±ëœ ë°°ì—´ ì¬ì‚¬ìš©, í• ë‹¹ ì—†ìŒ
             {
                 if (sr != null) sr.flipX = flip;
             }
         }
     }
 
-    // ¾Ö´Ï¸ŞÀÌ¼Ç Àç»ı¼Óµµ °ü·Ã
+    // ì• ë‹ˆë©”ì´ì…˜ ì¬ìƒì†ë„ ê´€ë ¨
     private void UpdateAnimationSpeed()
     {
         _statSpeedMultiplier = _controller.SpeedMultiplier;
 
-        // È÷Æ®½ºÅé ÁøÇà ÁßÀÌ ¾Æ´Ò ¶§¸¸ ½ºÅÈ ¹è¼ÓÀ» ½Ç½Ã°£ ¹İ¿µ
+        // íˆíŠ¸ìŠ¤í†± ì§„í–‰ ì¤‘ì´ ì•„ë‹ ë•Œë§Œ ìŠ¤íƒ¯ ë°°ì†ì„ ì‹¤ì‹œê°„ ë°˜ì˜
         if (_hitStopRoutine == null)
             ApplyAnimatorSpeed(_statSpeedMultiplier);
     }
 
-    // Æ¯Á¤ Á¤±ÔÈ­µÈ Àç»ı ½ÃÁ¡ºÎÅÍ »óÅÂ¸¦ Àç»ı (8¹ø: ÂøÁö ¼ø°£ ²÷±è ¾øÀÌ Áö»ó Å¬¸³À¸·Î ÀüÈ¯ÇÒ ¶§ »ç¿ë)
+    // íŠ¹ì • ì •ê·œí™”ëœ ì¬ìƒ ì‹œì ë¶€í„° ìƒíƒœë¥¼ ì¬ìƒ (8ë²ˆ: ì°©ì§€ ìˆœê°„ ëŠê¹€ ì—†ì´ ì§€ìƒ í´ë¦½ìœ¼ë¡œ ì „í™˜í•  ë•Œ ì‚¬ìš©)
     public void PlayAttackAnimation(string stateName, float normalizedTime = 0f)
     {
-        _eyeBlink?.SetVisible(false); // ¡Ú °ø°İ ½ÃÀÛ ½Ã ´« ¼û±è (Face ÀÚÃ¼ ±×¸²¿¡ ÀÌ¹Ì Æ÷ÇÔµÇ¾î ÀÖÀ¸¹Ç·Î)
+        _eyeBlink?.SetVisible(false); // â˜… ê³µê²© ì‹œì‘ ì‹œ ëˆˆ ìˆ¨ê¹€ (Face ìì²´ ê·¸ë¦¼ì— ì´ë¯¸ í¬í•¨ë˜ì–´ ìˆìœ¼ë¯€ë¡œ)
         PlayImmediate(stateName, normalizedTime);
     }
 
@@ -253,7 +255,7 @@ public class PlayerVisual : MonoBehaviour
     {
         if (_driverAnimator == null) return 0f;
         var info = _driverAnimator.GetCurrentAnimatorStateInfo(0);
-        return info.normalizedTime % 1f; // ¹İº¹ È½¼ö(Á¤¼öºÎ) Á¦°Å, 0~1 ¼Ò¼öºÎ¸¸
+        return info.normalizedTime % 1f; // ë°˜ë³µ íšŸìˆ˜(ì •ìˆ˜ë¶€) ì œê±°, 0~1 ì†Œìˆ˜ë¶€ë§Œ
     }
 
     public void SetFacingDirection(bool flipX)
@@ -261,22 +263,22 @@ public class PlayerVisual : MonoBehaviour
         foreach (var sr in _allSpriteRenderers)
             if (sr != null) sr.flipX = flipX;
 
-        bool facingRight = flipX; // ±âÁ¸ ÄÁº¥¼Ç: flipX=true ¡æ ¿À¸¥ÂÊ
+        bool facingRight = flipX; // ê¸°ì¡´ ì»¨ë²¤ì…˜: flipX=true â†’ ì˜¤ë¥¸ìª½
         foreach (var part in _directionalParts) part.ApplyFacing(facingRight);
         foreach (var s in _directionalSprites) s.ApplyFacing(facingRight);
     }
 
 
 
-    // --- Á¡ÇÁ/ÂøÁö/³«ÇÏ: Transition¿¡ ¸Ã±âÁö ¾Ê°í ÄÚµå°¡ Á÷Á¢ »óÅÂ¸¦ °­Á¦ ÁöÁ¤ ---
+    // --- ì í”„/ì°©ì§€/ë‚™í•˜: Transitionì— ë§¡ê¸°ì§€ ì•Šê³  ì½”ë“œê°€ ì§ì ‘ ìƒíƒœë¥¼ ê°•ì œ ì§€ì • ---
 
-    // ´ëÈ­/°ø°İ/³Ë¹é µîÀ¸·Î Àá±ä »óÅÂ¿¡¼­´Â Jump/Fall/Landed ½Ã°¢ ¹İÀÀÀ» ¹«½ÃÇÑ´Ù.
-    // (¹°¸®Àû IsGrounded °ª ÀÚÃ¼´Â ÄÁÆ®·Ñ·¯¿¡¼­ Ç×»ó Á¤È®È÷ °»½ÅµÇ°í ÀÖÀ¸¹Ç·Î,
-    //  Àá±İÀÌ Ç®¸®´Â ¼ø°£ SyncVisualToPhysicalState°¡ ÃÖÁ¾ »óÅÂ¸¦ ¹Ù·Î Àâ¾ÆÁØ´Ù.)
+    // ëŒ€í™”/ê³µê²©/ë„‰ë°± ë“±ìœ¼ë¡œ ì ê¸´ ìƒíƒœì—ì„œëŠ” Jump/Fall/Landed ì‹œê° ë°˜ì‘ì„ ë¬´ì‹œí•œë‹¤.
+    // (ë¬¼ë¦¬ì  IsGrounded ê°’ ìì²´ëŠ” ì»¨íŠ¸ë¡¤ëŸ¬ì—ì„œ í•­ìƒ ì •í™•íˆ ê°±ì‹ ë˜ê³  ìˆìœ¼ë¯€ë¡œ,
+    //  ì ê¸ˆì´ í’€ë¦¬ëŠ” ìˆœê°„ SyncVisualToPhysicalStateê°€ ìµœì¢… ìƒíƒœë¥¼ ë°”ë¡œ ì¡ì•„ì¤€ë‹¤.)
     private void HandleJumpTriggered()
     {
         if (_controller.IsActionLocked) return;
-        if (_formProvider != null && _formProvider.IsFlightForm) return; // ºñÇàÇüÀº º°µµ Á¡ÇÁ ¿¬Ãâ ¾øÀ½
+        if (_formProvider != null && _formProvider.IsFlightForm) return; // ë¹„í–‰í˜•ì€ ë³„ë„ ì í”„ ì—°ì¶œ ì—†ìŒ
         PlayImmediate(PlayerAnimStateNames.JumpUp);
     }
     private void HandleFallStarted()
@@ -300,35 +302,53 @@ public class PlayerVisual : MonoBehaviour
     //    PlayImmediate(PlayerAnimStateNames.Ground);
     //}
 
-    // ½ÇÁ¦ Á¢ÃË Àü, ¿¹°í ½ÃÁ¡¿¡ ÂøÁö ¸ğ¼ÇÀ» ¹Ì¸® Àç»ı
+    // ì‹¤ì œ ì ‘ì´‰ ì „, ì˜ˆê³  ì‹œì ì— ì°©ì§€ ëª¨ì…˜ì„ ë¯¸ë¦¬ ì¬ìƒ
     private void HandleLanded()
     {
         if (_controller.IsActionLocked) return;
-        if (_formProvider != null && _formProvider.IsFlightForm) return; // ºñÇàÇüÀº ÂøÁö ¸ğ¼Ç ¾øÀ½
+        if (_formProvider != null && _formProvider.IsFlightForm) return; // ë¹„í–‰í˜•ì€ ì°©ì§€ ëª¨ì…˜ ì—†ìŒ
         PlayImmediate(PlayerAnimStateNames.Ground);
     }
 
-    // Player_JumpUp Å¬¸³ ¸¶Áö¸· ÇÁ·¹ÀÓÀÇ Animation Event¿¡¼­ È£Ãâ (Relay °æÀ¯)
+    private void ReconcileStuckState()
+    {
+        if (_controller.IsActionLocked) return; // ì •ìƒì ìœ¼ë¡œ ì ê¸´ ìƒíƒœë©´ ê±´ë“œë¦¬ì§€ ì•ŠìŒ
+        if (_driverAnimator == null) return;
+
+        var info = _driverAnimator.GetCurrentAnimatorStateInfo(0);
+        bool isLocomotionState = info.IsName(PlayerAnimStateNames.Movement)
+            || info.IsName(PlayerAnimStateNames.JumpUp)
+            || info.IsName(PlayerAnimStateNames.JumpTree)
+            || info.IsName(PlayerAnimStateNames.Ground);
+
+        if (!isLocomotionState)
+        {
+            Debug.LogWarning("[PlayerVisual] ì ê¸ˆ í•´ì œ ìƒíƒœì¸ë° ì• ë‹ˆë©”ì´í„°ê°€ ë¡œì½”ëª¨ì…˜ì´ ì•„ë‹˜ â€” ê°•ì œ ë³µêµ¬í•©ë‹ˆë‹¤.");
+            ReturnToLocomotion();
+        }
+    }
+
+    // Player_JumpUp í´ë¦½ ë§ˆì§€ë§‰ í”„ë ˆì„ì˜ Animation Eventì—ì„œ í˜¸ì¶œ (Relay ê²½ìœ )
     public void OnJumpApex() => CrossFadeAll(PlayerAnimStateNames.JumpTree, 0.05f);
 
-    // Player_Ground Å¬¸³ ¸¶Áö¸· ÇÁ·¹ÀÓÀÇ Animation Event¿¡¼­ È£Ãâ (Relay °æÀ¯)
+    // Player_Ground í´ë¦½ ë§ˆì§€ë§‰ í”„ë ˆì„ì˜ Animation Eventì—ì„œ í˜¸ì¶œ (Relay ê²½ìœ )
     public void OnGroundEnd() => ReturnToMovement();
 
-    // --- PlayerCombat¿¡¼­ È£Ãâ ---
-    public void PlayAttackAnimation(string stateName) => PlayAttackAnimation(stateName, 0f); // ¡Ú ´« ¼û±è ·ÎÁ÷ÀÌ Ç×»ó °°ÀÌ ½ÇÇàµÊ
+    // --- PlayerCombatì—ì„œ í˜¸ì¶œ ---
+    public void PlayAttackAnimation(string stateName) => PlayAttackAnimation(stateName, 0f); // â˜… ëˆˆ ìˆ¨ê¹€ ë¡œì§ì´ í•­ìƒ ê°™ì´ ì‹¤í–‰ë¨
     public void ReturnToMovement() => CrossFadeAll(PlayerAnimStateNames.Movement, 0.1f);
 
-    // PlayerGuard¿¡¼­ È£Ãâ
+    // PlayerGuardì—ì„œ í˜¸ì¶œ
     public void PlayState(string stateName) => PlayImmediate(stateName);
 
-    // Àá±İ »óÅÂ(°ø°İ µî)¿¡¼­ ¹ş¾î³¯ ¶§ È£Ãâ: ÇöÀç ¹°¸® »óÅÂ¿¡ ¸Â´Â ÀÌµ¿ ¸ğ¼ÇÀ¸·Î º¹±Í
+    // ì ê¸ˆ ìƒíƒœ(ê³µê²© ë“±)ì—ì„œ ë²—ì–´ë‚  ë•Œ í˜¸ì¶œ: í˜„ì¬ ë¬¼ë¦¬ ìƒíƒœì— ë§ëŠ” ì´ë™ ëª¨ì…˜ìœ¼ë¡œ ë³µê·€
     public void ReturnToLocomotion()
     {
-        _eyeBlink?.SetVisible(true); // ¡Ú °ø°İ ³¡³ª¸é ´Ù½Ã Ç¥½Ã
+        _eyeBlink?.SetVisible(true); // â˜… ê³µê²© ëë‚˜ë©´ ë‹¤ì‹œ í‘œì‹œ
 
         if (_formProvider != null && _formProvider.IsFlightForm)
         {
-            CrossFadeAll(PlayerAnimStateNames.Movement, 0.1f); // ºñÇàÇüÀº Ç×»ó Movement(È£¹ö/ºñÇà ºí·»µåÆ®¸®)
+            CrossFadeAll(PlayerAnimStateNames.Movement, 0.1f); // ë¹„í–‰í˜•ì€ í•­ìƒ Movement(í˜¸ë²„/ë¹„í–‰ ë¸”ë Œë“œíŠ¸ë¦¬)
             return;
         }
 
@@ -342,7 +362,7 @@ public class PlayerVisual : MonoBehaviour
         _hitStopRoutine = StartCoroutine(HitStopRoutine(duration));
     }
 
-    // °ø°İÀÌ ÇÇ°İ µîÀ¸·Î Äµ½½µÆÀ» ¶§, °É·ÁÀÖ´ø È÷Æ®½ºÅéÀ» Áï½Ã Ç®°í Á¤»ó ¹è¼Ó(=ÇöÀç ½ºÅÈ ¹è¼Ó)À¸·Î º¹±Í
+    // ê³µê²©ì´ í”¼ê²© ë“±ìœ¼ë¡œ ìº”ìŠ¬ëì„ ë•Œ, ê±¸ë ¤ìˆë˜ íˆíŠ¸ìŠ¤í†±ì„ ì¦‰ì‹œ í’€ê³  ì •ìƒ ë°°ì†(=í˜„ì¬ ìŠ¤íƒ¯ ë°°ì†)ìœ¼ë¡œ ë³µê·€
     public void ResetAnimationSpeed()
     {
         if (_hitStopRoutine != null) { StopCoroutine(_hitStopRoutine); _hitStopRoutine = null; }
@@ -353,20 +373,20 @@ public class PlayerVisual : MonoBehaviour
     {
         ApplyAnimatorSpeed(0f);
         yield return new WaitForSecondsRealtime(duration);
-        ApplyAnimatorSpeed(_statSpeedMultiplier); // ¹«Á¶°Ç 1f°¡ ¾Æ´Ï¶ó 'ÇöÀç ½ºÅÈ ¹è¼Ó'À¸·Î º¹±Í
+        ApplyAnimatorSpeed(_statSpeedMultiplier); // ë¬´ì¡°ê±´ 1fê°€ ì•„ë‹ˆë¼ 'í˜„ì¬ ìŠ¤íƒ¯ ë°°ì†'ìœ¼ë¡œ ë³µê·€
         _hitStopRoutine = null;
     }
 
     private void PlayImmediate(string stateName, float normalizedTime = 0f)
     {
-        _lastCommandedState = stateName; // ¸í·ÉÀ» ³»¸± ¶§¸¶´Ù ±â·Ï
+        _lastCommandedState = stateName; // ëª…ë ¹ì„ ë‚´ë¦´ ë•Œë§ˆë‹¤ ê¸°ë¡
         foreach (var anim in _partAnimators)
             if (anim != null && anim.gameObject.activeInHierarchy)
                 anim.Play(stateName, -1, normalizedTime);
     }
     private void CrossFadeAll(string stateName, float duration)
     {
-        _lastCommandedState = stateName; // ¿©±âµµ µ¿ÀÏ
+        _lastCommandedState = stateName; // ì—¬ê¸°ë„ ë™ì¼
         foreach (var anim in _partAnimators)
             if (anim != null && anim.gameObject.activeInHierarchy)
                 anim.CrossFade(stateName, duration);
@@ -378,7 +398,7 @@ public class PlayerVisual : MonoBehaviour
             if (anim != null) anim.speed = speed;
     }
 
-    // ¿¬Ãâ¿ë ÄÆ½Å Àç»ı
+    // ì—°ì¶œìš© ì»·ì‹  ì¬ìƒ
     public void PlayCutscene(string bodyStateName, string faceStateName)
     {
         var appearance = GetComponent<CharacterAppearance>();

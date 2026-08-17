@@ -38,7 +38,7 @@ public class BossAIProfileWindow : EditorWindow
         {
             var liveLiel = Object.FindObjectsOfType<Liel_AI>().FirstOrDefault();
             if (liveLiel != null)
-                EditorGUILayout.HelpBox($"현재 씬: {liveLiel.currentDifficultyTier} / {liveLiel.currentCombatStyle} / Phase {liveLiel.bossPhase}", MessageType.Info);
+                EditorGUILayout.HelpBox($"현재 씬: {liveLiel.currentDifficultyTier} / {liveLiel.currentCombatStyle} / Phase {liveLiel.bossPhase} / HP {liveLiel.currentHealth}/{liveLiel.maxHealth}", MessageType.Info);
         }
 
         _scroll = EditorGUILayout.BeginScrollView(_scroll);
@@ -63,7 +63,7 @@ public class BossAIProfileWindow : EditorWindow
 
         var so = new SerializedObject(profile);
         so.Update();
-        EditorGUILayout.PropertyField(so.FindProperty("phases"), true); // styleOverrides/agilityModifier 자동으로 같이 보임
+        EditorGUILayout.PropertyField(so.FindProperty("phases"), true); // styleOverrides/agilityModifier/maxHealthOverride 전부 여기 안에서 자동으로 같이 보임
         so.ApplyModifiedProperties();
 
         if (!_previewStyle.ContainsKey(profile)) _previewStyle[profile] = Liel_AI.LielCombatStyle.InjuredCommander;

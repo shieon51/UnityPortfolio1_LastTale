@@ -18,6 +18,12 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
     public LayerMask groundLayer; // Solid Ground + One-Way Platform 모두 포함
     public Vector3 groundCheckOffset = new Vector3(0, -0.5f, 0);
 
+    [Header("Ground Embed Failsafe")]
+    [Tooltip("지형 파묻힘을 검사할 주기(초)")]
+    public float embedCheckInterval = 0.5f;
+    [Tooltip("발밑 기준 이 높이 위에서 아래로 검사")]
+    public float embedCheckHeight = 3f;
+
     [Header("Form Change Movement")]
     [Tooltip("변신 중 수평 속도가 감속되는 정도 (초당 감소 속도, 클수록 빨리 멈춤)")]
     public float formTransformDeceleration = 20f; // ex. 달리기 속도 6 기준 0.3초 안에 정지함
@@ -104,6 +110,11 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
     private float _lastConfirmedGroundedTime = -10f;
     private const float GroundedCoyoteGrace = 0.1f;
 
+    // 지형 파묻힘 예외처리 관련
+    private Vector2 _lastSafeGroundedPosition;
+    private float _embedCheckTimer = 0f;
+    private LayerMask _solidGroundOnlyLayer; // groundLayer에서 OneWayPlatform만 뺀 것
+
     // --- 컴포넌트 캐싱 ---
     private Rigidbody2D _rb;
     private Collider2D _groundCollider;
@@ -132,11 +143,15 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
             _formProvider.OnFormStageChanged += HandleFormStageChanged;
             _formProvider.OnFormStageChanged += HandleFlightStateChanged;
         }
+
+        _solidGroundOnlyLayer = groundLayer;
+        if (_oneWayPlatform != null) _solidGroundOnlyLayer &= ~_oneWayPlatform.oneWayPlatformLayer;
     }
 
     private void Start()
     {
         _originalGravity = _rb.gravityScale;
+        _lastSafeGroundedPosition = transform.position;
     }
 
     private void OnDestroy()
@@ -162,6 +177,9 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
         // 바닥 여부는 '물리적 사실'이므로 잠금 여부와 무관하게 항상 정확히 추적한다.
         // (대화/공격/넉백 중에도 실제로는 계속 낙하하다 착지할 수 있기 때문)
         CheckGrounded();
+
+        // 잠금 여부와 무관하게 항상 체크
+        CheckGroundEmbedFailsafe();
 
         // 2. 행동 불가 상태면 입력 무시
         if (IsActionLocked)
@@ -378,6 +396,33 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
         //    // 점프 호출 없이 자연스럽게 공중으로 진입한 경우 (낭떠러지 등)
         //    OnFallStarted?.Invoke();
         //}
+    }
+
+    // 예기치 못한 이유로 지형 아래로 파묻혔을 때 위로 올려주는 함수
+    private void CheckGroundEmbedFailsafe()
+    {
+        if (IsGrounded && !IsEmbeddedInGround())
+            _lastSafeGroundedPosition = transform.position; // 정상 상태일 때만 계속 갱신
+
+        _embedCheckTimer += Time.deltaTime;
+        if (_embedCheckTimer < embedCheckInterval) return;
+        _embedCheckTimer = 0f;
+
+        if (IsEmbeddedInGround())
+        {
+            Debug.LogWarning("[PlayerController] 지형에 파묻힌 상태 감지 — 마지막 안전 위치로 복구합니다.");
+            transform.position = _lastSafeGroundedPosition;
+            _rb.linearVelocity = Vector2.zero;
+        }
+    }
+
+    // 발보다 위에서 지형 표면이 잡히면 = 파묻힘
+    private bool IsEmbeddedInGround()
+    {
+        Vector2 feetPos = (Vector2)transform.position + (Vector2)groundCheckOffset;
+        Vector2 rayStart = feetPos + Vector2.up * embedCheckHeight;
+        RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, embedCheckHeight * 2f, _solidGroundOnlyLayer);
+        return hit.collider != null && hit.point.y > feetPos.y + 0.05f;
     }
 
     private bool ComputeRawGrounded()

@@ -61,6 +61,12 @@ public class NPCVisual : MonoBehaviour
                 anim.CrossFade(stateName, duration);
     }
 
+    public void SetAnimatorSpeed(float speed)
+    {
+        foreach (var anim in _partAnimators)
+            if (anim != null) anim.speed = speed;
+    }
+
     public void SetFacingDirection(bool flipX)
     {
         foreach (var sr in _allSpriteRenderers)
