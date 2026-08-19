@@ -314,6 +314,7 @@ public class PlayerVisual : MonoBehaviour
     {
         if (_controller.IsActionLocked) return; // 정상적으로 잠긴 상태면 건드리지 않음
         if (_driverAnimator == null) return;
+        if (_driverAnimator.IsInTransition(0)) return; // 크로스페이드 진행 중인 정상 과정은 건드리지 않음
 
         var info = _driverAnimator.GetCurrentAnimatorStateInfo(0);
         bool isLocomotionState = info.IsName(PlayerAnimStateNames.Movement)
@@ -329,10 +330,18 @@ public class PlayerVisual : MonoBehaviour
     }
 
     // Player_JumpUp 클립 마지막 프레임의 Animation Event에서 호출 (Relay 경유)
-    public void OnJumpApex() => CrossFadeAll(PlayerAnimStateNames.JumpTree, 0.05f);
+    public void OnJumpApex()
+    {
+        if (_lastCommandedState != PlayerAnimStateNames.JumpUp) return; // ★ 동일한 방어
+        CrossFadeAll(PlayerAnimStateNames.JumpTree, 0.05f);
+    }
 
     // Player_Ground 클립 마지막 프레임의 Animation Event에서 호출 (Relay 경유)
-    public void OnGroundEnd() => ReturnToMovement();
+    public void OnGroundEnd()
+    {
+        if (_lastCommandedState != PlayerAnimStateNames.Ground) return; // ★ 이미 다른 상태로 넘어갔으면 지연된 이벤트니 무시
+        ReturnToMovement();
+    }
 
     // --- PlayerCombat에서 호출 ---
     public void PlayAttackAnimation(string stateName) => PlayAttackAnimation(stateName, 0f); // ★ 눈 숨김 로직이 항상 같이 실행됨
@@ -379,6 +388,8 @@ public class PlayerVisual : MonoBehaviour
 
     private void PlayImmediate(string stateName, float normalizedTime = 0f)
     {
+        Debug.Log($"[DBG {Time.time:F3}] PlayImmediate({stateName}) ← {new System.Diagnostics.StackTrace().GetFrame(1)?.GetMethod()?.Name}");
+
         _lastCommandedState = stateName; // 명령을 내릴 때마다 기록
         foreach (var anim in _partAnimators)
             if (anim != null && anim.gameObject.activeInHierarchy)
@@ -386,6 +397,8 @@ public class PlayerVisual : MonoBehaviour
     }
     private void CrossFadeAll(string stateName, float duration)
     {
+        Debug.Log($"[DBG {Time.time:F3}] CrossFadeAll({stateName}) ← {new System.Diagnostics.StackTrace().GetFrame(1)?.GetMethod()?.Name}");
+
         _lastCommandedState = stateName; // 여기도 동일
         foreach (var anim in _partAnimators)
             if (anim != null && anim.gameObject.activeInHierarchy)

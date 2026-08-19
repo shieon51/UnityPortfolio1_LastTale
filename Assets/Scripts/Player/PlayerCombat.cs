@@ -19,7 +19,17 @@ public class PlayerCombat : MonoBehaviour
     private SpriteRenderer _spriteRenderer;
     private PlayerVisual _playerVisual; // 애니메이션 강제 동기화용
 
-    public bool IsAttacking { get; private set; }
+    public bool IsAttacking
+    {
+        get => _isAttacking;
+        private set
+        {
+            if (_isAttacking != value) Debug.Log($"[DBG {Time.time:F3}] IsAttacking: {_isAttacking} → {value}");
+            _isAttacking = value;
+        }
+    }
+    private bool _isAttacking;
+
     public MovementContext CurrentSkillContext { get; private set; } // 히트박스 오버라이드/착지 전환에 사용
     private float _originalGravity;
 
@@ -49,6 +59,9 @@ public class PlayerCombat : MonoBehaviour
 
     // ** 스킬 클래스(MeleeDashSkill 등)가 플레이어가 바라보는 방향을 쉽게 알 수 있도록 열어주는 프로퍼티
     public float FacingDirection => (_spriteRenderer != null && _spriteRenderer.flipX) ? -1f : 1f;
+
+    // 예기치 못한 상황으로 스킬 이벤트 지연으로 인한 모션 씹힘 현상 관련
+    private float _currentSkillStartTime; // 추가
 
     public event Action<SkillBase> OnSkillBlockedByMana; // UI 피드백(마나 부족 이펙트 등)용 훅
 
@@ -184,9 +197,15 @@ public class PlayerCombat : MonoBehaviour
         var context = ResolveMovementContext();
         CurrentSkillContext = context;
 
+        Debug.Log($"[DBG {Time.time:F3}] 공격 시작: {skillToPlay.skillName}, context={context}"); // ?
+
         // 비주얼 파츠 동시 재생
         if (_playerVisual != null)
+        {
             _playerVisual.PlayAttackAnimation(skillToPlay.ResolveAnimStateName(context));
+        }
+
+        _currentSkillStartTime = Time.time; // ?
 
         _attackSessionId++;
         int sessionId = _attackSessionId;
@@ -210,8 +229,16 @@ public class PlayerCombat : MonoBehaviour
         if (!IsAttacking || _currentPlayingSkill == null) return;
         if (CurrentSkillContext == MovementContext.Grounded) return;
 
+        //Debug.Log($"[DBG {Time.time:F3}] HandleLandedDuringAttack 발동 (공중→지상 컨텍스트 전환)");
+
         string groundedState = _currentPlayingSkill.ResolveAnimStateName(MovementContext.Grounded);
-        float normalizedTime = _playerVisual != null ? _playerVisual.GetCurrentNormalizedTime() : 0f;
+
+        // ★ 스킬 시작한 지 30ms 이내면, GetCurrentNormalizedTime()이 아직 애니메이터에 반영 안 된
+        //   직전 클립 값을 읽어올 수 있어서 못 믿음 — 그럴 땐 그냥 처음부터 재생
+        float normalizedTime = (Time.time - _currentSkillStartTime < 0.03f)
+            ? 0f
+            : (_playerVisual != null ? _playerVisual.GetCurrentNormalizedTime() : 0f);
+
         _playerVisual?.PlayAttackAnimation(groundedState, normalizedTime);
         CurrentSkillContext = MovementContext.Grounded;
     }
@@ -249,7 +276,8 @@ public class PlayerCombat : MonoBehaviour
 
         if (sessionId == _attackSessionId && IsAttacking)
         {
-            Debug.LogWarning($"[PlayerCombat] '{skill.skillName}' 스킬의 OnAttackEnd 이벤트가 {skill.maxAnimationDuration}초 내 호출되지 않아 안전장치가 강제로 종료합니다. 클립의 Animation Event를 확인해보세요.");
+            Debug.LogWarning($"[DBG {Time.time:F3}] ★★★ 워치독 강제종료 — OnAttackEnd 이벤트가 안 왔음!");
+            //Debug.LogWarning($"[PlayerCombat] '{skill.skillName}' 스킬의 OnAttackEnd 이벤트가 {skill.maxAnimationDuration}초 내 호출되지 않아 안전장치가 강제로 종료합니다. 클립의 Animation Event를 확인해보세요.");
             OnAttackEnd();
         }
     }
@@ -287,6 +315,8 @@ public class PlayerCombat : MonoBehaviour
 
     public void OnAttackCombo()
     {
+        if (Time.time - _currentSkillStartTime < 0.03f) return;
+
         // 애니메이션에서 OnAttackCombo 프레임에 도달하면 콤보 창 개방
         // 이 순간 버퍼에 예약된 게 있으면 Update문에서 즉시 다음 스킬이 나감
         _isComboWindowOpen = true;
@@ -295,6 +325,12 @@ public class PlayerCombat : MonoBehaviour
 
     public void OnAttackEnd()
     {
+        if (Time.time - _currentSkillStartTime < 0.03f) // ★ 30ms 이내면 직전 클립의 지연 이벤트로 판단
+        {
+            Debug.LogWarning($"[DBG {Time.time:F3}] OnAttackEnd 무시됨 — 스킬 시작 {Time.time - _currentSkillStartTime:F3}초 후");
+            return;
+        }
+
         IsAttacking = false;
         _isComboWindowOpen = false;
         _stats.isSuperArmor = false;
@@ -315,6 +351,8 @@ public class PlayerCombat : MonoBehaviour
 
     public void CancelAttack()
     {
+        Debug.Log($"[DBG {Time.time:F3}] CancelAttack 호출됨");
+
         StopAllCoroutines();
         IsAttacking = false;
         _isComboWindowOpen = false;

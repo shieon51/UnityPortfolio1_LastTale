@@ -70,7 +70,11 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
             if (_stats != null && _stats.IsGroggy) return true;
             if (_lockSources != null)
                 foreach (var source in _lockSources)
-                    if (source.IsLocked) { Debug.Log($"[잠금 원인] {source.GetType().Name}"); return true; } // ** 
+                    if (source.IsLocked) 
+                    { 
+                        //Debug.Log($"[잠금 원인] {source.GetType().Name}"); 
+                        return true; 
+                    } // ** 
             return false;
         }
     }
@@ -287,6 +291,8 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
 
     private void Jump()
     {
+        Debug.Log($"[DBG {Time.time:F3}] Jump() 호출");
+
         // 점프하는 순간 대시 중이었다면 상태를 기억함
         _isDashLatchedInAir = IsDashing;
         _lastJumpTime = Time.time;       // 점프 시간 기록
@@ -311,6 +317,8 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
 
         if (_oneWayPlatform.TryPassThrough(hit.collider))
         {
+            Debug.Log($"[DBG {Time.time:F3}] OneWayPlatform 통과 시작");
+
             _goToUnder = true;
             StartCoroutine(ResetGoToUnderFlagRoutine(_oneWayPlatform.passThroughDuration));
         }
@@ -498,6 +506,8 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
 
     private void ApplyGroundedChange(bool grounded)
     {
+        Debug.Log($"[DBG {Time.time:F3}] IsGrounded → {grounded}");
+
         bool wasGroundedPrev = IsGrounded;
         IsGrounded = grounded;
 
