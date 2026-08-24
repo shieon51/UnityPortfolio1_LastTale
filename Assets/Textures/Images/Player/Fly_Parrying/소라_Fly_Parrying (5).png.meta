@@ -1,0 +1,598 @@
+fileFormatVersion: 2
+guid: 0899f4dfd63a60d45a186903c014daea
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -7972671655505254472
+    second: "\uC18C\uB77C_Fly_Parrying (5)_0"
+  - first:
+      213: -1332480183057074309
+    second: "\uC18C\uB77C_Fly_Parrying (5)_1"
+  - first:
+      213: -2922984318796518272
+    second: "\uC18C\uB77C_Fly_Parrying (5)_2"
+  - first:
+      213: -2653728277040140822
+    second: "\uC18C\uB77C_Fly_Parrying (5)_3"
+  - first:
+      213: -6005148271962216995
+    second: "\uC18C\uB77C_Fly_Parrying (5)_4"
+  - first:
+      213: -1444745002620273341
+    second: "\uC18C\uB77C_Fly_Parrying (5)_5"
+  - first:
+      213: -5819989297117558387
+    second: "\uC18C\uB77C_Fly_Parrying (5)_6"
+  - first:
+      213: 4996122455090664218
+    second: "\uC18C\uB77C_Fly_Parrying (5)_7"
+  - first:
+      213: -1903849966721333927
+    second: "\uC18C\uB77C_Fly_Parrying (5)_8"
+  - first:
+      213: 6227979736770205653
+    second: "\uC18C\uB77C_Fly_Parrying (5)_9"
+  - first:
+      213: 509977214240443477
+    second: "\uC18C\uB77C_Fly_Parrying (5)_10"
+  - first:
+      213: -6550587552352320983
+    second: "\uC18C\uB77C_Fly_Parrying (5)_11"
+  - first:
+      213: -6691234016171353772
+    second: "\uC18C\uB77C_Fly_Parrying (5)_12"
+  - first:
+      213: -8369683169068504635
+    second: "\uC18C\uB77C_Fly_Parrying (5)_13"
+  - first:
+      213: -7674338421340543741
+    second: "\uC18C\uB77C_Fly_Parrying (5)_14"
+  - first:
+      213: 6444047620078655393
+    second: "\uC18C\uB77C_Fly_Parrying (5)_15"
+  - first:
+      213: 490266457513054794
+    second: "\uC18C\uB77C_Fly_Parrying (5)_16"
+  - first:
+      213: -9016411854572066734
+    second: "\uC18C\uB77C_Fly_Parrying (5)_17"
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Parrying (5)_0"
+      rect:
+        serializedVersion: 2
+        x: 255
+        y: 233
+        width: 15
+        height: 73
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8b7a8cece516b5190800000000000000
+      internalID: -7972671655505254472
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Parrying (5)_1"
+      rect:
+        serializedVersion: 2
+        x: 267
+        y: 273
+        width: 18
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b77b2a25554128de0800000000000000
+      internalID: -1332480183057074309
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Parrying (5)_2"
+      rect:
+        serializedVersion: 2
+        x: 295
+        y: 254
+        width: 32
+        height: 53
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 08ca81aaf397f67d0800000000000000
+      internalID: -2922984318796518272
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Parrying (5)_3"
+      rect:
+        serializedVersion: 2
+        x: 377
+        y: 303
+        width: 9
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aedec9c21301c2bd0800000000000000
+      internalID: -2653728277040140822
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Parrying (5)_4"
+      rect:
+        serializedVersion: 2
+        x: 378
+        y: 294
+        width: 25
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dd5242a967d69aca0800000000000000
+      internalID: -6005148271962216995
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Parrying (5)_5"
+      rect:
+        serializedVersion: 2
+        x: 233
+        y: 213
+        width: 13
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 34d3ccf131c33fbe0800000000000000
+      internalID: -1444745002620273341
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Parrying (5)_6"
+      rect:
+        serializedVersion: 2
+        x: 233
+        y: 168
+        width: 36
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d898bb4e19e3b3fa0800000000000000
+      internalID: -5819989297117558387
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Parrying (5)_7"
+      rect:
+        serializedVersion: 2
+        x: 274
+        y: 202
+        width: 6
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a13180ef6eac55540800000000000000
+      internalID: 4996122455090664218
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Parrying (5)_8"
+      rect:
+        serializedVersion: 2
+        x: 288
+        y: 16
+        width: 188
+        height: 282
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9558fe3da8a2495e0800000000000000
+      internalID: -1903849966721333927
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Parrying (5)_9"
+      rect:
+        serializedVersion: 2
+        x: 296
+        y: 164
+        width: 15
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5d7d486c29a3e6650800000000000000
+      internalID: 6227979736770205653
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Parrying (5)_10"
+      rect:
+        serializedVersion: 2
+        x: 237
+        y: 117
+        width: 26
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 55c485a039dc31700800000000000000
+      internalID: 509977214240443477
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Parrying (5)_11"
+      rect:
+        serializedVersion: 2
+        x: 244
+        y: 106
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 922c1ffd353a715a0800000000000000
+      internalID: -6550587552352320983
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Parrying (5)_12"
+      rect:
+        serializedVersion: 2
+        x: 235
+        y: 34
+        width: 36
+        height: 49
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 459981d2d16f323a0800000000000000
+      internalID: -6691234016171353772
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Parrying (5)_13"
+      rect:
+        serializedVersion: 2
+        x: 279
+        y: 28
+        width: 21
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c92b119089e8db80800000000000000
+      internalID: -8369683169068504635
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Parrying (5)_14"
+      rect:
+        serializedVersion: 2
+        x: 300
+        y: 28
+        width: 20
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3056dddbdd54f7590800000000000000
+      internalID: -7674338421340543741
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Parrying (5)_15"
+      rect:
+        serializedVersion: 2
+        x: 313
+        y: 28
+        width: 46
+        height: 54
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a75d7e1b2bdd6950800000000000000
+      internalID: 6444047620078655393
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Parrying (5)_16"
+      rect:
+        serializedVersion: 2
+        x: 472
+        y: 49
+        width: 7
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a42da5ddeb6cdc600800000000000000
+      internalID: 490266457513054794
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Parrying (5)_17"
+      rect:
+        serializedVersion: 2
+        x: 443
+        y: 30
+        width: 13
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2586c9370354fd280800000000000000
+      internalID: -9016411854572066734
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      "\uC18C\uB77C_Fly_Parrying (5)_0": -7972671655505254472
+      "\uC18C\uB77C_Fly_Parrying (5)_1": -1332480183057074309
+      "\uC18C\uB77C_Fly_Parrying (5)_10": 509977214240443477
+      "\uC18C\uB77C_Fly_Parrying (5)_11": -6550587552352320983
+      "\uC18C\uB77C_Fly_Parrying (5)_12": -6691234016171353772
+      "\uC18C\uB77C_Fly_Parrying (5)_13": -8369683169068504635
+      "\uC18C\uB77C_Fly_Parrying (5)_14": -7674338421340543741
+      "\uC18C\uB77C_Fly_Parrying (5)_15": 6444047620078655393
+      "\uC18C\uB77C_Fly_Parrying (5)_16": 490266457513054794
+      "\uC18C\uB77C_Fly_Parrying (5)_17": -9016411854572066734
+      "\uC18C\uB77C_Fly_Parrying (5)_2": -2922984318796518272
+      "\uC18C\uB77C_Fly_Parrying (5)_3": -2653728277040140822
+      "\uC18C\uB77C_Fly_Parrying (5)_4": -6005148271962216995
+      "\uC18C\uB77C_Fly_Parrying (5)_5": -1444745002620273341
+      "\uC18C\uB77C_Fly_Parrying (5)_6": -5819989297117558387
+      "\uC18C\uB77C_Fly_Parrying (5)_7": 4996122455090664218
+      "\uC18C\uB77C_Fly_Parrying (5)_8": -1903849966721333927
+      "\uC18C\uB77C_Fly_Parrying (5)_9": 6227979736770205653
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -1,0 +1,338 @@
+fileFormatVersion: 2
+guid: 2cb66119c74356c4d937514020291914
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -8439384730854067478
+    second: "\uC18C\uB77C_Fly_Shield_Wing1 (2)_0"
+  - first:
+      213: -9024375622864963218
+    second: "\uC18C\uB77C_Fly_Shield_Wing1 (2)_1"
+  - first:
+      213: 6475865711196927461
+    second: "\uC18C\uB77C_Fly_Shield_Wing1 (2)_2"
+  - first:
+      213: 3664057236227078793
+    second: "\uC18C\uB77C_Fly_Shield_Wing1 (2)_3"
+  - first:
+      213: 661987010763482614
+    second: "\uC18C\uB77C_Fly_Shield_Wing1 (2)_4"
+  - first:
+      213: -5332108234362166059
+    second: "\uC18C\uB77C_Fly_Shield_Wing1 (2)_5"
+  - first:
+      213: 7881069654572828921
+    second: "\uC18C\uB77C_Fly_Shield_Wing1 (2)_6"
+  - first:
+      213: -3475265430016053660
+    second: "\uC18C\uB77C_Fly_Shield_Wing1 (2)_7"
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Shield_Wing1 (2)_0"
+      rect:
+        serializedVersion: 2
+        x: 291
+        y: 325
+        width: 16
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae276921d4841ea80800000000000000
+      internalID: -8439384730854067478
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Shield_Wing1 (2)_1"
+      rect:
+        serializedVersion: 2
+        x: 209
+        y: 308
+        width: 9
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e6970772f2af2c280800000000000000
+      internalID: -9024375622864963218
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Shield_Wing1 (2)_2"
+      rect:
+        serializedVersion: 2
+        x: 286
+        y: 41
+        width: 102
+        height: 275
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5e57601cd85eed950800000000000000
+      internalID: 6475865711196927461
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Shield_Wing1 (2)_3"
+      rect:
+        serializedVersion: 2
+        x: 400
+        y: 51
+        width: 150
+        height: 259
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 98ab302b4a859d230800000000000000
+      internalID: 3664057236227078793
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Shield_Wing1 (2)_4"
+      rect:
+        serializedVersion: 2
+        x: 464
+        y: 267
+        width: 57
+        height: 52
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6f5ea7ecda9df2900800000000000000
+      internalID: 661987010763482614
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Shield_Wing1 (2)_5"
+      rect:
+        serializedVersion: 2
+        x: 542
+        y: 242
+        width: 9
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5d468e2cfcb8006b0800000000000000
+      internalID: -5332108234362166059
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Shield_Wing1 (2)_6"
+      rect:
+        serializedVersion: 2
+        x: 471
+        y: 36
+        width: 11
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9f88cea581f2f5d60800000000000000
+      internalID: 7881069654572828921
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "\uC18C\uB77C_Fly_Shield_Wing1 (2)_7"
+      rect:
+        serializedVersion: 2
+        x: 553
+        y: 28
+        width: 13
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 46ea2bf018065cfc0800000000000000
+      internalID: -3475265430016053660
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      "\uC18C\uB77C_Fly_Shield_Wing1 (2)_0": -8439384730854067478
+      "\uC18C\uB77C_Fly_Shield_Wing1 (2)_1": -9024375622864963218
+      "\uC18C\uB77C_Fly_Shield_Wing1 (2)_2": 6475865711196927461
+      "\uC18C\uB77C_Fly_Shield_Wing1 (2)_3": 3664057236227078793
+      "\uC18C\uB77C_Fly_Shield_Wing1 (2)_4": 661987010763482614
+      "\uC18C\uB77C_Fly_Shield_Wing1 (2)_5": -5332108234362166059
+      "\uC18C\uB77C_Fly_Shield_Wing1 (2)_6": 7881069654572828921
+      "\uC18C\uB77C_Fly_Shield_Wing1 (2)_7": -3475265430016053660
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
