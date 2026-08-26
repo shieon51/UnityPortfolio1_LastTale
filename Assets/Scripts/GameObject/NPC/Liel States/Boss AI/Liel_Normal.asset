@@ -23,6 +23,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 96c360bce90fdfa4884954edd9390841, type: 2}
     - {fileID: 11400000, guid: c7c6b381dca985b40a2e3f6421e590c1, type: 2}
     - {fileID: 11400000, guid: 53bd62abd2f8ca4469b3c7713c6fe7b0, type: 2}
+    - {fileID: 11400000, guid: 7a4fc7882a1b94e4ea94de6d38f00d43, type: 2}
     agilityModifier: 0
     styleOverrides: []
   - phaseNumber: 2
