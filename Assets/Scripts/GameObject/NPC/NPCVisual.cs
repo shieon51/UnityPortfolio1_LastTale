@@ -17,6 +17,13 @@ public class NPCVisual : MonoBehaviour
     // 눈 깜빡임
     private EyeBlinkController _eyeBlink;
 
+    // 그로기 등
+    private CharacterStats _stats; // ★ 추가
+
+    private float _lastReactionPoseTime = -10f; // ★ 추가 — NPC.cs에서 옮겨옴
+    private const float ReactionPoseHoldDuration = 0.3f;
+    public bool IsShowingReactionPose => Time.time - _lastReactionPoseTime < ReactionPoseHoldDuration;
+
     private void Awake()
     {
         _partAnimators = GetComponentsInChildren<Animator>(true);
@@ -25,16 +32,37 @@ public class NPCVisual : MonoBehaviour
         _directionalSprites = GetComponentsInChildren<DirectionalSprite>(true);
         _eyeBlink = GetComponentInChildren<EyeBlinkController>(true);
         _formProvider = GetComponentInParent<IFormStageProvider>(); // 페이즈 전환 쓰는 보스면 존재
+        _stats = GetComponentInParent<CharacterStats>(); // ★ 추가
 
         if (_formProvider != null) _formProvider.OnFormTransformStarted += HandleFormTransformStarted;
+
+        if (_stats != null) // ★ 추가 — PlayerVisual과 완전히 같은 패턴
+        {
+            _stats.OnKnockbackApplied += HandleHitVisual;
+            _stats.OnParrySuccess += HandleParrySuccessVisual;
+            _stats.OnGroggyStarted += HandleGroggyStartedVisual;
+            _stats.OnGroggyEnded += HandleGroggyEndedVisual;
+        }
     }
 
     private void OnDestroy()
     {
         if (_formProvider != null) _formProvider.OnFormTransformStarted -= HandleFormTransformStarted;
+        if (_stats != null) // ★ 추가
+        {
+            _stats.OnKnockbackApplied -= HandleHitVisual;
+            _stats.OnParrySuccess -= HandleParrySuccessVisual;
+            _stats.OnGroggyStarted -= HandleGroggyStartedVisual;
+            _stats.OnGroggyEnded -= HandleGroggyEndedVisual;
+        }
     }
 
     private void HandleFormTransformStarted() => PlayImmediate($"TransformToPhase{_formProvider.TargetFormStage}");
+
+    private void HandleHitVisual() { _lastReactionPoseTime = Time.time; PlayImmediate(NPCAnimStateNames.Hit); }
+    private void HandleParrySuccessVisual(CharacterStats attacker) { _lastReactionPoseTime = Time.time; PlayImmediate(NPCAnimStateNames.Parrying); }
+    private void HandleGroggyStartedVisual() => PlayImmediate(NPCAnimStateNames.Groggy);
+    private void HandleGroggyEndedVisual() => PlayIfChanged(NPCAnimStateNames.Idle);
 
     public void SetEyesVisible(bool visible) => _eyeBlink?.SetVisible(visible);
 

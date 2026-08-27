@@ -53,8 +53,9 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
     public float VelocityY => _rb.linearVelocity.y;
     public bool IsGrounded { get; private set; }
     public bool IsDashing { get; private set; }
-    public bool CanFlip => !IsActionLocked; // 공격 중일 때 좌우 플립(방향 전환)을 막기 위한 프로퍼티
+    public bool CanFlip => !IsActionLocked && (_stats == null || !_stats.isGuarding); // ★ 방어 중엔 방향 고정 // 공격 중일 때 좌우 플립(방향 전환)을 막기 위한 프로퍼티
     public bool IsKnockedBack => _stats != null && _stats.isKnockedBack;
+    public float EffectiveHorizontalInput => _horizontalInput;
     public bool IsDialogueLocked => DialogueManager.Instance != null && DialogueManager.Instance.IsTalking; // 대화 중일 때는 Idle로 모션 변경
     public float SpeedMultiplier => _stats != null ? _stats.GetSpeedMultiplier() : 1f; // 애니메이션 재생 속도 조절 (피로도 등)
 
@@ -223,6 +224,8 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
     private void HandleInput()
     {
         _horizontalInput = Input.GetAxisRaw("Horizontal");
+
+        if (_stats != null && _stats.isGuarding) _horizontalInput = 0f; // ★ 방어 중엔 이동 입력 무시 — 제자리 고정
 
         // 요정화 페이즈에 따른 Shift 이동기 분기
         SoraStats sora = _stats as SoraStats;

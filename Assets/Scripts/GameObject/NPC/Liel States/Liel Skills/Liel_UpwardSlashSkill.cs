@@ -9,6 +9,9 @@ public class Liel_UpwardSlashSkill : NPCSkillBase
     [Tooltip("이 거리 이하일 때만 후보가 됨")]
     public float maxRange = 0.8f;
 
+    [Header("Step (Attack1 DashSettings 재사용 — 훨씬 작은 값으로 세팅)")]
+    public DashSettings step;
+
     [Header("Hitbox")]
     public HitboxSettings hitbox; // Liel_MeleeAttackSkill.cs에 이미 있는 struct 재사용
 
@@ -30,22 +33,38 @@ public class Liel_UpwardSlashSkill : NPCSkillBase
         visual.SetEyesVisible(false);
         self.isSuperArmor = true;
 
+        var rb = self.Rb;
+        var sr = self.SpriteRenderer;
+        float originalDrag = rb.linearDamping;
+        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y); // 접근 관성 제거
+
         var context = self.CurrentMovementContext;
         string resolvedAnim = ResolveAnimStateName(context, animStateName);
         var (hitOffset, hitSize) = ResolveContextHitbox(context, hitbox.offset, hitbox.size);
 
         visual.PlayImmediate(resolvedAnim); // 제자리라 대시 관련 대기 없이 바로 재생
 
-        yield return WaitForHitboxStart(); // AE_HitboxStart — 검이 위로 올라오며 맞는 타이밍
+        yield return WaitForDashStart(); // AE_DashStart — 발을 내딛기 시작하는 프레임
+
+        rb.linearDamping = 0f;
+        float dir = sr.flipX ? 1f : -1f;
+        rb.linearVelocity = new Vector2(dir * step.burstSpeed, rb.linearVelocity.y);
+
+        yield return WaitForHitboxStart(); // AE_HitboxStart — 검이 실제로 닿는 타이밍
 
         PlaySkillVFX("slash", self);
         CameraDirector.Instance?.Shake(0.15f, 0.15f);
 
         var hitboxCoroutine = self.StartCoroutine(ActiveHitboxRoutine(self, hitOffset, hitSize));
 
+        yield return WaitForSlideStart(); // AE_SlideStart — 발 내딛기 끝, 멈추기 시작
+        rb.linearDamping = step.slideDrag;
+
         yield return WaitForActionEndEvent(); // AE_ActionEnd
         yield return hitboxCoroutine;
 
+        rb.linearDamping = originalDrag;
+        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
         self.isSuperArmor = false;
         visual.SetEyesVisible(true);
         self.CurrentPlayingSkill = null;

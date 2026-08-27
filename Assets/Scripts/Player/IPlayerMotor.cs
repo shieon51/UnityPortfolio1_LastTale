@@ -13,6 +13,7 @@ public interface IPlayerMotor
     bool IsDialogueLocked { get; }
     bool IsActionLocked { get; }
     bool IsExternallyLocked { get; }  // 내가 스스로 공격 중이라서 잠긴 것은 무시하고 그 외의 진짜 외부 잠금
+    float EffectiveHorizontalInput { get; } // 잠금/방어 등이 반영된 이번 프레임의 실제 유효 입력
     bool IsKnockedBack { get; }
     float SpeedMultiplier { get; }
 

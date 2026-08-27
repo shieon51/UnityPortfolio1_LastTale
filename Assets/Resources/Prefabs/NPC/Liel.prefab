@@ -96,6 +96,7 @@ MonoBehaviour:
   parryWindowDuration: 0.15
   invincibilityDuration: 0.2
   knockbackStunDuration: 0.3
+  superArmorBreakThreshold: 8
   isSuperArmor: 0
   statusText: {fileID: 8281881456917337172}
   debugUnderstanding: 0

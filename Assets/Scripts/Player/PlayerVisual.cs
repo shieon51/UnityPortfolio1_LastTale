@@ -23,6 +23,10 @@ public class PlayerVisual : MonoBehaviour
     // 눈깜빡임 모션
     private EyeBlinkController _eyeBlink;
 
+    // 패링 모션 관련
+    private Coroutine _parryRoutine;
+    private bool _isParryPosePlaying = false;
+
     private float _statSpeedMultiplier = 1f;
     private Coroutine _hitStopRoutine;
     private bool _wasDialogueLocked = false;
@@ -48,7 +52,6 @@ public class PlayerVisual : MonoBehaviour
         {
             _controller.OnJumpTriggered += HandleJumpTriggered;
             _controller.OnFallStarted += HandleFallStarted;
-            //_controller.OnLandingAnticipated += HandleLandingAnticipated; // ★ OnLanded 대신 이걸 구독
             _controller.OnLanded += HandleLanded;
         }
 
@@ -65,13 +68,9 @@ public class PlayerVisual : MonoBehaviour
         if (_stats != null)
         {
             _stats.OnKnockbackApplied += HandleKnockbackHit;
-        }
-
-        if (_stats != null)
-        {
-            _stats.OnKnockbackApplied += HandleKnockbackHit;
             _stats.OnGroggyStarted += HandleGroggyStarted;
             _stats.OnGroggyEnded += HandleGroggyEnded;
+            _stats.OnParrySuccess += HandleParrySuccess;
         }
     }
 
@@ -81,7 +80,6 @@ public class PlayerVisual : MonoBehaviour
         {
             _controller.OnJumpTriggered -= HandleJumpTriggered;
             _controller.OnFallStarted -= HandleFallStarted;
-            //_controller.OnLandingAnticipated -= HandleLandingAnticipated;
             _controller.OnLanded -= HandleLanded; 
         }
 
@@ -94,6 +92,9 @@ public class PlayerVisual : MonoBehaviour
         if (_stats != null)
         {
             _stats.OnKnockbackApplied -= HandleKnockbackHit;
+            _stats.OnGroggyStarted -= HandleGroggyStarted;
+            _stats.OnGroggyEnded -= HandleGroggyEnded;
+            _stats.OnParrySuccess -= HandleParrySuccess;
         }
     }
 
@@ -177,6 +178,23 @@ public class PlayerVisual : MonoBehaviour
     private void HandleGroggyStarted() => PlayImmediate(PlayerAnimStateNames.Groggy);
     private void HandleGroggyEnded() => ReturnToLocomotion();
 
+    // 패링 관련
+    private void HandleParrySuccess(CharacterStats attacker)
+    {
+        if (_parryRoutine != null) StopCoroutine(_parryRoutine);
+        _parryRoutine = StartCoroutine(ParryPoseRoutine());
+    }
+
+    private IEnumerator ParryPoseRoutine()
+    {
+        _isParryPosePlaying = true;
+        PlayImmediate(PlayerAnimStateNames.Parrying); // ★ 이 상수 없으면 클래스에 추가 필요
+        yield return new WaitForSeconds(0.35f); // 임시값 — 실제 패링 클립 길이에 맞춰 조정
+        _isParryPosePlaying = false;
+        if (!_controller.IsActionLocked && !_stats.isGuarding) ReturnToLocomotion();
+        _parryRoutine = null;
+    }
+
 
     // 안전장치: 공중 + 비잠금 상태인데 화면상 상태가 Jump/Fall 계열이 아니면 강제로 바로잡는다.
     // (이벤트 유실 등 어떤 경로로 상태가 꼬이든 최종적으로 항상 여기서 걸러진다)
@@ -184,6 +202,8 @@ public class PlayerVisual : MonoBehaviour
     private void ReconcileAirborneVisual()
     {
         if (_controller.IsGrounded || _controller.IsActionLocked) return; //|| _driverAnimator == null //?
+        if (_stats != null && _stats.isGuarding) return; 
+        if (_isParryPosePlaying) return; 
         if (_formProvider != null && _formProvider.IsFlightForm) return; // 비행형은 이 안전장치 대상이 아님
 
         bool isAcceptableAirborneState = _lastCommandedState == PlayerAnimStateNames.JumpUp
@@ -313,6 +333,8 @@ public class PlayerVisual : MonoBehaviour
     private void ReconcileStuckState()
     {
         if (_controller.IsActionLocked) return; // 정상적으로 잠긴 상태면 건드리지 않음
+        if (_stats != null && _stats.isGuarding) return; 
+        if (_isParryPosePlaying) return; 
         if (_driverAnimator == null) return;
         if (_driverAnimator.IsInTransition(0)) return; // 크로스페이드 진행 중인 정상 과정은 건드리지 않음
 
@@ -353,6 +375,7 @@ public class PlayerVisual : MonoBehaviour
     // 잠금 상태(공격 등)에서 벗어날 때 호출: 현재 물리 상태에 맞는 이동 모션으로 복귀
     public void ReturnToLocomotion()
     {
+        if (_stats != null && _stats.IsGroggy) return; // ★ 그로기 중엔 절대 로코모션으로 안 돌아감
         _eyeBlink?.SetVisible(true); // ★ 공격 끝나면 다시 표시
 
         if (_formProvider != null && _formProvider.IsFlightForm)

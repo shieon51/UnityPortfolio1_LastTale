@@ -29,6 +29,22 @@ public class PlayerGuard : MonoBehaviour
     {
         bool wantsGuard = Input.GetKey(guardKey); // ★ Down/Up 엣지 대신, 지금 눌려있는지 그 자체를 매 프레임 확인
 
+        if (_stats.IsGroggy) // ★ 그로기 중엔 방어 자체 불가 — 강제 해제하고 입력도 무시
+        {
+            if (_stats.isGuarding) _stats.StopGuard();
+            return;
+        }
+
+        if (!CanGuardRightNow())
+        {
+            if (_stats.isGuarding) // 방어 중에 뜨거나 움직이기 시작하면 자동 해제
+            {
+                _stats.StopGuard();
+                if (_combat == null || !_combat.IsAttacking) _visual?.ReturnToLocomotion();
+            }
+            return;
+        }
+
         if (_motor != null && _motor.IsActionLocked && !(_combat != null && _combat.IsAttacking))
         {
             // 완전히 잠긴 상태에서도 데이터(isGuarding)만큼은 실제 키 상태와 항상 일치시켜서, 놓친 프레임이 있어도 즉시 자가 교정
@@ -49,6 +65,14 @@ public class PlayerGuard : MonoBehaviour
             _stats.StopGuard();
             if (_combat == null || !_combat.IsAttacking) _visual?.ReturnToLocomotion();
         }
+    }
+
+    // 현재 가드가 가능한 상태인지
+    private bool CanGuardRightNow()
+    {
+        if (_formProvider != null && _formProvider.IsFlightForm)
+            return _motor != null && _motor.CurrentSpeed < 0.1f; // 비행형: 거의 정지 상태일 때만
+        return _motor != null && _motor.IsGrounded; // 지상형: 착지 상태에서만
     }
 
     private string ResolveContextState()

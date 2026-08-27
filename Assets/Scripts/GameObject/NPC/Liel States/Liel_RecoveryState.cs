@@ -16,7 +16,10 @@ public class Liel_RecoveryState : NPCState
     public override void Enter()
     {
         timer = 0f;
-        visual.PlayIfChanged(NPCAnimStateNames.Idle);
+        if (!visual.IsShowingReactionPose)
+        {
+            visual.PlayIfChanged(NPCAnimStateNames.Idle); 
+        }
     }
 
     public override void Execute()

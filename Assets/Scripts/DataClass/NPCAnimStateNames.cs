@@ -10,6 +10,7 @@ public static class NPCAnimStateNames
     public const string Groggy = "Groggy";
     public const string Hit = "Hit";
     public const string Guard = "Guard";
+    public const string Parrying = "Parrying";
     public const string Passive = "Passive";
     public const string Disabled = "Disabled";
 }

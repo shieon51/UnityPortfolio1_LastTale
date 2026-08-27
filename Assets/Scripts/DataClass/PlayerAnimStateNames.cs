@@ -11,5 +11,6 @@ public static class PlayerAnimStateNames
     public const string TransformOut = "TransformOut";
     public const string Hit = "Hit";
     public const string Guard = "Guard";
+    public const string Parrying = "Parrying";
     public const string Groggy = "Groggy"; // 대칭 그로기용
 }

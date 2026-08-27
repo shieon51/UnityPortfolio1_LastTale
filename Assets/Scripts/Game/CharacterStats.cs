@@ -43,6 +43,10 @@ public class CharacterStats : MonoBehaviour
     [Tooltip("피격 시 행동불능(넉백) 유지 시간(초). Hit 애니메이션 클립 길이에 맞춰 조정하세요.")]
     public float knockbackStunDuration = 0.3f;
 
+    [Header("Super Armor")]
+    [Tooltip("이 값 이상의 넉백파워는 슈퍼아머를 무시하고 관통함")]
+    public float superArmorBreakThreshold = 8f;
+
     // 최근에 나를 공격한 대상 (W 스킬의 "최근 피격 대상 우선" 타겟팅에 사용)
     public CharacterStats LastAttacker { get; private set; }
 
@@ -236,7 +240,8 @@ public class CharacterStats : MonoBehaviour
 
     public virtual void ApplyKnockback(Vector2 direction, float knockbackPower, float? knockbackTime = null)
     {
-        if (isSuperArmor || currentHealth <= 0) return; // ★ 이미 죽은 대상은 넉백 자체를 무시
+        if (currentHealth <= 0) return;
+        if (isSuperArmor && knockbackPower < superArmorBreakThreshold) return; // ★ 약한 넉백만 막음
 
         float duration = knockbackTime ?? knockbackStunDuration;
         OnKnockbackApplied?.Invoke();
