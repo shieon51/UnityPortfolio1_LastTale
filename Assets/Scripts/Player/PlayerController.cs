@@ -225,7 +225,11 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
     {
         _horizontalInput = Input.GetAxisRaw("Horizontal");
 
-        if (_stats != null && _stats.isGuarding) _horizontalInput = 0f; // ★ 방어 중엔 이동 입력 무시 — 제자리 고정
+        if (_stats != null && _stats.isGuarding)
+        {
+            _horizontalInput = 0f;
+            return; // ★ 방어 중엔 점프/대시/아래방향키 전부 무시, 여기서 끝
+        }
 
         // 요정화 페이즈에 따른 Shift 이동기 분기
         SoraStats sora = _stats as SoraStats;
@@ -431,9 +435,13 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
     private bool IsEmbeddedInGround()
     {
         Vector2 feetPos = (Vector2)transform.position + (Vector2)groundCheckOffset;
-        Vector2 rayStart = feetPos + Vector2.up * embedCheckHeight;
-        RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, embedCheckHeight * 2f, _solidGroundOnlyLayer);
-        return hit.collider != null && hit.point.y > feetPos.y + 0.05f;
+        Vector2 rayStart = new Vector2(feetPos.x, feetPos.y + 50f); // ★ 씬 어디서든 확실히 지형 바깥일 높이
+        RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, 100f, _solidGroundOnlyLayer);
+
+        if (hit.collider == null) 
+            return false;
+
+        return hit.point.y > feetPos.y + 0.3f; // ★ 여유값도 넉넉하게
     }
 
     private bool ComputeRawGrounded()

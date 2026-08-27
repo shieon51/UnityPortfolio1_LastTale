@@ -3,11 +3,12 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "LastMarchan/Combat/Formulas/Groggy Duration")]
 public class GroggyDurationFormula : ScriptableObject
 {
-    public float baseDuration = 2f;
+    public float baseDuration = 2.5f;
     [Tooltip("레벨 1당 그로기 시간 변화 비율")]
-    public float levelScalingPerPoint = 0.05f;
-    public float minDuration = 0.5f;
-    public float maxDuration = 5f;
+    public float levelScalingPerPoint = 0;
+
+    public float minDuration = 0.5f; //?
+    public float maxDuration = 5f; //?
 
     // groggyTarget: 그로기 걸리는 쪽(=패링당한 공격자), opponent: 패링 성공시킨 쪽
     public float CalculateDuration(int groggyTargetLevel, int opponentLevel)

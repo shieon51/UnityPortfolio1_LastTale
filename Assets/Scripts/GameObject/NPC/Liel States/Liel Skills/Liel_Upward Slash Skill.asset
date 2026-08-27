@@ -30,10 +30,15 @@ MonoBehaviour:
     m_Bits: 64
   vfxCues: []
   cameraCues: []
-  maxRange: 2.5
+  maxRange: 2
+  step:
+    burstSpeed: 10
+    slideDrag: 25
+    slideDuration: 0.1
+    accelRampDuration: 0
   hitbox:
     size: {x: 6.46, y: 2.24}
     offset: {x: -0.38, y: 0.33}
     activeDuration: 0.15
-    knockbackPower: 15
-  baseScore: 85
+    knockbackPower: 20
+  baseScore: 70

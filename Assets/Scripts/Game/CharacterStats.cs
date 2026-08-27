@@ -43,6 +43,9 @@ public class CharacterStats : MonoBehaviour
     [Tooltip("피격 시 행동불능(넉백) 유지 시간(초). Hit 애니메이션 클립 길이에 맞춰 조정하세요.")]
     public float knockbackStunDuration = 0.3f;
 
+    [Header("Knockback Friction")]
+    public float knockbackSlideDrag = 15f;
+
     [Header("Super Armor")]
     [Tooltip("이 값 이상의 넉백파워는 슈퍼아머를 무시하고 관통함")]
     public float superArmorBreakThreshold = 8f;
@@ -68,17 +71,40 @@ public class CharacterStats : MonoBehaviour
     // 넉백 상태인지 확인하는 변수 추가
     public bool isKnockedBack { get; protected set; } = false;
 
+    // 그로기 진입 시간 관련
+    public float GroggyDuration { get; private set; }
+
     // 슈퍼아머 변수 추가 (공격 중일 때 true가 됨) -> 공격 모션 중에는 대미지는 받되 밀려나지 않는 상태
     public bool isSuperArmor = false;
+
+    // 방향 관련 (방어 방향 판정)
+    protected SpriteRenderer spriteRenderer;
 
     public void StartGuard() { isGuarding = true; _guardStartTime = Time.time; }
     public void StopGuard() => isGuarding = false;
     private bool IsInParryWindow => isGuarding && (Time.time - _guardStartTime) <= parryWindowDuration;
 
+#if UNITY_EDITOR
+    [Header("한눈에 보기 (자동 생성 — 손대지 않아도 됨)")]
+    [TextArea(6, 14)]
+    public string statsSummary;
+
+    private void OnValidate()
+    {
+        statsSummary =
+            $"Lv.{level} | HP {maxHealth} | MP {maxMana}\n" +
+            $"공격 {attack.GetValue()} | 방어 {defense.GetValue()} | 민첩 {agility.GetValue()}\n" +
+            $"피격 경직 {knockbackStunDuration:F2}s | 슬라이드 마찰 {knockbackSlideDrag}\n" +
+            $"슈퍼아머 돌파 임계값 {superArmorBreakThreshold}\n" +
+            $"패링 판정창 {parryWindowDuration:F2}s | 무적시간 {invincibilityDuration:F2}s";
+    }
+#endif
+
     protected virtual void Awake()
     {
         currentHealth = maxHealth;
         currentMana = maxMana;
+        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
     }
 
     public virtual bool TakeDamage(
@@ -90,7 +116,10 @@ public class CharacterStats : MonoBehaviour
     {
         if (Time.time < lastHitTime + invincibilityDuration) return false; // 무적 중 — 넉백 포함 아무 효과 없음
 
-        if (IsInParryWindow && attacker != null && TryResolveParry(attacker))
+        bool facingAttacker = IsAttackFromFacingSide(attacker); // attacker null이면 내부에서 true 처리됨
+        bool guardActive = isGuarding && facingAttacker; // ★ 방어는 방향이 맞을 때만 유효
+
+        if (guardActive && attacker != null && IsInParryWindow && TryResolveParry(attacker)) // ★ guardActive 기준, attacker null 체크 유지
         {
             lastHitTime = Time.time;
             OnParrySuccess?.Invoke(attacker);
@@ -99,22 +128,22 @@ public class CharacterStats : MonoBehaviour
             ScreenFlashOverlay.Instance?.Flash(new Color(1f, 0.9f, 0.3f), 0.15f);
             float groggyDuration = CombatFormulaService.Instance.CalculateGroggyDuration(attacker, this);
             attacker.ApplyGroggy(groggyDuration);
-            return false; // 패링 성공 — 넉백 포함 완전 무효화
+            return false;  // 패링 성공 — 넉백 포함 완전 무효화
         }
 
         lastHitTime = Time.time;
         if (attacker != null) LastAttacker = attacker;
 
-        int finalDamage = ComputeFinalDamage(incomingDamage, attackElement, attacker);
+        int finalDamage = ComputeFinalDamage(incomingDamage, attackElement, attacker, guardActive); // ★ guardActive 전달
 
-        if (isGuarding && finalDamage <= 0)
+        if (guardActive && finalDamage <= 0) // ★
         {
             FloatingTextManager.Instance?.ShowGuard(transform.position + Vector3.up * 1f);
             SoundManager.Instance?.PlaySFX("guard_perfect");
             return false; // 완벽 방어 — 넉백 포함 아무 효과 없음
         }
 
-        if (isGuarding)
+        if (guardActive) // ★ 방향 안 맞으면 여기 안 들어오고 바로 else(무방비)로 감
         {
             FloatingTextManager.Instance?.ShowGuardedDamage(finalDamage, transform.position + Vector3.up * 1f);
             SoundManager.Instance?.PlaySFX("guard_break");
@@ -125,8 +154,7 @@ public class CharacterStats : MonoBehaviour
             SoundManager.Instance?.PlaySFX("hit_generic");
         }
 
-        if (attacker is NPC || this is NPC)
-            CameraDirector.Instance?.Shake(0.1f, 0.1f);
+        if (attacker is NPC || this is NPC) CameraDirector.Instance?.Shake(0.1f, 0.1f);
         GetComponentInChildren<HitFlashController>()?.Flash();
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
         OnHealthChanged?.Invoke();
@@ -143,13 +171,13 @@ public class CharacterStats : MonoBehaviour
         return true;
     }
 
-    protected int ComputeFinalDamage(int incomingDamage, ElementType attackElement, CharacterStats attacker)
+    protected int ComputeFinalDamage(int incomingDamage, ElementType attackElement, CharacterStats attacker, bool guardActive)
     {
         if (CombatFormulaService.Instance == null)
         {
             // 씬에 서비스가 없어도 게임이 죽지 않도록 하는 안전 폴백 (기존 로직과 동일)
             int fallbackDefense = defense.GetValue();
-            if (isGuarding)
+            if (guardActive)
             {
                 int guardDef = fallbackDefense * 2;
                 if (incomingDamage < guardDef) return 0; // ★ 폴백 경로에도 완벽 방어 반영
@@ -164,9 +192,18 @@ public class CharacterStats : MonoBehaviour
             Attacker = attacker,
             Defender = this,
             AttackElement = attackElement,
-            IsGuarding = isGuarding,
+            IsGuarding = guardActive,
         };
         return CombatFormulaService.Instance.CalculateDamage(ctx);
+    }
+
+    // 방향 판정 (방어 관련)
+    protected virtual bool IsAttackFromFacingSide(CharacterStats attacker)
+    {
+        if (attacker == null || spriteRenderer == null) return true;
+        float dirToAttacker = Mathf.Sign(attacker.transform.position.x - transform.position.x);
+        float facingDir = spriteRenderer.flipX ? 1f : -1f; // flipX=true→오른쪽, false→왼쪽 (프로젝트 공통 컨벤션)
+        return dirToAttacker == 0f || Mathf.Approximately(dirToAttacker, facingDir);
     }
 
     // 도착 순간처럼, '맞아서' 생기는 무적이 아니라 능동적으로 무적을 거는 경우를 위한 헬퍼.
@@ -220,6 +257,7 @@ public class CharacterStats : MonoBehaviour
     // 그로기
     public void ApplyGroggy(float duration)
     {
+        GroggyDuration = duration;
         if (_groggyRoutine != null) StopCoroutine(_groggyRoutine);
         _groggyRoutine = StartCoroutine(GroggyRoutine(duration));
     }
@@ -267,19 +305,12 @@ public class CharacterStats : MonoBehaviour
         if (rb != null)
         {
             isKnockedBack = true;
-
-            // 초기 X축 속도를 초기화하고 밀어냄
-            //rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
-            //Vector2 force = new Vector2(direction.x, 0.5f).normalized * power;
+            float originalDrag = rb.linearDamping;
             PrepareRigidbodyForKnockback(rb);
-            //rb.AddForce(force, ForceMode2D.Impulse);
+            rb.linearDamping = knockbackSlideDrag; // ★ 추가
             rb.AddForce(ComputeKnockbackForce(direction, power), ForceMode2D.Impulse);
-
             yield return new WaitForSeconds(duration);
-
-            // 밀려난 후 미끄러짐 방지 (Y축 중력은 유지)
-            //if (rb != null) rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
-
+            rb.linearDamping = originalDrag; // ★ 추가
             isKnockedBack = false;
         }
         _knockbackRoutine = null;

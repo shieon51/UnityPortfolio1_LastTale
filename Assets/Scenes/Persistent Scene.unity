@@ -6966,6 +6966,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 3647820703644649126, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
+      propertyPath: m_Size.x
+      value: 7.68
+      objectReference: {fileID: 0}
+    - target: {fileID: 3647820703644649126, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
+      propertyPath: m_Size.y
+      value: 4.32
+      objectReference: {fileID: 0}
     - target: {fileID: 3768006450966674468, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
       propertyPath: dashBurstSpeed
       value: 23
@@ -7037,6 +7045,10 @@ PrefabInstance:
     - target: {fileID: 8541148022777094637, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8950616784466513857, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
+      propertyPath: knockbackStunDuration
+      value: 0.2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

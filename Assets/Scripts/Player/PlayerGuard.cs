@@ -35,15 +35,7 @@ public class PlayerGuard : MonoBehaviour
             return;
         }
 
-        if (!CanGuardRightNow())
-        {
-            if (_stats.isGuarding) // 방어 중에 뜨거나 움직이기 시작하면 자동 해제
-            {
-                _stats.StopGuard();
-                if (_combat == null || !_combat.IsAttacking) _visual?.ReturnToLocomotion();
-            }
-            return;
-        }
+        if (!CanStartGuardNow() && !_stats.isGuarding) return; // 공중(지상형)이면 시작조차 불가
 
         if (_motor != null && _motor.IsActionLocked && !(_combat != null && _combat.IsAttacking))
         {
@@ -58,6 +50,8 @@ public class PlayerGuard : MonoBehaviour
         if (wantsGuard && !_stats.isGuarding)
         {
             _stats.StartGuard();
+            var rb = GetComponent<Rigidbody2D>();
+            if (rb != null) rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y); // ★ 이동 중이었어도 즉시 정지
             if (_combat == null || !_combat.IsAttacking) _visual?.PlayState(ResolveContextState());
         }
         else if (!wantsGuard && _stats.isGuarding)
@@ -68,11 +62,10 @@ public class PlayerGuard : MonoBehaviour
     }
 
     // 현재 가드가 가능한 상태인지
-    private bool CanGuardRightNow()
+    private bool CanStartGuardNow()
     {
-        if (_formProvider != null && _formProvider.IsFlightForm)
-            return _motor != null && _motor.CurrentSpeed < 0.1f; // 비행형: 거의 정지 상태일 때만
-        return _motor != null && _motor.IsGrounded; // 지상형: 착지 상태에서만
+        if (_formProvider != null && _formProvider.IsFlightForm) return true; // 비행형: 움직이던 중이어도 항상 가능
+        return _motor != null && _motor.IsGrounded; // 지상형: 공중/점프 중엔 불가
     }
 
     private string ResolveContextState()

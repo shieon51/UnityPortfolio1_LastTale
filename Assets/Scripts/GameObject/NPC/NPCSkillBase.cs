@@ -66,4 +66,22 @@ public abstract class NPCSkillBase : NPCActionBase
         Transform followParent = cue.followCaster ? self.transform : null;
         VFXManager.Instance.Play(vfxKey, (Vector2)self.transform.position + worldOffset, dir, PoolType.Global, followParent);
     }
+
+#if UNITY_EDITOR
+    [Header("Auto-Sync (클립을 연결하면 Time To Active가 자동으로 채워짐)")]
+    public AnimationClip clipForAutoCalc;
+
+    private void OnValidate()
+    {
+        if (clipForAutoCalc == null) return;
+        foreach (var evt in clipForAutoCalc.events)
+        {
+            if (evt.functionName == "AE_HitboxStart")
+            {
+                timeToActive = evt.time;
+                return;
+            }
+        }
+    }
+#endif
 }

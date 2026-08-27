@@ -20,8 +20,11 @@ public class NPCCombatTuning : Singleton<NPCCombatTuning>
     [Tooltip("슬로우모션 최대 강도일 때 NPC Animator.speed 배율 (1보다 작을수록 느림)")]
     public float SlowmoAnimatorSpeed = 0.35f;
 
-    // TODO(미래 확장): 민첩 차이가 이 상한을 넘어설 만큼 크면, 예고를 억지로 늘리는 대신
-    // '공격 시전 순간 NPC만 잠깐 로컬 슬로우모션' 연출로 대체 고려.
-    // (Time.timeScale 전역 조정 X — 플레이어 조작감까지 같이 느려지면 안 됨.
-    //  대신 이 NPC의 Animator.speed/물리 갱신 배속만 잠깐 낮추는 방식 추천)
+    [Header("그로기 진입 시 밀림")]
+    public float GroggyPushForce = 3f;
+    public float GroggyPushDuration = 0.15f;
+
+    [Header("패링 확률 보정 (연속 실패 시 상승)")]
+    public float ParryMissBonusPerMiss = 0.08f;
+    public float ParryMaxChance = 0.75f;
 }

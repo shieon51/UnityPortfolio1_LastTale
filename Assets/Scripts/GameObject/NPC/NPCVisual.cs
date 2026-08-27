@@ -20,9 +20,15 @@ public class NPCVisual : MonoBehaviour
     // 그로기 등
     private CharacterStats _stats; // ★ 추가
 
-    private float _lastReactionPoseTime = -10f; // ★ 추가 — NPC.cs에서 옮겨옴
-    private const float ReactionPoseHoldDuration = 0.3f;
-    public bool IsShowingReactionPose => Time.time - _lastReactionPoseTime < ReactionPoseHoldDuration;
+    [Header("리액션 포즈 유지시간")]
+    public float hitReactionDuration = 0.2f;
+    public float parryReactionDuration = 0.3f;
+
+    private float _reactionPoseEndTime = -10f;
+    public bool IsShowingReactionPose => Time.time < _reactionPoseEndTime;
+
+    // PlayImmediate에 이어재생용 오버로드 추가, 현재 상태 조회용 프로퍼티도 추가
+    public string CurrentState => _lastCommandedState;
 
     private void Awake()
     {
@@ -40,8 +46,6 @@ public class NPCVisual : MonoBehaviour
         {
             _stats.OnKnockbackApplied += HandleHitVisual;
             _stats.OnParrySuccess += HandleParrySuccessVisual;
-            _stats.OnGroggyStarted += HandleGroggyStartedVisual;
-            _stats.OnGroggyEnded += HandleGroggyEndedVisual;
         }
     }
 
@@ -52,17 +56,22 @@ public class NPCVisual : MonoBehaviour
         {
             _stats.OnKnockbackApplied -= HandleHitVisual;
             _stats.OnParrySuccess -= HandleParrySuccessVisual;
-            _stats.OnGroggyStarted -= HandleGroggyStartedVisual;
-            _stats.OnGroggyEnded -= HandleGroggyEndedVisual;
         }
     }
 
     private void HandleFormTransformStarted() => PlayImmediate($"TransformToPhase{_formProvider.TargetFormStage}");
 
-    private void HandleHitVisual() { _lastReactionPoseTime = Time.time; PlayImmediate(NPCAnimStateNames.Hit); }
-    private void HandleParrySuccessVisual(CharacterStats attacker) { _lastReactionPoseTime = Time.time; PlayImmediate(NPCAnimStateNames.Parrying); }
-    private void HandleGroggyStartedVisual() => PlayImmediate(NPCAnimStateNames.Groggy);
-    private void HandleGroggyEndedVisual() => PlayIfChanged(NPCAnimStateNames.Idle);
+    private void HandleHitVisual()
+    {
+        _reactionPoseEndTime = Time.time + hitReactionDuration;
+        PlayImmediate(NPCAnimStateNames.Hit);
+    }
+
+    private void HandleParrySuccessVisual(CharacterStats attacker)
+    {
+        _reactionPoseEndTime = Time.time + parryReactionDuration;
+        PlayImmediate(NPCAnimStateNames.Parrying);
+    }
 
     public void SetEyesVisible(bool visible) => _eyeBlink?.SetVisible(visible);
 
@@ -73,12 +82,12 @@ public class NPCVisual : MonoBehaviour
         PlayImmediate(stateName);
     }
 
-    public void PlayImmediate(string stateName)
+    public void PlayImmediate(string stateName, float normalizedTime = 0f) // ★ 매개변수 추가 (기존 호출부는 그대로 동작)
     {
         _lastCommandedState = stateName;
         foreach (var anim in _partAnimators)
             if (anim != null && anim.gameObject.activeInHierarchy)
-                anim.Play(stateName, -1, 0f);
+                anim.Play(stateName, -1, normalizedTime);
     }
 
     public void CrossFadeAll(string stateName, float duration)
@@ -104,4 +113,16 @@ public class NPCVisual : MonoBehaviour
         foreach (var part in _directionalParts) part.ApplyFacing(facingRight);
         foreach (var s in _directionalSprites) s.ApplyFacing(facingRight);
     }
+
+#if UNITY_EDITOR
+    [ContextMenu("애니메이션 클립 길이 전체 출력")]
+    private void PrintClipLengths()
+    {
+        var animator = GetComponentInChildren<Animator>();
+        if (animator == null || animator.runtimeAnimatorController == null) return;
+        foreach (var clip in animator.runtimeAnimatorController.animationClips)
+            Debug.Log($"{clip.name}: {clip.length:F3}초");
+    }
+#endif
+
 }

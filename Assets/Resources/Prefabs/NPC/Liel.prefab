@@ -95,7 +95,8 @@ MonoBehaviour:
   isGuarding: 0
   parryWindowDuration: 0.15
   invincibilityDuration: 0.2
-  knockbackStunDuration: 0.3
+  knockbackStunDuration: 0.2
+  knockbackSlideDrag: 10
   superArmorBreakThreshold: 8
   isSuperArmor: 0
   statusText: {fileID: 8281881456917337172}

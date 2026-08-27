@@ -26,6 +26,7 @@ public class PlayerVisual : MonoBehaviour
     // 패링 모션 관련
     private Coroutine _parryRoutine;
     private bool _isParryPosePlaying = false;
+    private float _parryingTime = 0.3f; // 패링 모션 유지 시간 **
 
     private float _statSpeedMultiplier = 1f;
     private Coroutine _hitStopRoutine;
@@ -149,7 +150,8 @@ public class PlayerVisual : MonoBehaviour
         }
         else if (!isKnockedBack && _wasKnockedBack)
         {
-            ReturnToLocomotion();
+            if (_stats != null && _stats.IsGroggy) PlayImmediate(PlayerAnimStateNames.Groggy); // ★ 그로기 중이면 그로기 포즈로
+            else ReturnToLocomotion();
         }
 
         _wasKnockedBack = isKnockedBack;
@@ -189,7 +191,7 @@ public class PlayerVisual : MonoBehaviour
     {
         _isParryPosePlaying = true;
         PlayImmediate(PlayerAnimStateNames.Parrying); // ★ 이 상수 없으면 클래스에 추가 필요
-        yield return new WaitForSeconds(0.35f); // 임시값 — 실제 패링 클립 길이에 맞춰 조정
+        yield return new WaitForSeconds(_parryingTime); // ?
         _isParryPosePlaying = false;
         if (!_controller.IsActionLocked && !_stats.isGuarding) ReturnToLocomotion();
         _parryRoutine = null;
@@ -447,4 +449,16 @@ public class PlayerVisual : MonoBehaviour
             else if (!isFace && !string.IsNullOrEmpty(bodyStateName)) anim.Play(bodyStateName, -1, 0f);
         }
     }
+
+#if UNITY_EDITOR
+    [ContextMenu("애니메이션 클립 길이 전체 출력")]
+    private void PrintClipLengths()
+    {
+        var animator = GetComponentInChildren<Animator>();
+        if (animator == null || animator.runtimeAnimatorController == null) return;
+        foreach (var clip in animator.runtimeAnimatorController.animationClips)
+            Debug.Log($"{clip.name}: {clip.length:F3}초");
+    }
+#endif
+
 }

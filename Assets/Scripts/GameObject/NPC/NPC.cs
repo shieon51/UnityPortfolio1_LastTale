@@ -36,8 +36,8 @@ public abstract class NPC : CharacterStats, ICombatTargetable
     // 매니저가 처음 나를 스폰시켰을 때의 CSV 좌표
     [HideInInspector] public Vector2 originalCsvPos;
 
-    // 모든 NPC가 공유할 스프라이트 렌더러
-    protected SpriteRenderer spriteRenderer;
+    //// 모든 NPC가 공유할 스프라이트 렌더러
+    //protected SpriteRenderer spriteRenderer;
 
     public NPCMode CurrentMode => myData != null ? myData.currentMode : NPCMode.Normal;
     public RelationshipTier CurrentRelationship => myData != null ? myData.GetRelationshipTier() : RelationshipTier.Wary;
@@ -78,6 +78,9 @@ public abstract class NPC : CharacterStats, ICombatTargetable
     private float _groundCheckTimer = 0f;
     private const float GroundCheckInterval = 0.5f;
 
+    // 패링 확률 관련
+    private int _consecutiveParryMisses = 0;
+    
     // 플레이 중 실시간 기즈모 (PlayerCombat과 동일한 패턴)
     private bool _showHitbox = false;
     private Vector2 _lastHitboxCenter, _lastHitboxSize;
@@ -98,9 +101,6 @@ public abstract class NPC : CharacterStats, ICombatTargetable
         // 자식 오브젝트에 달려 있는 EventTrigger를 찾음
         myEventTrigger = GetComponentInChildren<EventTrigger>(true);
 
-        // 부모에서 한 번만 캐싱해두면 모든 자식이 쓸 수 있음
-        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-
         // Instantiate 되자마자 OnEnable이 불리기 전에 미리 데이터를 채워두기
         if (NPCManager.Instance != null)
         {
@@ -108,6 +108,8 @@ public abstract class NPC : CharacterStats, ICombatTargetable
         }
 
         StateMachine = new StateMachine();
+
+        OnGroggyStarted += HandleGroggyInterrupt;
     }
 
     protected virtual void Start()
@@ -155,8 +157,23 @@ public abstract class NPC : CharacterStats, ICombatTargetable
     protected override bool TryResolveParry(CharacterStats attacker)
     {
         if (attacker == null) return false;
-        float chance = CombatFormulaService.Instance.CalculateParryChance(this, attacker);
-        return Random.value < chance;
+        float baseChance = CombatFormulaService.Instance.CalculateParryChance(this, attacker);
+        var tuning = NPCCombatTuning.Instance;
+        float effectiveChance = Mathf.Min(tuning.ParryMaxChance, baseChance + _consecutiveParryMisses * tuning.ParryMissBonusPerMiss);
+        bool success = Random.value < effectiveChance;
+        _consecutiveParryMisses = success ? 0 : _consecutiveParryMisses + 1;
+        return success;
+    }
+
+    // 그로기 인터럽트
+    private void HandleGroggyInterrupt()
+    {
+        StopAllCoroutines(); // 진행 중이던 스킬 코루틴 강제 중단
+        isSuperArmor = false;
+        CurrentPlayingSkill = null;
+        ClearDebugHitbox();
+        if (this is Liel_AI liel)
+            liel.StateMachine.ChangeState(new Liel_GroggyState(liel, visual, player));
     }
 
     // 지금 재생중인 스킬 알리기

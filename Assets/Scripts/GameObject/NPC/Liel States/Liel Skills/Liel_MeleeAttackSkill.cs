@@ -135,12 +135,13 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
     {
         float elapsed = 0f;
         var alreadyHit = new HashSet<Collider2D>();
-        Vector2 fixedCenter = (Vector2)self.transform.position + new Vector2(offset.x * dir, offset.y);
+        //Vector2 fixedCenter = (Vector2)self.transform.position + new Vector2(offset.x * dir, offset.y);
 
         while (elapsed < hitbox.activeDuration)
         {
-            self.SetDebugHitbox(fixedCenter, size);
-            Collider2D[] hits = Physics2D.OverlapBoxAll(fixedCenter, size, 0f, targetableLayers);
+            Vector2 currentCenter = (Vector2)self.transform.position + new Vector2(offset.x * dir, offset.y); // ★ 매 프레임 재계산 (기존엔 루프 밖에서 한 번만 계산했었음)
+            self.SetDebugHitbox(currentCenter, size);
+            Collider2D[] hits = Physics2D.OverlapBoxAll(currentCenter, size, 0f, targetableLayers);
             foreach (var hit in hits)
             {
                 if (alreadyHit.Contains(hit)) continue;
