@@ -22,7 +22,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 640
   manaCostPolicy: 0
-  maxAnimationDuration: 1.2
+  maxAnimationDuration: 0.76666665
   customDamageFormula: {fileID: 0}
   requiredStage: 0
   hitboxSize: {x: 3.8, y: 2.01}
@@ -43,6 +43,7 @@ MonoBehaviour:
     levelOverrides: []
   cameraCues: []
   facingLockOverride: 1
+  clipForAutoCalc: {fileID: 7400000, guid: 322389590c53bb8428ba40eed5b5320f, type: 2}
   dashSpeed: 15
   dashDuration: 0.2
   hitStopDuration: 0.08

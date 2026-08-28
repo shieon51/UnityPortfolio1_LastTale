@@ -23,6 +23,7 @@ public class NPCCombatTuning : Singleton<NPCCombatTuning>
     [Header("그로기 진입 시 밀림")]
     public float GroggyPushForce = 3f;
     public float GroggyPushDuration = 0.15f;
+    public float GroggyDrag = 15f; // 그로기 중 밀림 마찰
 
     [Header("패링 확률 보정 (연속 실패 시 상승)")]
     public float ParryMissBonusPerMiss = 0.08f;

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9cc346515b59e7743b07ee4ca7e38dd4, type: 3}
   m_Name: Groggy Duration Formula
   m_EditorClassIdentifier: Assembly-CSharp::GroggyDurationFormula
-  baseDuration: 2
-  levelScalingPerPoint: 0.05
+  baseDuration: 2.5
+  levelScalingPerPoint: 0
   minDuration: 0.5
   maxDuration: 5

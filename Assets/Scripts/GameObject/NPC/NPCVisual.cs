@@ -6,6 +6,7 @@ public class NPCVisual : MonoBehaviour
     private Animator[] _partAnimators;
     private SpriteRenderer[] _allSpriteRenderers;
     private string _lastCommandedState;
+    private Rigidbody2D _rb;
 
     // 목표 단계에 따라 다른 클립 재생 (보스마다 다르게 그리시면 자동 반영)
     private IFormStageProvider _formProvider;
@@ -32,6 +33,7 @@ public class NPCVisual : MonoBehaviour
 
     private void Awake()
     {
+        _rb = GetComponentInParent<Rigidbody2D>();
         _partAnimators = GetComponentsInChildren<Animator>(true);
         _allSpriteRenderers = GetComponentsInChildren<SpriteRenderer>(true);
         _directionalParts = GetComponentsInChildren<DirectionalPart>(true);
@@ -64,6 +66,7 @@ public class NPCVisual : MonoBehaviour
     private void HandleHitVisual()
     {
         _reactionPoseEndTime = Time.time + hitReactionDuration;
+        if (_rb != null) _rb.linearVelocity = Vector2.zero;
         PlayImmediate(NPCAnimStateNames.Hit);
     }
 

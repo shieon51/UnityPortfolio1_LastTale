@@ -173,5 +173,14 @@ public abstract class SkillBase : ScriptableObject
         Gizmos.DrawWireSphere(pos, 0.15f);
         UnityEditor.Handles.Label(pos, label);
     }
+
+    [Header("Auto-Sync")]
+    public AnimationClip clipForAutoCalc;
+
+    private void OnValidate()
+    {
+        if (clipForAutoCalc == null) return;
+        maxAnimationDuration = clipForAutoCalc.length + 0.1f; // 약간의 여유
+    }
 #endif
 }

@@ -51,6 +51,7 @@ public class Sora_Q_MeleeDashSkill : SkillBase
     {
         float elapsed = 0f;
         HashSet<Collider2D> alreadyHitEnemies = new HashSet<Collider2D>();
+        Vector2 attackOriginPos = parentTransform.position;
 
         while (elapsed < activeDuration)
         {
@@ -77,9 +78,7 @@ public class Sora_Q_MeleeDashSkill : SkillBase
                 int finalDamage = (int)(stats.attack.GetValue() * GetDamageMultiplier(1));
                 Vector2 knockbackDir = (hit.transform.position - parentTransform.position).normalized;
 
-                enemyStats.TakeDamage(finalDamage, stats.currentElement, stats, knockbackDir, 5f); // ★ 한 줄로 통합
-
-
+                enemyStats.TakeDamage(finalDamage, stats.currentElement, stats, knockbackDir, 5f, attackOriginPos); // ★ 추가
                 hitSomething = true;
             }
 

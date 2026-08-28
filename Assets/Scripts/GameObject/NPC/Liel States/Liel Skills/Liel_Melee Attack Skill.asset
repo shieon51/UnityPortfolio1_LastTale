@@ -22,7 +22,7 @@ MonoBehaviour:
   skillName: 
   animStateName: Attack1
   manaCost: 5
-  timeToActive: 0.2
+  timeToActive: 0.5833333
   hasTelegraph: 1
   baseTelegraphDuration: 0.8
   targetableLayers:
@@ -37,8 +37,9 @@ MonoBehaviour:
     contextOverrides: []
     levelOverrides: []
   cameraCues: []
-  minRange: 4
-  maxRange: 8
+  clipForAutoCalc: {fileID: 7400000, guid: c24ba61c91344414a9d096a84d79e8ba, type: 2}
+  minRange: 10
+  maxRange: 15
   dash:
     burstSpeed: 35
     slideDrag: 14
@@ -48,6 +49,6 @@ MonoBehaviour:
     size: {x: 10, y: 3.28}
     offset: {x: 0, y: 0.57}
     activeDuration: 0.15
-    knockbackPower: 5
+    knockbackPower: 40
   baseScore: 70
   comboBonusScore: 25

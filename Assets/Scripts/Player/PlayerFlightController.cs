@@ -1,20 +1,20 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
-// ºñÇàÇü(¿äÁ¤È­ 2´Ü°è) Àü¿ë ÀÌµ¿À» Àü´ãÇÏ´Â ÄÄÆ÷³ÍÆ®.
-// IFormStageProvider ÀÌº¥Æ®¸¦ ±¸µ¶ÇØ ½º½º·Î ÄÑ°í ²ô¸ç, PlayerControllerÀÇ Áö»ó ÀÌµ¿ ·ÎÁ÷°ú´Â ¿ÏÀüÈ÷ ºĞ¸®µÇ¾î ÀÖ´Ù.
-// ³ªÁß¿¡ »õ ÀÌµ¿ ¸ğµå(¼ö¿µ µî)°¡ ÇÊ¿äÇØÁö¸é, PlayerController¸¦ °Çµå¸®Áö ¾Ê°í
-// ÀÌ Å¬·¡½º¸¦ Âü°íÇØ °°Àº ÆĞÅÏ(Æû/»óÅÂ ÀÌº¥Æ® ±¸µ¶ ¡æ enabled Åä±Û)À¸·Î »õ ÄÄÆ÷³ÍÆ®¸¦ ³ª¶õÈ÷ Ãß°¡ÇÏ¸é µÈ´Ù.
+// ë¹„í–‰í˜•(ìš”ì •í™” 2ë‹¨ê³„) ì „ìš© ì´ë™ì„ ì „ë‹´í•˜ëŠ” ì»´í¬ë„ŒíŠ¸.
+// IFormStageProvider ì´ë²¤íŠ¸ë¥¼ êµ¬ë…í•´ ìŠ¤ìŠ¤ë¡œ ì¼œê³  ë„ë©°, PlayerControllerì˜ ì§€ìƒ ì´ë™ ë¡œì§ê³¼ëŠ” ì™„ì „íˆ ë¶„ë¦¬ë˜ì–´ ìˆë‹¤.
+// ë‚˜ì¤‘ì— ìƒˆ ì´ë™ ëª¨ë“œ(ìˆ˜ì˜ ë“±)ê°€ í•„ìš”í•´ì§€ë©´, PlayerControllerë¥¼ ê±´ë“œë¦¬ì§€ ì•Šê³ 
+// ì´ í´ë˜ìŠ¤ë¥¼ ì°¸ê³ í•´ ê°™ì€ íŒ¨í„´(í¼/ìƒíƒœ ì´ë²¤íŠ¸ êµ¬ë… â†’ enabled í† ê¸€)ìœ¼ë¡œ ìƒˆ ì»´í¬ë„ŒíŠ¸ë¥¼ ë‚˜ë€íˆ ì¶”ê°€í•˜ë©´ ëœë‹¤.
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerFlightController : MonoBehaviour
 {
     [Header("Flight Movement")]
     public float flightMaxSpeed = 8f;
-    [Tooltip("¸ñÇ¥ ¼Óµµ·Î ºÙ´Â °¡¼Óµµ")]
+    [Tooltip("ëª©í‘œ ì†ë„ë¡œ ë¶™ëŠ” ê°€ì†ë„")]
     public float flightAcceleration = 30f;
-    [Tooltip("ÀÔ·ÂÀ» ¶¼°Å³ª ¹İ´ë·Î ÁÙ ¶§ÀÇ °¨¼Óµµ. °¡¼Óº¸´Ù Ä¿¾ß 'Å¹' ¸ØÃß´Â ´À³¦ÀÌ ³²")]
+    [Tooltip("ì…ë ¥ì„ ë–¼ê±°ë‚˜ ë°˜ëŒ€ë¡œ ì¤„ ë•Œì˜ ê°ì†ë„. ê°€ì†ë³´ë‹¤ ì»¤ì•¼ 'íƒ' ë©ˆì¶”ëŠ” ëŠë‚Œì´ ë‚¨")]
     public float flightDeceleration = 45f;
 
-    [Header("Dash Burst (12¹ø Ç×¸ñ)")]
+    [Header("Dash Burst (12ë²ˆ í•­ëª©)")]
     public float dashBurstSpeed = 16f;
     public float dashBurstDuration = 0.15f;
     public float verticalBurstSpeed = 14f;
@@ -23,12 +23,13 @@ public class PlayerFlightController : MonoBehaviour
     private IFormStageProvider _formProvider;
     private PlayerController _playerController;
     private PlayerCombat _playerCombat;
+    private CharacterStats _stats;
 
     private bool _isDashBursting = false;
     private float _dashBurstTimer = 0f;
     private Vector2 _dashBurstVelocity;
 
-    public float afterimageTailDuration = 0.2f; // ´ë½Ã ³¡³ª°í °¨¼ÓÇÏ´Â µ¿¾È¿¡µµ ÀÜ»óÀÌ Á¶±İ ´õ ³²°Ô
+    public float afterimageTailDuration = 0.2f; // ëŒ€ì‹œ ëë‚˜ê³  ê°ì†í•˜ëŠ” ë™ì•ˆì—ë„ ì”ìƒì´ ì¡°ê¸ˆ ë” ë‚¨ê²Œ
 
     private void Awake()
     {
@@ -36,8 +37,9 @@ public class PlayerFlightController : MonoBehaviour
         _formProvider = GetComponent<IFormStageProvider>();
         _playerController = GetComponent<PlayerController>();
         _playerCombat = GetComponentInChildren<PlayerCombat>();
+        _stats = GetComponent<CharacterStats>();
 
-        enabled = false; // ±âº»Àº Áö»óÇüÀÌ¹Ç·Î Ã³À½¿£ ²¨Áø Ã¤·Î ½ÃÀÛ
+        enabled = false; // ê¸°ë³¸ì€ ì§€ìƒí˜•ì´ë¯€ë¡œ ì²˜ìŒì—” êº¼ì§„ ì±„ë¡œ ì‹œì‘
 
         if (_formProvider != null) _formProvider.OnFormStageChanged += HandleFormStageChanged;
     }
@@ -62,7 +64,7 @@ public class PlayerFlightController : MonoBehaviour
 
         int playerLayer = gameObject.layer;
         int oneWayLayer = LayerMask.NameToLayer("OneWayPlatform");
-        // ºñÇà Áß¿£ ¿ø¿şÀÌ ÇÃ·§ÆûÀ» ¿ÏÀüÈ÷ ¹«½Ã (Ground´Â Àı´ë °Çµå¸®Áö ¾ÊÀ¸¹Ç·Î ±×´ë·Î ¸·Èû)
+        // ë¹„í–‰ ì¤‘ì—” ì›ì›¨ì´ í”Œë«í¼ì„ ì™„ì „íˆ ë¬´ì‹œ (GroundëŠ” ì ˆëŒ€ ê±´ë“œë¦¬ì§€ ì•Šìœ¼ë¯€ë¡œ ê·¸ëŒ€ë¡œ ë§‰í˜)
         if (oneWayLayer >= 0) Physics2D.IgnoreLayerCollision(playerLayer, oneWayLayer, true);
     }
 
@@ -73,12 +75,13 @@ public class PlayerFlightController : MonoBehaviour
         if (oneWayLayer >= 0) Physics2D.IgnoreLayerCollision(playerLayer, oneWayLayer, false);
 
         _isDashBursting = false;
-        // gravityScale º¹±¸´Â PlayerController.HandleFormStageChanged°¡ ÀÌ¹Ì Ã³¸® (Áßº¹ È£ÃâÀº ¹«ÇØÇÔ)
+        // gravityScale ë³µêµ¬ëŠ” PlayerController.HandleFormStageChangedê°€ ì´ë¯¸ ì²˜ë¦¬ (ì¤‘ë³µ í˜¸ì¶œì€ ë¬´í•´í•¨)
     }
 
     private void Update()
     {
-        if (_playerController != null && _playerController.IsActionLocked) return; // °ø°İ/º¯½Å µî Àá±İ Áß¿£ ÀÔ·Â ¹«½Ã
+        if (_playerController != null && _playerController.IsActionLocked) return; // ê³µê²©/ë³€ì‹  ë“± ì ê¸ˆ ì¤‘ì—” ì…ë ¥ ë¬´ì‹œ
+        if (_stats != null && _stats.isGuarding) return; // â˜… ì¶”ê°€ â€” ëŒ€ì‹œë²„ìŠ¤íŠ¸ ì…ë ¥ ì°¨ë‹¨
         HandleDashBurstInput();
     }
 
@@ -100,12 +103,12 @@ public class PlayerFlightController : MonoBehaviour
 
     private float FacingDirectionHint()
     {
-        return _playerCombat != null ? _playerCombat.FacingDirection * -1f : 1f; // Q ½ºÅ³°ú µ¿ÀÏÇÑ ½ºÇÁ¶óÀÌÆ® ¹æÇâ º¸Á¤
+        return _playerCombat != null ? _playerCombat.FacingDirection * -1f : 1f; // Q ìŠ¤í‚¬ê³¼ ë™ì¼í•œ ìŠ¤í”„ë¼ì´íŠ¸ ë°©í–¥ ë³´ì •
     }
 
     private void StartDashBurst(Vector2 velocity)
     {
-        _playerCombat.GetComponent<AfterimageEffect>()?.Play(dashBurstDuration + afterimageTailDuration); // ¡Ú °¨¼Ó ²¿¸®±îÁö Ä¿¹ö
+        _playerCombat.GetComponent<AfterimageEffect>()?.Play(dashBurstDuration + afterimageTailDuration); // â˜… ê°ì† ê¼¬ë¦¬ê¹Œì§€ ì»¤ë²„
         _isDashBursting = true;
         _dashBurstTimer = 0f;
         _dashBurstVelocity = velocity;
@@ -115,6 +118,13 @@ public class PlayerFlightController : MonoBehaviour
     {
         if (_playerController != null && _playerController.IsActionLocked)
         {
+            _rb.linearVelocity = Vector2.MoveTowards(_rb.linearVelocity, Vector2.zero, flightDeceleration * Time.fixedDeltaTime);
+            return;
+        }
+
+        if (_stats != null && _stats.isGuarding) // ê°€ë“œ ì¤‘ì¼ ë• ì›€ì§ì´ì§€ ëª»í•˜ë„ë¡
+        {
+            _isDashBursting = false; // â˜… ì™„ì „íˆ ì·¨ì†Œ, ì¬ê°œ ì•ˆ ë˜ê²Œ
             _rb.linearVelocity = Vector2.MoveTowards(_rb.linearVelocity, Vector2.zero, flightDeceleration * Time.fixedDeltaTime);
             return;
         }
@@ -132,7 +142,7 @@ public class PlayerFlightController : MonoBehaviour
         }
 
         float inputX = Input.GetAxisRaw("Horizontal");
-        float inputY = Input.GetAxisRaw("Vertical"); // ÇÁ·ÎÁ§Æ® Input ManagerÀÇ ±âº» Up/Down Ãà »ç¿ë
+        float inputY = Input.GetAxisRaw("Vertical"); // í”„ë¡œì íŠ¸ Input Managerì˜ ê¸°ë³¸ Up/Down ì¶• ì‚¬ìš©
 
         Vector2 inputDir = new Vector2(inputX, inputY);
         Vector2 targetVelocity = inputDir.sqrMagnitude > 0.01f ? inputDir.normalized * flightMaxSpeed : Vector2.zero;

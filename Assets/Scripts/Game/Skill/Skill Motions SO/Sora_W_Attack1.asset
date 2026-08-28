@@ -22,7 +22,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 640
   manaCostPolicy: 0
-  maxAnimationDuration: 1.2
+  maxAnimationDuration: 0.78333336
   customDamageFormula: {fileID: 0}
   requiredStage: 0
   hitboxSize: {x: 3, y: 3}
@@ -38,6 +38,7 @@ MonoBehaviour:
     levelOverrides: []
   cameraCues: []
   facingLockOverride: 2
+  clipForAutoCalc: {fileID: 7400000, guid: f08291cfdcf32624db0f358379df35e3, type: 2}
   targetSearchRadius: 8
   facingToleranceDegrees: 100
   arrivalOffsetFromTarget: 2

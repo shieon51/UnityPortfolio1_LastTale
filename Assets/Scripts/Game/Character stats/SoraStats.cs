@@ -138,7 +138,7 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     }
 
     // [기획 반영] 시간 속성의 소라는 역상성(예: Normal)에 맞으면 추가 피해 및 정신력 감소
-    public override bool TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal, CharacterStats attacker = null, Vector2? knockbackDirection = null, float knockbackPower = 0f)
+    public override bool TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal, CharacterStats attacker = null, Vector2? knockbackDirection = null, float knockbackPower = 0f, Vector2? attackOriginOverride = null)
     {
         int finalDamage = incomingDamage;
         if (fairyStage > 0 && attackElement == ElementType.Normal) // 기획에 따라 상성 정의 필요    //************* 추후 수정

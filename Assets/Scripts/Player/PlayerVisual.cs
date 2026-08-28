@@ -23,6 +23,9 @@ public class PlayerVisual : MonoBehaviour
     // 눈깜빡임 모션
     private EyeBlinkController _eyeBlink;
 
+    // 그로기 지속 관련
+    private float _groggyElapsed = 0f;
+
     // 패링 모션 관련
     private Coroutine _parryRoutine;
     private bool _isParryPosePlaying = false;
@@ -110,6 +113,7 @@ public class PlayerVisual : MonoBehaviour
         UpdateAnimationSpeed();
         ReconcileAirborneVisual();
         ReconcileStuckState();
+        TickGroggyResume();
     }
 
     private Animator ResolveDriverAnimator()
@@ -148,10 +152,9 @@ public class PlayerVisual : MonoBehaviour
         {
             PlayImmediate(PlayerAnimStateNames.Hit);
         }
-        else if (!isKnockedBack && _wasKnockedBack)
+        else if (!isKnockedBack && _wasKnockedBack && (_stats == null || !_stats.IsGroggy))
         {
-            if (_stats != null && _stats.IsGroggy) PlayImmediate(PlayerAnimStateNames.Groggy); // ★ 그로기 중이면 그로기 포즈로
-            else ReturnToLocomotion();
+            ReturnToLocomotion(); // ★ 그로기 중이면 여기선 아무것도 안 함
         }
 
         _wasKnockedBack = isKnockedBack;
@@ -177,8 +180,24 @@ public class PlayerVisual : MonoBehaviour
     }
 
     // 그로기 상태
-    private void HandleGroggyStarted() => PlayImmediate(PlayerAnimStateNames.Groggy);
+    private void HandleGroggyStarted()
+    {
+        _groggyElapsed = 0f;
+        PlayImmediate(PlayerAnimStateNames.Groggy);
+    }
     private void HandleGroggyEnded() => ReturnToLocomotion();
+
+    private void TickGroggyResume() // ★ 신규
+    {
+        if (_stats == null || !_stats.IsGroggy) return;
+        _groggyElapsed += Time.deltaTime;
+        if (_controller.IsKnockedBack) return; // Hit 경직 중엔 그대로 둠
+        if (_lastCommandedState != PlayerAnimStateNames.Groggy)
+        {
+            float normalizedTime = _stats.GroggyDuration > 0f ? Mathf.Clamp01(_groggyElapsed / _stats.GroggyDuration) : 0f;
+            PlayImmediate(PlayerAnimStateNames.Groggy, normalizedTime); // ★ 이어재생
+        }
+    }
 
     // 패링 관련
     private void HandleParrySuccess(CharacterStats attacker)
@@ -313,16 +332,6 @@ public class PlayerVisual : MonoBehaviour
         }
         CrossFadeAll(PlayerAnimStateNames.JumpTree, 0.05f);
     }
-    //private void HandleLanded()
-    //{
-    //    if (_controller.IsActionLocked) return;
-    //    if (_formProvider != null && _formProvider.IsFlightForm)
-    //    {
-    //        CrossFadeAll(PlayerAnimStateNames.Movement, 0.1f);
-    //        return;
-    //    }
-    //    PlayImmediate(PlayerAnimStateNames.Ground);
-    //}
 
     // 실제 접촉 전, 예고 시점에 착지 모션을 미리 재생
     private void HandleLanded()
@@ -413,7 +422,7 @@ public class PlayerVisual : MonoBehaviour
 
     private void PlayImmediate(string stateName, float normalizedTime = 0f)
     {
-        Debug.Log($"[DBG {Time.time:F3}] PlayImmediate({stateName}) ← {new System.Diagnostics.StackTrace().GetFrame(1)?.GetMethod()?.Name}");
+        //Debug.Log($"[DBG {Time.time:F3}] PlayImmediate({stateName}) ← {new System.Diagnostics.StackTrace().GetFrame(1)?.GetMethod()?.Name}");
 
         _lastCommandedState = stateName; // 명령을 내릴 때마다 기록
         foreach (var anim in _partAnimators)
@@ -422,7 +431,7 @@ public class PlayerVisual : MonoBehaviour
     }
     private void CrossFadeAll(string stateName, float duration)
     {
-        Debug.Log($"[DBG {Time.time:F3}] CrossFadeAll({stateName}) ← {new System.Diagnostics.StackTrace().GetFrame(1)?.GetMethod()?.Name}");
+        //Debug.Log($"[DBG {Time.time:F3}] CrossFadeAll({stateName}) ← {new System.Diagnostics.StackTrace().GetFrame(1)?.GetMethod()?.Name}");
 
         _lastCommandedState = stateName; // 여기도 동일
         foreach (var anim in _partAnimators)

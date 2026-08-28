@@ -12,17 +12,15 @@ public class GuardMitigationDamageFormula : DamageFormulaSO
     public override int CalculateDamage(CombatContext ctx)
     {
         int defenderDef = ctx.Defender.defense.GetValue();
-
         if (ctx.IsGuarding)
         {
-            bool guardBroken = defenderDef <= 0 || ctx.IncomingDamage >= defenderDef * guardBreakDamageRatio;
+            bool guardBroken = defenderDef <= 0 || ctx.IncomingDamage >= defenderDef * guardBreakAttackRatio; // 관통 기준
+            if (!guardBroken) return 0; // 완벽 방어
 
-            if (!guardBroken) return 0; // ★ 완벽 방어 — 데미지 없음
-
-            int guardDef = Mathf.RoundToInt(defenderDef * guardDefenseMultiplier);
-            return Mathf.Max(1, ctx.IncomingDamage - guardDef); // 관통은 그래도 일부 경감
+            int boostedDef = Mathf.RoundToInt(defenderDef * guardDefenseMultiplier); // ★ 방어력 2배 적용
+            int piercedRaw = Mathf.Max(0, ctx.IncomingDamage - boostedDef);
+            return Mathf.Max(1, Mathf.RoundToInt(piercedRaw * guardBreakDamageRatio)); // 그 남은 것도 일부만 통과
         }
-
         return Mathf.Max(1, ctx.IncomingDamage - defenderDef);
     }
 }

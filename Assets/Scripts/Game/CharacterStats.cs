@@ -29,6 +29,9 @@ public class CharacterStats : MonoBehaviour
     public float parryWindowDuration = 0.25f;
     private float _guardStartTime = -10f;
 
+    [Header("완벽 방어 시 공격자 밀쳐내기")]
+    public float perfectGuardPushback = 3f;
+
     [Header("Groggy")] // 그로기
     public bool IsGroggy { get; private set; }
     public event System.Action OnGroggyStarted;
@@ -112,11 +115,12 @@ public class CharacterStats : MonoBehaviour
          ElementType attackElement = ElementType.Normal,
          CharacterStats attacker = null,
          Vector2? knockbackDirection = null,
-         float knockbackPower = 0f)
+         float knockbackPower = 0f,
+         Vector2? attackOriginOverride = null) // ★ 신규 — 대시형 공격이 "시작 시점" 위치를 넘길 때 사용
     {
         if (Time.time < lastHitTime + invincibilityDuration) return false; // 무적 중 — 넉백 포함 아무 효과 없음
 
-        bool facingAttacker = IsAttackFromFacingSide(attacker); // attacker null이면 내부에서 true 처리됨
+        bool facingAttacker = IsAttackFromFacingSide(attacker, attackOriginOverride); // attacker null이면 내부에서 true 처리됨
         bool guardActive = isGuarding && facingAttacker; // ★ 방어는 방향이 맞을 때만 유효
 
         if (guardActive && attacker != null && IsInParryWindow && TryResolveParry(attacker)) // ★ guardActive 기준, attacker null 체크 유지
@@ -140,7 +144,10 @@ public class CharacterStats : MonoBehaviour
         {
             FloatingTextManager.Instance?.ShowGuard(transform.position + Vector3.up * 1f);
             SoundManager.Instance?.PlaySFX("guard_perfect");
-            return false; // 완벽 방어 — 넉백 포함 아무 효과 없음
+            CameraDirector.Instance?.Shake(0.05f, 0.05f); // ★ 17번 — 관통 때보다 약하게
+            if (attacker != null && knockbackDirection.HasValue) // ★ 16번
+                attacker.ApplyKnockback(-knockbackDirection.Value, perfectGuardPushback);
+            return false; // 완벽 방어 시 공격자 밀쳐냄
         }
 
         if (guardActive) // ★ 방향 안 맞으면 여기 안 들어오고 바로 else(무방비)로 감
@@ -198,12 +205,20 @@ public class CharacterStats : MonoBehaviour
     }
 
     // 방향 판정 (방어 관련)
-    protected virtual bool IsAttackFromFacingSide(CharacterStats attacker)
+    protected virtual bool IsAttackFromFacingSide(CharacterStats attacker, Vector2? attackOriginOverride = null)
     {
         if (attacker == null || spriteRenderer == null) return true;
-        float dirToAttacker = Mathf.Sign(attacker.transform.position.x - transform.position.x);
+        Vector2 originPos = attackOriginOverride ?? (Vector2)attacker.transform.position;
+        float dirToAttacker = Mathf.Sign(originPos.x - transform.position.x);
         float facingDir = spriteRenderer.flipX ? 1f : -1f; // flipX=true→오른쪽, false→왼쪽 (프로젝트 공통 컨벤션)
         return dirToAttacker == 0f || Mathf.Approximately(dirToAttacker, facingDir);
+    }
+
+    // 그로기 리셋
+    public void ForceResetGroggy()
+    {
+        if (_groggyRoutine != null) { StopCoroutine(_groggyRoutine); _groggyRoutine = null; }
+        IsGroggy = false;
     }
 
     // 도착 순간처럼, '맞아서' 생기는 무적이 아니라 능동적으로 무적을 거는 경우를 위한 헬퍼.

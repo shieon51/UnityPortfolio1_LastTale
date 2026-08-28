@@ -161,6 +161,9 @@ public abstract class NPC : CharacterStats, ICombatTargetable
         var tuning = NPCCombatTuning.Instance;
         float effectiveChance = Mathf.Min(tuning.ParryMaxChance, baseChance + _consecutiveParryMisses * tuning.ParryMissBonusPerMiss);
         bool success = Random.value < effectiveChance;
+
+        Debug.Log($"[DBG Parry] base={baseChance:F3} misses={_consecutiveParryMisses} effective={effectiveChance:F3} → {(success ? "성공" : "실패")}"); 
+
         _consecutiveParryMisses = success ? 0 : _consecutiveParryMisses + 1;
         return success;
     }
@@ -168,7 +171,9 @@ public abstract class NPC : CharacterStats, ICombatTargetable
     // 그로기 인터럽트
     private void HandleGroggyInterrupt()
     {
-        StopAllCoroutines(); // 진행 중이던 스킬 코루틴 강제 중단
+        if (StateMachine.CurrentState is Liel_ExecutingActionState executingState)
+            executingState.ForceCancel(); // ★ StopAllCoroutines() 대신 이것만
+        WorldSpaceTelegraphIndicator.Instance?.Hide(); 
         isSuperArmor = false;
         CurrentPlayingSkill = null;
         ClearDebugHitbox();
@@ -337,6 +342,7 @@ public abstract class NPC : CharacterStats, ICombatTargetable
         }
 
         canRotate = true;
+        ForceResetGroggy();
         isSuperArmor = false;
         CurrentPlayingSkill = null;
     }

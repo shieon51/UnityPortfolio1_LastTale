@@ -20,14 +20,6 @@ public class Liel_UtilityDecisionState : NPCState
 
         if (visual.IsShowingReactionPose) return; // ★ 히트/패링 리액션 재생 중엔 Idle로 덮어쓰지 않음
 
-        liel.CheckPhaseTransition();
-
-        if (liel.IsGroggy)
-        {
-            visual.PlayIfChanged(NPCAnimStateNames.Groggy);
-            return;
-        }
-
         liel.CheckPhaseTransition(); // 페이즈 전환도 여기서 같이 체크 (아래)
 
         liel.LookAtPlayer_Public();

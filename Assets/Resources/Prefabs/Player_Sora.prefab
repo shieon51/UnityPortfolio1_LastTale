@@ -855,6 +855,8 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1032
   groundCheckOffset: {x: 0, y: -1.03, z: 0}
+  embedCheckInterval: 0.5
+  embedCheckHeight: 3
   formTransformDeceleration: 20
 --- !u!114 &3768006450966674468
 MonoBehaviour:
@@ -868,13 +870,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc27d3670fa1aa1468a59f704321eefe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerFlightController
-  flightMaxSpeed: 8
-  flightAcceleration: 30
-  flightDeceleration: 45
-  dashBurstSpeed: 16
-  dashBurstDuration: 0.15
-  verticalBurstSpeed: 14
-  afterimageTailDuration: 0.2
+  flightMaxSpeed: 13
+  flightAcceleration: 60
+  flightDeceleration: 100
+  dashBurstSpeed: 23
+  dashBurstDuration: 0.13
+  verticalBurstSpeed: 22
+  afterimageTailDuration: 0.13
 --- !u!114 &8950616784466513857
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -901,9 +903,16 @@ MonoBehaviour:
   currentElement: 0
   isGuarding: 0
   parryWindowDuration: 0.25
+  perfectGuardPushback: 3
   invincibilityDuration: 0.2
-  knockbackStunDuration: 0.3
+  knockbackStunDuration: 0.2
+  knockbackSlideDrag: 15
+  superArmorBreakThreshold: 8
   isSuperArmor: 0
+  statsSummary: "Lv.1 | HP 100 | MP 50\n\uACF5\uACA9 10 | \uBC29\uC5B4 5 | \uBBFC\uCCA9
+    5\n\uD53C\uACA9 \uACBD\uC9C1 0.20s | \uC2AC\uB77C\uC774\uB4DC \uB9C8\uCC30 15\n\uC288\uD37C\uC544\uBA38
+    \uB3CC\uD30C \uC784\uACC4\uAC12 8\n\uD328\uB9C1 \uD310\uC815\uCC3D 0.25s | \uBB34\uC801\uC2DC\uAC04
+    0.20s"
   experience: 0
   experienceToNextLevel: 100
   fairyStage: 0

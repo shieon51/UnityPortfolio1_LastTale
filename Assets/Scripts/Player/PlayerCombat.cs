@@ -24,7 +24,8 @@ public class PlayerCombat : MonoBehaviour
         get => _isAttacking;
         private set
         {
-            if (_isAttacking != value) Debug.Log($"[DBG {Time.time:F3}] IsAttacking: {_isAttacking} → {value}");
+            //if (_isAttacking != value) 
+            //    Debug.Log($"[DBG {Time.time:F3}] IsAttacking: {_isAttacking} → {value}");
             _isAttacking = value;
         }
     }
@@ -59,6 +60,9 @@ public class PlayerCombat : MonoBehaviour
 
     // ** 스킬 클래스(MeleeDashSkill 등)가 플레이어가 바라보는 방향을 쉽게 알 수 있도록 열어주는 프로퍼티
     public float FacingDirection => (_spriteRenderer != null && _spriteRenderer.flipX) ? -1f : 1f;
+
+    // 공격 중 방어로 캔슬을 위한 프로퍼티
+    public bool IsComboWindowOpen => _isComboWindowOpen; 
 
     // 예기치 못한 상황으로 스킬 이벤트 지연으로 인한 모션 씹힘 현상 관련
     private float _currentSkillStartTime; // 추가
@@ -197,7 +201,7 @@ public class PlayerCombat : MonoBehaviour
         var context = ResolveMovementContext();
         CurrentSkillContext = context;
 
-        Debug.Log($"[DBG {Time.time:F3}] 공격 시작: {skillToPlay.skillName}, context={context}"); // ?
+        //Debug.Log($"[DBG {Time.time:F3}] 공격 시작: {skillToPlay.skillName}, context={context}"); // ?
 
         // 비주얼 파츠 동시 재생
         if (_playerVisual != null)
@@ -351,7 +355,7 @@ public class PlayerCombat : MonoBehaviour
 
     public void CancelAttack()
     {
-        Debug.Log($"[DBG {Time.time:F3}] CancelAttack 호출됨");
+        //Debug.Log($"[DBG {Time.time:F3}] CancelAttack 호출됨");
 
         StopAllCoroutines();
         IsAttacking = false;
@@ -359,6 +363,7 @@ public class PlayerCombat : MonoBehaviour
         _stats.isSuperArmor = false;
         _currentPlayingSkill = null;
         _inputBuffer.Clear();
+        ClearDebugHitbox(); // ★ 추가
 
         if (_rb != null) _rb.gravityScale = ResolveRestingGravity();
         if (_playerVisual != null)

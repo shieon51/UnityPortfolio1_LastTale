@@ -154,9 +154,8 @@ public class CameraFollow : MonoBehaviour
     private void UpdateLookAhead()
     {
         float inputX = 0f;
-        if (_targetMotor == null || !_targetMotor.IsActionLocked)
-            inputX = Input.GetAxisRaw("Horizontal");
-
+        bool locked = _targetMotor != null && (_targetMotor.IsActionLocked || _targetMotor.IsGuarding);
+        if (!locked) inputX = Input.GetAxisRaw("Horizontal");
         float targetLookAhead = Mathf.Abs(inputX) > 0.01f ? Mathf.Sign(inputX) * lookAheadDistance : 0f;
         _currentLookAhead = Mathf.Lerp(_currentLookAhead, targetLookAhead, lookAheadSmoothSpeed * Time.deltaTime);
     }

@@ -9,6 +9,8 @@ public class Liel_ExecutingActionState : NPCState
 
     private float _pendingSlowmoIntensity = 0f; // ★ 신규 필드 (0~1)
 
+    private Coroutine _runActionHandle;
+
     public Liel_ExecutingActionState(Liel_AI npc, NPCVisual visual, Transform p, NPCActionBase action) : base(npc, visual, p)
     {
         liel = npc;
@@ -17,8 +19,15 @@ public class Liel_ExecutingActionState : NPCState
 
     public override void Enter()
     {
+        Debug.Log($"[DBG Action] Enter: {_action.name} at {Time.time:F3}"); // *
+
         liel.canRotate = false;
-        liel.StartCoroutine(RunAction());
+        _runActionHandle = liel.StartCoroutine(RunAction());
+    }
+
+    public void ForceCancel() // ★ 외부(그로기 등)에서 정확히 이것만 끊을 때 사용
+    {
+        if (_runActionHandle != null) liel.StopCoroutine(_runActionHandle);
     }
 
     private IEnumerator RunAction()
@@ -32,7 +41,7 @@ public class Liel_ExecutingActionState : NPCState
                 {
                     var defender = PlayerManager.Instance.CurrentCharacter;
                     leadTime = CombatFormulaService.Instance.CalculateTelegraphDuration(skill.baseTelegraphDuration, liel, defender);
-                    //leadTime = Mathf.Min(leadTime, NPCCombatTuning.MaxTelegraphLeadTime); // ★ 상한선
+                    Debug.Log($"[DBG Telegraph] {skill.name}: leadTime={leadTime:F3}, timeToActive={skill.timeToActive:F3}, preDelay={Mathf.Max(0f, leadTime - skill.timeToActive):F3}"); //?
 
                     float overflow = CombatFormulaService.Instance.CalculateTelegraphOverflow(skill.baseTelegraphDuration, liel, defender); // ★ 추가
                     _pendingSlowmoIntensity = Mathf.Clamp01(overflow * NPCCombatTuning.Instance.SlowmoOverflowScale);

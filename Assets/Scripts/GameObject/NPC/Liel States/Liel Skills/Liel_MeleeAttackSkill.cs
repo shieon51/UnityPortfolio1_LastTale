@@ -64,6 +64,8 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
 
     public override IEnumerator Execute(NPC self, NPCVisual visual, Transform target)
     {
+        Vector2 attackOriginPos = self.transform.position; // ★ 이동 시작 전 위치 스냅
+
         self.CurrentPlayingSkill = this; // ★ 릴레이가 이 스킬을 찾을 수 있게 등록
         visual.SetEyesVisible(false); // ** 모든 공격 모션 앞에 넣을 것
         self.isSuperArmor = true; // ★ 처음부터 슈퍼아머 — 돌진 중 맞아서 넉백당해 멈추는 것 방지
@@ -92,7 +94,7 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
         // 3. 찌르기: 판정 + 이펙트
         PlaySkillVFX("stab", self);
         CameraDirector.Instance?.DirectionalShake(0.2f, 0.15f, new Vector2(dir, 0)); // 카메라 흔들림
-        var hitboxCoroutine = self.StartCoroutine(ActiveHitboxRoutine(self, hitOffset, hitSize, dir));
+        var hitboxCoroutine = self.StartCoroutine(ActiveHitboxRoutine(self, hitOffset, hitSize, dir, attackOriginPos));
 
         yield return WaitForSlideStart(); // AE_SlideStart — 끼익 멈춤 시작
 
@@ -131,11 +133,10 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
         rb.linearVelocity = new Vector2(dir * dash.burstSpeed, rb.linearVelocity.y);
     }
 
-    private IEnumerator ActiveHitboxRoutine(NPC self, Vector2 offset, Vector2 size, float dir)
+    private IEnumerator ActiveHitboxRoutine(NPC self, Vector2 offset, Vector2 size, float dir, Vector2 attackOriginPos)
     {
         float elapsed = 0f;
         var alreadyHit = new HashSet<Collider2D>();
-        //Vector2 fixedCenter = (Vector2)self.transform.position + new Vector2(offset.x * dir, offset.y);
 
         while (elapsed < hitbox.activeDuration)
         {
@@ -149,7 +150,8 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
                 alreadyHit.Add(hit);
 
                 Vector2 kbDir = ((Vector2)hit.transform.position - (Vector2)self.transform.position).normalized;
-                targetStats.TakeDamage(Mathf.RoundToInt(self.attack.GetValue() * GetDamageMultiplier(1)), self.currentElement, self, kbDir, hitbox.knockbackPower);
+                targetStats.TakeDamage(Mathf.RoundToInt(self.attack.GetValue() * GetDamageMultiplier(1)), 
+                    self.currentElement, self, kbDir, hitbox.knockbackPower, attackOriginPos);
             }
             elapsed += Time.deltaTime;
             yield return null;

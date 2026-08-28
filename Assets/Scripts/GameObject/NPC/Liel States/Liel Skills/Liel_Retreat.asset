@@ -12,12 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83867e6502c20524d8f231a0c2d62c73, type: 3}
   m_Name: Liel_Retreat
   m_EditorClassIdentifier: Assembly-CSharp::NPCMovementAction
+  contextVariants: []
+  allowedContexts: 
   actionName: "\uD6C4\uD1F4"
   actionCooldown: 0
   recoveryDuration: 0
   eventTimeoutSeconds: 1
-  triggerBelowDistance: 4
-  triggerAboveDistance: 0
+  triggerBelowDistance: 10
+  triggerAboveDistance: 3.5
   direction: 1
   moveSpeed: 3
   maxDuration: 3

@@ -37,8 +37,18 @@ public abstract class NPCActionBase : ScriptableObject
     //private bool _activeStarted, _activeEnded;
     private bool _dashStarted, _hitboxStarted, _slideStarted, _actionEnded;
 
-    public void OnDashStart() => _dashStarted = true;
-    public void OnHitboxStart() => _hitboxStarted = true;
+    public void OnDashStart() 
+    { 
+        _dashStarted = true; 
+        Debug.Log($"[DBG Action] {name} OnDashStart at {Time.time:F3}"); // *
+    }
+
+    public void OnHitboxStart() 
+    { 
+        _hitboxStarted = true; 
+        Debug.Log($"[DBG Action] {name} OnHitboxStart at {Time.time:F3}"); // *
+    }
+
     public void OnSlideStart() => _slideStarted = true;
     public void OnActionEndEvent() => _actionEnded = true;
 

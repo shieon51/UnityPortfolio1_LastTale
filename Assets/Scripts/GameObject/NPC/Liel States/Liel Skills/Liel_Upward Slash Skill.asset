@@ -22,7 +22,7 @@ MonoBehaviour:
   skillName: 
   animStateName: Attack2
   manaCost: 3
-  timeToActive: 0.5
+  timeToActive: 0.28333333
   hasTelegraph: 1
   baseTelegraphDuration: 0.8
   targetableLayers:
@@ -30,7 +30,8 @@ MonoBehaviour:
     m_Bits: 64
   vfxCues: []
   cameraCues: []
-  maxRange: 2
+  clipForAutoCalc: {fileID: 7400000, guid: 29b33ada19c029c4e8593f5baed9a6f3, type: 2}
+  maxRange: 3.5
   step:
     burstSpeed: 10
     slideDrag: 25
@@ -40,5 +41,5 @@ MonoBehaviour:
     size: {x: 6.46, y: 2.24}
     offset: {x: -0.38, y: 0.33}
     activeDuration: 0.15
-    knockbackPower: 20
+    knockbackPower: 75
   baseScore: 70

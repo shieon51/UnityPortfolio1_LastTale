@@ -6,6 +6,7 @@ public class Liel_GroggyState : NPCState
 {
     private Liel_AI liel;
     private float _elapsed = 0f;
+    private float _originalDrag;
 
     public Liel_GroggyState(Liel_AI npc, NPCVisual visual, Transform p) : base(npc, visual, p) 
     { 
@@ -16,24 +17,26 @@ public class Liel_GroggyState : NPCState
     {
         liel.canRotate = false;
         _elapsed = 0f;
+        _originalDrag = liel.Rb.linearDamping;
 
         Vector2 pushDir = player != null ? ((Vector2)liel.transform.position - (Vector2)player.position).normalized : Vector2.left;
         liel.Rb.linearVelocity = Vector2.zero;
+        liel.Rb.linearDamping = NPCCombatTuning.Instance.GroggyDrag; // ★ 강제고정 대신 높은 마찰
         liel.Rb.AddForce(pushDir * NPCCombatTuning.Instance.GroggyPushForce, ForceMode2D.Impulse); // ★ 하드코딩 제거
 
         visual.PlayImmediate(NPCAnimStateNames.Groggy);
-        liel.StartCoroutine(LockAfterPush());
+        //liel.StartCoroutine(LockAfterPush());
     }
 
-    private IEnumerator LockAfterPush()
-    {
-        yield return new WaitForSeconds(NPCCombatTuning.Instance.GroggyPushDuration); // ★ 하드코딩 제거
-        while (liel.IsGroggy)
-        {
-            liel.Rb.linearVelocity = Vector2.zero;
-            yield return null;
-        }
-    }
+    //private IEnumerator LockAfterPush()
+    //{
+    //    yield return new WaitForSeconds(NPCCombatTuning.Instance.GroggyPushDuration); // ★ 하드코딩 제거
+    //    while (liel.IsGroggy)
+    //    {
+    //        liel.Rb.linearVelocity = Vector2.zero;
+    //        yield return null;
+    //    }
+    //}
 
     public override void Execute()
     {
@@ -53,5 +56,9 @@ public class Liel_GroggyState : NPCState
         }
     }
 
-    public override void Exit() => liel.canRotate = true;
+    public override void Exit()
+    {
+        liel.canRotate = true;
+        liel.Rb.linearDamping = _originalDrag; // ★ 원래 값 복원
+    }
 }

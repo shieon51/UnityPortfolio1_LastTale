@@ -29,6 +29,8 @@ public class Liel_UpwardSlashSkill : NPCSkillBase
 
     public override IEnumerator Execute(NPC self, NPCVisual visual, Transform target)
     {
+        Vector2 attackOriginPos = self.transform.position; // ★ 이동 시작 전 위치 스냅
+
         self.CurrentPlayingSkill = this;
         visual.SetEyesVisible(false);
         self.isSuperArmor = true;
@@ -55,12 +57,15 @@ public class Liel_UpwardSlashSkill : NPCSkillBase
         PlaySkillVFX("slash", self);
         CameraDirector.Instance?.Shake(0.15f, 0.15f);
 
-        var hitboxCoroutine = self.StartCoroutine(ActiveHitboxRoutine(self, hitOffset, hitSize));
+        var hitboxCoroutine = self.StartCoroutine(ActiveHitboxRoutine(self, hitOffset, hitSize, attackOriginPos));
 
         yield return WaitForSlideStart(); // AE_SlideStart — 발 내딛기 끝, 멈추기 시작
         rb.linearDamping = step.slideDrag;
 
+        var lockCoroutine = self.StartCoroutine(LockVelocityUntilActionEnd(rb)); // ★ 추가
+
         yield return WaitForActionEndEvent(); // AE_ActionEnd
+        if (lockCoroutine != null) self.StopCoroutine(lockCoroutine); // ★ 추가
         yield return hitboxCoroutine;
 
         rb.linearDamping = originalDrag;
@@ -70,12 +75,11 @@ public class Liel_UpwardSlashSkill : NPCSkillBase
         self.CurrentPlayingSkill = null;
     }
 
-    private IEnumerator ActiveHitboxRoutine(NPC self, Vector2 offset, Vector2 size)
+    private IEnumerator ActiveHitboxRoutine(NPC self, Vector2 offset, Vector2 size, Vector2 attackOriginPos) //?
     {
         float elapsed = 0f;
         var alreadyHit = new HashSet<Collider2D>();
         float dir = self.SpriteRenderer.flipX ? 1f : -1f;
-        //Vector2 fixedCenter = (Vector2)self.transform.position + new Vector2(offset.x * dir, offset.y);
 
         while (elapsed < hitbox.activeDuration)
         {
@@ -91,12 +95,21 @@ public class Liel_UpwardSlashSkill : NPCSkillBase
                 Vector2 kbDir = ((Vector2)hit.transform.position - (Vector2)self.transform.position).normalized;
                 targetStats.TakeDamage(
                     Mathf.RoundToInt(self.attack.GetValue() * GetDamageMultiplier(1)),
-                    self.currentElement, self, kbDir, hitbox.knockbackPower);
+                    self.currentElement, self, kbDir, hitbox.knockbackPower, attackOriginPos);
             }
             elapsed += Time.deltaTime;
             yield return null;
         }
         self.ClearDebugHitbox();
+    }
+
+    private IEnumerator LockVelocityUntilActionEnd(Rigidbody2D rb)
+    {
+        while (true)
+        {
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+            yield return null;
+        }
     }
 
 #if UNITY_EDITOR

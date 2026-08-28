@@ -29,6 +29,17 @@ public class PlayerGuard : MonoBehaviour
     {
         bool wantsGuard = Input.GetKey(guardKey); // ★ Down/Up 엣지 대신, 지금 눌려있는지 그 자체를 매 프레임 확인
 
+        // 공격 중 방어 키를 눌렀을 경우 - 콤보윈도우 끝나고 캔슬
+        if (wantsGuard && _combat != null && _combat.IsAttacking && _combat.IsComboWindowOpen && !_stats.isGuarding)
+        {
+            _combat.CancelAttack();
+            _stats.StartGuard();
+            var rb = GetComponent<Rigidbody2D>();
+            if (rb != null) rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+            _visual?.PlayState(ResolveContextState());
+            return;
+        }
+
         if (_stats.IsGroggy) // ★ 그로기 중엔 방어 자체 불가 — 강제 해제하고 입력도 무시
         {
             if (_stats.isGuarding) _stats.StopGuard();

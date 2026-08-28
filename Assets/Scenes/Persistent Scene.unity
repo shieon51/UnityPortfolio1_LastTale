@@ -2024,6 +2024,11 @@ MonoBehaviour:
   SlowmoOverflowScale: 0.5
   MaxSlowmoDuration: 0.6
   SlowmoAnimatorSpeed: 0.35
+  GroggyPushForce: 3
+  GroggyPushDuration: 0.15
+  GroggyDrag: 15
+  ParryMissBonusPerMiss: 0.08
+  ParryMaxChance: 0.75
 --- !u!1 &643845683
 GameObject:
   m_ObjectHideFlags: 0
@@ -6966,42 +6971,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 3647820703644649126, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
-      propertyPath: m_Size.x
-      value: 7.68
-      objectReference: {fileID: 0}
-    - target: {fileID: 3647820703644649126, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
-      propertyPath: m_Size.y
-      value: 4.32
-      objectReference: {fileID: 0}
-    - target: {fileID: 3768006450966674468, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
-      propertyPath: dashBurstSpeed
-      value: 23
-      objectReference: {fileID: 0}
-    - target: {fileID: 3768006450966674468, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
-      propertyPath: flightMaxSpeed
-      value: 13
-      objectReference: {fileID: 0}
-    - target: {fileID: 3768006450966674468, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
-      propertyPath: dashBurstDuration
-      value: 0.13
-      objectReference: {fileID: 0}
-    - target: {fileID: 3768006450966674468, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
-      propertyPath: flightAcceleration
-      value: 60
-      objectReference: {fileID: 0}
-    - target: {fileID: 3768006450966674468, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
-      propertyPath: flightDeceleration
-      value: 100
-      objectReference: {fileID: 0}
-    - target: {fileID: 3768006450966674468, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
-      propertyPath: verticalBurstSpeed
-      value: 22
-      objectReference: {fileID: 0}
-    - target: {fileID: 3768006450966674468, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
-      propertyPath: afterimageTailDuration
-      value: 0.13
-      objectReference: {fileID: 0}
     - target: {fileID: 6994465021518602846, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
       propertyPath: m_Name
       value: Player
@@ -7045,10 +7014,6 @@ PrefabInstance:
     - target: {fileID: 8541148022777094637, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8950616784466513857, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
-      propertyPath: knockbackStunDuration
-      value: 0.2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
