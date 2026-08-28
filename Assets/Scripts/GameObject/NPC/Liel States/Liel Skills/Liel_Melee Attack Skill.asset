@@ -15,8 +15,8 @@ MonoBehaviour:
   contextVariants: []
   allowedContexts: 
   actionName: "\uB9AC\uC5D8_\uCC0C\uB974\uAE30 \uACF5\uACA9"
-  actionCooldown: 1.5
-  recoveryDuration: 0.5
+  actionCooldown: 1.2
+  recoveryDuration: 0.3
   eventTimeoutSeconds: 1
   skillId: liel_melee1
   skillName: 

@@ -387,6 +387,8 @@ public class PlayerVisual : MonoBehaviour
     public void ReturnToLocomotion()
     {
         if (_stats != null && _stats.IsGroggy) return; // ★ 그로기 중엔 절대 로코모션으로 안 돌아감
+        if (_stats != null && _stats.isGuarding) return;
+
         _eyeBlink?.SetVisible(true); // ★ 공격 끝나면 다시 표시
 
         if (_formProvider != null && _formProvider.IsFlightForm)

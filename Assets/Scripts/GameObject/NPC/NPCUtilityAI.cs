@@ -68,7 +68,7 @@ public class NPCUtilityAI : MonoBehaviour
     private void OnDrawGizmosSelected()
     {
         var sr = GetComponentInChildren<SpriteRenderer>();
-        float dir = (sr != null && sr.flipX) ? -1f : 1f;
+        float dir = (sr != null && sr.flipX) ? 1f : -1f;
         if (availableActions == null) return;
         foreach (var action in availableActions)
             if (action != null) action.DrawEditorGizmos(transform.position, dir);

@@ -65,6 +65,9 @@ public class Liel_AI : NPC, IBossProfileTarget
     public event System.Action<float, float> OnAttackSlowmoTriggered; // (강도 0~1, 지속시간)
     public void RaiseAttackSlowmo(float intensity, float duration) => OnAttackSlowmoTriggered?.Invoke(intensity, duration);
 
+    // 리엘 보스 특징: 자동 회복 없음. 집중 상태 회복만 가능
+    protected override float ManaRegenPerSecond => 0f; // 패시브 회복 없음, 집중 상태에서만 회복
+
     private int _baseMaxHealth; // 프리팹에 세팅된 "진짜" 체력 (10000 등) — 최초 1회만 캐싱
 
     protected override void Awake()

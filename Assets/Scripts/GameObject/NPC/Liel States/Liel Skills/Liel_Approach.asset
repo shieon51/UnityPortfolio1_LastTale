@@ -16,7 +16,7 @@ MonoBehaviour:
   allowedContexts: 
   actionName: "\uC811\uADFC"
   actionCooldown: 0
-  recoveryDuration: 0
+  recoveryDuration: 0.2
   eventTimeoutSeconds: 1
   triggerBelowDistance: 0
   triggerAboveDistance: 15
@@ -24,3 +24,4 @@ MonoBehaviour:
   moveSpeed: 3
   maxDuration: 3
   baseScore: 45
+  lowHealthRetreatWeight: 30

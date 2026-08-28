@@ -20,6 +20,13 @@ public class Liel_UtilityDecisionState : NPCState
 
         if (visual.IsShowingReactionPose) return; // ★ 히트/패링 리액션 재생 중엔 Idle로 덮어쓰지 않음
 
+        // 체력이 낮을 시 '집중' 상태 돌입
+        if (liel.currentMana < liel.maxMana * NPCCombatTuning.Instance.ManaConcentrationTriggerRatio)
+        {
+            liel.StateMachine.ChangeState(new Liel_ConcentrationState(liel, visual, player));
+            return;
+        }
+
         liel.CheckPhaseTransition(); // 페이즈 전환도 여기서 같이 체크 (아래)
 
         liel.LookAtPlayer_Public();

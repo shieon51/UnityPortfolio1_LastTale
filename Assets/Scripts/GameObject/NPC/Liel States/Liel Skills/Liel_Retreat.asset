@@ -16,7 +16,7 @@ MonoBehaviour:
   allowedContexts: 
   actionName: "\uD6C4\uD1F4"
   actionCooldown: 0
-  recoveryDuration: 0
+  recoveryDuration: 0.2
   eventTimeoutSeconds: 1
   triggerBelowDistance: 10
   triggerAboveDistance: 3.5
@@ -24,3 +24,4 @@ MonoBehaviour:
   moveSpeed: 3
   maxDuration: 3
   baseScore: 40
+  lowHealthRetreatWeight: 30

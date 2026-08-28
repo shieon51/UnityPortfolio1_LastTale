@@ -15,8 +15,8 @@ MonoBehaviour:
   contextVariants: []
   allowedContexts: 
   actionName: "\uB9AC\uC5D8_\uC0AC\uC120\uBCA0\uAE30"
-  actionCooldown: 0
-  recoveryDuration: 0.5
+  actionCooldown: 1
+  recoveryDuration: 0.3
   eventTimeoutSeconds: 1
   skillId: liel_melee2
   skillName: 
@@ -41,5 +41,6 @@ MonoBehaviour:
     size: {x: 6.46, y: 2.24}
     offset: {x: -0.38, y: 0.33}
     activeDuration: 0.15
-    knockbackPower: 75
+    knockbackPower: 35
   baseScore: 70
+  healthConfidenceWeight: 20

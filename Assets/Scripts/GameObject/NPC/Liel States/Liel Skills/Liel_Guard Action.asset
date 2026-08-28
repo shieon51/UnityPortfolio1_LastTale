@@ -16,7 +16,7 @@ MonoBehaviour:
   allowedContexts: 
   actionName: 
   actionCooldown: 0
-  recoveryDuration: 0.5
+  recoveryDuration: 0.3
   eventTimeoutSeconds: 1
   triggerWithinDistance: 3
   baseScore: 50

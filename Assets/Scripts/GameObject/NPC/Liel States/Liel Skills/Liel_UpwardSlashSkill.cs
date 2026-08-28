@@ -17,14 +17,21 @@ public class Liel_UpwardSlashSkill : NPCSkillBase
 
     [Header("Utility AI Weights")]
     [Tooltip("너무 붙었을 때 강하게 우선시되도록 Attack1보다 높게")]
-    public float baseScore = 85f;
+    public float baseScore = 70f;
+
+    // 예: 공격2 — 체력 높을수록(자신있을수록) 더 공격적
+    [Header("체력 연동")]
+    public float healthConfidenceWeight = 20f;
 
     public override float EvaluateScore(NPCDecisionContext ctx)
     {
         if (!IsContextAllowed(ctx.Self.CurrentMovementContext)) return 0f;
         if (ctx.Self.currentMana < GetManaCost(1)) return 0f;
         if (ctx.DistanceToPlayer > maxRange) return 0f; // 근접 전용
-        return baseScore;
+
+        float score = baseScore;
+        score += ctx.SelfHealthPercent * healthConfidenceWeight; // 체력 높을수록(자신있을수록) 더 공격적
+        return score;
     }
 
     public override IEnumerator Execute(NPC self, NPCVisual visual, Transform target)

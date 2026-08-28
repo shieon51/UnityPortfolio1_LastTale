@@ -19,6 +19,13 @@ public class NPCMovementAction : NPCActionBase
     [Tooltip("안전장치: 이 시간을 넘기면 강제 종료 (한 방향으로 무한정 안 가게)")]
     public float maxDuration = 3f;
 
+    [Header("체력 연동")]
+    [Tooltip("후퇴류: 양수(체력 낮을수록 가산) / 접근류: 음수(체력 낮을수록 감산) 로 설정")]
+    public float healthWeight = 0f;
+
+    [Header("후퇴 공간 체크")]
+    public float retreatCheckDistance = 2f;
+
     [Header("Weight")]
     [Tooltip("공격 스킬들보다 낮게 잡으면 '가능하면 공격, 안 되면 이동'이 자연스럽게 됩니다")]
     public float baseScore = 40f;
@@ -27,7 +34,12 @@ public class NPCMovementAction : NPCActionBase
     {
         if (triggerBelowDistance > 0f && ctx.DistanceToPlayer >= triggerBelowDistance) return 0f;
         if (triggerAboveDistance > 0f && ctx.DistanceToPlayer <= triggerAboveDistance) return 0f;
-        return baseScore;
+
+        if (direction == MoveDirection.AwayFromPlayer && !HasRoomToRetreat(ctx)) return 0f; // ★ 물러날 공간 체크
+
+        float score = baseScore;
+        score += (1f - ctx.SelfHealthPercent) * healthWeight; // ★ 체력 연동
+        return score;
     }
 
     // ★ 핵심 변경: 트리거 조건이 풀릴 때까지(=적정 거리에 도달할 때까지) 멈추지 않고 한 번에 쭉 이동.
@@ -55,6 +67,13 @@ public class NPCMovementAction : NPCActionBase
         }
     }
 
+    private bool HasRoomToRetreat(NPCDecisionContext ctx)
+    {
+        if (SceneBoundsManager.Instance == null || !SceneBoundsManager.Instance.HasBounds) return true;
+        float awayDir = (ctx.Self.transform.position.x > ctx.Player.position.x) ? 1f : -1f;
+        Vector2 checkPos = (Vector2)ctx.Self.transform.position + Vector2.right * awayDir * retreatCheckDistance;
+        return SceneBoundsManager.Instance.IsWellWithinBounds(checkPos);
+    }
 
 #if UNITY_EDITOR
     public override void DrawEditorGizmos(Vector3 basePos, float facingDir)

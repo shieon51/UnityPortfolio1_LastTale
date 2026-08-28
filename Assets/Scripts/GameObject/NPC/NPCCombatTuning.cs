@@ -28,4 +28,12 @@ public class NPCCombatTuning : Singleton<NPCCombatTuning>
     [Header("패링 확률 보정 (연속 실패 시 상승)")]
     public float ParryMissBonusPerMiss = 0.08f;
     public float ParryMaxChance = 0.75f;
+
+    [Header("리엘 마나 집중")]
+    public float ManaConcentrationTriggerRatio = 0.2f; // 이 비율 이하로 마나가 떨어지면 집중 판단
+    public float ConcentrationRetreatDistance = 6f;
+    public float ConcentrationRetreatSpeed = 4f;
+    public float ConcentrationDuration = 3.5f;
+    public float ConcentrationInterruptRange = 4f; // 이 거리 안으로 플레이어가 들어오면 중단
+    public float ConcentrationRecoverRatioPerSecond = 0.15f; // 초당 최대마나 대비 회복 비율
 }
