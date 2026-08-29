@@ -43,8 +43,18 @@ public abstract class NPCActionBase : ScriptableObject
 
         public ExecutionGate(string debugName, float timeout) { _debugName = debugName; _timeout = timeout; }
 
-        public void OnDashStart() { _dashStarted = true; Debug.Log($"[DBG Action] {_debugName} OnDashStart at {Time.time:F3}"); }
-        public void OnHitboxStart() { _hitboxStarted = true; Debug.Log($"[DBG Action] {_debugName} OnHitboxStart at {Time.time:F3}"); }
+        public void OnDashStart() 
+        { 
+            _dashStarted = true; 
+            //Debug.Log($"[DBG Action] {_debugName} OnDashStart at {Time.time:F3}"); 
+        }
+
+        public void OnHitboxStart() 
+        { 
+            _hitboxStarted = true; 
+            //Debug.Log($"[DBG Action] {_debugName} OnHitboxStart at {Time.time:F3}"); 
+        }
+
         public void OnSlideStart() => _slideStarted = true;
         public void OnActionEnd() => _actionEnded = true;
 

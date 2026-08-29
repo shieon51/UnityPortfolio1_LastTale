@@ -19,7 +19,7 @@ public class Liel_ExecutingActionState : NPCState
 
     public override void Enter()
     {
-        Debug.Log($"[DBG Action] Enter: {_action.name} at {Time.time:F3}"); // *
+        //Debug.Log($"[DBG Action] Enter: {_action.name} at {Time.time:F3}"); // *
 
         liel.canRotate = false;
         _runActionHandle = liel.StartCoroutine(RunAction());
@@ -41,7 +41,7 @@ public class Liel_ExecutingActionState : NPCState
                 {
                     var defender = PlayerManager.Instance.CurrentCharacter;
                     leadTime = CombatFormulaService.Instance.CalculateTelegraphDuration(skill.baseTelegraphDuration, liel, defender);
-                    Debug.Log($"[DBG Telegraph] {skill.name}: leadTime={leadTime:F3}, timeToActive={skill.timeToActive:F3}, preDelay={Mathf.Max(0f, leadTime - skill.timeToActive):F3}"); //?
+                    //Debug.Log($"[DBG Telegraph] {skill.name}: leadTime={leadTime:F3}, timeToActive={skill.timeToActive:F3}, preDelay={Mathf.Max(0f, leadTime - skill.timeToActive):F3}"); //?
 
                     float overflow = CombatFormulaService.Instance.CalculateTelegraphOverflow(skill.baseTelegraphDuration, liel, defender); // ★ 추가
                     _pendingSlowmoIntensity = Mathf.Clamp01(overflow * NPCCombatTuning.Instance.SlowmoOverflowScale);

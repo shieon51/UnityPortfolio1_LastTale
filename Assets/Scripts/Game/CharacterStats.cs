@@ -58,7 +58,7 @@ public class CharacterStats : MonoBehaviour
     public float parryHitStopDuration = 0.25f; // 패링은 더 길게
 
     // 최근에 나를 공격한 대상 (W 스킬의 "최근 피격 대상 우선" 타겟팅에 사용)
-    public CharacterStats LastAttacker { get; private set; }
+    public CharacterStats LastAttacker { get; protected set; }
 
     // 부모에서 선언된 이벤트 (부모만 쏠 수 있음)
     public event Action OnHealthChanged;
@@ -154,9 +154,12 @@ public class CharacterStats : MonoBehaviour
         {
             FloatingTextManager.Instance?.ShowGuard(transform.position + Vector3.up * 1f);
             SoundManager.Instance?.PlaySFX("guard_perfect");
-            CameraDirector.Instance?.Shake(0.05f, 0.05f); // ★ 17번 — 관통 때보다 약하게
-            if (attacker != null && knockbackDirection.HasValue) // ★ 16번
-                attacker.ApplyKnockback(-knockbackDirection.Value, perfectGuardPushback);
+            CameraDirector.Instance?.Shake(0.05f, 0.05f); // ★ 17번 — 관통 때보다 약하게 // ? 하드코딩 빼기
+            if (attacker != null && knockbackDirection.HasValue)
+            {
+                attacker.LastAttacker = this; // ★ 추가 — "지금 나를 밀친 게 나(NPC/플레이어)"라는 걸 명확히 기록
+                attacker.ApplyKnockback(-knockbackDirection.Value, perfectGuardPushback); //?
+            }
             return false; // 완벽 방어 시 공격자 밀쳐냄
         }
 
@@ -172,7 +175,13 @@ public class CharacterStats : MonoBehaviour
         }
 
         if (attacker is NPC || this is NPC) CameraDirector.Instance?.Shake(0.1f, 0.1f);
+        if (knockbackDirection.HasValue && spriteRenderer != null) // ★ 추가
+        {
+            float hitFromDir = -Mathf.Sign(knockbackDirection.Value.x); // 넉백 반대쪽 = 맞은(공격 온) 방향
+            if (hitFromDir != 0f) spriteRenderer.flipX = hitFromDir > 0f;
+        }
         GetComponentInChildren<HitFlashController>()?.Flash();
+        
         //ScreenFlashOverlay.Instance?.Flash(new Color(1f, 0.3f, 0.3f, 0.3f), 0.08f); // ★ 은은한 빨간 플래시
         HitStopManager.Instance?.Trigger(hitStopDuration); // ★ 히트스톱 추가
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);

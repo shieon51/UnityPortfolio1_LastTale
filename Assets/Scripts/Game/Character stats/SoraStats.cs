@@ -164,7 +164,7 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
 
     protected override Vector2 ComputeKnockbackForce(Vector2 direction, float power)
     {
-        Debug.Log($"[넉백 진단] LastAttacker = {(LastAttacker != null ? LastAttacker.GetType().Name : "null")}");
+        //Debug.Log($"[넉백 진단] LastAttacker = {(LastAttacker != null ? LastAttacker.GetType().Name : "null")}");
         if (fairyStage == 1 || LastAttacker is NPC) return direction.normalized * power; // 순수하게 맞은 반대 방향으로만, 상승 편향 없음
         return base.ComputeKnockbackForce(direction, power);
     }

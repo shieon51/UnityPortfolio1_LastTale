@@ -8,6 +8,8 @@ public class Liel_ConcentrationState : NPCState
     private bool _isRetreating = true;
     private bool _interrupted = false;
 
+    private float _manaAccumulator = 0f; // 마나 정수 반올림 문제 해결
+
     public Liel_ConcentrationState(Liel_AI npc, NPCVisual visual, Transform p) : base(npc, visual, p) { liel = npc; }
 
     public override void Enter()
@@ -16,6 +18,7 @@ public class Liel_ConcentrationState : NPCState
         _channelElapsed = 0f; _isRetreating = true; _interrupted = false;
         liel.OnAttackReceived += HandleInterrupted; // ★ 결과 무관, 공격이 오면 즉시 중단 판정
         visual.PlayIfChanged(NPCAnimStateNames.Walk);
+        _manaAccumulator = 0f;
     }
 
     public override void Execute()
@@ -48,6 +51,14 @@ public class Liel_ConcentrationState : NPCState
         }
 
         _channelElapsed += Time.deltaTime;
+        _manaAccumulator += liel.maxMana * tuning.ConcentrationRecoverRatioPerSecond * Time.deltaTime; // ★ 누적
+        if (_manaAccumulator >= 1f)
+        {
+            int whole = Mathf.FloorToInt(_manaAccumulator);
+            liel.RecoverMana(whole);
+            _manaAccumulator -= whole;
+        }
+
         int manaPerFrame = Mathf.RoundToInt(liel.maxMana * tuning.ConcentrationRecoverRatioPerSecond * Time.deltaTime);
         if (manaPerFrame > 0) liel.RecoverMana(manaPerFrame); // ★ 프레임마다 조금씩 — 중단돼도 이미 받은 만큼은 유지됨
 

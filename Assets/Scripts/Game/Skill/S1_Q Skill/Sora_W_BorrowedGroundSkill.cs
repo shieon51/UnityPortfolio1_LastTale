@@ -121,6 +121,7 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
 
         rb.linearVelocity = Vector2.zero; // 순간이동 직후 잔여 낙하/이동 관성 제거
         Physics2D.SyncTransforms();
+        combat.GetComponent<PlayerController>()?.CheckGroundEmbedImmediate(); // ★ 추가
         CameraDirector.Instance?.SnapToCurrentTargets(); // ** 카메라 즉시 스냅
         CameraDirector.Instance?.TriggerRecenter(0.5f); // ★ 순간이동 직후 0.5초간 중점 프레이밍, 이후 자연스럽게 평소 추적으로 복귀
         combat.PlayCurrentSkillVFX("arrival");

@@ -10,6 +10,7 @@ public class HitStopManager : Singleton<HitStopManager>
     {
         if (_routine != null) StopCoroutine(_routine);
         Time.timeScale = timeScale;
+        HitStopVisualOverlay.Instance?.Pulse(duration * 3f); // ★ 히트스톱보다 살짝 더 오래 잔향처럼
         _routine = StartCoroutine(Routine(duration));
     }
 

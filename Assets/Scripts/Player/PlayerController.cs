@@ -548,6 +548,17 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
     //    return null;
     //}
 
+    // 땅 파묻힘 감지 (W 스킬 관련)
+    public void CheckGroundEmbedImmediate() 
+    {
+        if (IsEmbeddedInGround())
+        {
+            Debug.LogWarning("[PlayerController] 텔레포트 직후 지형 파묻힘 감지 — 즉시 복구");
+            transform.position = _lastSafeGroundedPosition;
+            _rb.linearVelocity = Vector2.zero;
+        }
+    }
+
     // 변신을 시작하는 순간(날개가 나타나기 시작하는 시점) 호출됨.
     // 목표 폼이 비행형인지 미리 계산해둬야, 낙하 속도를 감속시킬지 말지 판단 가능
     // (이 시점엔 아직 fairyStage가 토글되기 전이라 IsFlightForm이 '변신 전' 값을 그대로 반영함).

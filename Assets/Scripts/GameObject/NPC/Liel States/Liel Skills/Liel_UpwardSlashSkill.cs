@@ -9,8 +9,12 @@ public class Liel_UpwardSlashSkill : NPCSkillBase
     [Tooltip("이 거리 이하일 때만 후보가 됨")]
     public float maxRange = 0.8f;
 
-    [Header("Step (Attack1 DashSettings 재사용 — 훨씬 작은 값으로 세팅)")]
-    public DashSettings step;
+    //[Header("Step (Attack1 DashSettings 재사용 — 훨씬 작은 값으로 세팅)")]
+    //public DashSettings step;
+
+    [Header("Step (짧고 확실하게 끝나는 스텝)")]
+    public float stepSpeed = 6f;
+    public float stepDuration = 0.15f; // ★ 이 시간 안에 무조건 끝남 — 다음 이벤트를 기다리지 않음
 
     [Header("Hitbox")]
     public HitboxSettings hitbox; // Liel_MeleeAttackSkill.cs에 이미 있는 struct 재사용
@@ -37,7 +41,6 @@ public class Liel_UpwardSlashSkill : NPCSkillBase
     public override IEnumerator Execute(NPC self, NPCVisual visual, Transform target)
     {
         Vector2 attackOriginPos = self.transform.position; // ★ 이동 시작 전 위치 스냅
-
         self.CurrentPlayingSkill = this;
         var gate = new ExecutionGate(name, eventTimeoutSeconds); // ★ 이 실행 전용 게이트 생성
         self.CurrentGate = gate; // ★ 등록
@@ -48,7 +51,8 @@ public class Liel_UpwardSlashSkill : NPCSkillBase
         var rb = self.Rb;
         var sr = self.SpriteRenderer;
         float originalDrag = rb.linearDamping;
-        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y); // 접근 관성 제거
+        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y); // ★ 선딜 — 완전 정지, 칼 빼는 동작
+        rb.linearDamping = 999f; // ★ 선딜 동안 완전 고정 //?
 
         var context = self.CurrentMovementContext;
         string resolvedAnim = ResolveAnimStateName(context, animStateName);
@@ -58,34 +62,40 @@ public class Liel_UpwardSlashSkill : NPCSkillBase
 
         yield return gate.WaitForDashStart();  // AE_DashStart — 발을 내딛기 시작하는 프레임
 
-        rb.linearDamping = 0f;
         float dir = sr.flipX ? 1f : -1f;
-        rb.linearVelocity = new Vector2(dir * step.burstSpeed, rb.linearVelocity.y);
+        yield return self.StartCoroutine(QuickStep(rb, dir)); // ★ 짧고 확실하게 끝나는 스텝
 
         yield return gate.WaitForHitboxStart(); // AE_HitboxStart — 검이 실제로 닿는 타이밍
 
         PlaySkillVFX("slash", self);
         CameraDirector.Instance?.Shake(0.15f, 0.15f);
-
         var hitboxCoroutine = self.StartCoroutine(ActiveHitboxRoutine(self, hitOffset, hitSize, attackOriginPos));
 
-        yield return gate.WaitForSlideStart(); // AE_SlideStart — 발 내딛기 끝, 멈추기 시작
-        rb.linearDamping = step.slideDrag;
-
-        var lockCoroutine = self.StartCoroutine(LockVelocityUntilActionEnd(rb)); // ★ 추가
-
-        yield return gate.WaitForActionEndEvent(); // AE_ActionEnd
-
-        if (lockCoroutine != null) self.StopCoroutine(lockCoroutine); // ★ 추가
+        yield return gate.WaitForSlideStart(); // 후딜 시작
+        yield return gate.WaitForActionEndEvent();
         yield return hitboxCoroutine;
 
         rb.linearDamping = originalDrag;
         rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
-
         self.CurrentGate = null;
         self.isSuperArmor = false;
         visual.SetEyesVisible(true);
         self.CurrentPlayingSkill = null;
+    }
+
+    private IEnumerator QuickStep(Rigidbody2D rb, float dir)
+    {
+        rb.linearDamping = 0f;
+        float elapsed = 0f;
+        while (elapsed < stepDuration)
+        {
+            float t = elapsed / stepDuration;
+            rb.linearVelocity = new Vector2(dir * Mathf.Lerp(stepSpeed, 0f, t), rb.linearVelocity.y); // 스스로 감속하며 끝남
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+        rb.linearDamping = 999f; // ★ 스텝 끝나면 다시 완전 고정 — 액티브~후딜 내내 안 밀림
     }
 
     private IEnumerator ActiveHitboxRoutine(NPC self, Vector2 offset, Vector2 size, Vector2 attackOriginPos) //?
