@@ -102,6 +102,7 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
     public override IEnumerator ExecuteSkillBehavior(PlayerCombat combat, Rigidbody2D rb, Animator anim, CharacterStats stats)
     {
         Transform target = FindTarget(combat); // ★ 필드 캐시 대신 그 순간 다시 탐색 — 공유 상태 경쟁 자체를 제거
+        Debug.Log($"[DBG W] target={(target != null ? target.name : "null")}, 플레이어={combat.transform.position}"); // *
         if (target == null) yield break; // 안전장치 (CanExecute를 통과했다면 원래는 null이 아니어야 함)
 
         // 타겟의 반대편(뒤쪽) 좌표 계산 
@@ -114,6 +115,7 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
         // 이동 위치
         Vector2 desiredPos = new Vector2(target.position.x + sideDir * arrivalOffsetFromTarget, matchTargetHeight ? target.position.y : rb.position.y);
         Vector2 safePos = combat.ResolveSafeGroundedPosition(desiredPos, groundSnapLayer); // ★ 절벽/경사면 안전 보정
+        Debug.Log($"[DBG W] desiredPos={desiredPos}, safePos={safePos}, sideDir={sideDir}"); // *
 
         rb.position = safePos;
 

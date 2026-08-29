@@ -36,4 +36,5 @@ public class NPCCombatTuning : Singleton<NPCCombatTuning>
     public float ConcentrationDuration = 3.5f;
     public float ConcentrationInterruptRange = 4f; // 이 거리 안으로 플레이어가 들어오면 중단
     public float ConcentrationRecoverRatioPerSecond = 0.15f; // 초당 최대마나 대비 회복 비율
+    public float ConcentrationRetryCooldown = 5f; // 중단 후 이 시간 동안은 재시도 안 함
 }

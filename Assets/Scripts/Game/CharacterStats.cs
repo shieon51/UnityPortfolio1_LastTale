@@ -53,6 +53,10 @@ public class CharacterStats : MonoBehaviour
     [Tooltip("이 값 이상의 넉백파워는 슈퍼아머를 무시하고 관통함")]
     public float superArmorBreakThreshold = 8f;
 
+    [Header("타격감(히트스톱)")]
+    public float hitStopDuration = 0.1f;
+    public float parryHitStopDuration = 0.25f; // 패링은 더 길게
+
     // 최근에 나를 공격한 대상 (W 스킬의 "최근 피격 대상 우선" 타겟팅에 사용)
     public CharacterStats LastAttacker { get; private set; }
 
@@ -65,6 +69,9 @@ public class CharacterStats : MonoBehaviour
 
     // 방어자 기준 이벤트 (누구를 막았는지)
     public event Action<CharacterStats> OnParrySuccess;
+
+    // 결과(관통/방어/패링)와 무관하게 무적만 아니면 항상 발행
+    public event Action<CharacterStats> OnAttackReceived; 
 
     // 맞을 때마다(중첩 포함) 매번 발행
     public event Action OnKnockbackApplied;
@@ -116,12 +123,14 @@ public class CharacterStats : MonoBehaviour
          CharacterStats attacker = null,
          Vector2? knockbackDirection = null,
          float knockbackPower = 0f,
-         Vector2? attackOriginOverride = null) // ★ 신규 — 대시형 공격이 "시작 시점" 위치를 넘길 때 사용
+         Vector2? attackOriginOverride = null) // - 대시형 공격이 "시작 시점" 위치를 넘길 때 사용
     {
         if (Time.time < lastHitTime + invincibilityDuration) return false; // 무적 중 — 넉백 포함 아무 효과 없음
 
+        OnAttackReceived?.Invoke(attacker); // ★ 추가
+
         bool facingAttacker = IsAttackFromFacingSide(attacker, attackOriginOverride); // attacker null이면 내부에서 true 처리됨
-        bool guardActive = isGuarding && facingAttacker; // ★ 방어는 방향이 맞을 때만 유효
+        bool guardActive = isGuarding && facingAttacker; // 방어는 방향이 맞을 때만 유효
 
         if (guardActive && attacker != null && IsInParryWindow && TryResolveParry(attacker)) // ★ guardActive 기준, attacker null 체크 유지
         {
@@ -132,6 +141,7 @@ public class CharacterStats : MonoBehaviour
             ScreenFlashOverlay.Instance?.Flash(new Color(1f, 0.9f, 0.3f), 0.15f);
             float groggyDuration = CombatFormulaService.Instance.CalculateGroggyDuration(attacker, this);
             attacker.ApplyGroggy(groggyDuration);
+            HitStopManager.Instance?.Trigger(parryHitStopDuration); 
             return false;  // 패링 성공 — 넉백 포함 완전 무효화
         }
 
@@ -163,6 +173,8 @@ public class CharacterStats : MonoBehaviour
 
         if (attacker is NPC || this is NPC) CameraDirector.Instance?.Shake(0.1f, 0.1f);
         GetComponentInChildren<HitFlashController>()?.Flash();
+        //ScreenFlashOverlay.Instance?.Flash(new Color(1f, 0.3f, 0.3f, 0.3f), 0.08f); // ★ 은은한 빨간 플래시
+        HitStopManager.Instance?.Trigger(hitStopDuration); // ★ 히트스톱 추가
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
         OnHealthChanged?.Invoke();
         OnDamageTaken?.Invoke(finalDamage, attacker);

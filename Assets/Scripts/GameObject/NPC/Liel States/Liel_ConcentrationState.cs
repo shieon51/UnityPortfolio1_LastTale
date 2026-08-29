@@ -14,7 +14,7 @@ public class Liel_ConcentrationState : NPCState
     {
         liel.canRotate = false;
         _channelElapsed = 0f; _isRetreating = true; _interrupted = false;
-        liel.OnDamageTaken += HandleInterrupted; // 피격 시 중단
+        liel.OnAttackReceived += HandleInterrupted; // ★ 결과 무관, 공격이 오면 즉시 중단 판정
         visual.PlayIfChanged(NPCAnimStateNames.Walk);
     }
 
@@ -28,8 +28,10 @@ public class Liel_ConcentrationState : NPCState
             if (dist >= tuning.ConcentrationRetreatDistance || _interrupted)
             {
                 _isRetreating = false;
+                liel.canRotate = true; // ★ 채널 중엔 다시 플레이어를 볼 수 있게
                 liel.Rb.linearVelocity = Vector2.zero;
-                visual.PlayIfChanged(NPCAnimStateNames.Idle); // 전용 "집중" 모션 있으면 나중에 교체
+                liel.StartGuard(); // ★ 채널 중엔 방어 자세 — 패링/완벽방어 기회 생김
+                visual.PlayIfChanged(NPCAnimStateNames.Concentration); // ★ 전용 모션
                 return;
             }
             float awayDir = (liel.transform.position.x > player.position.x) ? 1f : -1f;
@@ -37,7 +39,9 @@ public class Liel_ConcentrationState : NPCState
             return;
         }
 
-        if (_interrupted || player == null || Vector2.Distance(liel.transform.position, player.position) < tuning.ConcentrationInterruptRange)
+        liel.LookAtPlayer_Public(); // 방어 중엔 플레이어를 계속 바라봄
+
+        if (_interrupted || liel.currentMana >= liel.maxMana) // ★ 방해받거나 마나 다 찼으면 종료
         {
             EndChannel();
             return;
@@ -50,13 +54,15 @@ public class Liel_ConcentrationState : NPCState
         if (_channelElapsed >= tuning.ConcentrationDuration) EndChannel();
     }
 
-    private void HandleInterrupted(int dmg, CharacterStats attacker) => _interrupted = true;
+    private void HandleInterrupted(CharacterStats attacker) => _interrupted = true;
 
     private void EndChannel() => liel.StateMachine.ChangeState(new Liel_UtilityDecisionState(liel, visual, player));
 
     public override void Exit()
     {
         liel.canRotate = true;
-        liel.OnDamageTaken -= HandleInterrupted;
+        liel.StopGuard(); // ★ 방어 해제
+        liel.OnAttackReceived -= HandleInterrupted;
+        liel.LastConcentrationEndTime = Time.time; // ★ 재진입 쿨다운 시작점 기록
     }
 }

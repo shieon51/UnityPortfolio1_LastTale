@@ -21,7 +21,7 @@ MonoBehaviour:
   skillId: liel_melee1
   skillName: 
   animStateName: Attack1
-  manaCost: 5
+  manaCost: 0
   timeToActive: 0.5833333
   hasTelegraph: 1
   baseTelegraphDuration: 0.8

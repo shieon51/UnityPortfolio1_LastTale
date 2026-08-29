@@ -88,26 +88,23 @@ public class Liel_ExecutingActionState : NPCState
     // 예고가 뜬 채로 대기하는 동안, 이동 행동만 계속 재평가하며 진행
     private IEnumerator RepositionWhileWaiting(float duration)
     {
-        //var ai = liel.GetComponent<NPCUtilityAI>();
-        //float startTime = Time.time; // ★ 시작 시각 고정
-        //while (Time.time - startTime < duration) // ★ 서브 액션이 몇 프레임을 쓰든 실제 경과시간으로 정확히 판단
-        //{
-        //    var movementAction = ai.ChooseMovementOnly(BuildContext());
-        //    if (movementAction != null)
-        //    {
-        //        float remaining = duration - (Time.time - startTime);
-        //        yield return liel.StartCoroutine(RunWithDeadline(movementAction, remaining)); // ★ 마감 넘기면 강제 중단
-        //    }
-        //    else
-        //    {
-        //        visual.PlayIfChanged(NPCAnimStateNames.Idle);
-        //        yield return null;
-        //    }
-        //} //?
-
-        liel.Rb.linearVelocity = new Vector2(0f, liel.Rb.linearVelocity.y); // ★ 확실히 정지
-        visual.PlayIfChanged(NPCAnimStateNames.Idle);
-        yield return new WaitForSeconds(duration); // ★ 더 이상 별도 행동 선택 안 함
+        var ai = liel.GetComponent<NPCUtilityAI>();
+        float startTime = Time.time;
+        while (Time.time - startTime < duration)
+        {
+            var movementAction = ai.ChooseMovementOnly(BuildContext());
+            if (movementAction != null)
+            {
+                float remaining = duration - (Time.time - startTime);
+                yield return liel.StartCoroutine(RunWithDeadline(movementAction, remaining));
+            }
+            else
+            {
+                visual.PlayIfChanged(NPCAnimStateNames.Idle);
+                yield return null;
+            }
+        }
+        liel.Rb.linearVelocity = new Vector2(0f, liel.Rb.linearVelocity.y); // ★ 확실히 멈추고 본 동작으로 넘어감
     }
 
     // 주어진 행동을 실행하되, maxDuration이 지나면 완료를 기다리지 않고 그 자리에서 끊음.

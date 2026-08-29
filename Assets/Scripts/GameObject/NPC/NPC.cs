@@ -89,6 +89,9 @@ public abstract class NPC : CharacterStats, ICombatTargetable
 
     public NPCSkillBase CurrentPlayingSkill { get; set; } // Liel_ExecutingActionState가 실행 시작할 때 설정
 
+    public NPCActionBase.ExecutionGate CurrentGate { get; set; } // * CurrentPlayingSkill은 VFX 조회용으로 그대로 두고, 이벤트 전달은 새 게이트로
+
+
     protected override void Awake()
     {
         base.Awake();
@@ -182,10 +185,10 @@ public abstract class NPC : CharacterStats, ICombatTargetable
     }
 
     // 지금 재생중인 스킬 알리기
-    public void NotifyDashStart() => CurrentPlayingSkill?.OnDashStart();
-    public void NotifyHitboxStart() => CurrentPlayingSkill?.OnHitboxStart();
-    public void NotifySlideStart() => CurrentPlayingSkill?.OnSlideStart();
-    public void NotifyActionEnd() => CurrentPlayingSkill?.OnActionEndEvent();
+    public void NotifyDashStart() => CurrentGate?.OnDashStart(); // ★ CurrentPlayingSkill → CurrentGate
+    public void NotifyHitboxStart() => CurrentGate?.OnHitboxStart();
+    public void NotifySlideStart() => CurrentGate?.OnSlideStart();
+    public void NotifyActionEnd() => CurrentGate?.OnActionEnd();
 
     public void PlayCurrentSkillVFX(string cueId)
     {

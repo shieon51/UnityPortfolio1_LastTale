@@ -79,7 +79,7 @@ public class PlayerGuard : MonoBehaviour
         return _motor != null && _motor.IsGrounded; // 지상형: 공중/점프 중엔 불가
     }
 
-    private string ResolveContextState()
+    public string ResolveContextState()
     {
         var context = ResolveMovementContext();
         foreach (var v in contextVariants) if (v.context == context) return v.animStateName;

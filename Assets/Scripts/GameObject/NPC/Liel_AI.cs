@@ -70,6 +70,9 @@ public class Liel_AI : NPC, IBossProfileTarget
 
     private int _baseMaxHealth; // 프리팹에 세팅된 "진짜" 체력 (10000 등) — 최초 1회만 캐싱
 
+    // 집중 상태 종료 시간
+    public float LastConcentrationEndTime { get; set; } = -999f;
+
     protected override void Awake()
     {
         base.Awake();

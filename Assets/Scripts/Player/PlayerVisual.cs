@@ -15,13 +15,16 @@ public class PlayerVisual : MonoBehaviour
     private IPlayerMotor _controller;
     private Animator _driverAnimator; // Body 파츠의 Animator. 이벤트/상태조회의 유일한 기준점.
     private Animator[] _partAnimators; // 자식으로 있는 모든 애니메이터를 싹 다 관리
-
+             
     // 좌우 방향 별 모션
     private DirectionalPart[] _directionalParts;
     private DirectionalSprite[] _directionalSprites;
 
     // 눈깜빡임 모션
     private EyeBlinkController _eyeBlink;
+
+    // 방어 모션 관련
+    private PlayerGuard _guard; 
 
     // 그로기 지속 관련
     private float _groggyElapsed = 0f;
@@ -48,6 +51,7 @@ public class PlayerVisual : MonoBehaviour
         _directionalParts = GetComponentsInChildren<DirectionalPart>(true);
         _directionalSprites = GetComponentsInChildren<DirectionalSprite>(true);
         _eyeBlink = GetComponentInChildren<EyeBlinkController>(true);
+        _guard = GetComponentInParent<PlayerGuard>();
 
         Debug.Log($"[PlayerVisual] 총 {_partAnimators.Length}개의 파츠 애니메이터를 동기화합니다.");
 
@@ -75,6 +79,7 @@ public class PlayerVisual : MonoBehaviour
             _stats.OnGroggyStarted += HandleGroggyStarted;
             _stats.OnGroggyEnded += HandleGroggyEnded;
             _stats.OnParrySuccess += HandleParrySuccess;
+            _stats.OnDamageTaken += HandleVignetteFlash;
         }
     }
 
@@ -143,6 +148,10 @@ public class PlayerVisual : MonoBehaviour
         PlayImmediate(PlayerAnimStateNames.Hit);
     }
 
+    // 맞았을 때 비네팅 점멸 효과
+    private void HandleVignetteFlash(int damage, CharacterStats attacker)
+    => VignetteFlashOverlay.Instance?.Flash(Color.red, 0.3f);
+
     // 대화/공격 잠금과는 별개로, 순수하게 '넉백 시작/종료' 전이만 감지해서 Hit 모션을 넣고 뺀다.
     private void HandleKnockbackTransition()
     {
@@ -152,9 +161,18 @@ public class PlayerVisual : MonoBehaviour
         {
             PlayImmediate(PlayerAnimStateNames.Hit);
         }
-        else if (!isKnockedBack && _wasKnockedBack && (_stats == null || !_stats.IsGroggy))
+        else if (!isKnockedBack && _wasKnockedBack)
         {
-            ReturnToLocomotion(); // ★ 그로기 중이면 여기선 아무것도 안 함
+            if (_stats != null && _stats.IsGroggy)
+            {
+                float normalizedTime = _stats.GroggyDuration > 0f ? Mathf.Clamp01(_groggyElapsed / _stats.GroggyDuration) : 0f;
+                PlayImmediate(PlayerAnimStateNames.Groggy, normalizedTime); // ★ 직접 처리
+            }
+            else if (_stats != null && _stats.isGuarding)
+            {
+                PlayImmediate(_guard != null ? _guard.ResolveContextState() : PlayerAnimStateNames.Guard); // ★ 지상/비행 컨텍스트 그대로 재사용
+            }
+            else ReturnToLocomotion();
         }
 
         _wasKnockedBack = isKnockedBack;

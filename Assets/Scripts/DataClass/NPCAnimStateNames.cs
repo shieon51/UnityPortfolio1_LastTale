@@ -7,6 +7,7 @@ public static class NPCAnimStateNames
     public const string Attack2 = "Attack2";
     public const string Attack3 = "Attack3";
     public const string Ultimate = "Ultimate";
+    public const string Concentration = "Concentration";
     public const string Groggy = "Groggy";
     public const string Hit = "Hit";
     public const string Guard = "Guard";

@@ -259,17 +259,35 @@ public class PlayerCombat : MonoBehaviour
             return desiredPos; // 미설정 시엔 원래 목표 위치를 그대로 사용 — 스킬을 무력화시키지 않음
         }
 
-        Vector2 rayStart = desiredPos + Vector2.up * 1.5f;
-        RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, maxSnapDistance, groundLayer);
+        Vector2? snapped = TrySnapToGround(desiredPos, groundLayer, 1.5f, maxSnapDistance);
+        if (snapped.HasValue) return snapped.Value;
 
-        if (hit.collider != null)
-        {
-            Collider2D myCol = GetComponent<Collider2D>();
-            float pivotToBottom = myCol != null ? (transform.position.y - myCol.bounds.min.y) : 0f;
-            return new Vector2(desiredPos.x, hit.point.y + pivotToBottom);
-        }
+        snapped = TrySnapToGround(desiredPos, groundLayer, 50f, 100f); // ★ 짧은 레이 실패 시 훨씬 높은 곳에서 재시도
+        if (snapped.HasValue) return snapped.Value;
 
-        return desiredPos; // 근처에 바닥이 없어도(절벽/틈 너머) 이동 자체는 항상 실행 — 그 자리에서 그냥 떨어지면 됨
+        return desiredPos;
+
+        //Vector2 rayStart = desiredPos + Vector2.up * 1.5f;
+        //RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, maxSnapDistance, groundLayer);
+
+        //if (hit.collider != null)
+        //{
+        //    Collider2D myCol = GetComponent<Collider2D>();
+        //    float pivotToBottom = myCol != null ? (transform.position.y - myCol.bounds.min.y) : 0f;
+        //    return new Vector2(desiredPos.x, hit.point.y + pivotToBottom);
+        //}
+
+        //return desiredPos; // 근처에 바닥이 없어도(절벽/틈 너머) 이동 자체는 항상 실행 — 그 자리에서 그냥 떨어지면 됨
+    }
+
+    private Vector2? TrySnapToGround(Vector2 desiredPos, LayerMask groundLayer, float startHeight, float rayDistance)
+    {
+        Vector2 rayStart = desiredPos + Vector2.up * startHeight;
+        RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, rayDistance, groundLayer);
+        if (hit.collider == null) return null;
+        Collider2D myCol = GetComponent<Collider2D>();
+        float pivotToBottom = myCol != null ? (transform.position.y - myCol.bounds.min.y) : 0f;
+        return new Vector2(desiredPos.x, hit.point.y + pivotToBottom);
     }
 
     // 애니메이션 이벤트(OnAttackEnd)가 어떤 이유로든 호출되지 못했을 때를 대비한 최종 안전장치.

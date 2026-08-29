@@ -67,6 +67,9 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
         Vector2 attackOriginPos = self.transform.position; // ★ 이동 시작 전 위치 스냅
 
         self.CurrentPlayingSkill = this; // ★ 릴레이가 이 스킬을 찾을 수 있게 등록
+        var gate = new ExecutionGate(name, eventTimeoutSeconds); // ★ 이 실행 전용 게이트 생성
+        self.CurrentGate = gate; // ★ 등록
+
         visual.SetEyesVisible(false); // ** 모든 공격 모션 앞에 넣을 것
         self.isSuperArmor = true; // ★ 처음부터 슈퍼아머 — 돌진 중 맞아서 넉백당해 멈추는 것 방지
 
@@ -82,32 +85,34 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
         visual.PlayImmediate(resolvedAnim);
         rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
 
-        yield return WaitForDashStart(); // AE_DashStart
+        yield return gate.WaitForDashStart(); // AE_DashStart
 
         // 2. 팍 치고 대시 돌진 (가속 곡선)
         rb.linearDamping = 0f;
         float dir = sr.flipX ? 1f : -1f;
         yield return self.StartCoroutine(BurstAccelerate(rb, dir));
 
-        yield return WaitForHitboxStart(); // AE_HitboxStart — 한발 내밀며 찌르기
+        yield return gate.WaitForHitboxStart(); // AE_HitboxStart — 한발 내밀며 찌르기
 
         // 3. 찌르기: 판정 + 이펙트
         PlaySkillVFX("stab", self);
         CameraDirector.Instance?.DirectionalShake(0.2f, 0.15f, new Vector2(dir, 0)); // 카메라 흔들림
         var hitboxCoroutine = self.StartCoroutine(ActiveHitboxRoutine(self, hitOffset, hitSize, dir, attackOriginPos));
 
-        yield return WaitForSlideStart(); // AE_SlideStart — 끼익 멈춤 시작
+        yield return gate.WaitForSlideStart(); // AE_SlideStart — 끼익 멈춤 시작
 
         // 4. 마찰 감속
         rb.linearDamping = dash.slideDrag;
-        yield return WaitForActionEndEvent(); // AE_ActionEnd — 애니메이션 끝
+        yield return gate.WaitForActionEndEvent(); // AE_ActionEnd — 애니메이션 끝
 
         yield return hitboxCoroutine; // 혹시 아직 안 끝났으면 마저 대기
 
         // 5. 후딜: 원상복귀
         rb.linearDamping = originalDrag;
         rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
-        self.isSuperArmor = false; // ★ 여기서 해제
+
+        self.CurrentGate = null;
+        self.isSuperArmor = false; 
         visual.SetEyesVisible(true); // **
         self.CurrentPlayingSkill = null;
     }

@@ -21,7 +21,7 @@ MonoBehaviour:
   skillId: liel_melee2
   skillName: 
   animStateName: Attack2
-  manaCost: 3
+  manaCost: 0
   timeToActive: 0.28333333
   hasTelegraph: 1
   baseTelegraphDuration: 0.8
@@ -39,7 +39,7 @@ MonoBehaviour:
     accelRampDuration: 0
   hitbox:
     size: {x: 6.46, y: 2.24}
-    offset: {x: -0.38, y: 0.33}
+    offset: {x: 0.38, y: 0.33}
     activeDuration: 0.15
     knockbackPower: 35
   baseScore: 70

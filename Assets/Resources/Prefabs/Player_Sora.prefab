@@ -903,14 +903,16 @@ MonoBehaviour:
   currentElement: 0
   isGuarding: 0
   parryWindowDuration: 0.25
-  perfectGuardPushback: 3
+  perfectGuardPushback: 10
   invincibilityDuration: 0.2
-  knockbackStunDuration: 0.2
-  knockbackSlideDrag: 15
+  knockbackStunDuration: 0.25
+  knockbackSlideDrag: 3
   superArmorBreakThreshold: 8
+  hitStopDuration: 0.1
+  parryHitStopDuration: 0.25
   isSuperArmor: 0
   statsSummary: "Lv.1 | HP 100 | MP 50\n\uACF5\uACA9 10 | \uBC29\uC5B4 5 | \uBBFC\uCCA9
-    5\n\uD53C\uACA9 \uACBD\uC9C1 0.20s | \uC2AC\uB77C\uC774\uB4DC \uB9C8\uCC30 15\n\uC288\uD37C\uC544\uBA38
+    5\n\uD53C\uACA9 \uACBD\uC9C1 0.25s | \uC2AC\uB77C\uC774\uB4DC \uB9C8\uCC30 3\n\uC288\uD37C\uC544\uBA38
     \uB3CC\uD30C \uC784\uACC4\uAC12 8\n\uD328\uB9C1 \uD310\uC815\uCC3D 0.25s | \uBB34\uC801\uC2DC\uAC04
     0.20s"
   experience: 0
