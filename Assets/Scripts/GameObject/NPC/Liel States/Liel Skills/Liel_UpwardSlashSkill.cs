@@ -15,6 +15,7 @@ public class Liel_UpwardSlashSkill : NPCSkillBase
     [Header("Step (짧고 확실하게 끝나는 스텝)")]
     public float stepSpeed = 6f;
     public float stepDuration = 0.15f; // ★ 이 시간 안에 무조건 끝남 — 다음 이벤트를 기다리지 않음
+    public float slideDrag = 20f; // 공격1의 dash.slideDrag와 같은 역할
 
     [Header("Hitbox")]
     public HitboxSettings hitbox; // Liel_MeleeAttackSkill.cs에 이미 있는 struct 재사용
@@ -40,7 +41,6 @@ public class Liel_UpwardSlashSkill : NPCSkillBase
 
     public override IEnumerator Execute(NPC self, NPCVisual visual, Transform target)
     {
-        Vector2 attackOriginPos = self.transform.position; // ★ 이동 시작 전 위치 스냅
         self.CurrentPlayingSkill = this;
         var gate = new ExecutionGate(name, eventTimeoutSeconds); // ★ 이 실행 전용 게이트 생성
         self.CurrentGate = gate; // ★ 등록
@@ -51,19 +51,20 @@ public class Liel_UpwardSlashSkill : NPCSkillBase
         var rb = self.Rb;
         var sr = self.SpriteRenderer;
         float originalDrag = rb.linearDamping;
-        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y); // ★ 선딜 — 완전 정지, 칼 빼는 동작
-        rb.linearDamping = 999f; // ★ 선딜 동안 완전 고정 //?
+        Vector2 attackOriginPos = self.transform.position;
 
         var context = self.CurrentMovementContext;
         string resolvedAnim = ResolveAnimStateName(context, animStateName);
         var (hitOffset, hitSize) = ResolveContextHitbox(context, hitbox.offset, hitbox.size);
 
         visual.PlayImmediate(resolvedAnim); // 제자리라 대시 관련 대기 없이 바로 재생
+        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y); // ★ 공격1과 완전히 동일
 
         yield return gate.WaitForDashStart();  // AE_DashStart — 발을 내딛기 시작하는 프레임
 
+        rb.linearDamping = 0f;
         float dir = sr.flipX ? 1f : -1f;
-        yield return self.StartCoroutine(QuickStep(rb, dir)); // ★ 짧고 확실하게 끝나는 스텝
+        self.StartCoroutine(QuickStep(rb, dir)); // ★ 짧고 확실하게 끝나는 스텝
 
         yield return gate.WaitForHitboxStart(); // AE_HitboxStart — 검이 실제로 닿는 타이밍
 
@@ -72,6 +73,8 @@ public class Liel_UpwardSlashSkill : NPCSkillBase
         var hitboxCoroutine = self.StartCoroutine(ActiveHitboxRoutine(self, hitOffset, hitSize, attackOriginPos));
 
         yield return gate.WaitForSlideStart(); // 후딜 시작
+        rb.linearDamping = slideDrag; // ★ 공격1과 같은 시점에 같은 방식으로 마찰
+
         yield return gate.WaitForActionEndEvent();
         yield return hitboxCoroutine;
 
@@ -85,17 +88,14 @@ public class Liel_UpwardSlashSkill : NPCSkillBase
 
     private IEnumerator QuickStep(Rigidbody2D rb, float dir)
     {
-        rb.linearDamping = 0f;
         float elapsed = 0f;
         while (elapsed < stepDuration)
         {
             float t = elapsed / stepDuration;
-            rb.linearVelocity = new Vector2(dir * Mathf.Lerp(stepSpeed, 0f, t), rb.linearVelocity.y); // 스스로 감속하며 끝남
+            rb.linearVelocity = new Vector2(dir * Mathf.Lerp(stepSpeed, 0f, t), rb.linearVelocity.y);
             elapsed += Time.deltaTime;
             yield return null;
         }
-        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
-        rb.linearDamping = 999f; // ★ 스텝 끝나면 다시 완전 고정 — 액티브~후딜 내내 안 밀림
     }
 
     private IEnumerator ActiveHitboxRoutine(NPC self, Vector2 offset, Vector2 size, Vector2 attackOriginPos) //?

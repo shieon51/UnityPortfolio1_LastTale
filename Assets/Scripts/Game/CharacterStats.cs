@@ -117,15 +117,23 @@ public class CharacterStats : MonoBehaviour
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
     }
 
+    protected virtual bool IsDodgeInvincible => false; // 기본은 아무도 회피 무적 없음
+
     public virtual bool TakeDamage(
          int incomingDamage,
          ElementType attackElement = ElementType.Normal,
          CharacterStats attacker = null,
          Vector2? knockbackDirection = null,
          float knockbackPower = 0f,
-         Vector2? attackOriginOverride = null) // - 대시형 공격이 "시작 시점" 위치를 넘길 때 사용
+         Vector2? attackOriginOverride = null, // - 대시형 공격이 "시작 시점" 위치를 넘길 때 사용
+         bool piercesDodge = false) 
     {
-        if (Time.time < lastHitTime + invincibilityDuration) return false; // 무적 중 — 넉백 포함 아무 효과 없음
+        if (Time.time < lastHitTime + invincibilityDuration) return false; // 일반 무적은 무조건 존중 // 무적 중 — 넉백 포함 아무 효과 없음
+        if (IsDodgeInvincible && !piercesDodge) // ★ 회피 무적은 침범 표시된 공격만 뚫음
+        {
+            FloatingTextManager.Instance?.ShowDodge(transform.position + Vector3.up * 1f); // ★ 추가
+            return false;
+        }
 
         OnAttackReceived?.Invoke(attacker); // ★ 추가
 
@@ -141,7 +149,7 @@ public class CharacterStats : MonoBehaviour
             ScreenFlashOverlay.Instance?.Flash(new Color(1f, 0.9f, 0.3f), 0.15f);
             float groggyDuration = CombatFormulaService.Instance.CalculateGroggyDuration(attacker, this);
             attacker.ApplyGroggy(groggyDuration);
-            HitStopManager.Instance?.Trigger(parryHitStopDuration); 
+            HitStopManager.Instance?.Trigger(attacker, this, parryHitStopDuration); // 패링 분기
             return false;  // 패링 성공 — 넉백 포함 완전 무효화
         }
 
@@ -181,9 +189,9 @@ public class CharacterStats : MonoBehaviour
             if (hitFromDir != 0f) spriteRenderer.flipX = hitFromDir > 0f;
         }
         GetComponentInChildren<HitFlashController>()?.Flash();
-        
+
         //ScreenFlashOverlay.Instance?.Flash(new Color(1f, 0.3f, 0.3f, 0.3f), 0.08f); // ★ 은은한 빨간 플래시
-        HitStopManager.Instance?.Trigger(hitStopDuration); // ★ 히트스톱 추가
+        HitStopManager.Instance?.Trigger(attacker, this, hitStopDuration); // 일반 피격 분기
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
         OnHealthChanged?.Invoke();
         OnDamageTaken?.Invoke(finalDamage, attacker);

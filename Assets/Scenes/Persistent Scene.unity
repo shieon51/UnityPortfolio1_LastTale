@@ -404,6 +404,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 257964917}
+  - {fileID: 1960345568}
   - {fileID: 351659694}
   - {fileID: 625374066}
   - {fileID: 673272154}
@@ -768,8 +770,6 @@ RectTransform:
   - {fileID: 1776417546}
   - {fileID: 1422428541}
   - {fileID: 1167150035}
-  - {fileID: 257964917}
-  - {fileID: 1960345568}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -946,11 +946,11 @@ Transform:
   m_GameObject: {fileID: 257964916}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -954.0023, y: -539.0915, z: 0}
+  m_LocalPosition: {x: 2.495043, y: 0.73240066, z: -0.0455945}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 186597601}
+  m_Father: {fileID: 79130433}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &257964918
 MonoBehaviour:
@@ -1376,7 +1376,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
+  m_RenderPostProcessing: 1
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0
@@ -6620,11 +6620,11 @@ Transform:
   m_GameObject: {fileID: 1960345567}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -944.34595, y: -539.12573, z: 0}
+  m_LocalPosition: {x: 12.151415, y: 0.69815993, z: -0.0455945}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 186597601}
+  m_Father: {fileID: 79130433}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1960345569
 MonoBehaviour:

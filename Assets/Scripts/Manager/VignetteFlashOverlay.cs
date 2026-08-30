@@ -10,12 +10,20 @@ public class VignetteFlashOverlay : Singleton<VignetteFlashOverlay>
     private Vignette _vignette;
     private Coroutine _routine;
 
+    [Header("비네트 조절")]
+    public float defaultMaxIntensity = 0.4f;
+    public Color defaultColor = Color.red;
+
     private void Awake()
     {
-        if (globalVolume != null && globalVolume.profile.TryGet(out Vignette v)) _vignette = v;
+        if (globalVolume == null) { Debug.LogWarning($"[{name}] Global Volume이 연결 안 됨"); return; }
+        if (!globalVolume.profile.TryGet(out Vignette v)) Debug.LogWarning($"[{name}] Vignette 오버라이드를 프로필에서 못 찾음");
+        else _vignette = v;
     }
 
-    public void Flash(Color color, float duration, float maxIntensity = 0.4f)
+    public void Flash(float duration) => Flash(defaultColor, duration, defaultMaxIntensity);
+    public void Flash(Color color, float duration) => Flash(color, duration, defaultMaxIntensity);
+    public void Flash(Color color, float duration, float maxIntensity)
     {
         if (_vignette == null) return;
         if (_routine != null) StopCoroutine(_routine);

@@ -112,7 +112,14 @@ public class Enemy : CharacterStats
     }
 
     // 2. 데미지 받았을 때 처리 (CharacterStats 오버라이드)
-    public override bool TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal, CharacterStats attacker = null, Vector2? knockbackDirection = null, float knockbackPower = 0f, Vector2? attackOriginOverride = null)
+    public override bool TakeDamage(
+        int incomingDamage, 
+        ElementType attackElement = ElementType.Normal, 
+        CharacterStats attacker = null, 
+        Vector2? knockbackDirection = null, 
+        float knockbackPower = 0f, 
+        Vector2? attackOriginOverride = null,
+        bool piercesDodge = false)
     {
         if (player == null) player = GameObject.FindGameObjectWithTag("Player").transform;
 

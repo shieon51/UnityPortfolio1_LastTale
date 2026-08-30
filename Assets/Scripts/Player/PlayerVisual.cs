@@ -23,8 +23,11 @@ public class PlayerVisual : MonoBehaviour
     // 눈깜빡임 모션
     private EyeBlinkController _eyeBlink;
 
-    // 방어 모션 관련
-    private PlayerGuard _guard; 
+    // 방어/회피 모션 관련
+    private PlayerGuard _guard;
+    private PlayerDodge _dodge;
+    private bool _wasGuarding = false, _wasDodging = false;
+    private PlayerCombat _combat; //?
 
     // 그로기 지속 관련
     private float _groggyElapsed = 0f;
@@ -52,6 +55,8 @@ public class PlayerVisual : MonoBehaviour
         _directionalSprites = GetComponentsInChildren<DirectionalSprite>(true);
         _eyeBlink = GetComponentInChildren<EyeBlinkController>(true);
         _guard = GetComponentInParent<PlayerGuard>();
+        _dodge = GetComponentInParent<PlayerDodge>();
+        _combat = GetComponentInParent<PlayerCombat>(); //?
 
         Debug.Log($"[PlayerVisual] 총 {_partAnimators.Length}개의 파츠 애니메이터를 동기화합니다.");
 
@@ -119,6 +124,8 @@ public class PlayerVisual : MonoBehaviour
         ReconcileAirborneVisual();
         ReconcileStuckState();
         TickGroggyResume();
+        HandleGuardTransition();
+        HandleDodgeTransition();
     }
 
     private Animator ResolveDriverAnimator()
@@ -130,6 +137,36 @@ public class PlayerVisual : MonoBehaviour
 
         Debug.LogWarning("[PlayerVisual] Body 슬롯 태그를 찾지 못했습니다. 첫 파츠를 기준 Animator로 사용합니다.");
         return _partAnimators.Length > 0 ? _partAnimators[0] : null;
+    }
+
+    // 방어
+    private void HandleGuardTransition()
+    {
+        if (_guard == null || _stats == null) return;
+        bool isGuarding = _stats.isGuarding;
+        if (isGuarding && !_wasGuarding && (_combat == null || !_combat.IsAttacking))
+            PlayImmediate(_guard.ResolveContextState());
+        _wasGuarding = isGuarding; // 해제 시점은 기존 ReturnToLocomotion의 isGuarding 체크가 이미 처리
+    }
+
+    // 회피
+    private void HandleDodgeTransition()
+    {
+        if (_dodge == null) return;
+        bool isDodging = _dodge.IsDodging;
+        if (isDodging && !_wasDodging) { PlayImmediate("Dodge"); SetTranslucent(true); }
+        else if (!isDodging && _wasDodging) { SetTranslucent(false); ReturnToLocomotion(); }
+        _wasDodging = isDodging;
+    }
+
+    private void SetTranslucent(bool on)
+    {
+        foreach (var sr in _allSpriteRenderers)
+        {
+            var c = sr.color;
+            c.a = on ? 0.35f : 1f;
+            sr.color = c;
+        }
     }
 
     // 폼체인지(요정화) 모션 관련
@@ -405,7 +442,11 @@ public class PlayerVisual : MonoBehaviour
     public void ReturnToLocomotion()
     {
         if (_stats != null && _stats.IsGroggy) return; // ★ 그로기 중엔 절대 로코모션으로 안 돌아감
-        if (_stats != null && _stats.isGuarding) return;
+        if (_stats != null && _stats.isGuarding)
+        {
+            PlayImmediate(_guard != null ? _guard.ResolveContextState() : PlayerAnimStateNames.Guard); // ★ 추가 — 실제로 방어 포즈 재생
+            return;
+        }
 
         _eyeBlink?.SetVisible(true); // ★ 공격 끝나면 다시 표시
 

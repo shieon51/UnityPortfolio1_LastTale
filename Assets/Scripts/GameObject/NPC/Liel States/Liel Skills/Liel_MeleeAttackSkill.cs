@@ -90,7 +90,7 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
         // 2. 팍 치고 대시 돌진 (가속 곡선)
         rb.linearDamping = 0f;
         float dir = sr.flipX ? 1f : -1f;
-        yield return self.StartCoroutine(BurstAccelerate(rb, dir));
+        self.StartCoroutine(BurstAccelerate(rb, dir)); //? ★ yield 제거 — 백그라운드로 실행, 안 기다림
 
         yield return gate.WaitForHitboxStart(); // AE_HitboxStart — 한발 내밀며 찌르기
 

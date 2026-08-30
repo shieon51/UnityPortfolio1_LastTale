@@ -32,6 +32,8 @@ public class Liel_ExecutingActionState : NPCState
 
     private IEnumerator RunAction()
     {
+        liel.StopGuard(); // ★ 새 행동 시작 전 잔여 방어 상태 확실히 정리
+
         try
         {
             if (_action is NPCSkillBase skill)

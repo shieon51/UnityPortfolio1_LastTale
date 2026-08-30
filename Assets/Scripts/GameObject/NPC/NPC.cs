@@ -178,6 +178,7 @@ public abstract class NPC : CharacterStats, ICombatTargetable
             executingState.ForceCancel(); // ★ StopAllCoroutines() 대신 이것만
         WorldSpaceTelegraphIndicator.Instance?.Hide(); 
         isSuperArmor = false;
+        StopGuard(); // ★ 추가
         CurrentPlayingSkill = null;
         ClearDebugHitbox();
         if (this is Liel_AI liel)

@@ -10,12 +10,18 @@ public class HitStopVisualOverlay : Singleton<HitStopVisualOverlay>
     private ChromaticAberration _chromatic;
     private Coroutine _routine;
 
+    [Header("색수차 조절")]
+    public float defaultMaxIntensity = 0.6f;
+
     private void Awake()
     {
-        if (globalVolume != null && globalVolume.profile.TryGet(out ChromaticAberration ca)) _chromatic = ca;
+        if (globalVolume == null) { Debug.LogWarning($"[{name}] Global Volume이 연결 안 됨"); return; }
+        if (!globalVolume.profile.TryGet(out ChromaticAberration ca)) Debug.LogWarning($"[{name}] ChromaticAberration 오버라이드를 프로필에서 못 찾음");
+        else _chromatic = ca;
     }
 
-    public void Pulse(float duration, float maxIntensity = 0.6f)
+    public void Pulse(float duration) => Pulse(duration, defaultMaxIntensity);
+    public void Pulse(float duration, float maxIntensity)
     {
         if (_chromatic == null) return;
         if (_routine != null) StopCoroutine(_routine);

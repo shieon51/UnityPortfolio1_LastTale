@@ -21,8 +21,9 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
     [Header("Ground Embed Failsafe")]
     [Tooltip("지형 파묻힘을 검사할 주기(초)")]
     public float embedCheckInterval = 0.5f;
-    [Tooltip("발밑 기준 이 높이 위에서 아래로 검사")]
-    public float embedCheckHeight = 3f;
+    [Tooltip("발밑 기준 이 높이 위에서 아래로 검사 — 씬에서 있을 수 있는 가장 깊은 파묻힘보다 확실히 높아야 함")]
+    public float embedCheckHeight = 50f;
+    public float embedThreshold = 0.5f; // ★ 오탐 줄이려고 0.3 → 0.5로 여유 늘림
 
     [Header("Form Change Movement")]
     [Tooltip("변신 중 수평 속도가 감속되는 정도 (초당 감소 속도, 클수록 빨리 멈춤)")]
@@ -172,6 +173,9 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
 
     private void Update()
     {
+        // 잠금 여부와 무관하게 항상 체크
+        CheckGroundEmbedFailsafe();
+
         // 비행 중인 경우
         if (_isFlying)
         {
@@ -183,9 +187,6 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
         // 바닥 여부는 '물리적 사실'이므로 잠금 여부와 무관하게 항상 정확히 추적한다.
         // (대화/공격/넉백 중에도 실제로는 계속 낙하하다 착지할 수 있기 때문)
         CheckGrounded();
-
-        // 잠금 여부와 무관하게 항상 체크
-        CheckGroundEmbedFailsafe();
 
         // 2. 행동 불가 상태면 입력 무시
         if (IsActionLocked)
@@ -417,32 +418,42 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
     // 예기치 못한 이유로 지형 아래로 파묻혔을 때 위로 올려주는 함수
     private void CheckGroundEmbedFailsafe()
     {
-        if (IsGrounded && !IsEmbeddedInGround())
-            _lastSafeGroundedPosition = transform.position; // 정상 상태일 때만 계속 갱신
+        bool consideredSafe = _isFlying ? !IsEmbeddedInGround() : (IsGrounded && !IsEmbeddedInGround());
+        if (consideredSafe) _lastSafeGroundedPosition = transform.position;
 
         _embedCheckTimer += Time.deltaTime;
         if (_embedCheckTimer < embedCheckInterval) return;
         _embedCheckTimer = 0f;
 
-        if (IsEmbeddedInGround())
-        {
-            Debug.LogWarning("[PlayerController] 지형에 파묻힌 상태 감지 — 마지막 안전 위치로 복구합니다.");
-            transform.position = _lastSafeGroundedPosition;
-            _rb.linearVelocity = Vector2.zero;
-        }
+        TryRecoverFromEmbed();
     }
 
-    // 발보다 위에서 지형 표면이 잡히면 = 파묻힘
+    private void TryRecoverFromEmbed()
+    {
+        Vector2 feetPos = (Vector2)transform.position + (Vector2)groundCheckOffset;
+        if (!TryFindGroundAbove(out Vector2 groundPoint)) return;
+        if (groundPoint.y <= feetPos.y + embedThreshold) return;
+
+        Debug.LogWarning("[PlayerController] 지형 파묻힘 감지 — 현재 위치 바로 위로 복구합니다.");
+        float pivotOffsetFromFeet = transform.position.y - feetPos.y;
+        transform.position = new Vector3(transform.position.x, groundPoint.y + pivotOffsetFromFeet + 0.05f, transform.position.z);
+        _rb.linearVelocity = Vector2.zero;
+    }
+
+    private bool TryFindGroundAbove(out Vector2 groundPoint)
+    {
+        Vector2 feetPos = (Vector2)transform.position + (Vector2)groundCheckOffset;
+        Vector2 rayStart = new Vector2(feetPos.x, feetPos.y + embedCheckHeight);
+        RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, embedCheckHeight * 2f, _solidGroundOnlyLayer);
+        groundPoint = hit.point;
+        return hit.collider != null;
+    }
+
     private bool IsEmbeddedInGround()
     {
         Vector2 feetPos = (Vector2)transform.position + (Vector2)groundCheckOffset;
-        Vector2 rayStart = new Vector2(feetPos.x, feetPos.y + 50f); // ★ 씬 어디서든 확실히 지형 바깥일 높이
-        RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, 100f, _solidGroundOnlyLayer);
-
-        if (hit.collider == null) 
-            return false;
-
-        return hit.point.y > feetPos.y + 0.3f; // ★ 여유값도 넉넉하게
+        if (!TryFindGroundAbove(out Vector2 groundPoint)) return false;
+        return groundPoint.y > feetPos.y + embedThreshold; // ★ 공용 threshold
     }
 
     private bool ComputeRawGrounded()
@@ -548,16 +559,8 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
     //    return null;
     //}
 
-    // 땅 파묻힘 감지 (W 스킬 관련)
-    public void CheckGroundEmbedImmediate() 
-    {
-        if (IsEmbeddedInGround())
-        {
-            Debug.LogWarning("[PlayerController] 텔레포트 직후 지형 파묻힘 감지 — 즉시 복구");
-            transform.position = _lastSafeGroundedPosition;
-            _rb.linearVelocity = Vector2.zero;
-        }
-    }
+    // 땅 파묻힘 감지 (W 스킬 관련) //?
+    public void CheckGroundEmbedImmediate() => TryRecoverFromEmbed();
 
     // 변신을 시작하는 순간(날개가 나타나기 시작하는 시점) 호출됨.
     // 목표 폼이 비행형인지 미리 계산해둬야, 낙하 속도를 감속시킬지 말지 판단 가능

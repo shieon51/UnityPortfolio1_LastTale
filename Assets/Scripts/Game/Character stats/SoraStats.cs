@@ -48,6 +48,10 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
 
     private bool _isTransforming = false; // 변신 딜레이 중인지 체크
 
+    // 소라 회피 '틈입'
+    private PlayerDodge _dodge;
+    protected override bool IsDodgeInvincible => _dodge != null && _dodge.IsDodging;
+
     // 소라의 특수 스탯은 '피로도'임을 UI에게 알려줌
     public override bool HasSpecialStat => true;
     public override float SpecialStatPercentage => (float)currentFatigue / maxFatigue;
@@ -138,7 +142,14 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     }
 
     // [기획 반영] 시간 속성의 소라는 역상성(예: Normal)에 맞으면 추가 피해 및 정신력 감소
-    public override bool TakeDamage(int incomingDamage, ElementType attackElement = ElementType.Normal, CharacterStats attacker = null, Vector2? knockbackDirection = null, float knockbackPower = 0f, Vector2? attackOriginOverride = null)
+    public override bool TakeDamage(
+        int incomingDamage, 
+        ElementType attackElement = ElementType.Normal, 
+        CharacterStats attacker = null, 
+        Vector2? knockbackDirection = null, 
+        float knockbackPower = 0f, 
+        Vector2? attackOriginOverride = null, 
+        bool piercesDodge = false)
     {
         int finalDamage = incomingDamage;
         if (fairyStage > 0 && attackElement == ElementType.Normal) // 기획에 따라 상성 정의 필요    //************* 추후 수정

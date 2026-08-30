@@ -6,18 +6,26 @@ public class HitStopManager : Singleton<HitStopManager>
 {
     private Coroutine _routine;
 
-    public void Trigger(float duration, float timeScale = 0.05f)
+    public void Trigger(CharacterStats a, CharacterStats b, float duration)
     {
-        if (_routine != null) StopCoroutine(_routine);
-        Time.timeScale = timeScale;
-        HitStopVisualOverlay.Instance?.Pulse(duration * 3f); // ★ 히트스톱보다 살짝 더 오래 잔향처럼
-        _routine = StartCoroutine(Routine(duration));
+        ApplyToCharacter(a, duration);
+        ApplyToCharacter(b, duration);
+        HitStopVisualOverlay.Instance?.Pulse(duration * 3f);
     }
 
-    private IEnumerator Routine(float duration)
+    private void ApplyToCharacter(CharacterStats c, float duration)
     {
+        if (c == null) return;
+        var pv = c.GetComponentInChildren<PlayerVisual>();
+        if (pv != null) { pv.TriggerHitStop(duration); return; } // 기존 있던 기능 재사용
+        var nv = c.GetComponentInChildren<NPCVisual>();
+        if (nv != null) StartCoroutine(NPCHitStopRoutine(nv, duration));
+    }
+
+    private IEnumerator NPCHitStopRoutine(NPCVisual nv, float duration)
+    {
+        nv.SetAnimatorSpeed(0f);
         yield return new WaitForSecondsRealtime(duration);
-        Time.timeScale = 1f; // ★ 항상 고정값으로 복원
-        _routine = null;
+        nv.SetAnimatorSpeed(1f);
     }
 }

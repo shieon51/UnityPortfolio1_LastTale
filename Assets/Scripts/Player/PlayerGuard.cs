@@ -11,7 +11,6 @@ public class PlayerGuard : MonoBehaviour
     public List<GuardContextVariant> contextVariants = new();
 
     private CharacterStats _stats;
-    private PlayerVisual _visual;
     private IPlayerMotor _motor;
     private IFormStageProvider _formProvider;
     private PlayerCombat _combat;
@@ -19,7 +18,6 @@ public class PlayerGuard : MonoBehaviour
     private void Awake()
     {
         _stats = GetComponent<CharacterStats>();
-        _visual = GetComponentInChildren<PlayerVisual>();
         _motor = GetComponent<IPlayerMotor>();
         _formProvider = GetComponent<IFormStageProvider>();
         _combat = GetComponentInChildren<PlayerCombat>();
@@ -36,7 +34,6 @@ public class PlayerGuard : MonoBehaviour
             _stats.StartGuard();
             var rb = GetComponent<Rigidbody2D>();
             if (rb != null) rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
-            _visual?.PlayState(ResolveContextState());
             return;
         }
 
@@ -63,12 +60,12 @@ public class PlayerGuard : MonoBehaviour
             _stats.StartGuard();
             var rb = GetComponent<Rigidbody2D>();
             if (rb != null) rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y); // ★ 이동 중이었어도 즉시 정지
-            if (_combat == null || !_combat.IsAttacking) _visual?.PlayState(ResolveContextState());
+            //if (_combat == null || !_combat.IsAttacking) _visual?.PlayState(ResolveContextState());
         }
         else if (!wantsGuard && _stats.isGuarding)
         {
             _stats.StopGuard();
-            if (_combat == null || !_combat.IsAttacking) _visual?.ReturnToLocomotion();
+            //if (_combat == null || !_combat.IsAttacking) _visual?.ReturnToLocomotion();
         }
     }
 

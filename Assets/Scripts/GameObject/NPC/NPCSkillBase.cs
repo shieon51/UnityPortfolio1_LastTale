@@ -12,6 +12,10 @@ public abstract class NPCSkillBase : NPCActionBase
     public string animStateName;
     public int manaCost;
 
+    [Header("Mana Cost Override (테스트용 — 체크하면 CSV 무시하고 이 값 사용)")]
+    public bool overrideManaCost = false;
+    public int manaCostOverrideValue = 0;
+
     [Header("Timing")]
     [Tooltip("스킬 결정 시점부터 실제 액티브(AE_ActiveStart)까지 걸리는 시간(초). 클립의 선딜 길이와 맞춰주세요.")]
     public float timeToActive = 0.5f;
@@ -31,7 +35,12 @@ public abstract class NPCSkillBase : NPCActionBase
     public List<CameraCue> cameraCues = new();
     public CameraCue FindCameraCue(string cueId) => cameraCues.Find(c => c.cueId == cueId);
 
-    public int GetManaCost(int level) => SkillDataManager.Instance?.GetLevelData(skillId, level)?.manaCost ?? manaCost;
+    public int GetManaCost(int level)
+    {
+        if (overrideManaCost) return manaCostOverrideValue; // ★ 최우선 — CSV보다 위
+        return SkillDataManager.Instance?.GetLevelData(skillId, level)?.manaCost ?? manaCost;
+    }
+
     public float GetDamageMultiplier(int level) => SkillDataManager.Instance?.GetLevelData(skillId, level)?.damageMultiplier ?? 1f;
 
     public (Vector2 offset, Vector2 size) ResolveContextHitbox(MovementContext context, Vector2 defaultOffset, Vector2 defaultSize)

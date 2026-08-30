@@ -32,6 +32,8 @@ public class Liel_ConcentrationState : NPCState
             {
                 _isRetreating = false;
                 liel.canRotate = true; // ★ 채널 중엔 다시 플레이어를 볼 수 있게
+                liel.LookAtPlayer_Public(); // ★ 채널 시작하는 이 순간에만 딱 한 번
+                liel.canRotate = false; // ★ 이후로는 다시 고정 — 플레이어가 좌우로 움직여도 안 따라봄
                 liel.Rb.linearVelocity = Vector2.zero;
                 liel.StartGuard(); // ★ 채널 중엔 방어 자세 — 패링/완벽방어 기회 생김
                 visual.PlayIfChanged(NPCAnimStateNames.Concentration); // ★ 전용 모션
@@ -42,7 +44,7 @@ public class Liel_ConcentrationState : NPCState
             return;
         }
 
-        liel.LookAtPlayer_Public(); // 방어 중엔 플레이어를 계속 바라봄
+        //liel.LookAtPlayer_Public(); // 방어 중엔 플레이어를 계속 바라봄
 
         if (_interrupted || liel.currentMana >= liel.maxMana) // ★ 방해받거나 마나 다 찼으면 종료
         {
