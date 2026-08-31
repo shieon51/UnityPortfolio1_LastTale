@@ -436,8 +436,11 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
 
         Debug.LogWarning("[PlayerController] 지형 파묻힘 감지 — 현재 위치 바로 위로 복구합니다.");
         float pivotOffsetFromFeet = transform.position.y - feetPos.y;
-        transform.position = new Vector3(transform.position.x, groundPoint.y + pivotOffsetFromFeet + 0.05f, transform.position.z);
+        Vector3 newPos = new Vector3(transform.position.x, groundPoint.y + pivotOffsetFromFeet + 0.05f, transform.position.z);
+        transform.position = newPos;
+        _rb.position = newPos; // ★ 추가 — Rigidbody 자체도 명시적으로 동기화 (이게 빠져서 안 고쳐지고 있었음)
         _rb.linearVelocity = Vector2.zero;
+        Physics2D.SyncTransforms(); // ★ 추가
     }
 
     private bool TryFindGroundAbove(out Vector2 groundPoint)
@@ -570,6 +573,17 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
         if (_formProvider == null) return;
         _isFormTransforming = true;
         _formTransformTargetIsFlight = !_formProvider.IsFlightForm;
+    }
+
+    public IEnumerator EnsureSafeLandingRoutine()
+    {
+        float originalGravity = _originalGravity; // Awake에서 이미 캐싱해둔 값
+        for (int i = 0; i < 5; i++) // ★ 5프레임 연속 확인 — 한 번의 순간적 누락도 방지
+        {
+            TryRecoverFromEmbed();
+            yield return null;
+        }
+        _rb.gravityScale = originalGravity;
     }
 
     // 변신이 완료된 순간(날개가 다 펴지거나 다 접힌 시점) 호출됨.

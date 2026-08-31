@@ -20,4 +20,10 @@ public class PooledVFX : MonoBehaviour
         yield return new WaitForSeconds(lifetime);
         PoolManager.Instance.ReturnToPool(gameObject, poolType);
     }
+
+    // 자동반납 취소 기능 
+    public void CancelAutoReturn()
+    {
+        if (_returnRoutine != null) { StopCoroutine(_returnRoutine); _returnRoutine = null; }
+    }
 }

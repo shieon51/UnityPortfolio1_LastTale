@@ -1,4 +1,5 @@
 ﻿// Liel_ConcentrationState.cs (신규)
+using System.Collections;
 using UnityEngine;
 
 public class Liel_ConcentrationState : NPCState
@@ -9,6 +10,8 @@ public class Liel_ConcentrationState : NPCState
     private bool _interrupted = false;
 
     private float _manaAccumulator = 0f; // 마나 정수 반올림 문제 해결
+
+    private GameObject _manaGatherVFX; // 필드 추가
 
     public Liel_ConcentrationState(Liel_AI npc, NPCVisual visual, Transform p) : base(npc, visual, p) { liel = npc; }
 
@@ -36,6 +39,12 @@ public class Liel_ConcentrationState : NPCState
                 liel.canRotate = false; // ★ 이후로는 다시 고정 — 플레이어가 좌우로 움직여도 안 따라봄
                 liel.Rb.linearVelocity = Vector2.zero;
                 liel.StartGuard(); // ★ 채널 중엔 방어 자세 — 패링/완벽방어 기회 생김
+
+                // 마나 모이는 이펙트 //?
+                _manaGatherVFX = VFXManager.Instance?.PlayPersistent("liel_mana_gather", liel.transform.position, Quaternion.identity, liel.transform);
+                var gatherComp = _manaGatherVFX?.GetComponent<ManaGatherParticles>();
+                if (gatherComp != null) gatherComp.target = liel.transform;
+
                 visual.PlayIfChanged(NPCAnimStateNames.Concentration); // ★ 전용 모션
                 return;
             }
@@ -74,8 +83,22 @@ public class Liel_ConcentrationState : NPCState
     public override void Exit()
     {
         liel.canRotate = true;
-        liel.StopGuard(); // ★ 방어 해제
+        liel.StopGuard();
         liel.OnAttackReceived -= HandleInterrupted;
-        liel.LastConcentrationEndTime = Time.time; // ★ 재진입 쿨다운 시작점 기록
+        liel.LastConcentrationEndTime = Time.time;
+
+        if (_manaGatherVFX != null)
+        {
+            var gatherComp = _manaGatherVFX.GetComponent<ManaGatherParticles>();
+            gatherComp?.StopEmittingAndFinish(); // ★ 즉시 반납 대신 자연 소멸 유도
+            liel.StartCoroutine(ReturnVFXWhenFinished(gatherComp, _manaGatherVFX));
+            _manaGatherVFX = null;
+        }
+    }
+
+    private IEnumerator ReturnVFXWhenFinished(ManaGatherParticles gatherComp, GameObject vfx)
+    {
+        while (gatherComp != null && !gatherComp.IsFullyFinished) yield return null;
+        VFXManager.Instance?.StopPersistent(vfx);
     }
 }

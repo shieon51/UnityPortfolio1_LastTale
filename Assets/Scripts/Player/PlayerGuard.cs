@@ -43,6 +43,12 @@ public class PlayerGuard : MonoBehaviour
             return;
         }
 
+        if (_motor.IsDialogueLocked) // ★ 대화 중 방어 안 뜨게
+        {
+            if (_stats.isGuarding) _stats.StopGuard();
+            return;
+        }
+
         if (!CanStartGuardNow() && !_stats.isGuarding) return; // 공중(지상형)이면 시작조차 불가
 
         if (_motor != null && _motor.IsActionLocked && !(_combat != null && _combat.IsAttacking))

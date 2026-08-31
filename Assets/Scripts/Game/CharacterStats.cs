@@ -54,8 +54,12 @@ public class CharacterStats : MonoBehaviour
     public float superArmorBreakThreshold = 8f;
 
     [Header("타격감(히트스톱)")]
-    public float hitStopDuration = 0.1f;
-    public float parryHitStopDuration = 0.25f; // 패링은 더 길게
+    public float hitStopDuration = 0.25f;      // ★ 0.05→0.1로 기본값 조금 늘림
+    public float parryHitStopDuration = 0.45f; // ★ 0.15~0.25 → 0.35로 확실히 늘림
+
+    [Header("색수차 강도")]
+    public float hitChromaticIntensity = 0.6f;
+    public float parryChromaticIntensity = 1.2f; // ★ 패링은 훨씬 강하게(URP에서 1 넘으면 클램프될 수 있어 테스트해봐)
 
     // 최근에 나를 공격한 대상 (W 스킬의 "최근 피격 대상 우선" 타겟팅에 사용)
     public CharacterStats LastAttacker { get; protected set; }
@@ -149,7 +153,8 @@ public class CharacterStats : MonoBehaviour
             ScreenFlashOverlay.Instance?.Flash(new Color(1f, 0.9f, 0.3f), 0.15f);
             float groggyDuration = CombatFormulaService.Instance.CalculateGroggyDuration(attacker, this);
             attacker.ApplyGroggy(groggyDuration);
-            HitStopManager.Instance?.Trigger(attacker, this, parryHitStopDuration); // 패링 분기
+            HitStopManager.Instance?.Trigger(attacker, this, parryHitStopDuration, parryChromaticIntensity);
+            CameraDirector.Instance?.Shake(0.15f, 0.2f); // ★ 색수차랑 같이 흔들려서 더 역동적으로
             return false;  // 패링 성공 — 넉백 포함 완전 무효화
         }
 
@@ -191,7 +196,7 @@ public class CharacterStats : MonoBehaviour
         GetComponentInChildren<HitFlashController>()?.Flash();
 
         //ScreenFlashOverlay.Instance?.Flash(new Color(1f, 0.3f, 0.3f, 0.3f), 0.08f); // ★ 은은한 빨간 플래시
-        HitStopManager.Instance?.Trigger(attacker, this, hitStopDuration); // 일반 피격 분기
+        HitStopManager.Instance?.Trigger(attacker, this, hitStopDuration, hitChromaticIntensity); // 일반 피격 분기
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
         OnHealthChanged?.Invoke();
         OnDamageTaken?.Invoke(finalDamage, attacker);

@@ -248,7 +248,7 @@ public class PlayerCombat : MonoBehaviour
     }
 
     // 순간이동형 스킬들이 공용으로 쓸 수 있는 안전 착지 헬퍼
-    public Vector2 ResolveSafeGroundedPosition(Vector2 desiredPos, LayerMask groundLayer, float maxSnapDistance = 3f)
+    public Vector2 ResolveSafeGroundedPosition(Vector2 desiredPos, Vector2 fallbackPos, LayerMask groundLayer, float maxSnapDistance = 3f)
     {
         if (SceneBoundsManager.Instance != null && SceneBoundsManager.Instance.HasBounds)
             desiredPos = SceneBoundsManager.Instance.ClampToBounds(desiredPos); // 범위 바깥으로 이동하지 못하도록 제한
@@ -265,19 +265,8 @@ public class PlayerCombat : MonoBehaviour
         snapped = TrySnapToGround(desiredPos, groundLayer, 50f, 100f); // ★ 짧은 레이 실패 시 훨씬 높은 곳에서 재시도
         if (snapped.HasValue) return snapped.Value;
 
-        return desiredPos;
-
-        //Vector2 rayStart = desiredPos + Vector2.up * 1.5f;
-        //RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, maxSnapDistance, groundLayer);
-
-        //if (hit.collider != null)
-        //{
-        //    Collider2D myCol = GetComponent<Collider2D>();
-        //    float pivotToBottom = myCol != null ? (transform.position.y - myCol.bounds.min.y) : 0f;
-        //    return new Vector2(desiredPos.x, hit.point.y + pivotToBottom);
-        //}
-
-        //return desiredPos; // 근처에 바닥이 없어도(절벽/틈 너머) 이동 자체는 항상 실행 — 그 자리에서 그냥 떨어지면 됨
+        Debug.LogWarning("[PlayerCombat] W 스킬 지형 탐색 완전 실패 — 시전 전 위치로 폴백"); //?
+        return fallbackPos; // ★ 최후의 안전망
     }
 
     private Vector2? TrySnapToGround(Vector2 desiredPos, LayerMask groundLayer, float startHeight, float rayDistance)

@@ -64,6 +64,8 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
 
     public override IEnumerator Execute(NPC self, NPCVisual visual, Transform target)
     {
+        self.canRotate = false; // ★ 추가 — 상위 State 타이밍과 무관하게 확실히 잠금
+
         Vector2 attackOriginPos = self.transform.position; // ★ 이동 시작 전 위치 스냅
 
         self.CurrentPlayingSkill = this; // ★ 릴레이가 이 스킬을 찾을 수 있게 등록
@@ -111,6 +113,7 @@ public class Liel_MeleeAttackSkill : NPCSkillBase
         rb.linearDamping = originalDrag;
         rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
 
+        self.canRotate = true; // ★ 추가 — 스킬 끝나면 다음 판단이 스스로 결정하게 열어줌
         self.CurrentGate = null;
         self.isSuperArmor = false; 
         visual.SetEyesVisible(true); // **

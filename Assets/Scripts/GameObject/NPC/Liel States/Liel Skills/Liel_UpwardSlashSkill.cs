@@ -41,6 +41,8 @@ public class Liel_UpwardSlashSkill : NPCSkillBase
 
     public override IEnumerator Execute(NPC self, NPCVisual visual, Transform target)
     {
+        self.canRotate = false; // ★ 추가 — 상위 State 타이밍과 무관하게 확실히 잠금
+
         self.CurrentPlayingSkill = this;
         var gate = new ExecutionGate(name, eventTimeoutSeconds); // ★ 이 실행 전용 게이트 생성
         self.CurrentGate = gate; // ★ 등록
@@ -80,6 +82,8 @@ public class Liel_UpwardSlashSkill : NPCSkillBase
 
         rb.linearDamping = originalDrag;
         rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+
+        self.canRotate = true; // ★ 추가 — 스킬 끝나면 다음 판단이 스스로 결정하게 열어줌
         self.CurrentGate = null;
         self.isSuperArmor = false;
         visual.SetEyesVisible(true);

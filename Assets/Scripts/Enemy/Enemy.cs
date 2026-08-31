@@ -37,7 +37,7 @@ public class Enemy : CharacterStats
     protected Transform player; //
     protected Rigidbody2D rb;
     protected Animator animator;
-    protected SpriteRenderer spriteRenderer;
+    //protected SpriteRenderer spriteRenderer;
 
     // 풀에서 빌려온 체력바를 기억하는 변수
     protected EnemyHealthBar activeHealthBar;
@@ -131,7 +131,7 @@ public class Enemy : CharacterStats
             knockbackPower = 5f;
         }
 
-        bool applied = base.TakeDamage(incomingDamage, attackElement, attacker, knockbackDirection, knockbackPower); // ★ attacker 누락 수정
+        bool applied = base.TakeDamage(incomingDamage, attackElement, attacker, knockbackDirection, knockbackPower, attackOriginOverride, piercesDodge); // ★ 두 매개변수 추가
 
         if (applied)
         {

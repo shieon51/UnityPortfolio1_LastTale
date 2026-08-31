@@ -143,6 +143,8 @@ public class PlayerVisual : MonoBehaviour
     private void HandleGuardTransition()
     {
         if (_guard == null || _stats == null) return;
+        if (_isParryPosePlaying) { _wasGuarding = _stats.isGuarding; return; } // ★ 추가 — 패링 재생 중엔 방어가 안 끼어듦
+
         bool isGuarding = _stats.isGuarding;
         if (isGuarding && !_wasGuarding && (_combat == null || !_combat.IsAttacking))
             PlayImmediate(_guard.ResolveContextState());

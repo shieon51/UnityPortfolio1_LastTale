@@ -6,11 +6,12 @@ public class HitStopManager : Singleton<HitStopManager>
 {
     private Coroutine _routine;
 
-    public void Trigger(CharacterStats a, CharacterStats b, float duration)
+    public void Trigger(CharacterStats a, CharacterStats b, float duration, float visualIntensity = -1f)
     {
         ApplyToCharacter(a, duration);
         ApplyToCharacter(b, duration);
-        HitStopVisualOverlay.Instance?.Pulse(duration * 3f);
+        if (visualIntensity > 0f) HitStopVisualOverlay.Instance?.Pulse(duration * 3f, visualIntensity);
+        else HitStopVisualOverlay.Instance?.Pulse(duration * 3f);
     }
 
     private void ApplyToCharacter(CharacterStats c, float duration)

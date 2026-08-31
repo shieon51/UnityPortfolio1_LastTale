@@ -95,6 +95,11 @@ public class Liel_ExecutingActionState : NPCState
         while (Time.time - startTime < duration)
         {
             var movementAction = ai.ChooseMovementOnly(BuildContext());
+
+            // ★ 공격 예고 중엔 후퇴 방향 이동은 후보에서 제외 — 공격 준비하면서 물러나는 건 말이 안 됨 //?
+            if (movementAction is NPCMovementAction ma && ma.direction == NPCMovementAction.MoveDirection.AwayFromPlayer)
+                movementAction = null;
+
             if (movementAction != null)
             {
                 float remaining = duration - (Time.time - startTime);

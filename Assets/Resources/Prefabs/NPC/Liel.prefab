@@ -99,8 +99,10 @@ MonoBehaviour:
   knockbackStunDuration: 0.25
   knockbackSlideDrag: 3
   superArmorBreakThreshold: 8
-  hitStopDuration: 0.1
-  parryHitStopDuration: 0.25
+  hitStopDuration: 0.25
+  parryHitStopDuration: 0.45
+  hitChromaticIntensity: 0.6
+  parryChromaticIntensity: 1.2
   isSuperArmor: 0
   statsSummary: "Lv.1 | HP 100 | MP 50\n\uACF5\uACA9 10 | \uBC29\uC5B4 5 | \uBBFC\uCCA9
     5\n\uD53C\uACA9 \uACBD\uC9C1 0.25s | \uC2AC\uB77C\uC774\uB4DC \uB9C8\uCC30 3\n\uC288\uD37C\uC544\uBA38

@@ -105,6 +105,8 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
         Debug.Log($"[DBG W] target={(target != null ? target.name : "null")}, 플레이어={combat.transform.position}"); // *
         if (target == null) yield break; // 안전장치 (CanExecute를 통과했다면 원래는 null이 아니어야 함)
 
+        Vector2 casterStartPos = combat.transform.position; // ★ 시전 시작 시점 위치를 최상단에서 미리 캡처해둬야 함 //?
+
         // 타겟의 반대편(뒤쪽) 좌표 계산 
         float sideDir = (combat.transform.position.x < target.position.x) ? 1f : -1f; 
         float arrivalY = matchTargetHeight ? target.position.y : rb.position.y; // ★ 기본은 현재 높이 유지 (파묻힘 방지)
@@ -114,13 +116,17 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
 
         // 이동 위치
         Vector2 desiredPos = new Vector2(target.position.x + sideDir * arrivalOffsetFromTarget, matchTargetHeight ? target.position.y : rb.position.y);
-        Vector2 safePos = combat.ResolveSafeGroundedPosition(desiredPos, groundSnapLayer); // ★ 절벽/경사면 안전 보정
+        Vector2 safePos = combat.ResolveSafeGroundedPosition(desiredPos, casterStartPos, groundSnapLayer);
         Debug.Log($"[DBG W] desiredPos={desiredPos}, safePos={safePos}, sideDir={sideDir}"); // *
 
         rb.position = safePos;
-
         rb.linearVelocity = Vector2.zero; // 순간이동 직후 잔여 낙하/이동 관성 제거
+        rb.gravityScale = 0f; // ★ 안전 확인 끝날 때까지 중력 임시 차단
         Physics2D.SyncTransforms();
+
+        var controller = combat.GetComponent<PlayerController>();
+        if (controller != null) yield return controller.EnsureSafeLandingRoutine(); // ★ 여러 프레임 연속 확인 후 중력 복구
+
         combat.GetComponent<PlayerController>()?.CheckGroundEmbedImmediate(); // ★ 추가
         CameraDirector.Instance?.SnapToCurrentTargets(); // ** 카메라 즉시 스냅
         CameraDirector.Instance?.TriggerRecenter(0.5f); // ★ 순간이동 직후 0.5초간 중점 프레이밍, 이후 자연스럽게 평소 추적으로 복귀

@@ -19,33 +19,6 @@ public class Slime : Enemy
         StartCoroutine(StateMachine());
     }
 
-    //private void Update()
-    //{
-    //    base.Update();
-
-    //    // 💡 넉백 중이거나 죽었으면 AI 추적 로직 중단!
-    //    if (isKnockedBack || currentState == EnemyState.Die) return;
-
-    //    if (player == null)
-    //        player = GameObject.FindGameObjectWithTag("Player").transform;
-
-    //    if (player != null)
-    //    {
-    //        float dist = Vector2.Distance(transform.position, player.position);
-
-    //        if (dist <= detectionRange && !isAttacking)
-    //        {
-    //            currentState = EnemyState.Chase;
-    //        }
-    //        else if (currentState >= EnemyState.Chase && dist > detectionRange)
-    //        {
-    //            currentState = EnemyState.Idle;
-    //            isAttacking = false;
-    //            animator.SetBool("IsAttack", false);
-    //        }
-    //    }
-    //}
-
     // 부모의 Update() 안에서 호출됨 (넉백 중엔 알아서 안 불림)
     protected override void HandleAI()
     {

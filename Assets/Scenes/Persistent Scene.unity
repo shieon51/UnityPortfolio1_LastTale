@@ -965,6 +965,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VignetteFlashOverlay
   globalVolume: {fileID: 1327124282}
+  defaultMaxIntensity: 0.4
+  defaultColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!1 &351659693
 GameObject:
   m_ObjectHideFlags: 0
@@ -5144,6 +5146,10 @@ MonoBehaviour:
     prefab: {fileID: 1552641043255559299, guid: 980921db1e6380c43a8d34b83b3a4f1e, type: 3}
     initialSize: 50
     type: 0
+  - poolName: liel_mana_gather
+    prefab: {fileID: 7598176543790341342, guid: f1785b51aff3829439a08786c1e6516f, type: 3}
+    initialSize: 1
+    type: 0
 --- !u!1 &1398704212
 GameObject:
   m_ObjectHideFlags: 0
@@ -6639,6 +6645,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitStopVisualOverlay
   globalVolume: {fileID: 1327124282}
+  defaultMaxIntensity: 0.6
 --- !u!4 &1988383330 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8541148022777094637, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
@@ -7207,10 +7214,6 @@ PrefabInstance:
     - target: {fileID: 8541148022777094637, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8950616784466513857, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
-      propertyPath: perfectGuardPushback
-      value: 5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

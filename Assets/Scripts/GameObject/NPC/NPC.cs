@@ -397,7 +397,7 @@ public abstract class NPC : CharacterStats, ICombatTargetable
     // 특정 타겟을 쳐다보는 함수 (좌우 반전)
     protected void LookAtTarget(Vector3 targetPos)
     {
-        if (spriteRenderer == null) return;
+        if (!canRotate || spriteRenderer == null) return; 
 
         // 타겟이 내 왼쪽에 있으면 flipX를 true로 (기본 이미지가 오른쪽을 본다고 가정)
         spriteRenderer.flipX = targetPos.x > transform.position.x;
@@ -406,8 +406,8 @@ public abstract class NPC : CharacterStats, ICombatTargetable
     // 플레이어를 쳐다보는 함수
     protected void LookAtPlayer()
     {
-        if (!canRotate || player == null || spriteRenderer == null) return; // 플래그 체크 
-        
+        if (player == null) return; // canRotate 체크는 이제 LookAtTarget이 전담
+
         LookAtTarget(player.position);
     }
 

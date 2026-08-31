@@ -22,4 +22,19 @@ public class VFXManager : Singleton<VFXManager>
         }
         return vfx;
     }
+
+    // 지속형 재생/정지 메서드 추가
+    public GameObject PlayPersistent(string vfxName, Vector3 position, Quaternion rotation, Transform parent = null, PoolType poolType = PoolType.Global)
+    {
+        GameObject vfx = PoolManager.Instance.SpawnFromPool(vfxName, position, rotation, poolType);
+        if (vfx == null) return null;
+        vfx.transform.SetParent(parent, worldPositionStays: true);
+        vfx.GetComponent<PooledVFX>()?.CancelAutoReturn(); // ★ 자동 반납 안 되게 막음
+        return vfx;
+    }
+
+    public void StopPersistent(GameObject vfx, PoolType poolType = PoolType.Global)
+    {
+        if (vfx != null) PoolManager.Instance.ReturnToPool(vfx, poolType);
+    }
 }
