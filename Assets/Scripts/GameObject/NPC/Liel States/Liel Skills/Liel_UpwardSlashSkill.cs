@@ -72,7 +72,7 @@ public class Liel_UpwardSlashSkill : NPCSkillBase
 
         PlaySkillVFX("slash", self);
         CameraDirector.Instance?.Shake(0.15f, 0.15f);
-        var hitboxCoroutine = self.StartCoroutine(ActiveHitboxRoutine(self, hitOffset, hitSize, attackOriginPos));
+        var hitboxCoroutine = self.StartCoroutine(ActiveHitboxRoutine(self, hitOffset, hitSize, dir, attackOriginPos));
 
         yield return gate.WaitForSlideStart(); // 후딜 시작
         rb.linearDamping = slideDrag; // ★ 공격1과 같은 시점에 같은 방식으로 마찰
@@ -102,11 +102,10 @@ public class Liel_UpwardSlashSkill : NPCSkillBase
         }
     }
 
-    private IEnumerator ActiveHitboxRoutine(NPC self, Vector2 offset, Vector2 size, Vector2 attackOriginPos) //?
+    private IEnumerator ActiveHitboxRoutine(NPC self, Vector2 offset, Vector2 size, float dir, Vector2 attackOriginPos) // ★ dir 매개변수 추가
     {
         float elapsed = 0f;
         var alreadyHit = new HashSet<Collider2D>();
-        float dir = self.SpriteRenderer.flipX ? 1f : -1f;
 
         while (elapsed < hitbox.activeDuration)
         {

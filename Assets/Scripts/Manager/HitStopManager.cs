@@ -6,11 +6,22 @@ public class HitStopManager : Singleton<HitStopManager>
 {
     private Coroutine _routine;
 
-    public void Trigger(CharacterStats a, CharacterStats b, float duration, float visualIntensity = -1f)
+    [Header("느린 속도 조절")]
+    [Tooltip("히트스톱 동안 애니메이터 재생 속도. 0에 가까울수록 거의 멈춘 듯, 1에 가까울수록 정상속도")]
+    public float hitStopSlowSpeed = 0.08f;
+
+    public void Trigger(CharacterStats a, CharacterStats b, float duration, float chromaticIntensity = -1f, float lensIntensity = -1f)
     {
         ApplyToCharacter(a, duration);
         ApplyToCharacter(b, duration);
-        if (visualIntensity > 0f) HitStopVisualOverlay.Instance?.Pulse(duration * 3f, visualIntensity);
+        if (chromaticIntensity > 0f) HitStopVisualOverlay.Instance?.Pulse(duration * 3f, chromaticIntensity, lensIntensity);
+        else HitStopVisualOverlay.Instance?.Pulse(duration * 3f);
+    }
+
+    public void TriggerSingle(CharacterStats target, float duration, float chromaticIntensity = -1f, float lensIntensity = -1f)
+    {
+        ApplyToCharacter(target, duration);
+        if (chromaticIntensity > 0f) HitStopVisualOverlay.Instance?.Pulse(duration * 3f, chromaticIntensity, lensIntensity);
         else HitStopVisualOverlay.Instance?.Pulse(duration * 3f);
     }
 
@@ -25,7 +36,7 @@ public class HitStopManager : Singleton<HitStopManager>
 
     private IEnumerator NPCHitStopRoutine(NPCVisual nv, float duration)
     {
-        nv.SetAnimatorSpeed(0f);
+        nv.SetAnimatorSpeed(hitStopSlowSpeed); // ★ 0f → hitStopSlowSpeed
         yield return new WaitForSecondsRealtime(duration);
         nv.SetAnimatorSpeed(1f);
     }

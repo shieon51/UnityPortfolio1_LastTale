@@ -41,9 +41,14 @@ public class Liel_ConcentrationState : NPCState
                 liel.StartGuard(); // ★ 채널 중엔 방어 자세 — 패링/완벽방어 기회 생김
 
                 // 마나 모이는 이펙트 //?
-                _manaGatherVFX = VFXManager.Instance?.PlayPersistent("liel_mana_gather", liel.transform.position, Quaternion.identity, liel.transform);
-                var gatherComp = _manaGatherVFX?.GetComponent<ManaGatherParticles>();
-                if (gatherComp != null) gatherComp.target = liel.transform;
+                var vfxObj = liel.manaGatherVFXSlot.GetOrCreateInstance(liel.transform);
+                if (vfxObj != null)
+                {
+                    vfxObj.SetActive(true);
+                    var gatherComp = vfxObj.GetComponent<ManaGatherParticles>();
+                    if (gatherComp != null) gatherComp.target = liel.transform;
+                    gatherComp?.GetComponent<ParticleSystem>()?.Play();
+                }
 
                 visual.PlayIfChanged(NPCAnimStateNames.Concentration); // ★ 전용 모션
                 return;
@@ -70,8 +75,8 @@ public class Liel_ConcentrationState : NPCState
             _manaAccumulator -= whole;
         }
 
-        int manaPerFrame = Mathf.RoundToInt(liel.maxMana * tuning.ConcentrationRecoverRatioPerSecond * Time.deltaTime);
-        if (manaPerFrame > 0) liel.RecoverMana(manaPerFrame); // ★ 프레임마다 조금씩 — 중단돼도 이미 받은 만큼은 유지됨
+        //int manaPerFrame = Mathf.RoundToInt(liel.maxMana * tuning.ConcentrationRecoverRatioPerSecond * Time.deltaTime);
+        //if (manaPerFrame > 0) liel.RecoverMana(manaPerFrame); // ★ 프레임마다 조금씩 — 중단돼도 이미 받은 만큼은 유지됨
 
         if (_channelElapsed >= tuning.ConcentrationDuration) EndChannel();
     }
@@ -87,18 +92,17 @@ public class Liel_ConcentrationState : NPCState
         liel.OnAttackReceived -= HandleInterrupted;
         liel.LastConcentrationEndTime = Time.time;
 
-        if (_manaGatherVFX != null)
+        var vfxObj = liel.manaGatherVFXSlot.instance;
+        if (vfxObj != null && vfxObj.activeSelf)
         {
-            var gatherComp = _manaGatherVFX.GetComponent<ManaGatherParticles>();
-            gatherComp?.StopEmittingAndFinish(); // ★ 즉시 반납 대신 자연 소멸 유도
-            liel.StartCoroutine(ReturnVFXWhenFinished(gatherComp, _manaGatherVFX));
-            _manaGatherVFX = null;
+            var comp = vfxObj.GetComponent<ManaGatherParticles>();
+            comp?.StopEmittingAndFinish();
+            liel.StartCoroutine(DeactivateWhenFinished(comp, vfxObj));
         }
     }
-
-    private IEnumerator ReturnVFXWhenFinished(ManaGatherParticles gatherComp, GameObject vfx)
+    private IEnumerator DeactivateWhenFinished(ManaGatherParticles p, GameObject vfxObj)
     {
-        while (gatherComp != null && !gatherComp.IsFullyFinished) yield return null;
-        VFXManager.Instance?.StopPersistent(vfx);
+        while (p != null && !p.IsFullyFinished) yield return null;
+        if (vfxObj != null) vfxObj.SetActive(false);
     }
 }

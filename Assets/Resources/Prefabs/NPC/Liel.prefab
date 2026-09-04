@@ -103,6 +103,8 @@ MonoBehaviour:
   parryHitStopDuration: 0.45
   hitChromaticIntensity: 0.6
   parryChromaticIntensity: 1.2
+  hitLensDistortionIntensity: 0.3
+  parryLensDistortionIntensity: 0.6
   isSuperArmor: 0
   statsSummary: "Lv.1 | HP 100 | MP 50\n\uACF5\uACA9 10 | \uBC29\uC5B4 5 | \uBBFC\uCCA9
     5\n\uD53C\uACA9 \uACBD\uC9C1 0.25s | \uC2AC\uB77C\uC774\uB4DC \uB9C8\uCC30 3\n\uC288\uD37C\uC544\uBA38
@@ -129,6 +131,9 @@ MonoBehaviour:
   teleportManaCost: 20
   ultimateManaCost: 40
   isGroggy: 0
+  manaGatherVFXSlot:
+    prefab: {fileID: 7598176543790341342, guid: f1785b51aff3829439a08786c1e6516f, type: 3}
+    instance: {fileID: 0}
   approachDistance: 6
   stopDistance: 2
   walkSpeed: 1.5

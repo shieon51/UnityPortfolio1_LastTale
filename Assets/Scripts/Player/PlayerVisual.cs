@@ -194,6 +194,8 @@ public class PlayerVisual : MonoBehaviour
     // 대화/공격 잠금과는 별개로, 순수하게 '넉백 시작/종료' 전이만 감지해서 Hit 모션을 넣고 뺀다.
     private void HandleKnockbackTransition()
     {
+        if (_isParryPosePlaying) { _wasKnockedBack = _controller.IsKnockedBack; return; } // ★ 추가 — 패링 재생 중엔 절대 안 건드림
+
         bool isKnockedBack = _controller.IsKnockedBack;
 
         if (isKnockedBack && !_wasKnockedBack)
@@ -462,10 +464,10 @@ public class PlayerVisual : MonoBehaviour
         else CrossFadeAll(PlayerAnimStateNames.JumpTree, 0.1f);
     }
 
-    public void TriggerHitStop(float duration)
+    public void TriggerHitStop(float duration, float slowSpeed = 0.08f) // ★ 완전정지(0) 대신 느린 속도
     {
         if (_hitStopRoutine != null) StopCoroutine(_hitStopRoutine);
-        _hitStopRoutine = StartCoroutine(HitStopRoutine(duration));
+        _hitStopRoutine = StartCoroutine(HitStopRoutine(duration, slowSpeed));
     }
 
     // 공격이 피격 등으로 캔슬됐을 때, 걸려있던 히트스톱을 즉시 풀고 정상 배속(=현재 스탯 배속)으로 복귀
@@ -475,11 +477,11 @@ public class PlayerVisual : MonoBehaviour
         ApplyAnimatorSpeed(_statSpeedMultiplier);
     }
 
-    private IEnumerator HitStopRoutine(float duration)
+    private IEnumerator HitStopRoutine(float duration, float slowSpeed)
     {
-        ApplyAnimatorSpeed(0f);
+        ApplyAnimatorSpeed(slowSpeed); // ★ 0f → slowSpeed
         yield return new WaitForSecondsRealtime(duration);
-        ApplyAnimatorSpeed(_statSpeedMultiplier); // 무조건 1f가 아니라 '현재 스탯 배속'으로 복귀
+        ApplyAnimatorSpeed(_statSpeedMultiplier);
         _hitStopRoutine = null;
     }
 

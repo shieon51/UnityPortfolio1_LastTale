@@ -91,6 +91,7 @@ public abstract class NPC : CharacterStats, ICombatTargetable
 
     public NPCActionBase.ExecutionGate CurrentGate { get; set; } // * CurrentPlayingSkill은 VFX 조회용으로 그대로 두고, 이벤트 전달은 새 게이트로
 
+    private bool _lastLoggedFlipX; //?
 
     protected override void Awake()
     {
@@ -232,6 +233,12 @@ public abstract class NPC : CharacterStats, ICombatTargetable
 
     private void Update()
     {
+        if (spriteRenderer != null && spriteRenderer.flipX != _lastLoggedFlipX) // ★ 이 블록 추가
+        {
+            Debug.LogWarning($"[DBG Flip1] flipX → {spriteRenderer.flipX} at {Time.time:F3}, canRotate={canRotate}");
+            _lastLoggedFlipX = spriteRenderer.flipX;
+        }
+
         if (isKnockedBack || myData == null) return; // 넉백 중엔 행동 불가
         if (isTalking) return;                       // 대화 중일 때는 AI 판단(다가가기 등)을 멈춤
         if (_cutscenePlayer != null && _cutscenePlayer.IsLocked) return; // 연출 중엔 AI 정지

@@ -42,6 +42,9 @@ public class Liel_AI : NPC, IBossProfileTarget
     private float actionCooldown = 1.5f;
     private float lastActionTime = 0f;
 
+    [Header("전용 VFX (프리팹 애셋만 드래그하면 됨, 씬 배치 불필요)")]
+    public NPCVFXSlot manaGatherVFXSlot;
+
     // 일반 모드 행동 제어용 변수들
     [Header("Normal Mode AI")]
     public float approachDistance = 6f; // 다가오기 시작하는 감지 거리

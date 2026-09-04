@@ -61,6 +61,12 @@ public class CharacterStats : MonoBehaviour
     public float hitChromaticIntensity = 0.6f;
     public float parryChromaticIntensity = 1.2f; // ★ 패링은 훨씬 강하게(URP에서 1 넘으면 클램프될 수 있어 테스트해봐)
 
+    [Header("렌즈 왜곡 강도")]
+    [Tooltip("일반 피격 시 렌즈 왜곡 강도. 0에 가까울수록 약함, 음수 쪽으로 갈수록 화면이 오목하게 출렁임")]
+    public float hitLensDistortionIntensity = 0.3f;
+    [Tooltip("패링 성공 시 렌즈 왜곡 강도 — 일반 피격보다 크게 잡는 걸 추천")]
+    public float parryLensDistortionIntensity = 0.6f;
+
     // 최근에 나를 공격한 대상 (W 스킬의 "최근 피격 대상 우선" 타겟팅에 사용)
     public CharacterStats LastAttacker { get; protected set; }
 
@@ -153,7 +159,7 @@ public class CharacterStats : MonoBehaviour
             ScreenFlashOverlay.Instance?.Flash(new Color(1f, 0.9f, 0.3f), 0.15f);
             float groggyDuration = CombatFormulaService.Instance.CalculateGroggyDuration(attacker, this);
             attacker.ApplyGroggy(groggyDuration);
-            HitStopManager.Instance?.Trigger(attacker, this, parryHitStopDuration, parryChromaticIntensity);
+            HitStopManager.Instance?.TriggerSingle(attacker, parryHitStopDuration, parryChromaticIntensity, parryLensDistortionIntensity); // ★ Trigger(a,b,...) → TriggerSingle(공격자만)
             CameraDirector.Instance?.Shake(0.15f, 0.2f); // ★ 색수차랑 같이 흔들려서 더 역동적으로
             return false;  // 패링 성공 — 넉백 포함 완전 무효화
         }
@@ -188,7 +194,7 @@ public class CharacterStats : MonoBehaviour
         }
 
         if (attacker is NPC || this is NPC) CameraDirector.Instance?.Shake(0.1f, 0.1f);
-        if (knockbackDirection.HasValue && spriteRenderer != null) // ★ 추가
+        if (knockbackDirection.HasValue && spriteRenderer != null && !isSuperArmor) // ★ 슈퍼아머 중엔 방향 안 바뀜
         {
             float hitFromDir = -Mathf.Sign(knockbackDirection.Value.x); // 넉백 반대쪽 = 맞은(공격 온) 방향
             if (hitFromDir != 0f) spriteRenderer.flipX = hitFromDir > 0f;
@@ -196,7 +202,7 @@ public class CharacterStats : MonoBehaviour
         GetComponentInChildren<HitFlashController>()?.Flash();
 
         //ScreenFlashOverlay.Instance?.Flash(new Color(1f, 0.3f, 0.3f, 0.3f), 0.08f); // ★ 은은한 빨간 플래시
-        HitStopManager.Instance?.Trigger(attacker, this, hitStopDuration, hitChromaticIntensity); // 일반 피격 분기
+        HitStopManager.Instance?.Trigger(attacker, this, hitStopDuration, hitChromaticIntensity, hitLensDistortionIntensity);
         currentHealth = Mathf.Max(0, currentHealth - finalDamage);
         OnHealthChanged?.Invoke();
         OnDamageTaken?.Invoke(finalDamage, attacker);
