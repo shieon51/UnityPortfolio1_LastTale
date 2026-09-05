@@ -1,20 +1,27 @@
-// Assets/Scripts/Editor/GameStateOverviewWindow.cs (½Å±Ô)
+ï»¿// Assets/Scripts/Editor/GameStateOverviewWindow.cs (ì‹ ê·œ)
 using UnityEngine;
 using UnityEditor;
 using System.Linq;
+using System.Collections.Generic;
 
 public class GameStateOverviewWindow : EditorWindow
 {
     [MenuItem("LastMarchan/Game State Overview")]
-    public static void Open() => GetWindow<GameStateOverviewWindow>("ÀüÃ¼ »óÅÂ °ü¸®");
+    public static void Open() => GetWindow<GameStateOverviewWindow>("ì „ì²´ ìƒíƒœ ê´€ë¦¬");
 
     private Vector2 _scroll;
+
+    private Dictionary<string, bool> _categoryFoldouts = new();
+
+    // DrawMemorySection ê´€ë ¨
+    private int _groupMode = 0;
+    private readonly string[] _groupModeLabels = { "ì¹´í…Œê³ ë¦¬ë³„", "ë‚ ì§œë³„" };
 
     private void OnGUI()
     {
         if (!Application.isPlaying)
         {
-            EditorGUILayout.HelpBox("Play ¸ğµå¿¡¼­¸¸ ½Ç½Ã°£ »óÅÂ¸¦ º¼ ¼ö ÀÖ½À´Ï´Ù.", MessageType.Info);
+            EditorGUILayout.HelpBox("Play ëª¨ë“œì—ì„œë§Œ ì‹¤ì‹œê°„ ìƒíƒœë¥¼ ë³¼ ìˆ˜ ìˆìŠµë‹ˆë‹¤.", MessageType.Info);
             return;
         }
 
@@ -23,25 +30,27 @@ public class GameStateOverviewWindow : EditorWindow
         EditorGUILayout.Space(10);
         DrawNPCSection();
         EditorGUILayout.EndScrollView();
+        DrawDebugToolsSection(); //?
+        DrawMemorySection(); //?
 
-        Repaint(); // ½Ç½Ã°£ °»½Å
+        Repaint(); // ì‹¤ì‹œê°„ ê°±ì‹ 
     }
 
     private void DrawPlayerSection()
     {
-        EditorGUILayout.LabelField("ÇÃ·¹ÀÌ¾î", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("í”Œë ˆì´ì–´", EditorStyles.boldLabel);
         var c = PlayerManager.Instance?.CurrentCharacter;
-        if (c == null) { EditorGUILayout.LabelField("(¾øÀ½)"); return; }
+        if (c == null) { EditorGUILayout.LabelField("(ì—†ìŒ)"); return; }
 
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-        EditorGUILayout.LabelField($"·¹º§: {c.level}   HP: {c.currentHealth}/{c.maxHealth}   MP: {c.currentMana}/{c.maxMana}");
+        EditorGUILayout.LabelField($"ë ˆë²¨: {c.level}   HP: {c.currentHealth}/{c.maxHealth}   MP: {c.currentMana}/{c.maxMana}");
         if (c is SoraStats sora)
         {
             EditorGUI.BeginChangeCheck();
-            int newLoop = EditorGUILayout.IntField("È¸±Í È½¼ö", sora.loopCount);
+            int newLoop = EditorGUILayout.IntField("íšŒê·€ íšŸìˆ˜", sora.loopCount);
             if (EditorGUI.EndChangeCheck()) sora.loopCount = newLoop;
-            EditorGUILayout.LabelField($"ÇÇ·Îµµ: {sora.currentFatigue}/{sora.maxFatigue}   Á¤½Å·Â: {sora.currentMental}/{sora.maxMental}   ¿äÁ¤È­: {sora.fairyStage}´Ü°è");
-            EditorGUILayout.LabelField($"½Ã°£°áÁ¤Ã¼: {sora.timeCrystals}°³");
+            EditorGUILayout.LabelField($"í”¼ë¡œë„: {sora.currentFatigue}/{sora.maxFatigue}   ì •ì‹ ë ¥: {sora.currentMental}/{sora.maxMental}   ìš”ì •í™”: {sora.fairyStage}ë‹¨ê³„");
+            EditorGUILayout.LabelField($"ì‹œê°„ê²°ì •ì²´: {sora.timeCrystals}ê°œ");
         }
         EditorGUILayout.EndVertical();
     }
@@ -58,8 +67,8 @@ public class GameStateOverviewWindow : EditorWindow
             EditorGUILayout.LabelField(kvp.Key, EditorStyles.boldLabel);
 
             EditorGUI.BeginChangeCheck();
-            int newU = EditorGUILayout.IntField("ÀÌÇØµµ", data.understanding);
-            int newA = EditorGUILayout.IntField("È£°¨µµ", data.hiddenAffection);
+            int newU = EditorGUILayout.IntField("ì´í•´ë„", data.understanding);
+            int newA = EditorGUILayout.IntField("í˜¸ê°ë„", data.hiddenAffection);
             if (EditorGUI.EndChangeCheck())
             {
                 data.understanding = newU;
@@ -67,13 +76,66 @@ public class GameStateOverviewWindow : EditorWindow
                 NPCManager.Instance.SaveNPCData(data);
             }
 
-            EditorGUILayout.LabelField($"¸ğµå: {data.currentMode}   °ü°è µî±Ş: {data.GetRelationshipTier()}");
+            EditorGUILayout.LabelField($"ëª¨ë“œ: {data.currentMode}   ê´€ê³„ ë“±ê¸‰: {data.GetRelationshipTier()}");
 
             var live = Object.FindObjectsOfType<NPC>().FirstOrDefault(n => n.npcName == kvp.Key);
             if (live != null)
                 EditorGUILayout.LabelField($"HP: {live.currentHealth}/{live.maxHealth}   MP: {live.currentMana}/{live.maxMana}");
 
             EditorGUILayout.EndVertical();
+        }
+    }
+
+    private void DrawDebugToolsSection()
+    {
+        EditorGUILayout.LabelField("ë””ë²„ê·¸ ë„êµ¬", EditorStyles.boldLabel);
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+        if (GUILayout.Button("ë‹¤ìŒ íšŒì°¨ë¡œ (ê¸°ì–µ ìœ ì§€)"))
+            DebugLoopTools.AdvanceToNextLoop();
+
+        GUI.backgroundColor = new Color(1f, 0.6f, 0.6f);
+        if (GUILayout.Button("ì™„ì „ ë¦¬ì…‹"))
+        {
+            if (EditorUtility.DisplayDialog("ì™„ì „ ë¦¬ì…‹", "ëª¨ë“  ì§„í–‰ ìƒí™©ì´ ì´ˆê¸°í™”ë©ë‹ˆë‹¤. ê³„ì†í• ê¹Œìš”?", "ë„¤", "ì·¨ì†Œ"))
+                DebugLoopTools.FullReset();
+        }
+        GUI.backgroundColor = Color.white;
+
+        EditorGUILayout.EndVertical();
+    }
+
+    private void DrawMemorySection()
+    {
+        EditorGUILayout.LabelField("ê¸°ì–µ(ì •ë³´) í˜„í™©", EditorStyles.boldLabel);
+        if (MemoryManager.Instance == null) return;
+
+        _groupMode = GUILayout.Toolbar(_groupMode, _groupModeLabels);
+
+        var acquired = new HashSet<string>(MemoryManager.Instance.GetAllAcquired());
+        var all = MemoryManager.Instance.GetAllRegistered();
+        var grouped = _groupMode == 0
+            ? all.GroupBy(d => string.IsNullOrEmpty(d.category) ? "(ë¯¸ë¶„ë¥˜)" : d.category)
+            : all.GroupBy(d => d.day > 0 ? $"Day {d.day}" : "(ë‚ ì§œ ë¬´ê´€)");
+
+        foreach (var group in grouped.OrderBy(g => g.Key))
+        {
+            if (!_categoryFoldouts.ContainsKey(group.Key)) _categoryFoldouts[group.Key] = false;
+            int haveCount = group.Count(d => acquired.Contains(d.flagId));
+            _categoryFoldouts[group.Key] = EditorGUILayout.Foldout(_categoryFoldouts[group.Key], $"{group.Key} ({haveCount}/{group.Count()})", true);
+
+            if (_categoryFoldouts[group.Key])
+            {
+                EditorGUI.indentLevel++;
+                foreach (var data in group.OrderBy(d => d.flagId))
+                {
+                    bool has = acquired.Contains(data.flagId);
+                    GUI.color = has ? Color.green : Color.gray;
+                    EditorGUILayout.LabelField($"{(has ? "âœ”" : "âœ˜")} {data.displayName} ({data.flagId})");
+                    GUI.color = Color.white;
+                }
+                EditorGUI.indentLevel--;
+            }
         }
     }
 }

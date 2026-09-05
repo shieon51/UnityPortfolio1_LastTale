@@ -30,6 +30,9 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     public event Action OnFormTransformStarted;
     public event Action<int> OnFormStageChanged;
 
+    // 완전 리셋용 기본값 캐싱 
+    private int _baseLevel, _baseMaxHealth, _baseMaxMana;
+
     [Header("Time Loop")]
     public int loopCount = 0; // 회귀 횟수 (나중에 실제 회귀 시스템과 연동)
 
@@ -66,6 +69,11 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         currentElement = ElementType.Spacetime; // 소라 전용 속성
         currentMental = maxMental;
         _motor = GetComponent<IPlayerMotor>();
+        _dodge = GetComponent<PlayerDodge>(); // ★ 추가 — 이게 빠져서 회피 무적이 전혀 작동 안 하고 있었음 // *
+
+        _baseLevel = level;
+        _baseMaxHealth = maxHealth;
+        _baseMaxMana = maxMana;
     }
 
     // 플레이어가 소라를 조종하기 시작할 때 호출됨 (빙의)
@@ -215,4 +223,16 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         Debug.Log("소라 사망. 타임루프(회귀) 발동!");
     }
 
+    public void ResetProgression() // 디버그 하드리셋 전용
+    {
+        level = _baseLevel;
+        highestLevelReached = _baseLevel;
+        experience = 0;
+        experienceToNextLevel = 100;
+        maxHealth = _baseMaxHealth;
+        maxMana = _baseMaxMana;
+        currentHealth = maxHealth;
+        currentMana = maxMana;
+        CallProgressionChanged();
+    }
 }

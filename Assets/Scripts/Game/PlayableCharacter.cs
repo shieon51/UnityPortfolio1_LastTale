@@ -16,10 +16,8 @@ public abstract class PlayableCharacter : CharacterStats
     public event Action OnProgressionChanged;
     public event Action OnSpecialStatChanged; // 피로도, 정신력 등 캐릭터 고유 스탯 UI 갱신용
 
-    //// 2. 이벤트 정의 (기존 코드 유지 및 확장)
-    //public event Action OnStatsChanged; // HP, MP, 경험치, 정신력 등 일반 UI 업데이트 -> UIManager에서 체력바 업데이트 // ?
-    //public event Action<int> OnFatigueChanged; // 피로도 변화 이벤트 -> PlayerController에서 확인(이동속도 감소)
-
+    // 영혼 레벨 (경험한 최고 레벨) // ?
+    public int highestLevelReached { get; protected set; } = 1;
 
     // 범용 특수 스탯(피로도, 신성력 등) 프로퍼티 정의
     // 자식 클래스(SoraStats, LielStats)가 무조건 이 값을 어떻게 줄지 정의해야 함
@@ -68,6 +66,8 @@ public abstract class PlayableCharacter : CharacterStats
     {
         experience -= experienceToNextLevel;
         level++;
+        highestLevelReached = Mathf.Max(highestLevelReached, level); // 영혼 레벨 갱신(최고 도달 레벨)
+
         experienceToNextLevel += 50; //다음 레벨까지 경험치 총량 증가
 
         maxHealth += 10; //max 체력 증가 (임시)
@@ -110,4 +110,16 @@ public abstract class PlayableCharacter : CharacterStats
         return applied;
     }
 
+    // 스텟 리셋
+    public void ResetProgression(int baseLevel, int baseMaxHealth, int baseMaxMana)
+    {
+        level = baseLevel;
+        experience = 0;
+        experienceToNextLevel = 100;
+        maxHealth = baseMaxHealth;
+        maxMana = baseMaxMana;
+        currentHealth = maxHealth;
+        currentMana = maxMana;
+        CallProgressionChanged();
+    }
 }

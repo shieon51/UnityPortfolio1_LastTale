@@ -15,6 +15,11 @@ public class SceneLoader : Singleton<SceneLoader>
     public GameObject player; // 인스펙터에서 할당
     public GameObject portalPrefab; // 인스펙터에서 할당
 
+    [Header("Ground Snap")]
+    public LayerMask groundSnapLayer; // NPCManager와 같은 레이어로 연결
+
+    public GameStartConfig startConfig; // ★ 인스펙터에 연결
+
     private void Awake()
     {
         //LoadSceneData();   // 씬 id: 씬 이름 대응 정보 불러오기
@@ -22,8 +27,7 @@ public class SceneLoader : Singleton<SceneLoader>
 
     private void Start()
     {
-        LoadScene(1, player.transform.position); // ++ 임시 코드 (BiginnerTown Scene)
-
+        LoadScene(startConfig.startSceneID, startConfig.startPosition); // ★ 하드코딩된 1/player.position 대신 (비기너 타운)
     }
 
     public string GetSceneName(int sceneID)
@@ -85,7 +89,7 @@ public class SceneLoader : Singleton<SceneLoader>
         // Player 위치 이동
         if (player != null)
         {
-            player.transform.position = spawnPos;
+            player.transform.position = ComputeSnappedPosition(spawnPos); // ★ 스냅 적용
             // 물리 충돌로 튕겨나가지 않게 잠시 물리 끄거나 위치 강제 동기화
             Physics2D.SyncTransforms();
         }
@@ -97,4 +101,17 @@ public class SceneLoader : Singleton<SceneLoader>
         }
     }
 
+    // 땅에 스냅
+    private Vector3 ComputeSnappedPosition(Vector2 desiredPos, float startOffset = 1f, float rayDistance = 3f)
+    {
+        Vector2 rayStart = desiredPos + Vector2.up * startOffset;
+        RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, rayDistance, groundSnapLayer);
+        if (hit.collider == null) return new Vector3(desiredPos.x, desiredPos.y, 0);
+
+        Collider2D col = player.GetComponentInChildren<Collider2D>();
+        if (col == null) return new Vector3(desiredPos.x, desiredPos.y, 0);
+
+        float pivotToBottom = player.transform.position.y - col.bounds.min.y;
+        return new Vector3(desiredPos.x, hit.point.y + pivotToBottom, 0);
+    }
 }

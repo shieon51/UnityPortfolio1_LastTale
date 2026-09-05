@@ -37,4 +37,23 @@ public class TimeManager : Singleton<TimeManager>
 
         //OnDayChanged?.Invoke(); //** 아직 안 쓰임
     }
+
+    public void ResetToDay1()
+    {
+        timeCoins = 24;
+        currentHour = 0;
+        currentDay = 1;
+        OnTimeUpdated?.Invoke(timeCoins, currentDay);
+        EventManager.Instance?.UpdateEventTriggers();
+    }
+
+    // 앵커 복귀 시 임의 시각으로 세팅하기 위함
+    public void SetTime(int day, int hour)
+    {
+        currentDay = day;
+        currentHour = hour;
+        timeCoins = 24 - hour;
+        OnTimeUpdated?.Invoke(timeCoins, currentDay);
+        EventManager.Instance?.UpdateEventTriggers();
+    }
 }

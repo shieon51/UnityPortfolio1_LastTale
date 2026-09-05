@@ -100,6 +100,9 @@ public class CharacterStats : MonoBehaviour
     // 방향 관련 (방어 방향 판정)
     protected SpriteRenderer spriteRenderer;
 
+    // 넉백 시 바라보는 방향 관련
+    public event Action<bool> OnFacingChangedByHit;
+
     public void StartGuard() { isGuarding = true; _guardStartTime = Time.time; }
     public void StopGuard() => isGuarding = false;
     private bool IsInParryWindow => isGuarding && (Time.time - _guardStartTime) <= parryWindowDuration;
@@ -194,10 +197,10 @@ public class CharacterStats : MonoBehaviour
         }
 
         if (attacker is NPC || this is NPC) CameraDirector.Instance?.Shake(0.1f, 0.1f);
-        if (knockbackDirection.HasValue && spriteRenderer != null && !isSuperArmor) // ★ 슈퍼아머 중엔 방향 안 바뀜
+        if (knockbackDirection.HasValue && spriteRenderer != null && !isSuperArmor)
         {
-            float hitFromDir = -Mathf.Sign(knockbackDirection.Value.x); // 넉백 반대쪽 = 맞은(공격 온) 방향
-            if (hitFromDir != 0f) spriteRenderer.flipX = hitFromDir > 0f;
+            float hitFromDir = -Mathf.Sign(knockbackDirection.Value.x);
+            if (hitFromDir != 0f) OnFacingChangedByHit?.Invoke(hitFromDir > 0f); // ★ 직접 대입 대신 이벤트만
         }
         GetComponentInChildren<HitFlashController>()?.Flash();
 

@@ -19,9 +19,9 @@
 ->DONE
 
 === Liel_Day2_001_BattleWin ===
-{Liel_friendship >= 5: 제법이군요. 생각보다 재능이 있으신 것 같습니다.}
-{Liel_friendship < 5: 흠. 제법이군요.}
-~ Liel_friendship += 1
+{get_affection("Liel") >= 5: 제법이군요. 생각보다 재능이 있으신 것 같습니다.}
+{get_affection("Liel") < 5: 흠. 제법이군요.}
+~ add_affection("Liel", 1)
 -> DONE
 
 === Liel_Day2_001_BattleLose ===

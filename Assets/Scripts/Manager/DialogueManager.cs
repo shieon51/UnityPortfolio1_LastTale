@@ -34,6 +34,7 @@ public class DialogueManager : Singleton<DialogueManager>
     {
         //CloseDialog();
         story = new Story(inkJSON.text);
+        BindMemoryFunctions(); // ★ 추가
     }
 
     private void Update()
@@ -43,6 +44,37 @@ public class DialogueManager : Singleton<DialogueManager>
         {
             DisplayNextLine();
         }
+    }
+
+    private void BindMemoryFunctions()
+    {
+        story.BindExternalFunction("has_memory", (string flagId) => MemoryManager.Instance.HasMemory(flagId));
+        story.BindExternalFunction("acquire_memory", (string flagId) =>
+        {
+            MemoryManager.Instance.AcquireMemory(flagId);
+            return 0;
+        }, lookaheadSafe: false);
+        story.BindExternalFunction("erase_memory", (string flagId) =>
+        {
+            MemoryManager.Instance.EraseMemory(flagId);
+            return 0;
+        }, lookaheadSafe: false);
+
+        story.BindExternalFunction("get_counter", (string key) => MemoryManager.Instance.GetCounter(key));
+        story.BindExternalFunction("increment_counter", (string key) =>
+        {
+            MemoryManager.Instance.IncrementCounter(key);
+            return 0;
+        }, lookaheadSafe: false);
+
+        story.BindExternalFunction("get_affection", (string npcName) => NPCManager.Instance.GetNPCData(npcName).hiddenAffection); // ★ 신규
+        story.BindExternalFunction("add_affection", (string npcName, int amount) => // ★ 신규
+        {
+            var data = NPCManager.Instance.GetNPCData(npcName);
+            data.hiddenAffection += amount;
+            NPCManager.Instance.SaveNPCData(data);
+            return 0;
+        }, lookaheadSafe: false);
     }
 
     public void StartStory(EventData eventData)
@@ -108,8 +140,17 @@ public class DialogueManager : Singleton<DialogueManager>
             //    }
             //}
 
-            // 선택지가 있는지 확인 후 처리
-            if (story.currentChoices.Count > 0)
+            bool hasChoices = story.currentChoices.Count > 0;
+
+            if (string.IsNullOrWhiteSpace(text) && !hasChoices) // ★ 추가 — 표시할 게 없는 스텝은 자동으로 건너뜀
+            {
+                isProcessingLine = false;
+                DisplayNextLine();
+                return;
+            }
+
+            UIManager.Instance.UpdateDialogueText(text);
+            if (hasChoices)
             {
                 UIManager.Instance.ShowChoices(story.currentChoices);
                 isChoices = true;
@@ -130,11 +171,11 @@ public class DialogueManager : Singleton<DialogueManager>
 
         // 2. 대화가 끝나는 순간 Ink 속의 호감도 변수를 뽑아와 NPCManager에 전달
         // (잉크에 선언된 변수 이름과 동일해야 함)
-        int lielFriendship = (int)story.variablesState["Liel_friendship"];
+        //int lielFriendship = (int)story.variablesState["Liel_friendship"];
 
-        NPCData lielData = NPCManager.Instance.GetNPCData("Liel");
-        lielData.hiddenAffection = lielFriendship; // 덮어씌우기
-        NPCManager.Instance.SaveNPCData(lielData); // 영구 저장
+        //NPCData lielData = NPCManager.Instance.GetNPCData("Liel");
+        //lielData.hiddenAffection = lielFriendship; // 덮어씌우기
+        //NPCManager.Instance.SaveNPCData(lielData); // 영구 저장
 
         OnDialogueEnd?.Invoke(curEventData); // 다이얼로그가 끝나면 실행하기
 
@@ -200,4 +241,9 @@ public class DialogueManager : Singleton<DialogueManager>
         }
     }
 
+    public void ResetStoryState() // ink 자체 지역변수(만남 카운터 등)를 완전히 새로 시작
+    {
+        story = new Story(inkJSON.text);
+        BindMemoryFunctions();
+    }
 }

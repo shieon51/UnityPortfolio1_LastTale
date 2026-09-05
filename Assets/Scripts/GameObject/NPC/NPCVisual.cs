@@ -48,6 +48,7 @@ public class NPCVisual : MonoBehaviour
         {
             _stats.OnKnockbackApplied += HandleHitVisual;
             _stats.OnParrySuccess += HandleParrySuccessVisual;
+            _stats.OnFacingChangedByHit += HandleFacingChangedByHit;
         }
     }
 
@@ -58,6 +59,7 @@ public class NPCVisual : MonoBehaviour
         {
             _stats.OnKnockbackApplied -= HandleHitVisual;
             _stats.OnParrySuccess -= HandleParrySuccessVisual;
+            _stats.OnFacingChangedByHit -= HandleFacingChangedByHit;
         }
     }
 
@@ -75,6 +77,8 @@ public class NPCVisual : MonoBehaviour
         _reactionPoseEndTime = Time.time + parryReactionDuration;
         PlayImmediate(NPCAnimStateNames.Parrying);
     }
+
+    private void HandleFacingChangedByHit(bool faceRight) => SetFacingDirection(faceRight);
 
     public void SetEyesVisible(bool visible) => _eyeBlink?.SetVisible(visible);
 
@@ -109,7 +113,7 @@ public class NPCVisual : MonoBehaviour
 
     public void SetFacingDirection(bool flipX)
     {
-        Debug.LogWarning($"[DBG Flip2] SetFacingDirection({flipX}) 호출됨, 호출자={new System.Diagnostics.StackTrace().GetFrame(1)?.GetMethod()?.Name}"); // ★ 이 줄 추가
+        //Debug.LogWarning($"[DBG Flip2] SetFacingDirection({flipX}) 호출됨, 호출자={new System.Diagnostics.StackTrace().GetFrame(1)?.GetMethod()?.Name}"); // ★ 이 줄 추가
 
         foreach (var sr in _allSpriteRenderers)
             if (sr != null) sr.flipX = flipX;

@@ -1,10 +1,11 @@
+EXTERNAL has_memory(flagId)
+EXTERNAL acquire_memory(flagId)
+EXTERNAL erase_memory(flagId)
+EXTERNAL get_counter(key)
+EXTERNAL increment_counter(key)
+EXTERNAL get_affection(npcName)
+EXTERNAL add_affection(npcName, amount)
 
 VAR player_name = "소라"
 
-
-VAR Liel_Day1_001_meet = 0
-VAR Liel_Day1_002_meet = 0
-VAR Liel_Day1_003_meet = 0
-
-VAR Liel_friendship = 0
 

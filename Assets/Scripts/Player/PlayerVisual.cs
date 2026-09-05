@@ -85,6 +85,7 @@ public class PlayerVisual : MonoBehaviour
             _stats.OnGroggyEnded += HandleGroggyEnded;
             _stats.OnParrySuccess += HandleParrySuccess;
             _stats.OnDamageTaken += HandleVignetteFlash;
+            _stats.OnFacingChangedByHit += HandleFacingChangedByHit;
         }
     }
 
@@ -109,6 +110,7 @@ public class PlayerVisual : MonoBehaviour
             _stats.OnGroggyStarted -= HandleGroggyStarted;
             _stats.OnGroggyEnded -= HandleGroggyEnded;
             _stats.OnParrySuccess -= HandleParrySuccess;
+            _stats.OnFacingChangedByHit -= HandleFacingChangedByHit;
         }
     }
 
@@ -275,6 +277,8 @@ public class PlayerVisual : MonoBehaviour
         _parryRoutine = null;
     }
 
+    // 넉백 시 맞은 방향 바라보기
+    private void HandleFacingChangedByHit(bool faceRight) => SetFacingDirection(faceRight); // 이미 있는 다중 파츠 반전 메서드 재사용
 
     // 안전장치: 공중 + 비잠금 상태인데 화면상 상태가 Jump/Fall 계열이 아니면 강제로 바로잡는다.
     // (이벤트 유실 등 어떤 경로로 상태가 꼬이든 최종적으로 항상 여기서 걸러진다)

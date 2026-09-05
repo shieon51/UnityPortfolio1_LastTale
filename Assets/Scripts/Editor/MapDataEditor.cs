@@ -32,6 +32,9 @@ public class MapDataEditor : EditorWindow
     private Vector2 scrollPos;
     private bool showHelp = false;
 
+    // 플레이어 게임 시작 위치
+    private GameStartConfig startConfig;
+
     [MenuItem("Tools/Map Data Editor")]
     public static void ShowWindow()
     {
@@ -47,6 +50,8 @@ public class MapDataEditor : EditorWindow
         EditorSceneManager.sceneOpened += OnSceneOpened;
 
         DetectCurrentSceneID();
+
+        startConfig = AssetDatabase.LoadAssetAtPath<GameStartConfig>("Assets/Datas/GameStartConfig.asset");
     }
 
     private void OnDisable()
@@ -174,6 +179,21 @@ public class MapDataEditor : EditorWindow
                 " - 필터 적용 중에도 'Load CSV'를 누르면 모든 데이터가 로드됩니다.\n" +
                 " - 로드 시 중복 생성을 막기 위해 숨겨진 마커까지 모두 삭제 후 로드합니다.";
             EditorGUILayout.TextArea(helpText, EditorStyles.helpBox);
+        }
+
+        GUILayout.Space(10);
+        GUILayout.Label("게임 시작 위치", EditorStyles.boldLabel);
+        if (startConfig == null) { EditorGUILayout.HelpBox("Assets/Datas/GameStartConfig.asset이 없음", MessageType.Warning); return; }
+        EditorGUILayout.LabelField($"현재: Scene {startConfig.startSceneID}, {startConfig.startPosition}");
+        if (GUILayout.Button("현재 씬 뷰 중심을 시작 위치로 저장"))
+        {
+            int realID = GetSceneIDByName(EditorSceneManager.GetActiveScene().name);
+            SceneView view = SceneView.lastActiveSceneView;
+            Vector2 pos = view != null ? (Vector2)view.pivot : Vector2.zero;
+            startConfig.startSceneID = realID;
+            startConfig.startPosition = pos;
+            EditorUtility.SetDirty(startConfig);
+            AssetDatabase.SaveAssets();
         }
     }
 
@@ -503,4 +523,36 @@ public class MapDataEditor : EditorWindow
     private void DetectCurrentSceneID() { int id = GetSceneIDByName(EditorSceneManager.GetActiveScene().name); if (id != -1) targetSceneID = id; }
 
     class ScheduleItem { public string Name; public int Day; public int Start; public int End; public int SceneID; public Vector2 Pos; }
+
+    // ------ 시작 위치 지정 관련
+    private void DrawStartPositionUI()
+    {
+        if (startConfig == null) startConfig = AssetDatabase.LoadAssetAtPath<GameStartConfig>("Assets/Datas/GameStartConfig.asset");
+        GUILayout.Space(10);
+        GUILayout.Label("게임 시작 위치", EditorStyles.boldLabel);
+        if (startConfig == null) { EditorGUILayout.HelpBox("Assets/Datas/GameStartConfig.asset이 없음", MessageType.Warning); return; }
+
+        EditorGUILayout.LabelField($"현재: Scene {startConfig.startSceneID}, {startConfig.startPosition}");
+
+        var marker = FindObjectOfType<StartPositionMarker>();
+        if (marker == null)
+        {
+            if (GUILayout.Button("씬에 시작 위치 마커 배치"))
+            {
+                var go = new GameObject("StartPositionMarker");
+                go.transform.position = new Vector3(startConfig.startPosition.x, startConfig.startPosition.y, 0);
+                go.AddComponent<StartPositionMarker>();
+                Selection.activeGameObject = go;
+            }
+        }
+        else if (GUILayout.Button("마커 위치를 시작 위치로 저장"))
+        {
+            startConfig.startSceneID = GetSceneIDByName(EditorSceneManager.GetActiveScene().name);
+            startConfig.startPosition = marker.transform.position;
+            EditorUtility.SetDirty(startConfig);
+            AssetDatabase.SaveAssets();
+        }
+    }
+
+
 }
