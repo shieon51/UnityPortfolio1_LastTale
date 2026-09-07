@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 900cf32a947245048bcdf5db155f13d2, type: 3}
   m_Name: GameStartConfig
   m_EditorClassIdentifier: Assembly-CSharp::GameStartConfig
-  startSceneID: 2
-  startPosition: {x: 1.7179302, y: 0.9971595}
+  startSceneID: 1
+  startPosition: {x: 0.11169305, y: 0.18190806}

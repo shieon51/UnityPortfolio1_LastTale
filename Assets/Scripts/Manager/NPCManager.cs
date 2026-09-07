@@ -295,4 +295,12 @@ public class NPCManager : Singleton<NPCManager>
         };
         DialogueManager.Instance.StartStory(resultEvent);
     }
+
+    // 이해도 계산
+    public void ResetAffectionForNewLoop()
+    {
+        foreach (var data in npcDataDict.Values)
+            if (!data.rememberAcrossLoops) data.hiddenAffection = 0;
+        // 이해도는 이제 계산값이라 손 댈 필요 없음
+    }
 }

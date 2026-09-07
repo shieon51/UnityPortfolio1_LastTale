@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class MemoryManager : Singleton<MemoryManager>
 {
@@ -71,6 +72,10 @@ public class MemoryManager : Singleton<MemoryManager>
 
     public MemoryFragmentData GetData(string flagId)
         => _registry.TryGetValue(flagId, out var d) ? d : null;
+
+    public int GetUnderstandingScore(string npcCategory)
+    => GetAllRegistered().Count(d => d.category == npcCategory && HasMemory(d.flagId));
+
 
     // 6번(시간 고정/회귀) 시스템 만들 때 이 두 개를 그대로 씀
     public IEnumerable<string> GetAllAcquired() => _acquiredFlags;

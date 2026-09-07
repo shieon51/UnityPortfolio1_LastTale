@@ -534,6 +534,25 @@ public class MapDataEditor : EditorWindow
 
         EditorGUILayout.LabelField($"현재: Scene {startConfig.startSceneID}, {startConfig.startPosition}");
 
+        if (Application.isPlaying)
+        {
+            if (GUILayout.Button("[Play 중] 현재 플레이어 위치를 시작 위치로 저장"))
+            {
+                var player = PlayerManager.Instance?.CurrentCharacter;
+                if (player != null)
+                {
+                    startConfig.startSceneID = SceneLoader.Instance.CurrentSceneID;
+                    startConfig.startPosition = player.transform.position;
+                    EditorUtility.SetDirty(startConfig);
+                    AssetDatabase.SaveAssets();
+                }
+            }
+        }
+        else
+        {
+            EditorGUILayout.HelpBox("Play 모드로 실행해서 원하는 위치로 걸어간 뒤 저장하는 걸 추천해.", MessageType.Info);
+        }
+
         var marker = FindObjectOfType<StartPositionMarker>();
         if (marker == null)
         {
@@ -547,10 +566,16 @@ public class MapDataEditor : EditorWindow
         }
         else if (GUILayout.Button("마커 위치를 시작 위치로 저장"))
         {
-            startConfig.startSceneID = GetSceneIDByName(EditorSceneManager.GetActiveScene().name);
-            startConfig.startPosition = marker.transform.position;
-            EditorUtility.SetDirty(startConfig);
-            AssetDatabase.SaveAssets();
+            int realID = GetSceneIDByName(EditorSceneManager.GetActiveScene().name);
+            if (realID == -1)
+                EditorUtility.DisplayDialog("경고", "지금 열려있는 씬이 SceneTable.csv에 등록된 맵이 아닙니다. 실제 맵 씬을 열어서 마커를 배치해주세요.", "확인");
+            else
+            {
+                startConfig.startSceneID = realID;
+                startConfig.startPosition = marker.transform.position;
+                EditorUtility.SetDirty(startConfig);
+                AssetDatabase.SaveAssets();
+            }
         }
     }
 

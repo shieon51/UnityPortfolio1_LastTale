@@ -75,7 +75,7 @@
     {get_counter("Liel_Day1_003_meet") == 1: 밤산책하기 좋은 시간이네요.}
     ~ add_affection("Liel", 1)
 }
-{get_counter("Liel_Day1_001_meet") >= 1 and get_counter("Liel_Day1_001_meet") < 1: 
+{get_counter("Liel_Day1_001_meet") >= 1 and get_counter("Liel_Day1_002_meet") < 1: 
     {get_counter("Liel_Day1_003_meet") == 0: 좋은 저녁입니다. 또 뵙네요.}
     {get_counter("Liel_Day1_003_meet") == 1: 전 아까 저녁먹기 전에 산책을 했습니다. 날씨가 좋아서요.}
     ~ add_affection("Liel", 1)

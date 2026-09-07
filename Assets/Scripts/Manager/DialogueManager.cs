@@ -95,54 +95,19 @@ public class DialogueManager : Singleton<DialogueManager>
         if (story.canContinue) 
         {
             string text = story.Continue();
-            print(text);
-            UIManager.Instance.UpdateDialogueText(text);
+            ParseTags();
 
-            // 태그 파싱: #battle:Liel 이 있으면 예약
-            foreach (string tag in story.currentTags)
+            // ★ 추가 — 선택지 조건(외부함수) 확정을 위해 필요한 만큼 자동으로 더 진행
+            while (story.currentChoices.Count == 0 && story.canContinue)
             {
-                string[] args = tag.Split(':');
-                if (args[0] == "battle" && args.Length > 1)
-                {
-                    pendingBattleNPC = args[1];
-                    pendingBattleWinNode = args.Length > 2 ? args[2] : $"{pendingBattleNPC}_Battle_Win";
-                    pendingBattleLoseNode = args.Length > 3 ? args[3] : $"{pendingBattleNPC}_Battle_Lose";
-                    pendingBattleDifficulty = (args.Length > 4 && Enum.TryParse(args[4], out BossDifficultyTier parsedTier))
-                        ? parsedTier
-                        : BossDifficultyTier.Training; // ★ 추가 — 태그에 없으면 훈련모드
-                }
-                //if (args[0] == "emote" && args.Length > 1)
-                //{
-                //    PlayerCutsceneAnimator.Instance.Play(args[1]); // 예: #emote:crossArms_shocked
-                //}
+                string more = story.Continue();
+                if (!string.IsNullOrWhiteSpace(more)) text += more;
+                ParseTags();
             }
-            //// 태그를 읽어올 때 Split(':')을 사용
-            //foreach (string tag in story.currentTags)
-            //{
-            //    string[] args = tag.Split(':');
-            //    string command = args[0];
-
-            //    switch (command)
-            //    {
-            //        case "cameraShake":
-            //            float duration = float.Parse(args[1]); // 0.5
-            //            float power = float.Parse(args[2]);    // 10.0
-            //            CameraManager.Instance.Shake(duration, power);
-            //            break;
-
-            //        case "textSpeed":
-            //            ChangeTextSpeed(args[1]); // "fast" 또는 "normal"
-            //            break;
-
-            //        case "hideUI":
-            //            UIManager.Instance.HideDialogUI();
-            //            break;
-            //    }
-            //}
 
             bool hasChoices = story.currentChoices.Count > 0;
 
-            if (string.IsNullOrWhiteSpace(text) && !hasChoices) // ★ 추가 — 표시할 게 없는 스텝은 자동으로 건너뜀
+            if (string.IsNullOrWhiteSpace(text) && !hasChoices)
             {
                 isProcessingLine = false;
                 DisplayNextLine();
@@ -162,6 +127,22 @@ public class DialogueManager : Singleton<DialogueManager>
         }
 
         StartCoroutine(ResetProcessingFlag());
+    }
+
+    // ★ 태그 파싱 중복 제거 (기존 foreach 두 번 반복되던 걸 메서드로 뽑음)
+    private void ParseTags()
+    {
+        foreach (string tag in story.currentTags)
+        {
+            string[] args = tag.Split(':');
+            if (args[0] == "battle" && args.Length > 1)
+            {
+                pendingBattleNPC = args[1];
+                pendingBattleWinNode = args.Length > 2 ? args[2] : $"{pendingBattleNPC}_Battle_Win";
+                pendingBattleLoseNode = args.Length > 3 ? args[3] : $"{pendingBattleNPC}_Battle_Lose";
+                pendingBattleDifficulty = (args.Length > 4 && Enum.TryParse(args[4], out BossDifficultyTier parsedTier)) ? parsedTier : BossDifficultyTier.Training;
+            }
+        }
     }
 
     private void EndDialogue()

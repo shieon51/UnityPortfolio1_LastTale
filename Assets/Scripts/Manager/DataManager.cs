@@ -10,15 +10,11 @@ public class DataManager : Singleton<DataManager>
     public Dictionary<int, PortalData> PortalDict { get; private set; } = new Dictionary<int, PortalData>();
     public Dictionary<int, EventData> EventDict { get; private set; } = new Dictionary<int, EventData>();
 
-    private void Awake()
-    {
-        // Manager들 중 가장 먼저 초기화되어야 하므로 Script Execution Order에서 우선순위를 높이거나,
-        // Boot 씬에서 명시적으로 호출하는 것이 좋을 듯
-        LoadAllData();
-    }
+    private void Awake() => LoadAllData();
 
     public void LoadAllData()
     {
+        SceneDict.Clear(); PortalDict.Clear(); EventDict.Clear(); // ★ 재로드 대비 초기화 추가
         LoadSceneData();
         LoadPortalData();
         LoadEventData();
@@ -26,65 +22,34 @@ public class DataManager : Singleton<DataManager>
     }
 
     private void LoadSceneData()
-    {
-        string filePath = Path.Combine(Application.streamingAssetsPath, "Datas", "SceneTable.csv");
-        if (!File.Exists(filePath)) return;
-
-        string[] lines = File.ReadAllLines(filePath);
-        for (int i = 1; i < lines.Length; i++)
-        {
-            if (string.IsNullOrEmpty(lines[i])) continue;
-            string[] values = lines[i].Split(',');
-            SceneDict.Add(int.Parse(values[0]), values[1].Trim());
-        }
-    }
+        => CsvTableLoader.Load("SceneTable.csv", v => SceneDict[int.Parse(v[0])] = v[1].Trim());
 
     private void LoadPortalData()
-    {
-        string filePath = Path.Combine(Application.streamingAssetsPath, "Datas", "PortalTable.csv");
-        if (!File.Exists(filePath)) return;
-
-        string[] lines = File.ReadAllLines(filePath);
-        for (int i = 1; i < lines.Length; i++)
+        => CsvTableLoader.Load("PortalTable.csv", v => PortalDict[int.Parse(v[0])] = new PortalData
         {
-            if (string.IsNullOrEmpty(lines[i])) continue;
-            string[] values = lines[i].Split(',');
-            PortalData data = new PortalData
-            {
-                portalID = int.Parse(values[0]),
-                OwnerSceneID = int.Parse(values[1]),
-                TargetPortalID = int.Parse(values[2]),
-                Position = new Vector2(float.Parse(values[3]), float.Parse(values[4]))
-            };
-            PortalDict.Add(data.portalID, data);
-        }
-    }
+            portalID = int.Parse(v[0]),
+            OwnerSceneID = int.Parse(v[1]),
+            TargetPortalID = int.Parse(v[2]),
+            Position = new Vector2(float.Parse(v[3]), float.Parse(v[4]))
+        });
 
     private void LoadEventData()
-    {
-        string filePath = Path.Combine(Application.streamingAssetsPath, "Datas", "EventTable.csv");
-        if (!File.Exists(filePath)) return;
-
-        string[] lines = File.ReadAllLines(filePath);
-        for (int i = 1; i < lines.Length; i++)
+        => CsvTableLoader.Load("EventTable.csv", v => EventDict[int.Parse(v[0])] = new EventData
         {
-            if (string.IsNullOrEmpty(lines[i])) continue;
-            string[] values = lines[i].Split(',');
-            EventData data = new EventData
-            {
-                EventID = int.Parse(values[0]),
-                EventName = values[1],
-                IsAnytime = bool.Parse(values[2]),
-                Day = int.Parse(values[3]),
-                StartTime = int.Parse(values[4]),
-                EndTime = int.Parse(values[5]),
-                InkNodeName = values[6],
-                SceneID = int.Parse(values[7]),
-                Position = new Vector2(float.Parse(values[8]), float.Parse(values[9])),
-                TimeTaken = int.Parse(values[10]),
-            };
-            EventDict.Add(data.EventID, data);
-        }
-    }
+            EventID = int.Parse(v[0]),
+            EventName = v[1],
+            IsAnytime = bool.Parse(v[2]),
+            Day = int.Parse(v[3]),
+            StartTime = int.Parse(v[4]),
+            EndTime = int.Parse(v[5]),
+            InkNodeName = v[6],
+            SceneID = int.Parse(v[7]),
+            Position = new Vector2(float.Parse(v[8]), float.Parse(v[9])),
+            TimeTaken = int.Parse(v[10]),
+        });
 
+#if UNITY_EDITOR
+    [ContextMenu("CSV 다시 로드")]
+    private void ReloadFromMenu() => LoadAllData();
+#endif
 }

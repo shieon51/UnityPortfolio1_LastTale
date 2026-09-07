@@ -4,13 +4,18 @@ using UnityEngine;
 
 public class TimeLoopManager : Singleton<TimeLoopManager>
 {
-    private TimeAnchorSnapshot _anchor;
-    public bool HasAnchor => _anchor != null;
+    private List<TimeAnchorSnapshot> _anchors = new();
+    private List<GameObject> _anchorMarkers = new();
 
-    public int setAnchorManaCost = 20; // 임시 값, 밸런스 조정 필요
+    [Header("앵커 개수/자원")]
+    public int setAnchorManaCost = 20;
     public int returnManaCost = 30;
+    public int removeAnchorManaRefund = 10;
+    public GameObject anchorMarkerPrefab;
 
-    // "시간 고정" — 공중/비행 중엔 불가 (5번 항목과 연동)
+    public IReadOnlyList<TimeAnchorSnapshot> Anchors => _anchors;
+    public int MaxAnchorCount(int level) => Mathf.Clamp((level - 1) / 10 + 1, 1, 10); // 1~9→1, ..., 90~99→10
+
     public bool TrySetAnchor()
     {
         var sora = PlayerManager.Instance.CurrentCharacter as SoraStats;
@@ -22,10 +27,21 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             NotificationManager.Instance?.Show("공중에서는 시간을 고정할 수 없습니다", NotificationType.Warning);
             return false;
         }
-        if (sora.currentMana < setAnchorManaCost) return false;
+
+        int maxCount = MaxAnchorCount(sora.level);
+        if (_anchors.Count >= maxCount)
+        {
+            NotificationManager.Instance?.Show($"시간 고정 최대 개수({maxCount}개)에 도달했습니다", NotificationType.Warning);
+            return false;
+        }
+        if (sora.currentMana < setAnchorManaCost)
+        {
+            NotificationManager.Instance?.Show("마나가 부족하여 시간을 고정할 수 없습니다", NotificationType.Warning);
+            return false;
+        }
 
         sora.UseMana(setAnchorManaCost);
-        _anchor = new TimeAnchorSnapshot
+        var snapshot = new TimeAnchorSnapshot
         {
             sceneID = SceneLoader.Instance.CurrentSceneID,
             position = sora.transform.position,
@@ -37,43 +53,51 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             experience = sora.experience,
             acquiredMemoryFlags = new HashSet<string>(MemoryManager.Instance.GetAllAcquired()),
         };
+        _anchors.Add(snapshot);
+
+        if (anchorMarkerPrefab != null)
+        {
+            var markerObj = Instantiate(anchorMarkerPrefab, sora.transform.position, Quaternion.identity);
+            markerObj.GetComponent<TimeAnchorMarker>().snapshotData = snapshot;
+            _anchorMarkers.Add(markerObj);
+        }
         return true;
     }
 
-    // 사망 시 진입점 — keepBodyLevel은 나중에 선택 UI에서 넘겨줄 값 (지금은 항상 true로 임시 고정 가능)
+    public void RemoveAnchor(TimeAnchorSnapshot snapshot) // UI 창에서 삭제 버튼 누를 때 호출
+    {
+        int idx = _anchors.IndexOf(snapshot);
+        if (idx < 0) return;
+        _anchors.RemoveAt(idx);
+        if (idx < _anchorMarkers.Count) { if (_anchorMarkers[idx] != null) Destroy(_anchorMarkers[idx]); _anchorMarkers.RemoveAt(idx); }
+        (PlayerManager.Instance.CurrentCharacter as SoraStats)?.RecoverMana(removeAnchorManaRefund);
+    }
+
     public void HandleDeath(bool keepBodyLevel = true)
     {
         var sora = PlayerManager.Instance.CurrentCharacter as SoraStats;
         sora.loopCount++;
+        NPCManager.Instance.ResetAffectionForNewLoop(); // ★ 4번 반영
 
-        bool canReturnToAnchor = HasAnchor && sora.currentMana >= returnManaCost;
+        bool hasAnchor = _anchors.Count > 0;
+        var latest = hasAnchor ? _anchors[_anchors.Count - 1] : null;
+        bool canReturn = hasAnchor && sora.currentMana >= returnManaCost;
 
-        if (canReturnToAnchor)
+        if (canReturn)
         {
             sora.UseMana(returnManaCost);
-            if (!keepBodyLevel) // 몸 레벨을 앵커 시점으로 되돌림 (정보/기억은 유지 — highestLevelReached도 유지됨)
-            {
-                sora.level = _anchor.level;
-                sora.maxHealth = _anchor.maxHealth;
-                sora.maxMana = _anchor.maxMana;
-                sora.experience = _anchor.experience;
-            }
+            if (!keepBodyLevel) { sora.level = latest.level; sora.maxHealth = latest.maxHealth; sora.maxMana = latest.maxMana; sora.experience = latest.experience; }
             sora.currentHealth = Mathf.Max(10, sora.currentHealth);
-            sora.currentMana = Mathf.Min(sora.currentMana, sora.maxMana);
-            LoadScene(_anchor.sceneID, _anchor.position, _anchor.day, _anchor.hour);
+            LoadScene(latest.sceneID, latest.position, latest.day, latest.hour);
         }
-        else if (HasAnchor) // 앵커는 있지만 복귀할 마나가 없음 → 강제로 앵커 시점 상태+정보로
+        else if (hasAnchor)
         {
-            MemoryManager.Instance.RestoreAcquired(_anchor.acquiredMemoryFlags);
-            sora.level = _anchor.level;
-            sora.maxHealth = _anchor.maxHealth;
-            sora.maxMana = _anchor.maxMana;
-            sora.experience = _anchor.experience;
+            MemoryManager.Instance.RestoreAcquired(latest.acquiredMemoryFlags);
+            sora.level = latest.level; sora.maxHealth = latest.maxHealth; sora.maxMana = latest.maxMana; sora.experience = latest.experience;
             sora.currentHealth = Mathf.Max(10, sora.maxHealth / 2);
-            sora.currentMana = sora.maxMana;
-            LoadScene(_anchor.sceneID, _anchor.position, _anchor.day, _anchor.hour);
+            LoadScene(latest.sceneID, latest.position, latest.day, latest.hour);
         }
-        else // 앵커 자체가 없음 → Day1 처음으로 (시간의 결정체=경험은 안 잊음, highestLevelReached 등은 그대로 남김)
+        else
         {
             MemoryManager.Instance.ClearAllAcquired();
             var cfg = SceneLoader.Instance.startConfig;
@@ -84,7 +108,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
 
     private void LoadScene(int sceneID, Vector2 pos, int day, int hour)
     {
-        TimeManager.Instance.SetTime(day, hour); // ★ TimeManager에 이 메서드 추가 필요 (아래 참고)
+        TimeManager.Instance.SetTime(day, hour);
         SceneLoader.Instance.LoadScene(sceneID, pos);
     }
 }

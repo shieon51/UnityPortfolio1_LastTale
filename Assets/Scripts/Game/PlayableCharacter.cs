@@ -68,10 +68,19 @@ public abstract class PlayableCharacter : CharacterStats
         level++;
         highestLevelReached = Mathf.Max(highestLevelReached, level); // 영혼 레벨 갱신(최고 도달 레벨)
 
-        experienceToNextLevel += 50; //다음 레벨까지 경험치 총량 증가
-
-        maxHealth += 10; //max 체력 증가 (임시)
-        maxMana += 5; //max 마나 증가 (임시)
+        var data = LevelDataManager.Instance?.GetLevelData(level);
+        if (data != null)
+        {
+            maxHealth = data.maxHealth;
+            maxMana = data.maxMana;
+            experienceToNextLevel = data.expToNextLevel;
+        }
+        else // CSV에 아직 없는 레벨(최대치 초과 등) — 기존 방식으로 폴백
+        {
+            maxHealth += 10;
+            maxMana += 5;
+            experienceToNextLevel += 50;
+        }
 
         Heal(maxHealth); // 레벨업 시 풀피 회복
 

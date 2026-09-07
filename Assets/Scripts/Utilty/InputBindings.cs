@@ -8,6 +8,7 @@ public static class InputBindings
     public static KeyCode Attack2 = KeyCode.W;
     public static KeyCode Attack3 = KeyCode.E;
     public static KeyCode Ultimate = KeyCode.R;
+    public static KeyCode TimeAnchor = KeyCode.T;
     public static KeyCode Jump = KeyCode.Space;
     public static KeyCode Dash = KeyCode.LeftShift;
     public static KeyCode Guard = KeyCode.F;

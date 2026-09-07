@@ -67,11 +67,10 @@ public class GameStateOverviewWindow : EditorWindow
             EditorGUILayout.LabelField(kvp.Key, EditorStyles.boldLabel);
 
             EditorGUI.BeginChangeCheck();
-            int newU = EditorGUILayout.IntField("이해도", data.understanding);
-            int newA = EditorGUILayout.IntField("호감도", data.hiddenAffection);
-            if (EditorGUI.EndChangeCheck())
-            {
-                data.understanding = newU;
+            EditorGUILayout.LabelField($"이해도: {data.CurrentUnderstandingCount} (상한 {data.maxObtainableUnderstanding}, {data.UnderstandingPercent:F0}%)");
+            int newA = EditorGUILayout.IntField("호감도", data.hiddenAffection); // 호감도만 편집 가능하게 남김
+            if (data.hiddenAffection != newA) 
+            { 
                 data.hiddenAffection = newA;
                 NPCManager.Instance.SaveNPCData(data);
             }

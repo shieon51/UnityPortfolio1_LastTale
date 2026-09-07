@@ -1,30 +1,45 @@
-using System;
+ï»¿using System;
+using UnityEngine;
 
 [Serializable]
 public class NPCData
 {
-    public string npcName; // ¿¹: "Liel", "Diavalu"
+    public string npcName; // ì˜ˆ: "Liel", "Diavalu"
 
-    // °¨Á¤ µ¥ÀÌÅÍ
-    public int understanding = 0;   // Ç¥¸éÀû ÀÌÇØµµ (¿ìÁ¤)
-    public int hiddenAffection = 0; // ¼û°ÜÁø È£°¨µµ (¾ÖÁ¤)
+    // ê°ì • ë°ì´í„°
+    [Obsolete("ë” ì´ìƒ ì§ì ‘ ì €ì¥ ì•ˆ í•¨ â€” CurrentUnderstandingCount/UnderstandingPercent ì‚¬ìš©")]
+    public int understanding = 0; // â˜… ì´ì œ ë¡œì§ì—ì„œ ì•ˆ ì”€, ê³¼ê±° ì„¸ì´ë¸Œ í˜¸í™˜ìš©ìœ¼ë¡œë§Œ ë‚¨ê²¨ë‘    // í‘œë©´ì  ì´í•´ë„ (ìš°ì •)
 
-    // ÀüÅõ ¹× ½ºÅä¸® »óÅÂ µ¥ÀÌÅÍ
-    public NPC.NPCMode currentMode = NPC.NPCMode.Normal; // Æò»ó½ÃÀÎÁö º¸½ºÀüÀÎÁö
-    public int bossPhase = 1; // º¸½ºÀü µ¹ÀÔ ½Ã ÇöÀç ÆäÀÌÁî
-    //public bool hasDiscoveredSecret = false; // (¿¹½Ã) µğ¾Æº£¸£ÀÇ ºñ¹ĞÀ» µéÄ×´Â°¡?
+    public int hiddenAffection = 0; // ìˆ¨ê²¨ì§„ í˜¸ê°ë„ (ì• ì •)
 
-    // »ı¼ºÀÚ
+    [Tooltip("ì´ NPCë¥¼ 'ì™„ì „íˆ' ì´í•´í•˜ëŠ” ë° í•„ìš”í•œ ì´ëŸ‰. ì‹¤ì œ ë§Œë“  ì •ë³´ ê°œìˆ˜ë³´ë‹¤ í¬ê²Œ ì¡ìœ¼ë©´ 100% ë„ë‹¬ì´ ì›ì²œì ìœ¼ë¡œ ë¶ˆê°€ëŠ¥í•´ì§ (ì¼ë¶€ëŸ¬ ê·¸ëŸ° ìºë¦­í„°ë¥¼ ë§Œë“¤ê³  ì‹¶ì„ ë•Œ)")]
+    public int maxObtainableUnderstanding = 100; // â˜… ì‹ ê·œ
+
+    // ì „íˆ¬ ë° ìŠ¤í† ë¦¬ ìƒíƒœ ë°ì´í„°
+    public NPC.NPCMode currentMode = NPC.NPCMode.Normal; // í‰ìƒì‹œì¸ì§€ ë³´ìŠ¤ì „ì¸ì§€
+    public int bossPhase = 1; // ë³´ìŠ¤ì „ ëŒì… ì‹œ í˜„ì¬ í˜ì´ì¦ˆ
+    public bool rememberAcrossLoops = false; // íšŒê·€í•´ë„ í˜¸ê°ë„ê°€ ë¦¬ì…‹ ì•ˆ ë˜ëŠ” íŠ¹ë³„í•œ NPC
+
+    // ìƒì„±ì
     public NPCData(string name)
     {
         npcName = name;
-        // Ä³¸¯ÅÍº° ÃÊ±â È£°¨µµ ¼¼ÆÃÀÌ ÇÊ¿äÇÏ´Ù¸é ¿©±â¼­ ºĞ±âÃ³¸® °¡´É
+        // ìºë¦­í„°ë³„ ì´ˆê¸° í˜¸ê°ë„ ì„¸íŒ…ì´ í•„ìš”í•˜ë‹¤ë©´ ì—¬ê¸°ì„œ ë¶„ê¸°ì²˜ë¦¬ ê°€ëŠ¥
     }
 
-    // °ü°è µî±Ş °è»ê (±âÁ¸ NPC.cs¿¡ ÀÖ´ø °É ¼ø¼ö µ¥ÀÌÅÍ ÂÊÀ¸·Î ¿Å±è - Á¤º¸ Àü¹®°¡ ÆĞÅÏ)
+    // â˜… ì‹ ê·œ â€” ì§€ê¸ˆ ì´ ìˆœê°„ ì‹¤ì œë¡œ ê°–ê³  ìˆëŠ” ì •ë³´ ê°œìˆ˜ (ì§€ì› ìœ¼ë©´ ì¦‰ì‹œ ë°˜ì˜ë¨)
+    public int CurrentUnderstandingCount
+        => MemoryManager.Instance != null ? MemoryManager.Instance.GetUnderstandingScore(npcName) : 0;
+
+    // â˜… ì‹ ê·œ â€” 0~100% (maxObtainableUnderstandingë³´ë‹¤ ì‹¤ì œ ì •ë³´ ê°œìˆ˜ê°€ ì ìœ¼ë©´ 100% ë„ë‹¬ ë¶ˆê°€)
+    public float UnderstandingPercent
+        => Mathf.Clamp01((float)CurrentUnderstandingCount / Mathf.Max(1, maxObtainableUnderstanding)) * 100f;
+
+
+    // ê´€ê³„ ë“±ê¸‰ ê³„ì‚° (ê¸°ì¡´ NPC.csì— ìˆë˜ ê±¸ ìˆœìˆ˜ ë°ì´í„° ìª½ìœ¼ë¡œ ì˜®ê¹€ - ì •ë³´ ì „ë¬¸ê°€ íŒ¨í„´)
     public NPC.RelationshipTier GetRelationshipTier()
     {
-        int totalScore = understanding + (hiddenAffection * 2);
+        int totalScore = Mathf.RoundToInt(UnderstandingPercent) + (hiddenAffection * 2); // â˜… í•„ë“œ ëŒ€ì‹  ê³„ì‚°ê°’
         if (totalScore < 10) return NPC.RelationshipTier.Hostile;
         if (totalScore < 30) return NPC.RelationshipTier.Wary;
         if (totalScore < 60) return NPC.RelationshipTier.Acquaintance;
