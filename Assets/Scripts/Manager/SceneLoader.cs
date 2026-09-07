@@ -20,6 +20,8 @@ public class SceneLoader : Singleton<SceneLoader>
 
     public GameStartConfig startConfig; // ★ 인스펙터에 연결
 
+    public event Action<int> OnSceneLoaded;
+
     private void Awake()
     {
         //LoadSceneData();   // 씬 id: 씬 이름 대응 정보 불러오기
@@ -99,6 +101,8 @@ public class SceneLoader : Singleton<SceneLoader>
         {
             EventManager.Instance.UpdateEventTriggers();
         }
+
+        OnSceneLoaded?.Invoke(sceneID); // ★ 맨 마지막에 추가
     }
 
     // 땅에 스냅

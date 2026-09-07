@@ -32,6 +32,7 @@ public class GameStateOverviewWindow : EditorWindow
         EditorGUILayout.EndScrollView();
         DrawDebugToolsSection(); //?
         DrawMemorySection(); //?
+        DrawTimeAnchorSection();
 
         Repaint(); // 실시간 갱신
     }
@@ -80,6 +81,29 @@ public class GameStateOverviewWindow : EditorWindow
             var live = Object.FindObjectsOfType<NPC>().FirstOrDefault(n => n.npcName == kvp.Key);
             if (live != null)
                 EditorGUILayout.LabelField($"HP: {live.currentHealth}/{live.maxHealth}   MP: {live.currentMana}/{live.maxMana}");
+
+            if (MemoryManager.Instance != null)
+            {
+                string foldKey = $"npc_memory_{kvp.Key}";
+                if (!_categoryFoldouts.ContainsKey(foldKey)) _categoryFoldouts[foldKey] = false;
+
+                var npcFragments = MemoryManager.Instance.GetAllRegistered().Where(d => d.category == kvp.Key).ToList();
+                int haveCount = npcFragments.Count(d => MemoryManager.Instance.HasMemory(d.flagId));
+                _categoryFoldouts[foldKey] = EditorGUILayout.Foldout(_categoryFoldouts[foldKey], $"획득 정보 ({haveCount}/{npcFragments.Count})", true);
+
+                if (_categoryFoldouts[foldKey])
+                {
+                    EditorGUI.indentLevel++;
+                    foreach (var frag in npcFragments.OrderBy(d => d.flagId))
+                    {
+                        bool has = MemoryManager.Instance.HasMemory(frag.flagId);
+                        GUI.color = has ? Color.green : Color.gray;
+                        EditorGUILayout.LabelField($"{(has ? "✔" : "✘")} {frag.displayName} ({frag.flagId})");
+                        GUI.color = Color.white;
+                    }
+                    EditorGUI.indentLevel--;
+                }
+            }
 
             EditorGUILayout.EndVertical();
         }
@@ -135,6 +159,23 @@ public class GameStateOverviewWindow : EditorWindow
                 }
                 EditorGUI.indentLevel--;
             }
+        }
+    }
+
+    private void DrawTimeAnchorSection()
+    {
+        EditorGUILayout.LabelField("시간 고정(앵커) 목록", EditorStyles.boldLabel);
+        if (TimeLoopManager.Instance == null) return;
+
+        var anchors = TimeLoopManager.Instance.Anchors;
+        for (int i = 0; i < anchors.Count; i++)
+        {
+            var a = anchors[i];
+            EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
+            EditorGUILayout.LabelField($"#{i + 1}  Scene {a.sceneID}  Day {a.day} {a.hour}시  Lv.{a.level}");
+            if (GUILayout.Button("이동", GUILayout.Width(60))) TimeLoopManager.Instance.TravelToAnchor(a);
+            if (GUILayout.Button("삭제", GUILayout.Width(60))) TimeLoopManager.Instance.RemoveAnchor(a);
+            EditorGUILayout.EndHorizontal();
         }
     }
 }

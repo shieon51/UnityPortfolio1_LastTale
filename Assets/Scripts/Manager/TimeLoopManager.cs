@@ -13,8 +13,32 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     public int removeAnchorManaRefund = 10;
     public GameObject anchorMarkerPrefab;
 
+    // TimeLoopManager.cs — 마커 관리 방식을 딕셔너리로 교체 (인덱스 매칭 방식은 씬이 바뀌면 깨지기 쉬워서)
+    private Dictionary<TimeAnchorSnapshot, GameObject> _activeMarkers = new(); // 지금 로드된 씬에 실제로 떠있는 마커만
+
     public IReadOnlyList<TimeAnchorSnapshot> Anchors => _anchors;
     public int MaxAnchorCount(int level) => Mathf.Clamp((level - 1) / 10 + 1, 1, 10); // 1~9→1, ..., 90~99→10
+
+    private void Awake()
+    {
+        if (SceneLoader.Instance != null) SceneLoader.Instance.OnSceneLoaded += HandleSceneLoaded;
+    }
+    private void OnDestroy()
+    {
+        if (SceneLoader.Instance != null) SceneLoader.Instance.OnSceneLoaded -= HandleSceneLoaded;
+    }
+
+    private void HandleSceneLoaded(int sceneID)
+    {
+        _activeMarkers.Clear(); // 이전 씬 마커는 씬 언로드로 이미 파괴됨, 참조만 정리
+        foreach (var anchor in _anchors)
+        {
+            if (anchor.sceneID != sceneID || anchorMarkerPrefab == null) continue;
+            var markerObj = Instantiate(anchorMarkerPrefab, anchor.position, Quaternion.identity);
+            markerObj.GetComponent<TimeAnchorMarker>().snapshotData = anchor;
+            _activeMarkers[anchor] = markerObj;
+        }
+    }
 
     public bool TrySetAnchor()
     {
@@ -59,18 +83,29 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         {
             var markerObj = Instantiate(anchorMarkerPrefab, sora.transform.position, Quaternion.identity);
             markerObj.GetComponent<TimeAnchorMarker>().snapshotData = snapshot;
-            _anchorMarkers.Add(markerObj);
+            _activeMarkers[snapshot] = markerObj; // ★ 리스트 대신 딕셔너리
         }
         return true;
     }
 
     public void RemoveAnchor(TimeAnchorSnapshot snapshot) // UI 창에서 삭제 버튼 누를 때 호출
     {
-        int idx = _anchors.IndexOf(snapshot);
-        if (idx < 0) return;
-        _anchors.RemoveAt(idx);
-        if (idx < _anchorMarkers.Count) { if (_anchorMarkers[idx] != null) Destroy(_anchorMarkers[idx]); _anchorMarkers.RemoveAt(idx); }
+        if (!_anchors.Remove(snapshot)) return;
+        if (_activeMarkers.TryGetValue(snapshot, out var marker))
+        {
+            if (marker != null) Destroy(marker);
+            _activeMarkers.Remove(snapshot);
+        }
         (PlayerManager.Instance.CurrentCharacter as SoraStats)?.RecoverMana(removeAnchorManaRefund);
+    }
+
+    public void TravelToAnchor(TimeAnchorSnapshot anchor)
+    {
+        if (anchor == null) return;
+        // ★ 디버그/즉시 이동 용도 — 마나 소모나 몸 레벨 선택 없이 그대로 이동
+        //   나중에 실제 SaveLoadWindow는 자기 확인 UI를 먼저 띄운 뒤 이 메서드만 호출하면 됨
+        TimeManager.Instance.SetTime(anchor.day, anchor.hour);
+        SceneLoader.Instance.LoadScene(anchor.sceneID, anchor.position);
     }
 
     public void HandleDeath(bool keepBodyLevel = true)

@@ -15,6 +15,11 @@ public class DialogueManager : Singleton<DialogueManager>
 
     public event Action<EventData> OnDialogueEnd; //다이얼로그가 끝나면 실행됨
 
+    [Header("선택지 등장 딜레이 (텍스트 다 나온 뒤)")]
+    public float choiceRevealDelay = 0.3f;
+
+    private List<Ink.Runtime.Choice> _pendingChoices;
+
     private bool isTalking = false; //현재 대화가 진행중일 때 -> EventTrigger에서 Z키 입력 불가, 엔터 키 입력 가능 처리.
     private bool isChoices = false; //선택지가 주어진 상태일 때 -> EventTrigger에서 엔터키 입력에 대한 예외처리
 
@@ -92,18 +97,10 @@ public class DialogueManager : Singleton<DialogueManager>
         if (isProcessingLine) return; // 이미 실행 중이면 무시
         isProcessingLine = true; // 실행 시작
 
-        if (story.canContinue) 
+        if (story.canContinue)
         {
             string text = story.Continue();
             ParseTags();
-
-            // ★ 추가 — 선택지 조건(외부함수) 확정을 위해 필요한 만큼 자동으로 더 진행
-            while (story.currentChoices.Count == 0 && story.canContinue)
-            {
-                string more = story.Continue();
-                if (!string.IsNullOrWhiteSpace(more)) text += more;
-                ParseTags();
-            }
 
             bool hasChoices = story.currentChoices.Count > 0;
 
@@ -114,19 +111,30 @@ public class DialogueManager : Singleton<DialogueManager>
                 return;
             }
 
-            UIManager.Instance.UpdateDialogueText(text);
             if (hasChoices)
             {
-                UIManager.Instance.ShowChoices(story.currentChoices);
-                isChoices = true;
+                _pendingChoices = story.currentChoices;
+                UIManager.Instance.dialogue.OnTextFullyDisplayed += HandleTextFullyDisplayed; // ★ 텍스트 다 나오면 알려달라고 구독
             }
+            UIManager.Instance.UpdateDialogueText(text);
         }
-        else
-        {
-            EndDialogue();
-        }
+        else EndDialogue();
 
         StartCoroutine(ResetProcessingFlag());
+    }
+
+    private void HandleTextFullyDisplayed()
+    {
+        UIManager.Instance.dialogue.OnTextFullyDisplayed -= HandleTextFullyDisplayed;
+        if (_pendingChoices != null) StartCoroutine(ShowChoicesAfterDelay(_pendingChoices));
+        _pendingChoices = null;
+    }
+
+    private IEnumerator ShowChoicesAfterDelay(List<Ink.Runtime.Choice> choices)
+    {
+        yield return new WaitForSeconds(choiceRevealDelay);
+        UIManager.Instance.ShowChoices(choices);
+        isChoices = true;
     }
 
     // ★ 태그 파싱 중복 제거 (기존 foreach 두 번 반복되던 걸 메서드로 뽑음)

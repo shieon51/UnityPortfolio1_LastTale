@@ -181,20 +181,7 @@ public class MapDataEditor : EditorWindow
             EditorGUILayout.TextArea(helpText, EditorStyles.helpBox);
         }
 
-        GUILayout.Space(10);
-        GUILayout.Label("게임 시작 위치", EditorStyles.boldLabel);
-        if (startConfig == null) { EditorGUILayout.HelpBox("Assets/Datas/GameStartConfig.asset이 없음", MessageType.Warning); return; }
-        EditorGUILayout.LabelField($"현재: Scene {startConfig.startSceneID}, {startConfig.startPosition}");
-        if (GUILayout.Button("현재 씬 뷰 중심을 시작 위치로 저장"))
-        {
-            int realID = GetSceneIDByName(EditorSceneManager.GetActiveScene().name);
-            SceneView view = SceneView.lastActiveSceneView;
-            Vector2 pos = view != null ? (Vector2)view.pivot : Vector2.zero;
-            startConfig.startSceneID = realID;
-            startConfig.startPosition = pos;
-            EditorUtility.SetDirty(startConfig);
-            AssetDatabase.SaveAssets();
-        }
+        DrawStartPositionUI();
     }
 
     private void DrawFilterUI()

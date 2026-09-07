@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: GameStartConfig
   m_EditorClassIdentifier: Assembly-CSharp::GameStartConfig
   startSceneID: 1
-  startPosition: {x: 0.11169305, y: 0.18190806}
+  startPosition: {x: -5.6119795, y: -0.4760688}
