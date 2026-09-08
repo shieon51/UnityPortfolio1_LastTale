@@ -28,6 +28,8 @@ public class DialogueManager : Singleton<DialogueManager>
     private string pendingBattleLoseNode = "";
     private BossDifficultyTier pendingBattleDifficulty = BossDifficultyTier.Training; // ★ 추가
 
+    private string _pendingSpeakerKey, _pendingSpeakerDisplayName;
+
     public bool IsTalking
     { get { return isTalking; } }
     public bool IsChoices        
@@ -47,7 +49,8 @@ public class DialogueManager : Singleton<DialogueManager>
         //대화 중일 때 엔터 입력하면 -> 다음 대사 출력 (단, 선택지가 있을 경우 엔터 키 입력 막기)
         if (IsTalking && !IsChoices && Input.GetKeyDown(KeyCode.Return))
         {
-            DisplayNextLine();
+            if (UIManager.Instance.dialogue.IsTyping) UIManager.Instance.dialogue.SkipTyping(); // ★ 타이핑 중 첫 엔터는 스킵
+            else DisplayNextLine(); // 다 나온 뒤 엔터는 다음 줄
         }
     }
 
@@ -80,6 +83,9 @@ public class DialogueManager : Singleton<DialogueManager>
             NPCManager.Instance.SaveNPCData(data);
             return 0;
         }, lookaheadSafe: false);
+
+        story.BindExternalFunction("get_understanding_percent", (string npcName) =>
+            (int)Mathf.Round(NPCManager.Instance.GetNPCData(npcName).UnderstandingPercent));
     }
 
     public void StartStory(EventData eventData)
@@ -101,8 +107,19 @@ public class DialogueManager : Singleton<DialogueManager>
         {
             string text = story.Continue();
             ParseTags();
-
             bool hasChoices = story.currentChoices.Count > 0;
+
+            if (!string.IsNullOrWhiteSpace(text) && !hasChoices && story.canContinue)
+            {
+                string peek = story.Continue();
+                ParseTags();
+                hasChoices = story.currentChoices.Count > 0;
+                if (!string.IsNullOrWhiteSpace(peek))
+                {
+                    Debug.LogWarning("[DBG Ink] 예상 밖 추가 텍스트 발견, 이어붙임: " + peek); // ★ 혹시 다른 케이스면 여기서 바로 알 수 있음
+                    text += peek;
+                }
+            }
 
             if (string.IsNullOrWhiteSpace(text) && !hasChoices)
             {
@@ -116,11 +133,26 @@ public class DialogueManager : Singleton<DialogueManager>
                 _pendingChoices = story.currentChoices;
                 UIManager.Instance.dialogue.OnTextFullyDisplayed += HandleTextFullyDisplayed; // ★ 텍스트 다 나오면 알려달라고 구독
             }
-            UIManager.Instance.UpdateDialogueText(text);
+
+            if (!string.IsNullOrEmpty(_pendingSpeakerKey))
+            {
+                var speaker = ResolveSpeakerTransform(_pendingSpeakerKey);
+                if (speaker != null) SpeechBubbleManager.Instance?.ShowBubble(speaker, _pendingSpeakerDisplayName, text);
+            }
+            else
+            {
+                UIManager.Instance.UpdateDialogueText(text); // 태그 없으면 기존 하단 패널(시스템/내레이션/회상용)
+            }
         }
         else EndDialogue();
 
         StartCoroutine(ResetProcessingFlag());
+    }
+
+    private Transform ResolveSpeakerTransform(string key)
+    {
+        if (key == "Player") return PlayerManager.Instance.CurrentCharacter.transform;
+        return System.Linq.Enumerable.FirstOrDefault(FindObjectsOfType<NPC>(), n => n.npcName == key)?.transform;
     }
 
     private void HandleTextFullyDisplayed()
@@ -150,6 +182,13 @@ public class DialogueManager : Singleton<DialogueManager>
                 pendingBattleLoseNode = args.Length > 3 ? args[3] : $"{pendingBattleNPC}_Battle_Lose";
                 pendingBattleDifficulty = (args.Length > 4 && Enum.TryParse(args[4], out BossDifficultyTier parsedTier)) ? parsedTier : BossDifficultyTier.Training;
             }
+            else if (args[0] == "speak" && args.Length > 2) // ★ 신규 — #speak:Liel:???
+            {
+                _pendingSpeakerKey = args[1];
+                _pendingSpeakerDisplayName = args[2];
+            }
+            else if (args[0] == "cue" && args.Length > 1) 
+                NarrativeCuePlayer.Instance?.Play(args[1]);
         }
     }
 

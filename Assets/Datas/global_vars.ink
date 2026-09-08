@@ -5,6 +5,7 @@ EXTERNAL get_counter(key)
 EXTERNAL increment_counter(key)
 EXTERNAL get_affection(npcName)
 EXTERNAL add_affection(npcName, amount)
+EXTERNAL get_understanding_percent(npcName)
 
 VAR player_name = "소라"
 

@@ -221,6 +221,7 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     protected override void Die()
     {
         Debug.Log("소라 사망. 타임루프(회귀) 발동!");
+        TimeLoopManager.Instance?.HandleDeath(); // ★ 추가 — 이게 빠져있었음
     }
 
     public void ResetProgression() // 디버그 하드리셋 전용

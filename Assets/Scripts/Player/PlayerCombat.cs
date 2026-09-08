@@ -95,7 +95,7 @@ public class PlayerCombat : MonoBehaviour
 
     private void Update()
     {
-        if (_stats.isKnockedBack || DialogueManager.Instance.IsTalking) return;
+        if (_stats.isKnockedBack || DialogueManager.Instance.IsTalking || GlobalActionLock.IsLocked) return;
         if (_motor != null && _motor.IsExternallyLocked) return; // * IsExternallyLocked
 
         // 키 입력 

@@ -1,4 +1,5 @@
 === Liel_Day2_001 ===
+#speak:Liel:리엘
 심심하십니까.
 - 할 거 없으시면 저와 대련이라도 하시겠습니까?
  + 네
@@ -19,12 +20,14 @@
 ->DONE
 
 === Liel_Day2_001_BattleWin ===
+#speak:Liel:리엘
 {get_affection("Liel") >= 5: 제법이군요. 생각보다 재능이 있으신 것 같습니다.}
 {get_affection("Liel") < 5: 흠. 제법이군요.}
 ~ add_affection("Liel", 1)
 -> DONE
 
 === Liel_Day2_001_BattleLose ===
+#speak:Liel:리엘
 - 체력이 없으시군요. 이쯤에서 그만두겠습니다.
 - 다음엔 좀 더 분발해보시죠.
 -> DONE

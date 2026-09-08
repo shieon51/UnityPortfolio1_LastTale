@@ -1,5 +1,6 @@
 
 === Liel_Day1_001 ===
+#speak:Liel:???
 {get_counter("Liel_Day1_001_meet") == 0: 좋은 아침입니다. 초면이군요.}
 {get_counter("Liel_Day1_001_meet") == 1: ->Liel_Day1_001_B}
 {get_counter("Liel_Day1_001_meet") >= 2: ->Liel_Day1_001_A}
@@ -7,32 +8,38 @@
 -> DONE
 
 ===Liel_Day1_001_B===
-제가 좋아하는 과일이 무엇인지 아십니까?
-+ {not has_memory("liel_likes_apple")} 뭔데요?
-    -> Liel_Day1_001_B_02
-+ {has_memory("liel_likes_apple")} 사과
-    -> Liel_Day1_001_B_01
-+ {has_memory("liel_likes_apple")} 오렌지
-    -> Liel_Day1_001_B_wrong
-+ {has_memory("liel_likes_apple")} 딸기
-    -> Liel_Day1_001_B_wrong
+#speak:Liel:리엘
+전 리엘이라고 합니다.
+-제가 좋아하는 과일이 무엇인지 아십니까?
+    + {not has_memory("liel_likes_apple")} 뭔데요?
+        -> Liel_Day1_001_B_02
+    + {has_memory("liel_likes_apple")} 사과
+        -> Liel_Day1_001_B_01
+    + {has_memory("liel_likes_apple")} 오렌지
+        -> Liel_Day1_001_B_wrong
+    + {has_memory("liel_likes_apple")} 딸기
+        -> Liel_Day1_001_B_wrong
 
 ===Liel_Day1_001_B_01===
+#speak:Liel:리엘
 맞습니다. 어떻게 아셨습니까?
 ~ increment_counter("Liel_Day1_001_meet")
 ->DONE
 
 ===Liel_Day1_001_B_02===
+#speak:Liel:리엘
 제가 좋아하는 과일은 사과입니다.
 ~ acquire_memory("liel_likes_apple")
 ~ increment_counter("Liel_Day1_001_meet")
  ->DONE
 
 ===Liel_Day1_001_B_wrong===
+#speak:Liel:리엘
 아쉽게도 틀렸군요.
 -> Liel_Day1_001_B_02
 
 ===Liel_Day1_001_A===
+#speak:Liel:리엘
 이야기하다보니 벌써 시간이 많이 지났네요.
 -전 점심을 먹으러 가보겠습니다. 
 ~ increment_counter("Liel_Day1_001_meet")
@@ -42,6 +49,7 @@
 // ---------------------------
 
 === Liel_Day1_002 ===
+#speak:Liel:리엘
 {get_counter("Liel_Day1_001_meet") >= 1: 
     {get_counter("Liel_Day1_002_meet") == 0: 이름이 {player_name} 씨라고 하셨죠? 또 뵙네요.}
     {get_counter("Liel_Day1_002_meet") == 1: 오늘 날이 참 좋습니다. 그렇지 않나요?}
@@ -59,6 +67,7 @@
 
 
 ===Liel_Day1_002_A===
+#speak:Liel:리엘
 날이 좋아 산책이라도 가봐야 할 것 같네요. 
 - 그럼 {player_name} 씨도 좋은 하루 되시길 바랍니다.
 ~ add_affection("Liel", 1)
@@ -66,6 +75,7 @@
 
 //---------------------------
 === Liel_Day1_003 ===
+#speak:Liel:리엘
 {get_counter("Liel_Day1_001_meet") >= 1 and get_counter("Liel_Day1_002_meet") >= 1: 
     {get_counter("Liel_Day1_003_meet") == 0: -> Liel_Day1_003_A}
     {get_counter("Liel_Day1_003_meet") == 1: -> Liel_Day1_003_B}

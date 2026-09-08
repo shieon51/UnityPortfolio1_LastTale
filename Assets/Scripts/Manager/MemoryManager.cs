@@ -67,6 +67,19 @@ public class MemoryManager : Singleton<MemoryManager>
             OnMemoryErased?.Invoke(flagId);
     }
 
+    public MemoryTopicData.Stage GetCurrentStage(MemoryTopicData topic)
+    {
+        MemoryTopicData.Stage latest = null;
+        foreach (var stage in topic.stages)
+            if (HasMemory(stage.requiredFlagId)) latest = stage; // 배열 뒤쪽일수록 더 진전된 단계
+        return latest; // null = 아직 아무것도 모름
+    }
+    public bool IsTopicFullyRevealed(MemoryTopicData topic)
+    {
+        var stage = GetCurrentStage(topic);
+        return stage != null && stage.isFinal;
+    }
+
     public void ClearAllAcquired() => _acquiredFlags.Clear();
     public void ClearAllCounters() => _counters.Clear(); // 5번에서 만들 카운터 시스템
 

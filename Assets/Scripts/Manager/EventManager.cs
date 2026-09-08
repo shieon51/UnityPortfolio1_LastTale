@@ -18,6 +18,7 @@ public class EventData
     public int SceneID;
     public Vector2 Position;
     public int TimeTaken;
+    public bool AutoTrigger;
 }
 
 public class EventManager : Singleton<EventManager>
@@ -76,6 +77,7 @@ public class EventManager : Singleton<EventManager>
         // Z키 입력 시 상호작용
         // (조건: 대화중이 아님 + 상호작용 가능한 거리임 + 대상이 존재함 + Z키 누름)
         if (!DialogueManager.Instance.IsTalking &&
+             !GlobalActionLock.IsLocked &&
              canInteract &&
              closest != null &&
              Input.GetKeyDown(KeyCode.Z))
@@ -205,6 +207,13 @@ public class EventManager : Singleton<EventManager>
 
         // 매 프레임 초기화
         canInteract = false;
+
+        // 자동 이벤트가 있다면 실행
+        if (closest != null && closest.eventData.AutoTrigger && minDistance <= closest.InteractionRange && !DialogueManager.Instance.IsTalking && !GlobalActionLock.IsLocked)
+        {
+            closest.StartDialogue();
+            return;
+        }
 
         // 1. 정적 이벤트(activeTriggers) + 동적 NPC 이벤트(dynamicTriggers) 모두 검사
         List<EventTrigger> allTriggers = new List<EventTrigger>(); // ==> ? 여기 왜 매번 생성 중인가? -> 수정 예정

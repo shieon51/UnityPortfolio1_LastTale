@@ -67,6 +67,7 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
     {
         get
         {
+            if (GlobalActionLock.IsLocked) return true;
             if (DialogueManager.Instance != null && DialogueManager.Instance.IsTalking) return true;
             if (_stats != null && _stats.isKnockedBack) return true;
             if (_playerCombat != null && _playerCombat.IsAttacking) return true;
@@ -88,6 +89,7 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
     {
         get
         {
+            if (GlobalActionLock.IsLocked) return true;
             if (DialogueManager.Instance != null && DialogueManager.Instance.IsTalking) return true;
             if (_stats != null && _stats.isKnockedBack) return true;
             if (_stats != null && _stats.IsGroggy) return true;
