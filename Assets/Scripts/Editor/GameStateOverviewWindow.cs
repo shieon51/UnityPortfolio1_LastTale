@@ -32,6 +32,7 @@ public class GameStateOverviewWindow : EditorWindow
         EditorGUILayout.EndScrollView();
         DrawDebugToolsSection(); //?
         DrawMemorySection(); //?
+        DrawMemoryTopicSection();
         DrawTimeAnchorSection();
 
         Repaint(); // 실시간 갱신
@@ -176,6 +177,22 @@ public class GameStateOverviewWindow : EditorWindow
             if (GUILayout.Button("이동", GUILayout.Width(60))) TimeLoopManager.Instance.TravelToAnchor(a);
             if (GUILayout.Button("삭제", GUILayout.Width(60))) TimeLoopManager.Instance.RemoveAnchor(a);
             EditorGUILayout.EndHorizontal();
+        }
+    }
+
+    private void DrawMemoryTopicSection()
+    {
+        EditorGUILayout.LabelField("정보 주제(단계별) 현황", EditorStyles.boldLabel);
+        if (MemoryManager.Instance == null || LocalizationManager.Instance == null) return;
+
+        foreach (var topic in Resources.LoadAll<MemoryTopicData>("MemoryTopics"))
+        {
+            var stage = MemoryManager.Instance.GetCurrentStage(topic);
+            string label = stage != null ? LocalizationManager.Instance.Get(stage.localizationKey) : "(아직 모름)";
+            bool isFinal = stage != null && stage.isFinal;
+            GUI.color = isFinal ? Color.white : (stage != null ? Color.gray : new Color(0.5f, 0.5f, 0.5f, 0.6f));
+            EditorGUILayout.LabelField($"[{topic.category}] {topic.topicId}: {label}");
+            GUI.color = Color.white;
         }
     }
 }

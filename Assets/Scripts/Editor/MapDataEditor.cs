@@ -1,38 +1,41 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEditor;
 using System.IO;
 using System.Collections.Generic;
 using UnityEditor.SceneManagement;
 using System.Linq;
 using System;
-using System.Text; // ÇÑ±Û ±úÁü ¹æÁö(UTF-8)
+using System.Text; // í•œê¸€ ê¹¨ì§ ë°©ì§€(UTF-8)
 
 public class MapDataEditor : EditorWindow
 {
-    // ÅÇ °ü¸® (0: ¸Ê ¿¡µğÅÍ, 1: NPC ½ºÄÉÁÙÇ¥)
+    // íƒ­ ê´€ë¦¬ (0: ë§µ ì—ë””í„°, 1: NPC ìŠ¤ì¼€ì¤„í‘œ)
     private int toolbarOption = 0;
     private string[] toolbarTexts = { "Map Editor", "NPC Schedule" };
 
-    // °æ·Î ¼³Á¤
+    // ê²½ë¡œ ì„¤ì •
     private string eventCsvPath => Path.Combine(Application.streamingAssetsPath, "Datas", "EventTable.csv");
     private string sceneCsvPath => Path.Combine(Application.streamingAssetsPath, "Datas", "SceneTable.csv");
     private string backupFolderPath => Path.Combine(Application.streamingAssetsPath, "Datas", "Backups");
 
-    // ¿¡µğÅÍ º¯¼ö
+    // ì—ë””í„° ë³€ìˆ˜
     private GameObject markerPrefab;
     private int targetSceneID = 1;
     private float gridSize = 1.0f;
 
-    // ÇÊÅÍ¸µ º¯¼ö
+    // í•„í„°ë§ ë³€ìˆ˜
     private bool filterEnable = false;
     private int filterDay = 1;
     private int filterTime = 9;
 
-    // UI »óÅÂ
+    // UI ìƒíƒœ
     private Vector2 scrollPos;
     private bool showHelp = false;
 
-    // ÇÃ·¹ÀÌ¾î °ÔÀÓ ½ÃÀÛ À§Ä¡
+    // ìë™ ì´ë²¤íŠ¸ì¸ì§€ ì•„ë‹Œì§€
+    public bool AutoTrigger = false;
+
+    // í”Œë ˆì´ì–´ ê²Œì„ ì‹œì‘ ìœ„ì¹˜
     private GameStartConfig startConfig;
 
     [MenuItem("Tools/Map Data Editor")]
@@ -46,7 +49,7 @@ public class MapDataEditor : EditorWindow
     {
         if (markerPrefab == null) markerPrefab = Resources.Load<GameObject>("Editor/EventMarkerPrefab");
 
-        // ¡Ú [À¯·É µ¥ÀÌÅÍ ¹æÁö] ¾À ¿­¸± ¶§ ÀÚµ¿ Á¤È­ ÀÌº¥Æ® ¿¬°á
+        // â˜… [ìœ ë ¹ ë°ì´í„° ë°©ì§€] ì”¬ ì—´ë¦´ ë•Œ ìë™ ì •í™” ì´ë²¤íŠ¸ ì—°ê²°
         EditorSceneManager.sceneOpened += OnSceneOpened;
 
         DetectCurrentSceneID();
@@ -56,20 +59,20 @@ public class MapDataEditor : EditorWindow
 
     private void OnDisable()
     {
-        // ÀÌº¥Æ® ¿¬°á ÇØÁ¦
+        // ì´ë²¤íŠ¸ ì—°ê²° í•´ì œ
         EditorSceneManager.sceneOpened -= OnSceneOpened;
     }
 
-    // ¡Ú [À¯·É µ¥ÀÌÅÍ ¹æÁö] ¾À ÁøÀÔ ½Ã Á»ºñ ¸¶Ä¿ »èÁ¦ ¹× µ¥ÀÌÅÍ µ¿±âÈ­
+    // â˜… [ìœ ë ¹ ë°ì´í„° ë°©ì§€] ì”¬ ì§„ì… ì‹œ ì¢€ë¹„ ë§ˆì»¤ ì‚­ì œ ë° ë°ì´í„° ë™ê¸°í™”
     private void OnSceneOpened(UnityEngine.SceneManagement.Scene scene, OpenSceneMode mode)
     {
-        ClearMarkers(); // ¾À¿¡ ³²¾ÆÀÖ´Â Á»ºñ ¸¶Ä¿ Á¦°Å
-        DetectCurrentSceneID(); // ÇöÀç ¾À ID °»½Å
+        ClearMarkers(); // ì”¬ì— ë‚¨ì•„ìˆëŠ” ì¢€ë¹„ ë§ˆì»¤ ì œê±°
+        DetectCurrentSceneID(); // í˜„ì¬ ì”¬ ID ê°±ì‹ 
 
-        // ÇÊ¿äÇÏ´Ù¸é ÀÚµ¿À¸·Î ·Îµå (¿øÄ¡ ¾ÊÀ¸¸é ÁÖ¼® Ã³¸®)
+        // í•„ìš”í•˜ë‹¤ë©´ ìë™ìœ¼ë¡œ ë¡œë“œ (ì›ì¹˜ ì•Šìœ¼ë©´ ì£¼ì„ ì²˜ë¦¬)
         LoadMarkers(); 
 
-        Debug.Log($"[MapEditor] ¾À ÁøÀÔ: {scene.name} (ID: {targetSceneID}) - À¯·É ¸¶Ä¿ Á¤¸® ¿Ï·á");
+        Debug.Log($"[MapEditor] ì”¬ ì§„ì…: {scene.name} (ID: {targetSceneID}) - ìœ ë ¹ ë§ˆì»¤ ì •ë¦¬ ì™„ë£Œ");
     }
 
     private void OnGUI()
@@ -83,11 +86,11 @@ public class MapDataEditor : EditorWindow
     }
 
     // =================================================================================
-    // [ÅÇ 1] ¸Ê ¿¡µğÅÍ
+    // [íƒ­ 1] ë§µ ì—ë””í„°
     // =================================================================================
     private void DrawMapEditorTab()
     {
-        GUILayout.Label("1. ¾À ÀÌµ¿ & ¼³Á¤", EditorStyles.boldLabel);
+        GUILayout.Label("1. ì”¬ ì´ë™ & ì„¤ì •", EditorStyles.boldLabel);
 
         string currentSceneName = EditorSceneManager.GetActiveScene().name;
         string targetNameFromCSV = GetSceneNameByID(targetSceneID);
@@ -96,24 +99,24 @@ public class MapDataEditor : EditorWindow
         GUIStyle statusStyle = new GUIStyle(EditorStyles.label);
         statusStyle.normal.textColor = isMatch ? Color.green : Color.red;
         statusStyle.fontStyle = FontStyle.Bold;
-        GUILayout.Label($"ÇöÀç ¾À: {currentSceneName} / Å¸°Ù ID({targetSceneID}): {targetNameFromCSV}", statusStyle);
+        GUILayout.Label($"í˜„ì¬ ì”¬: {currentSceneName} / íƒ€ê²Ÿ ID({targetSceneID}): {targetNameFromCSV}", statusStyle);
 
         GUILayout.BeginHorizontal();
-        targetSceneID = EditorGUILayout.IntField("ÀÌµ¿ÇÒ Scene ID", targetSceneID);
+        targetSceneID = EditorGUILayout.IntField("ì´ë™í•  Scene ID", targetSceneID);
 
-        // ¡Ú [¾ÈÀüÀåÄ¡] ¾ÈÀüÇÑ ÀÌµ¿ ¹öÆ°
-        if (GUILayout.Button("ÀÌµ¿ (Move)", GUILayout.Width(120)))
+        // â˜… [ì•ˆì „ì¥ì¹˜] ì•ˆì „í•œ ì´ë™ ë²„íŠ¼
+        if (GUILayout.Button("ì´ë™ (Move)", GUILayout.Width(120)))
         {
             TryOpenScene(targetSceneID);
         }
         GUILayout.EndHorizontal();
 
-        if (!isMatch) EditorGUILayout.HelpBox("ÇöÀç ¾À°ú Å¸°Ù ID°¡ ´Ù¸¨´Ï´Ù. ÀÌµ¿ ½Ã ÀúÀå ¿©ºÎ¸¦ È®ÀÎÇÕ´Ï´Ù.", MessageType.Warning);
+        if (!isMatch) EditorGUILayout.HelpBox("í˜„ì¬ ì”¬ê³¼ íƒ€ê²Ÿ IDê°€ ë‹¤ë¦…ë‹ˆë‹¤. ì´ë™ ì‹œ ì €ì¥ ì—¬ë¶€ë¥¼ í™•ì¸í•©ë‹ˆë‹¤.", MessageType.Warning);
 
         markerPrefab = (GameObject)EditorGUILayout.ObjectField("Prefab", markerPrefab, typeof(GameObject), false);
 
         GUILayout.Space(10);
-        GUILayout.Label("2. »ı¼º ¹× ¹èÄ¡", EditorStyles.boldLabel);
+        GUILayout.Label("2. ìƒì„± ë° ë°°ì¹˜", EditorStyles.boldLabel);
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("+ NPC")) CreateNewMarker(EventMarkerType.Normal_NPC);
         if (GUILayout.Button("+ System")) CreateNewMarker(EventMarkerType.System_Repeat);
@@ -128,11 +131,11 @@ public class MapDataEditor : EditorWindow
         DrawFilterUI();
 
         GUILayout.Space(10);
-        GUILayout.Label("4. µ¥ÀÌÅÍ °ü¸®", EditorStyles.boldLabel);
+        GUILayout.Label("4. ë°ì´í„° ê´€ë¦¬", EditorStyles.boldLabel);
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("Load CSV", GUILayout.Height(40))) LoadMarkers();
 
-        // ¡Ú [¾ÈÀüÀåÄ¡] ÇöÀç ¾À ID·Î °­Á¦ ÀúÀå
+        // â˜… [ì•ˆì „ì¥ì¹˜] í˜„ì¬ ì”¬ IDë¡œ ê°•ì œ ì €ì¥
         if (GUILayout.Button("Save Current Scene", GUILayout.Height(40)))
         {
             int realID = GetSceneIDByName(EditorSceneManager.GetActiveScene().name);
@@ -143,7 +146,7 @@ public class MapDataEditor : EditorWindow
             }
             else
             {
-                if (EditorUtility.DisplayDialog("°æ°í", "SceneTable¿¡ ¾ø´Â ¾ÀÀÔ´Ï´Ù. ÀÔ·ÂµÈ ID·Î ÀúÀåÇÒ±î¿ä?", "³×", "¾Æ´Ï¿À"))
+                if (EditorUtility.DisplayDialog("ê²½ê³ ", "SceneTableì— ì—†ëŠ” ì”¬ì…ë‹ˆë‹¤. ì…ë ¥ëœ IDë¡œ ì €ì¥í• ê¹Œìš”?", "ë„¤", "ì•„ë‹ˆì˜¤"))
                     SaveMarkers(targetSceneID);
             }
         }
@@ -151,33 +154,33 @@ public class MapDataEditor : EditorWindow
 
         GUILayout.Space(5);
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button("ID ÀçÁ¤·Ä")) AutoAssignIDs();
-        if (GUILayout.Button("ÀüÃ¼ µ¥ÀÌÅÍ »èÁ¦")) ClearMarkers();
+        if (GUILayout.Button("ID ì¬ì •ë ¬")) AutoAssignIDs();
+        if (GUILayout.Button("ì „ì²´ ë°ì´í„° ì‚­ì œ")) ClearMarkers();
         GUILayout.EndHorizontal();
 
         GUILayout.Space(10);
-        showHelp = EditorGUILayout.Foldout(showHelp, "»ç¿ë ¼³¸í¼­");
+        showHelp = EditorGUILayout.Foldout(showHelp, "ì‚¬ìš© ì„¤ëª…ì„œ");
         if (showHelp)
         {
             string helpText =
-                " [¾ÈÀü ±â´É]\n" +
-                " - ÀÌµ¿ ½Ã ÀúÀå ¿©ºÎ¸¦ ¹°¾î µ¥ÀÌÅÍ ¼Õ½Ç/µ¤¾î¾²±â¸¦ ¹æÁöÇÕ´Ï´Ù.\n" +
-                " - ¾À ÁøÀÔ ½Ã 'À¯·É ¸¶Ä¿'¸¦ ÀÚµ¿À¸·Î Ã»¼ÒÇÕ´Ï´Ù.\n" +
-                " - ÀúÀå ½Ã .csv Çü½ÄÀ¸·Î ¹é¾÷µÇ¸ç ÇÑ±Û ±úÁü(UTF-8 BOM)ÀÌ ÇØ°áµÇ¾ú½À´Ï´Ù.\n\n" +
+                " [ì•ˆì „ ê¸°ëŠ¥]\n" +
+                " - ì´ë™ ì‹œ ì €ì¥ ì—¬ë¶€ë¥¼ ë¬¼ì–´ ë°ì´í„° ì†ì‹¤/ë®ì–´ì“°ê¸°ë¥¼ ë°©ì§€í•©ë‹ˆë‹¤.\n" +
+                " - ì”¬ ì§„ì… ì‹œ 'ìœ ë ¹ ë§ˆì»¤'ë¥¼ ìë™ìœ¼ë¡œ ì²­ì†Œí•©ë‹ˆë‹¤.\n" +
+                " - ì €ì¥ ì‹œ .csv í˜•ì‹ìœ¼ë¡œ ë°±ì—…ë˜ë©° í•œê¸€ ê¹¨ì§(UTF-8 BOM)ì´ í•´ê²°ë˜ì—ˆìŠµë‹ˆë‹¤.\n\n" +
                 " [NPC Schedule]\n" +
-                " - »ó´Ü ÅÇÀ» ´­·¯ NPCµéÀÇ ÀüÃ¼ µ¿¼±À» È®ÀÎÇÒ ¼ö ÀÖ½À´Ï´Ù."+
-                " [±âº» »ç¿ë¹ı]\n" +
-                " 1. 'Scene ID' ÀÔ·Â ÈÄ 'ÀÌµ¿' ¹öÆ°À¸·Î ¾ÀÀ» ¿±´Ï´Ù. (¾À ÀÌ¸§Àº ÃÊ·Ï»öÀÌ¾î¾ß ÇÕ´Ï´Ù)\n" +
-                " 2. 'Load CSV'·Î µ¥ÀÌÅÍ¸¦ ºÒ·¯¿É´Ï´Ù.\n" +
-                " 3. '+ NPC' ¹öÆ°À¸·Î Áß¾Ó¿¡ »õ ¸¶Ä¿¸¦ »ı¼ºÇÕ´Ï´Ù.\n" +
-                " 4. À§Ä¡¸¦ Àâ°í 'Save to CSV'¸¦ ´©¸£¸é ÀúÀåµË´Ï´Ù.\n\n" +
-                " [Ink ÆÄÀÏ ¿¬µ¿]\n" +
-                " - ¸¶Ä¿ÀÇ 'Ink Node Name'À» 'NPC1_Day1_001' Ã³·³ Áş½À´Ï´Ù.\n" +
-                " - ¸¶Ä¿¸¦ Å¬¸¯ÇÏ°í ÀÎ½ºÆåÅÍ¿¡¼­ 'Create Ink'¸¦ ´©¸£¸é\n" +
-                "   Assets/Datas/NPC1/NPC1_Day1.ink ÆÄÀÏÀÌ »ı¼ºµË´Ï´Ù.\n\n" +
-                " [ÇÊÅÍ¸µ ÁÖÀÇ»çÇ×]\n" +
-                " - ÇÊÅÍ Àû¿ë Áß¿¡µµ 'Load CSV'¸¦ ´©¸£¸é ¸ğµç µ¥ÀÌÅÍ°¡ ·ÎµåµË´Ï´Ù.\n" +
-                " - ·Îµå ½Ã Áßº¹ »ı¼ºÀ» ¸·±â À§ÇØ ¼û°ÜÁø ¸¶Ä¿±îÁö ¸ğµÎ »èÁ¦ ÈÄ ·ÎµåÇÕ´Ï´Ù.";
+                " - ìƒë‹¨ íƒ­ì„ ëˆŒëŸ¬ NPCë“¤ì˜ ì „ì²´ ë™ì„ ì„ í™•ì¸í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤."+
+                " [ê¸°ë³¸ ì‚¬ìš©ë²•]\n" +
+                " 1. 'Scene ID' ì…ë ¥ í›„ 'ì´ë™' ë²„íŠ¼ìœ¼ë¡œ ì”¬ì„ ì—½ë‹ˆë‹¤. (ì”¬ ì´ë¦„ì€ ì´ˆë¡ìƒ‰ì´ì–´ì•¼ í•©ë‹ˆë‹¤)\n" +
+                " 2. 'Load CSV'ë¡œ ë°ì´í„°ë¥¼ ë¶ˆëŸ¬ì˜µë‹ˆë‹¤.\n" +
+                " 3. '+ NPC' ë²„íŠ¼ìœ¼ë¡œ ì¤‘ì•™ì— ìƒˆ ë§ˆì»¤ë¥¼ ìƒì„±í•©ë‹ˆë‹¤.\n" +
+                " 4. ìœ„ì¹˜ë¥¼ ì¡ê³  'Save to CSV'ë¥¼ ëˆ„ë¥´ë©´ ì €ì¥ë©ë‹ˆë‹¤.\n\n" +
+                " [Ink íŒŒì¼ ì—°ë™]\n" +
+                " - ë§ˆì»¤ì˜ 'Ink Node Name'ì„ 'NPC1_Day1_001' ì²˜ëŸ¼ ì§“ìŠµë‹ˆë‹¤.\n" +
+                " - ë§ˆì»¤ë¥¼ í´ë¦­í•˜ê³  ì¸ìŠ¤í™í„°ì—ì„œ 'Create Ink'ë¥¼ ëˆ„ë¥´ë©´\n" +
+                "   Assets/Datas/NPC1/NPC1_Day1.ink íŒŒì¼ì´ ìƒì„±ë©ë‹ˆë‹¤.\n\n" +
+                " [í•„í„°ë§ ì£¼ì˜ì‚¬í•­]\n" +
+                " - í•„í„° ì ìš© ì¤‘ì—ë„ 'Load CSV'ë¥¼ ëˆ„ë¥´ë©´ ëª¨ë“  ë°ì´í„°ê°€ ë¡œë“œë©ë‹ˆë‹¤.\n" +
+                " - ë¡œë“œ ì‹œ ì¤‘ë³µ ìƒì„±ì„ ë§‰ê¸° ìœ„í•´ ìˆ¨ê²¨ì§„ ë§ˆì»¤ê¹Œì§€ ëª¨ë‘ ì‚­ì œ í›„ ë¡œë“œí•©ë‹ˆë‹¤.";
             EditorGUILayout.TextArea(helpText, EditorStyles.helpBox);
         }
 
@@ -186,10 +189,10 @@ public class MapDataEditor : EditorWindow
 
     private void DrawFilterUI()
     {
-        GUILayout.Label("3. ÇÊÅÍ¸µ (View Filter)", EditorStyles.boldLabel);
+        GUILayout.Label("3. í•„í„°ë§ (View Filter)", EditorStyles.boldLabel);
         GUILayout.BeginHorizontal();
         bool prev = filterEnable;
-        filterEnable = EditorGUILayout.Toggle("ÇÊÅÍ Àû¿ë", filterEnable);
+        filterEnable = EditorGUILayout.Toggle("í•„í„° ì ìš©", filterEnable);
         if (prev != filterEnable) ApplyFilter();
 
         if (filterEnable)
@@ -206,17 +209,17 @@ public class MapDataEditor : EditorWindow
     }
 
     // =================================================================================
-    // [ÅÇ 2] NPC ½ºÄÉÁÙÇ¥ 
+    // [íƒ­ 2] NPC ìŠ¤ì¼€ì¤„í‘œ 
     // =================================================================================
     private void DrawScheduleTab()
     {
-        GUILayout.Label("NPC ÀüÃ¼ ½ºÄÉÁÙ (CSV ±â¹İ)", EditorStyles.boldLabel);
+        GUILayout.Label("NPC ì „ì²´ ìŠ¤ì¼€ì¤„ (CSV ê¸°ë°˜)", EditorStyles.boldLabel);
 
-        if (GUILayout.Button("µ¥ÀÌÅÍ »õ·Î°íÄ§ (Refresh)")) { } // GUI °»½Å
+        if (GUILayout.Button("ë°ì´í„° ìƒˆë¡œê³ ì¹¨ (Refresh)")) { } // GUI ê°±ì‹ 
 
         if (!File.Exists(eventCsvPath))
         {
-            GUILayout.Label("EventTable.csv ÆÄÀÏÀÌ ¾ø½À´Ï´Ù.");
+            GUILayout.Label("EventTable.csv íŒŒì¼ì´ ì—†ìŠµë‹ˆë‹¤.");
             return;
         }
 
@@ -228,7 +231,7 @@ public class MapDataEditor : EditorWindow
             if (string.IsNullOrEmpty(lines[i])) continue;
             string[] cols = lines[i].Split(',');
 
-            // µ¥ÀÌÅÍ ÆÄ½Ì ¿¹¿ÜÃ³¸®
+            // ë°ì´í„° íŒŒì‹± ì˜ˆì™¸ì²˜ë¦¬
             if (cols.Length < 10) continue;
 
             scheduleList.Add(new ScheduleItem
@@ -242,7 +245,7 @@ public class MapDataEditor : EditorWindow
             });
         }
 
-        // ÀÌ¸§ -> ³¯Â¥ -> ½Ã°£ ¼ø Á¤·Ä
+        // ì´ë¦„ -> ë‚ ì§œ -> ì‹œê°„ ìˆœ ì •ë ¬
         var grouped = scheduleList
             .OrderBy(x => x.Name)
             .ThenBy(x => x.Day)
@@ -254,14 +257,14 @@ public class MapDataEditor : EditorWindow
         foreach (var group in grouped)
         {
             GUILayout.BeginVertical("box");
-            GUILayout.Label($"[ {group.Key} ]", EditorStyles.boldLabel); // NPC ÀÌ¸§
+            GUILayout.Label($"[ {group.Key} ]", EditorStyles.boldLabel); // NPC ì´ë¦„
 
             foreach (var item in group)
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label($"Day {item.Day}", GUILayout.Width(50));
 
-                string timeStr = (item.Start == 0 && item.End == 24) ? "All Day" : $"{item.Start}½Ã ~ {item.End}½Ã";
+                string timeStr = (item.Start == 0 && item.End == 24) ? "All Day" : $"{item.Start}ì‹œ ~ {item.End}ì‹œ";
                 GUILayout.Label(timeStr, GUILayout.Width(100));
 
                 GUILayout.Label($"Scene {item.SceneID}", GUILayout.Width(80));
@@ -275,61 +278,61 @@ public class MapDataEditor : EditorWindow
     }
 
     // =================================================================================
-    // ÇÙ½É ·ÎÁ÷ ±¸Çö (¾ÈÀüÀåÄ¡ Æ÷ÇÔ)
+    // í•µì‹¬ ë¡œì§ êµ¬í˜„ (ì•ˆì „ì¥ì¹˜ í¬í•¨)
     // =================================================================================
 
     private void TryOpenScene(int nextSceneID)
     {
-        // 1. ÇöÀç ¾À ID ÆÄ¾Ç
+        // 1. í˜„ì¬ ì”¬ ID íŒŒì•…
         string currentSceneName = EditorSceneManager.GetActiveScene().name;
         int currentID = GetSceneIDByName(currentSceneName);
 
-        // 2. º¯°æ»çÇ×ÀÌ ÀÖ´ÂÁö °Ë»ç (Smart Check)
+        // 2. ë³€ê²½ì‚¬í•­ì´ ìˆëŠ”ì§€ ê²€ì‚¬ (Smart Check)
         bool isDirty = IsCurrentSceneDirty(currentID);
 
-        // 3. º¯°æ»çÇ×ÀÌ ÀÖÀ» ¶§¸¸ ¹°¾îº½
+        // 3. ë³€ê²½ì‚¬í•­ì´ ìˆì„ ë•Œë§Œ ë¬¼ì–´ë´„
         if (isDirty)
         {
-            int option = EditorUtility.DisplayDialogComplex("º¯°æ»çÇ× °¨Áö",
-                $"ÇöÀç ¾À({currentSceneName})¿¡ 'ÀúÀåµÇÁö ¾ÊÀº º¯°æ»çÇ×'ÀÌ ÀÖ½À´Ï´Ù.\nÀúÀåÇÏÁö ¾Ê°í ÀÌµ¿ÇÏ¸é »ç¶óÁı´Ï´Ù.",
-                "ÀúÀå ÈÄ ÀÌµ¿", "±×³É ÀÌµ¿ (»èÁ¦µÊ)", "Ãë¼Ò");
+            int option = EditorUtility.DisplayDialogComplex("ë³€ê²½ì‚¬í•­ ê°ì§€",
+                $"í˜„ì¬ ì”¬({currentSceneName})ì— 'ì €ì¥ë˜ì§€ ì•Šì€ ë³€ê²½ì‚¬í•­'ì´ ìˆìŠµë‹ˆë‹¤.\nì €ì¥í•˜ì§€ ì•Šê³  ì´ë™í•˜ë©´ ì‚¬ë¼ì§‘ë‹ˆë‹¤.",
+                "ì €ì¥ í›„ ì´ë™", "ê·¸ëƒ¥ ì´ë™ (ì‚­ì œë¨)", "ì·¨ì†Œ");
 
             switch (option)
             {
-                case 0: // ÀúÀå ÈÄ ÀÌµ¿
+                case 0: // ì €ì¥ í›„ ì´ë™
                     if (currentID != -1) { SaveMarkers(currentID); ClearMarkers(); OpenSceneByID(nextSceneID); }
-                    else EditorUtility.DisplayDialog("¿À·ù", "ÇöÀç ¾À ID¸¦ ¾Ë ¼ö ¾ø¾î ÀúÀåÇÒ ¼ö ¾ø½À´Ï´Ù.", "È®ÀÎ");
+                    else EditorUtility.DisplayDialog("ì˜¤ë¥˜", "í˜„ì¬ ì”¬ IDë¥¼ ì•Œ ìˆ˜ ì—†ì–´ ì €ì¥í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤.", "í™•ì¸");
                     break;
-                case 1: // ±×³É ÀÌµ¿
+                case 1: // ê·¸ëƒ¥ ì´ë™
                     ClearMarkers(); OpenSceneByID(nextSceneID);
                     break;
-                case 2: return; // Ãë¼Ò
+                case 2: return; // ì·¨ì†Œ
             }
         }
         else
         {
-            // º¯°æ»çÇ× ¾øÀ¸¸é ¹¯Áöµµ µûÁöÁöµµ ¾Ê°í ¹Ù·Î ÀÌµ¿
+            // ë³€ê²½ì‚¬í•­ ì—†ìœ¼ë©´ ë¬»ì§€ë„ ë”°ì§€ì§€ë„ ì•Šê³  ë°”ë¡œ ì´ë™
             ClearMarkers();
             OpenSceneByID(nextSceneID);
         }
     }
 
-    // 1. ÇöÀç ¾À°ú CSV ÆÄÀÏ ³»¿ë ºñ±³ ÇÔ¼ö
+    // 1. í˜„ì¬ ì”¬ê³¼ CSV íŒŒì¼ ë‚´ìš© ë¹„êµ í•¨ìˆ˜
     private bool IsCurrentSceneDirty(int sceneID)
     {
         if (sceneID == -1) return false;
 
-        // A. ÇöÀç È­¸é¿¡ ÀÖ´Â ¸¶Ä¿µéÀ» ¹®ÀÚ¿­ ¸®½ºÆ®·Î º¯È¯
+        // A. í˜„ì¬ í™”ë©´ì— ìˆëŠ” ë§ˆì»¤ë“¤ì„ ë¬¸ìì—´ ë¦¬ìŠ¤íŠ¸ë¡œ ë³€í™˜
         List<string> currentMarkerData = new List<string>();
         var markers = FindObjectsOfType<EventMarker>(true);
         foreach (var m in markers)
         {
-            m.SceneID = sceneID; // ºñ±³¸¦ À§ÇØ ID Àá½Ã µ¿±âÈ­
+            m.SceneID = sceneID; // ë¹„êµë¥¼ ìœ„í•´ ID ì ì‹œ ë™ê¸°í™”
             currentMarkerData.Add(GetMarkerCsvString(m));
         }
-        currentMarkerData.Sort(); // ¼ø¼­ ¼¯¿©µµ ³»¿ë¸¸ °°À¸¸é µÇ´Ï±î Á¤·Ä
+        currentMarkerData.Sort(); // ìˆœì„œ ì„ì—¬ë„ ë‚´ìš©ë§Œ ê°™ìœ¼ë©´ ë˜ë‹ˆê¹Œ ì •ë ¬
 
-        // B. CSV ÆÄÀÏ¿¡¼­ ÇØ´ç ¾À µ¥ÀÌÅÍ¸¸ °¡Á®¿È
+        // B. CSV íŒŒì¼ì—ì„œ í•´ë‹¹ ì”¬ ë°ì´í„°ë§Œ ê°€ì ¸ì˜´
         List<string> csvData = new List<string>();
         if (File.Exists(eventCsvPath))
         {
@@ -341,44 +344,45 @@ public class MapDataEditor : EditorWindow
 
                 if (int.Parse(cols[7]) == sceneID)
                 {
-                    // ºñ±³¸¦ À§ÇØ Æ÷¸Ë ÅëÀÏ (¼Ò¼öÁ¡ Ã³¸® µî)
+                    // ë¹„êµë¥¼ ìœ„í•´ í¬ë§· í†µì¼ (ì†Œìˆ˜ì  ì²˜ë¦¬ ë“±)
                     csvData.Add(NormalizeCsvLine(cols));
                 }
             }
         }
         csvData.Sort();
 
-        // C. µÎ ¸®½ºÆ® ºñ±³
-        if (currentMarkerData.Count != csvData.Count) return true; // °³¼ö ´Ù¸£¸é ¹Ù²ï °ÅÀÓ
+        // C. ë‘ ë¦¬ìŠ¤íŠ¸ ë¹„êµ
+        if (currentMarkerData.Count != csvData.Count) return true; // ê°œìˆ˜ ë‹¤ë¥´ë©´ ë°”ë€ ê±°ì„
 
         for (int i = 0; i < currentMarkerData.Count; i++)
         {
-            if (currentMarkerData[i] != csvData[i]) return true; // ³»¿ë ÇÏ³ª¶óµµ ´Ù¸£¸é ¹Ù²ï °ÅÀÓ
+            if (currentMarkerData[i] != csvData[i]) return true; // ë‚´ìš© í•˜ë‚˜ë¼ë„ ë‹¤ë¥´ë©´ ë°”ë€ ê±°ì„
         }
 
-        return false; // ¿Ïº®È÷ ¶È°°À½ (ÀúÀå ºÒÇÊ¿ä)
+        return false; // ì™„ë²½íˆ ë˜‘ê°™ìŒ (ì €ì¥ ë¶ˆí•„ìš”)
     }
 
-    // 2. ¸¶Ä¿ -> CSV Æ÷¸Ë ¹®ÀÚ¿­ º¯È¯
+
+    // 2. ë§ˆì»¤ -> CSV í¬ë§· ë¬¸ìì—´ ë³€í™˜
+    // â˜… AutoTrigger ì»¬ëŸ¼ ì¶”ê°€
     private string GetMarkerCsvString(EventMarker m)
     {
         string pX = m.transform.position.x.ToString("F2");
         string pY = m.transform.position.y.ToString("F2");
-        return $"{m.EventID},{m.EventName},{m.IsAnytime},{m.Day},{m.StartTime},{m.EndTime},{m.InkNodeName},{m.SceneID},{pX},{pY},{m.TimeTaken}";
+        return $"{m.EventID},{m.EventName},{m.IsAnytime},{m.Day},{m.StartTime},{m.EndTime},{m.InkNodeName},{m.SceneID},{pX},{pY},{m.TimeTaken},{m.AutoTrigger}";
     }
 
-    // 3. CSV ÀĞÀº ÁÙ -> ºñ±³¿ë Ç¥ÁØ Æ÷¸Ë º¯È¯
+    // 3. CSV ì½ì€ ì¤„ -> ë¹„êµìš© í‘œì¤€ í¬ë§· ë³€í™˜
+    // â˜… AutoTrigger ì»¬ëŸ¼ ì¶”ê°€ (êµ¬ë²„ì „ CSVì™€ì˜ í˜¸í™˜ì„ ìœ„í•´ ì—†ìœ¼ë©´ Falseë¡œ ì²˜ë¦¬)
     private string NormalizeCsvLine(string[] cols)
     {
-        // ÆÄÀÏ¿¡ 4.5¶ó°í ÀûÇôÀÖ¾îµµ 4.50À¸·Î º¯È¯ÇØ¼­ ºñ±³ÇØ¾ß ÇÔ
         float x = float.Parse(cols[8]);
         float y = float.Parse(cols[9]);
         string pX = x.ToString("F2");
         string pY = y.ToString("F2");
-
-        return $"{cols[0]},{cols[1]},{cols[2]},{cols[3]},{cols[4]},{cols[5]},{cols[6]},{cols[7]},{pX},{pY},{cols[10]}";
+        string autoTrigger = cols.Length > 11 ? cols[11] : "False";
+        return $"{cols[0]},{cols[1]},{cols[2]},{cols[3]},{cols[4]},{cols[5]},{cols[6]},{cols[7]},{pX},{pY},{cols[10]},{autoTrigger}";
     }
-
 
     private void SaveMarkers(int saveAsID)
     {
@@ -386,7 +390,7 @@ public class MapDataEditor : EditorWindow
         AutoAssignIDs();
 
         List<string> allRows = new List<string>();
-        string header = "EventID,EventName,IsAnytime,EventDay,StartTime,EndTime,NodeName,SceneID,PositionX,PositionY,TimeTaken";
+        string header = "EventID,EventName,IsAnytime,EventDay,StartTime,EndTime,NodeName,SceneID,PositionX,PositionY,TimeTaken,AutoTrigger";
 
         if (File.Exists(eventCsvPath))
         {
@@ -395,7 +399,7 @@ public class MapDataEditor : EditorWindow
             for (int i = 1; i < lines.Length; i++)
             {
                 if (string.IsNullOrEmpty(lines[i])) continue;
-                if (int.Parse(lines[i].Split(',')[7]) != saveAsID) allRows.Add(lines[i]); // Å¸ ¾À µ¥ÀÌÅÍ º¸Á¸
+                if (int.Parse(lines[i].Split(',')[7]) != saveAsID) allRows.Add(lines[i]); // íƒ€ ì”¬ ë°ì´í„° ë³´ì¡´
             }
         }
 
@@ -405,7 +409,7 @@ public class MapDataEditor : EditorWindow
             m.SceneID = saveAsID;
             string pX = m.transform.position.x.ToString("F2");
             string pY = m.transform.position.y.ToString("F2");
-            allRows.Add($"{m.EventID},{m.EventName},{m.IsAnytime},{m.Day},{m.StartTime},{m.EndTime},{m.InkNodeName},{m.SceneID},{pX},{pY},{m.TimeTaken}");
+            allRows.Add($"{m.EventID},{m.EventName},{m.IsAnytime},{m.Day},{m.StartTime},{m.EndTime},{m.InkNodeName},{m.SceneID},{pX},{pY},{m.TimeTaken},{m.AutoTrigger}"); // â˜… ì¶”ê°€
         }
 
         allRows.Sort((a, b) => int.Parse(a.Split(',')[0]).CompareTo(int.Parse(b.Split(',')[0])));
@@ -414,7 +418,7 @@ public class MapDataEditor : EditorWindow
 
         File.WriteAllLines(eventCsvPath, final.ToArray(), new UTF8Encoding(true)); // UTF-8 BOM
         AssetDatabase.Refresh();
-        Debug.Log($"[Save] Scene {saveAsID} ÀúÀå ¿Ï·á.");
+        Debug.Log($"[Save] Scene {saveAsID} ì €ì¥ ì™„ë£Œ.");
     }
 
     private void CreateBackup()
@@ -449,6 +453,7 @@ public class MapDataEditor : EditorWindow
             m.InkNodeName = cols[6];
             m.SceneID = int.Parse(cols[7]);
             m.TimeTaken = int.Parse(cols[10]);
+            m.AutoTrigger = cols.Length > 11 && bool.Parse(cols[11]); // â˜… ì¶”ê°€ â€” êµ¬ë²„ì „ CSV í˜¸í™˜
             m.markerType = m.EventID >= 90000 ? EventMarkerType.System_Repeat : EventMarkerType.Normal_NPC;
             go.name = $"Marker_{m.EventID}_{m.EventName}";
         }
@@ -474,16 +479,36 @@ public class MapDataEditor : EditorWindow
     private void AutoAssignIDs()
     {
         HashSet<int> used = new HashSet<int>();
-        if (File.Exists(eventCsvPath)) { var lines = File.ReadAllLines(eventCsvPath); for (int i = 1; i < lines.Length; i++) if (!string.IsNullOrEmpty(lines[i])) used.Add(int.Parse(lines[i].Split(',')[0])); }
+        if (File.Exists(eventCsvPath)) 
+        { 
+            var lines = File.ReadAllLines(eventCsvPath); 
+            for (int i = 1; i < lines.Length; i++) 
+                if (!string.IsNullOrEmpty(lines[i])) 
+                    used.Add(int.Parse(lines[i].Split(',')[0])); 
+        }
+
         int n = 10000, s = 90000;
-        foreach (var m in FindObjectsOfType<EventMarker>(true)) { if (m.EventID == 0) { int newID = m.markerType == EventMarkerType.Normal_NPC ? n : s; while (used.Contains(newID)) newID++; m.EventID = newID; used.Add(newID); m.name = $"Marker_{newID}_{m.EventName}"; if (m.markerType == EventMarkerType.Normal_NPC) n = newID + 1; else s = newID + 1; EditorUtility.SetDirty(m); } }
+        foreach (var m in FindObjectsOfType<EventMarker>(true)) 
+        { 
+            if (m.EventID == 0) 
+            { 
+                int newID = m.markerType == EventMarkerType.Normal_NPC ? n : s; 
+                while (used.Contains(newID)) 
+                    newID++; 
+                m.EventID = newID; 
+                used.Add(newID); 
+                m.name = $"Marker_{newID}_{m.EventName}"; 
+                if (m.markerType == EventMarkerType.Normal_NPC) n = newID + 1; 
+                else s = newID + 1; EditorUtility.SetDirty(m); 
+            } 
+        }
     }
 
     private void SnapAllMarkers() { foreach (var m in FindObjectsOfType<EventMarker>(true)) { m.transform.position = new Vector3(Mathf.Round(m.transform.position.x / gridSize) * gridSize, Mathf.Round(m.transform.position.y / gridSize) * gridSize, 0); } }
     private void ApplyFilter() { foreach (var m in FindObjectsOfType<EventMarker>(true)) m.gameObject.SetActive(m.IsAnytime || (m.Day == filterDay && filterTime >= m.StartTime && filterTime < m.EndTime)); }
     private void ShowAllMarkers() { foreach (var m in FindObjectsOfType<EventMarker>(true)) m.gameObject.SetActive(true); }
 
-    // ÇïÆÛ ÇÔ¼ö
+    // í—¬í¼ í•¨ìˆ˜
     private void OpenSceneByID(int id)
     {
         string tName = GetSceneNameByID(id);
@@ -511,19 +536,19 @@ public class MapDataEditor : EditorWindow
 
     class ScheduleItem { public string Name; public int Day; public int Start; public int End; public int SceneID; public Vector2 Pos; }
 
-    // ------ ½ÃÀÛ À§Ä¡ ÁöÁ¤ °ü·Ã
+    // ------ ì‹œì‘ ìœ„ì¹˜ ì§€ì • ê´€ë ¨
     private void DrawStartPositionUI()
     {
         if (startConfig == null) startConfig = AssetDatabase.LoadAssetAtPath<GameStartConfig>("Assets/Datas/GameStartConfig.asset");
         GUILayout.Space(10);
-        GUILayout.Label("°ÔÀÓ ½ÃÀÛ À§Ä¡", EditorStyles.boldLabel);
-        if (startConfig == null) { EditorGUILayout.HelpBox("Assets/Datas/GameStartConfig.assetÀÌ ¾øÀ½", MessageType.Warning); return; }
+        GUILayout.Label("ê²Œì„ ì‹œì‘ ìœ„ì¹˜", EditorStyles.boldLabel);
+        if (startConfig == null) { EditorGUILayout.HelpBox("Assets/Datas/GameStartConfig.assetì´ ì—†ìŒ", MessageType.Warning); return; }
 
-        EditorGUILayout.LabelField($"ÇöÀç: Scene {startConfig.startSceneID}, {startConfig.startPosition}");
+        EditorGUILayout.LabelField($"í˜„ì¬: Scene {startConfig.startSceneID}, {startConfig.startPosition}");
 
         if (Application.isPlaying)
         {
-            if (GUILayout.Button("[Play Áß] ÇöÀç ÇÃ·¹ÀÌ¾î À§Ä¡¸¦ ½ÃÀÛ À§Ä¡·Î ÀúÀå"))
+            if (GUILayout.Button("[Play ì¤‘] í˜„ì¬ í”Œë ˆì´ì–´ ìœ„ì¹˜ë¥¼ ì‹œì‘ ìœ„ì¹˜ë¡œ ì €ì¥"))
             {
                 var player = PlayerManager.Instance?.CurrentCharacter;
                 if (player != null)
@@ -537,13 +562,13 @@ public class MapDataEditor : EditorWindow
         }
         else
         {
-            EditorGUILayout.HelpBox("Play ¸ğµå·Î ½ÇÇàÇØ¼­ ¿øÇÏ´Â À§Ä¡·Î °É¾î°£ µÚ ÀúÀåÇÏ´Â °É ÃßÃµÇØ.", MessageType.Info);
+            EditorGUILayout.HelpBox("Play ëª¨ë“œë¡œ ì‹¤í–‰í•´ì„œ ì›í•˜ëŠ” ìœ„ì¹˜ë¡œ ê±¸ì–´ê°„ ë’¤ ì €ì¥í•˜ëŠ” ê±¸ ì¶”ì²œí•´.", MessageType.Info);
         }
 
         var marker = FindObjectOfType<StartPositionMarker>();
         if (marker == null)
         {
-            if (GUILayout.Button("¾À¿¡ ½ÃÀÛ À§Ä¡ ¸¶Ä¿ ¹èÄ¡"))
+            if (GUILayout.Button("ì”¬ì— ì‹œì‘ ìœ„ì¹˜ ë§ˆì»¤ ë°°ì¹˜"))
             {
                 var go = new GameObject("StartPositionMarker");
                 go.transform.position = new Vector3(startConfig.startPosition.x, startConfig.startPosition.y, 0);
@@ -551,11 +576,11 @@ public class MapDataEditor : EditorWindow
                 Selection.activeGameObject = go;
             }
         }
-        else if (GUILayout.Button("¸¶Ä¿ À§Ä¡¸¦ ½ÃÀÛ À§Ä¡·Î ÀúÀå"))
+        else if (GUILayout.Button("ë§ˆì»¤ ìœ„ì¹˜ë¥¼ ì‹œì‘ ìœ„ì¹˜ë¡œ ì €ì¥"))
         {
             int realID = GetSceneIDByName(EditorSceneManager.GetActiveScene().name);
             if (realID == -1)
-                EditorUtility.DisplayDialog("°æ°í", "Áö±İ ¿­·ÁÀÖ´Â ¾ÀÀÌ SceneTable.csv¿¡ µî·ÏµÈ ¸ÊÀÌ ¾Æ´Õ´Ï´Ù. ½ÇÁ¦ ¸Ê ¾ÀÀ» ¿­¾î¼­ ¸¶Ä¿¸¦ ¹èÄ¡ÇØÁÖ¼¼¿ä.", "È®ÀÎ");
+                EditorUtility.DisplayDialog("ê²½ê³ ", "ì§€ê¸ˆ ì—´ë ¤ìˆëŠ” ì”¬ì´ SceneTable.csvì— ë“±ë¡ëœ ë§µì´ ì•„ë‹™ë‹ˆë‹¤. ì‹¤ì œ ë§µ ì”¬ì„ ì—´ì–´ì„œ ë§ˆì»¤ë¥¼ ë°°ì¹˜í•´ì£¼ì„¸ìš”.", "í™•ì¸");
             else
             {
                 startConfig.startSceneID = realID;
@@ -565,6 +590,4 @@ public class MapDataEditor : EditorWindow
             }
         }
     }
-
-
 }

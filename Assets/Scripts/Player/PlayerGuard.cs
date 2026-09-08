@@ -25,6 +25,8 @@ public class PlayerGuard : MonoBehaviour
 
     private void Update()
     {
+        if (GlobalActionLock.IsLocked) { if (_stats.isGuarding) _stats.StopGuard(); return; }
+
         bool wantsGuard = Input.GetKey(guardKey); // ★ Down/Up 엣지 대신, 지금 눌려있는지 그 자체를 매 프레임 확인
 
         // 공격 중 방어 키를 눌렀을 경우 - 콤보윈도우 끝나고 캔슬

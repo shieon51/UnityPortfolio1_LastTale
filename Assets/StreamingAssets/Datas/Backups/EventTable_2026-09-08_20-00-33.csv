@@ -3,7 +3,7 @@
 10001,Liel,FALSE,1,14,17,Liel_Day1_002,1,18,2,1,FALSE
 10002,Liel,False,1,8,11,Liel_Day1_001,2,2.00,0.00,1,False
 10003,Liel,False,2,7,12,Liel_Day2_001,2,22.00,0.00,0,False
-10004,Liel,False,3,0,3,Liel_Day3_001,2,12.00,0.00,1,True
+10004,Liel,False,3,0,3,Liel_Day3_001,2,12.00,0.00,1,False
 90000,Training,TRUE,0,0,24,training,1,4,2,2,FALSE
 90001,Practice,TRUE,0,0,24,practice,1,-3,0,1,FALSE
 90002,Sleep,TRUE,0,0,24,sleep,1,-8,0,8,FALSE

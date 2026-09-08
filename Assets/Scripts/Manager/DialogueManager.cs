@@ -18,7 +18,10 @@ public class DialogueManager : Singleton<DialogueManager>
     [Header("선택지 등장 딜레이 (텍스트 다 나온 뒤)")]
     public float choiceRevealDelay = 0.3f;
 
-    private List<Ink.Runtime.Choice> _pendingChoices;
+    // 자동진행 + Enter표시 관련
+    private float _autoAdvanceDelay = -1f;
+    public bool IsWaitingForInput { get; private set; }
+    public event Action<bool> OnWaitingForInputChanged;
 
     private bool isTalking = false; //현재 대화가 진행중일 때 -> EventTrigger에서 Z키 입력 불가, 엔터 키 입력 가능 처리.
     private bool isChoices = false; //선택지가 주어진 상태일 때 -> EventTrigger에서 엔터키 입력에 대한 예외처리
@@ -29,6 +32,9 @@ public class DialogueManager : Singleton<DialogueManager>
     private BossDifficultyTier pendingBattleDifficulty = BossDifficultyTier.Training; // ★ 추가
 
     private string _pendingSpeakerKey, _pendingSpeakerDisplayName;
+    private bool _forcePanel;
+    private List<Ink.Runtime.Choice> _pendingChoices;
+    private SpeechBubbleController _subscribedBubble;
 
     public bool IsTalking
     { get { return isTalking; } }
@@ -91,8 +97,9 @@ public class DialogueManager : Singleton<DialogueManager>
     public void StartStory(EventData eventData)
     {
         curEventData = eventData;
+        _pendingSpeakerKey = null; _pendingSpeakerDisplayName = null; _forcePanel = false; // ★ 새 대화 시작할 때만 초기화
         UIManager.Instance.ShowDialogUI();
-        story.ChoosePathString(curEventData.InkNodeName); //대화 내용 불러오기
+        story.ChoosePathString(curEventData.InkNodeName);
         isTalking = true;
 
         DisplayNextLine();
@@ -109,51 +116,72 @@ public class DialogueManager : Singleton<DialogueManager>
             ParseTags();
             bool hasChoices = story.currentChoices.Count > 0;
 
-            if (!string.IsNullOrWhiteSpace(text) && !hasChoices && story.canContinue)
-            {
-                string peek = story.Continue();
-                ParseTags();
-                hasChoices = story.currentChoices.Count > 0;
-                if (!string.IsNullOrWhiteSpace(peek))
-                {
-                    Debug.LogWarning("[DBG Ink] 예상 밖 추가 텍스트 발견, 이어붙임: " + peek); // ★ 혹시 다른 케이스면 여기서 바로 알 수 있음
-                    text += peek;
-                }
-            }
+            Debug.Log($"[DBG Ink] text=\"{text}\" hasChoices={hasChoices} canContinue={story.canContinue}"); // ★ 진단용 — 이번엔 확실한 데이터로 접근
 
-            if (string.IsNullOrWhiteSpace(text) && !hasChoices)
+            if (string.IsNullOrWhiteSpace(text) && !hasChoices) // ★ 순수 빈 스텝만 자동 스킵 (안전한 원래 방식)
             {
                 isProcessingLine = false;
                 DisplayNextLine();
                 return;
             }
 
-            if (hasChoices)
-            {
-                _pendingChoices = story.currentChoices;
-                UIManager.Instance.dialogue.OnTextFullyDisplayed += HandleTextFullyDisplayed; // ★ 텍스트 다 나오면 알려달라고 구독
-            }
+            bool useBubble = !string.IsNullOrEmpty(_pendingSpeakerKey) && !_forcePanel; // ★ 6번 — 태그로 명시 제어
+            SpeechBubbleController bubble = useBubble ? ResolveSpeakerTransform(_pendingSpeakerKey)?.GetComponentInChildren<SpeechBubbleController>(true) : null;
 
-            if (!string.IsNullOrEmpty(_pendingSpeakerKey))
+            if (bubble != null)
             {
-                var speaker = ResolveSpeakerTransform(_pendingSpeakerKey);
-                if (speaker != null) SpeechBubbleManager.Instance?.ShowBubble(speaker, _pendingSpeakerDisplayName, text);
+                UIManager.Instance.HideDialogUI(); // ★ 3번 — 말풍선 쓸 땐 하단 패널 확실히 숨김
+                SpeechBubbleManager.Instance?.ShowBubble(bubble.transform, _pendingSpeakerDisplayName, text);
+                if (hasChoices)
+                {
+                    _pendingChoices = story.currentChoices;
+                    _subscribedBubble = bubble;
+                    bubble.OnTextFullyDisplayed += HandleBubbleTextFullyDisplayed;
+                }
             }
             else
             {
-                UIManager.Instance.UpdateDialogueText(text); // 태그 없으면 기존 하단 패널(시스템/내레이션/회상용)
+                UIManager.Instance.ShowDialogUI();
+                UIManager.Instance.UpdateDialogueText(text);
+                if (hasChoices)
+                {
+                    _pendingChoices = story.currentChoices;
+                    UIManager.Instance.dialogue.OnTextFullyDisplayed += HandlePanelTextFullyDisplayed;
+                }
             }
+
+            //?
+            _autoAdvanceDelay = -1f; // 매번 리셋(자동 진행은 "이 줄만"에 해당하는 게 자연스러움)
+            foreach (string tag in story.currentTags) { } // (이미 ParseTags에서 처리됨, 여기선 결과만 사용)
+            if (_autoAdvanceDelay >= 0f)
+            {
+                SetWaitingForInput(false);
+                StartCoroutine(AutoAdvanceAfter(_autoAdvanceDelay));
+            }
+            else
+            {
+                SetWaitingForInput(!hasChoices); // 선택지 대기 중엔 버튼 자체가 안내 역할이라 따로 안 켬
+            }
+
         }
         else EndDialogue();
 
         StartCoroutine(ResetProcessingFlag());
     }
 
-    private Transform ResolveSpeakerTransform(string key)
+    private void SetWaitingForInput(bool waiting)
     {
-        if (key == "Player") return PlayerManager.Instance.CurrentCharacter.transform;
-        return System.Linq.Enumerable.FirstOrDefault(FindObjectsOfType<NPC>(), n => n.npcName == key)?.transform;
+        IsWaitingForInput = waiting;
+        OnWaitingForInputChanged?.Invoke(waiting);
     }
+
+    private IEnumerator AutoAdvanceAfter(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        DisplayNextLine();
+    }
+
+    private Transform ResolveSpeakerTransform(string key) => SpeakerResolver.Resolve(key);
 
     private void HandleTextFullyDisplayed()
     {
@@ -172,6 +200,7 @@ public class DialogueManager : Singleton<DialogueManager>
     // ★ 태그 파싱 중복 제거 (기존 foreach 두 번 반복되던 걸 메서드로 뽑음)
     private void ParseTags()
     {
+        //_pendingSpeakerKey = null; _pendingSpeakerDisplayName = null; _forcePanel = false; // ★ 매번 리셋
         foreach (string tag in story.currentTags)
         {
             string[] args = tag.Split(':');
@@ -182,20 +211,34 @@ public class DialogueManager : Singleton<DialogueManager>
                 pendingBattleLoseNode = args.Length > 3 ? args[3] : $"{pendingBattleNPC}_Battle_Lose";
                 pendingBattleDifficulty = (args.Length > 4 && Enum.TryParse(args[4], out BossDifficultyTier parsedTier)) ? parsedTier : BossDifficultyTier.Training;
             }
-            else if (args[0] == "speak" && args.Length > 2) // ★ 신규 — #speak:Liel:???
-            {
-                _pendingSpeakerKey = args[1];
-                _pendingSpeakerDisplayName = args[2];
-            }
-            else if (args[0] == "cue" && args.Length > 1) 
-                NarrativeCuePlayer.Instance?.Play(args[1]);
+            else if (args[0] == "speak" && args.Length > 2) { _pendingSpeakerKey = args[1]; _pendingSpeakerDisplayName = args[2]; _forcePanel = false; }
+            else if (args[0] == "panel") _forcePanel = true;
+            else if (args[0] == "system") { _pendingSpeakerKey = null; _pendingSpeakerDisplayName = null; } // ★ 신규 — 명시적으로 "화자 없음"으로 전환
+            else if (args[0] == "cue" && args.Length > 1) NarrativeCuePlayer.Instance?.Play(args[1]);
+            else if (args[0] == "auto" && args.Length > 1) float.TryParse(args[1], out _autoAdvanceDelay);
         }
+    }
+
+    private void HandlePanelTextFullyDisplayed()
+    {
+        UIManager.Instance.dialogue.OnTextFullyDisplayed -= HandlePanelTextFullyDisplayed;
+        if (_pendingChoices != null) StartCoroutine(ShowChoicesAfterDelay(_pendingChoices));
+        _pendingChoices = null;
+    }
+
+    private void HandleBubbleTextFullyDisplayed()
+    {
+        if (_subscribedBubble != null) _subscribedBubble.OnTextFullyDisplayed -= HandleBubbleTextFullyDisplayed;
+        _subscribedBubble = null;
+        if (_pendingChoices != null) StartCoroutine(ShowChoicesAfterDelay(_pendingChoices));
+        _pendingChoices = null;
     }
 
     private void EndDialogue()
     {
         isTalking = false;
         UIManager.Instance.HideDialogUI();
+        SpeechBubbleManager.Instance?.HideAll(); // ★ 추가
 
         // 2. 대화가 끝나는 순간 Ink 속의 호감도 변수를 뽑아와 NPCManager에 전달
         // (잉크에 선언된 변수 이름과 동일해야 함)

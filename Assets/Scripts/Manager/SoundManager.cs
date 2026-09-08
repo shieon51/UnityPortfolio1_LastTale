@@ -8,24 +8,32 @@ public class SoundManager : Singleton<SoundManager>
     [System.Serializable]
     public class SoundEntry { public string soundKey; public AudioClip clip; [Range(0f, 1f)] public float volume = 1f; }
 
+    [System.Serializable]
+    public class BGMEntry { public string bgmKey; public AudioClip clip; }
+
     [Header("SFX")]
     public List<SoundEntry> sfxLibrary = new();
     public AudioSource sfxSourcePrefab;
     public int sfxPoolSize = 8;
 
     [Header("BGM")]
+    public List<BGMEntry> bgmLibrary = new();
     public AudioSource bgmSourceA;
     public AudioSource bgmSourceB;
     public float bgmCrossfadeDuration = 1.5f;
     private bool _usingSourceA = true;
 
     private Dictionary<string, AudioClip> _sfxDict;
+    private Dictionary<string, AudioClip> _bgmDict;
     private Queue<AudioSource> _sfxPool;
 
     private void Awake()
     {
         _sfxDict = new Dictionary<string, AudioClip>();
         foreach (var e in sfxLibrary) _sfxDict[e.soundKey] = e.clip;
+
+        _bgmDict = new Dictionary<string, AudioClip>();
+        foreach (var e in bgmLibrary) _bgmDict[e.bgmKey] = e.clip;
 
         _sfxPool = new Queue<AudioSource>();
         for (int i = 0; i < sfxPoolSize; i++) _sfxPool.Enqueue(Instantiate(sfxSourcePrefab, transform));
@@ -45,6 +53,12 @@ public class SoundManager : Singleton<SoundManager>
     }
 
     public void PlayBGM(AudioClip clip) => StartCoroutine(CrossfadeBGM(clip));
+
+    public void PlayBGM(string key) // ★ 오버로드
+    {
+        if (_bgmDict.TryGetValue(key, out var clip) && clip != null) PlayBGM(clip);
+        else Debug.LogWarning($"[SoundManager] BGM '{key}'가 등록되지 않았습니다.");
+    }
 
     private IEnumerator CrossfadeBGM(AudioClip newClip)
     {

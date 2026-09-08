@@ -3,3 +3,6 @@ INCLUDE etc\etc.ink
 
 INCLUDE Liel\Liel_Day1.ink
 INCLUDE Liel\Liel_Day2.ink
+INCLUDE BattleBarks/LielBattleBarks.ink
+
+INCLUDE Liel\Liel_Day3.ink

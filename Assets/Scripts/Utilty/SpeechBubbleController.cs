@@ -1,15 +1,23 @@
-// TypewriterText Àç»ç¿ë - SpeechBubbleController.cs (½Å±Ô)
+ï»¿// TypewriterText ì¬ì‚¬ìš© - SpeechBubbleController.cs (ì‹ ê·œ)
 using UnityEngine;
 using TMPro;
+using System;
 
-// ¸»Ç³¼± ui ÄÁÆ®·Ñ·¯
+// ë§í’ì„  ui ì»¨íŠ¸ë¡¤ëŸ¬
 public class SpeechBubbleController : MonoBehaviour
 {
     public GameObject bubbleRoot;
     public TextMeshProUGUI nameText;
-    public TypewriterText bodyTypewriter; // 6¹ø¿¡¼­ ¸¸µç °Å Àç»ç¿ë
+    public TypewriterText bodyTypewriter; // 6ë²ˆì—ì„œ ë§Œë“  ê±° ì¬ì‚¬ìš©
     public Vector3 offsetAboveTarget = new Vector3(0, 1.5f, 0);
     private Transform _followTarget;
+
+    public event Action OnTextFullyDisplayed; 
+
+    private void Awake()
+    {
+        bodyTypewriter.OnFullyDisplayed += () => OnTextFullyDisplayed?.Invoke(); // â˜… ì¶”ê°€ â€” TypewriterText ì™„ë£Œ ì‹ í˜¸ë¥¼ ê·¸ëŒ€ë¡œ ì „ë‹¬
+    }
 
     public void Show(Transform target, string speakerName, string text)
     {
@@ -20,7 +28,7 @@ public class SpeechBubbleController : MonoBehaviour
     }
     public void Hide() => bubbleRoot.SetActive(false);
 
-    private void LateUpdate() // Å¬·¥ÇÁ Ãß°¡
+    private void LateUpdate() // í´ë¨í”„ ì¶”ê°€
     {
         if (_followTarget == null || !bubbleRoot.activeSelf) return;
 

@@ -16,5 +16,7 @@ public class LocalizationManager : Singleton<LocalizationManager>
         CsvTableLoader.Load("LocalizationTable.csv", v => { if (v.Length > langIndex) _table[v[0]] = v[langIndex]; });
     }
 
+    public void SetLanguage(string lang) { currentLanguage = lang; LoadTable(); }
+
     public string Get(string key) => _table.TryGetValue(key, out var text) ? text : $"[{key}]"; // 못 찾으면 키 자체가 보여서 누락 바로 발견됨
 }

@@ -1,10 +1,11 @@
-// TypewriterText.cs (�ű�)
+﻿// TypewriterText.cs (신규)
 using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
-// ���� Ÿ���� ȿ��
+// 글자 타이핑 효과
 public class TypewriterText : MonoBehaviour
 {
     public TextMeshProUGUI target;
@@ -25,6 +26,10 @@ public class TypewriterText : MonoBehaviour
         target.text = text;
         target.maxVisibleCharacters = 0;
         target.ForceMeshUpdate();
+
+        var fitterRect = target.GetComponentInParent<ContentSizeFitter>()?.GetComponent<RectTransform>();
+        if (fitterRect != null) LayoutRebuilder.ForceRebuildLayoutImmediate(fitterRect); // ★ 추가 — 배경(BubblePanel) 즉시 재계산
+
         int total = target.textInfo.characterCount;
         float delay = charsPerSecond > 0f ? 1f / charsPerSecond : 0f;
         for (int i = 0; i <= total; i++) { target.maxVisibleCharacters = i; yield return new WaitForSeconds(delay); }

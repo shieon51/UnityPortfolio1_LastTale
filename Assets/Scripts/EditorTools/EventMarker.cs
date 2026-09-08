@@ -25,6 +25,7 @@ public class EventMarker : MonoBehaviour
     public string InkNodeName = "node_name";
     public int SceneID;
     public int TimeTaken = 1;
+    public bool AutoTrigger = false;
 
     // 게임 시작 시 자동 삭제 
     private void Awake()
