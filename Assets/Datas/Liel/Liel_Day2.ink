@@ -12,6 +12,7 @@
 - 이렇게 흔쾌히 수락하실 줄은 몰랐군요. 알겠습니다. 
 - 다만 훈련이 처음이실 것 같으니, 저는 한 손만 쓰도록 하겠습니다.
 - 그럼 한 번 해보지요.
+#panel
 - ('훈련 모드'로 전투가 진행됩니다!) #battle:Liel:Liel_Day2_001_BattleWin:Liel_Day2_001_BattleLose
 ->DONE
 

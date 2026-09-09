@@ -22,6 +22,7 @@ MonoBehaviour:
     flashColor: {r: 0, g: 1, b: 0.92101526, a: 1}
     flashDuration: 0.1
     instantSnap: 0
+  cameraShot: {fileID: 11400000, guid: 5ac21471784b44e4291383423a05fb6b, type: 2}
   targetCharacterKey: 
   animationKey: 
   sfxKey: 

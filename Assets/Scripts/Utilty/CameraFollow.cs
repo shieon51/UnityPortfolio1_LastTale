@@ -46,6 +46,8 @@ public class CameraFollow : MonoBehaviour
     private bool _instantSnapNextFrame = false;
     private Vector3 _shakeOffset = Vector3.zero;
 
+    public Camera Cam => _camera; // ★ 추가 — private _camera를 외부(CameraDirector)에서 읽을 수 있게
+
     private void Awake()
     {
         _camera = GetComponent<Camera>();
@@ -70,6 +72,12 @@ public class CameraFollow : MonoBehaviour
     private void LateUpdate()
     {
         if (primaryTarget == null) return;
+
+        if (CameraDirector.Instance != null && CameraDirector.Instance.IsCinematicOverride) // ★ 추가 — 연출 중엔 일반 추적 로직 전부 양보
+        {
+            transform.position += _shakeOffset; // 연출 중에도 흔들림(패링 등)은 자연스럽게 얹히도록 유지
+            return;
+        }
 
         UpdateLookAhead();
 

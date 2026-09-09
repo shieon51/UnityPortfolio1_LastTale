@@ -24,4 +24,11 @@ public class SpeechBubbleManager : Singleton<SpeechBubbleManager>
         _activeBubbles.Clear();
     }
 
+    public Vector3 GetActiveSpeakersMidpoint()
+    {
+        if (_activeBubbles.Count == 0) return Camera.main.transform.position;
+        Vector3 sum = Vector3.zero; int count = 0;
+        foreach (var b in _activeBubbles) if (b != null) { sum += b.FollowTargetPosition; count++; }
+        return count > 0 ? sum / count : Camera.main.transform.position;
+    }
 }

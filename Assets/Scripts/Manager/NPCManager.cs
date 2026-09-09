@@ -37,6 +37,8 @@ public class NPCManager : Singleton<NPCManager>
 
     private void InitializeDefaultNPCData()
     {
+        Debug.LogWarning("[NPCManager] InitializeDefaultNPCData 호출됨 — 데이터가 새로 초기화됩니다!\n" + System.Environment.StackTrace); // ★ 추가
+
         // 게임에 등장하는 모든 NPC의 초기 상태를 등록
         npcDataDict.Add("Liel", new NPCData("Liel"));
         //npcDataDict.Add("Diaber", new NPCData("Diavalu"));

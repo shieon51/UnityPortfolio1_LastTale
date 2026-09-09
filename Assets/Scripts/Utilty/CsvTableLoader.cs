@@ -1,6 +1,8 @@
 // CsvTableLoader.cs (신규)
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using UnityEngine;
 
 public static class CsvTableLoader
@@ -9,11 +11,28 @@ public static class CsvTableLoader
     {
         string path = Path.Combine(Application.streamingAssetsPath, "Datas", fileName);
         if (!File.Exists(path)) { Debug.LogWarning($"[CsvTableLoader] 파일 없음: {path}"); return; }
-        var lines = File.ReadAllLines(path);
+        var lines = File.ReadAllLines(path, Encoding.UTF8); // ★ 명시적 UTF-8
         for (int i = 1; i < lines.Length; i++)
         {
             if (string.IsNullOrEmpty(lines[i])) continue;
             onEachRow(lines[i].Split(','));
         }
     }
+
+    // ★ 큰따옴표 안의 쉼표는 분리 안 하는 간단한 파서 (문장에 쉼표 들어갈 일이 많아서 추가)
+    private static string[] SplitCsvLine(string line)
+    {
+        var result = new List<string>();
+        bool inQuotes = false;
+        var current = new StringBuilder();
+        foreach (char c in line)
+        {
+            if (c == '"') inQuotes = !inQuotes;
+            else if (c == ',' && !inQuotes) { result.Add(current.ToString()); current.Clear(); }
+            else current.Append(c);
+        }
+        result.Add(current.ToString());
+        return result.ToArray();
+    }
+
 }

@@ -11,7 +11,6 @@
 ===Liel_Day1_001_B===
 #speak:Liel:리엘
 전 리엘이라고 합니다.
-#panel
 -제가 좋아하는 과일이 무엇인지 아십니까?
     + {not has_memory("liel_likes_apple")} 뭔데요?
         -> Liel_Day1_001_B_02

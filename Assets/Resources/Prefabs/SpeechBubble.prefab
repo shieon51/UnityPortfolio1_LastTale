@@ -13,7 +13,6 @@ GameObject:
   - component: {fileID: 931448424203426130}
   - component: {fileID: 2641061740880756886}
   - component: {fileID: 7656502508640419044}
-  - component: {fileID: 3744668464777871119}
   m_Layer: 6
   m_Name: SpeechBubble
   m_TagString: Untagged
@@ -39,7 +38,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 500, y: 250}
+  m_SizeDelta: {x: 600, y: 300}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!223 &2608821621837339855
 Canvas:
@@ -119,20 +118,7 @@ MonoBehaviour:
   bubbleRoot: {fileID: 2018004290659192783}
   nameText: {fileID: 6101423250343992033}
   bodyTypewriter: {fileID: 8645758678934787416}
-  offsetAboveTarget: {x: 0, y: 2, z: 0}
---- !u!114 &3744668464777871119
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2018004290659192783}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8968453651853e44f9cb16824402ac97, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnterIconIndicator
-  icon: {fileID: 6359494255317740586}
+  offsetAboveTarget: {x: 0, y: 5, z: 0}
 --- !u!1 &3039445715083555877
 GameObject:
   m_ObjectHideFlags: 0
@@ -170,11 +156,11 @@ RectTransform:
   - {fileID: 1890797277150404426}
   m_Father: {fileID: 4033817997331374072}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_SizeDelta: {x: 600, y: 0}
+  m_Pivot: {x: 0.5, y: 0}
 --- !u!222 &117322126251823511
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -226,18 +212,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
   m_Padding:
-    m_Left: 0
-    m_Right: 0
-    m_Top: 0
-    m_Bottom: 0
+    m_Left: 20
+    m_Right: 20
+    m_Top: 8
+    m_Bottom: 32
   m_ChildAlignment: 4
   m_Spacing: 0
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 1
-  m_ChildControlWidth: 0
+  m_ChildControlWidth: 1
   m_ChildControlHeight: 1
   m_ChildScaleWidth: 0
-  m_ChildScaleHeight: 1
+  m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
 --- !u!114 &5921770768889057957
 MonoBehaviour:
@@ -289,7 +275,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 500, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2597376724401237966
 CanvasRenderer:
@@ -440,7 +426,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 500, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1322667403379550364
 CanvasRenderer:
@@ -479,8 +465,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190080
-  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
+    rgba: 4288401770
+  m_fontColor: {r: 0.41424885, g: 0.8207547, b: 0.60843503, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -550,6 +536,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5900054723429970758}
     m_Modifications:
+    - target: {fileID: 955437542411907541, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
+      propertyPath: ownerBubble
+      value: 
+      objectReference: {fileID: 7656502508640419044}
     - target: {fileID: 2585278889251251950, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
       propertyPath: m_Name
       value: EnterIcon
@@ -564,7 +554,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7033709181599847822, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7033709181599847822, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
       propertyPath: m_AnchorMax.y
@@ -572,7 +562,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7033709181599847822, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
       propertyPath: m_AnchorMin.x
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7033709181599847822, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
       propertyPath: m_AnchorMin.y
@@ -580,11 +570,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7033709181599847822, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 20
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 7033709181599847822, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 0
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 7033709181599847822, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
       propertyPath: m_LocalPosition.x
@@ -616,11 +606,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7033709181599847822, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: -36
       objectReference: {fileID: 0}
     - target: {fileID: 7033709181599847822, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 7033709181599847822, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -642,10 +632,5 @@ PrefabInstance:
 --- !u!224 &1890797277150404426 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 7033709181599847822, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
-  m_PrefabInstance: {fileID: 8908602916189424324}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &6359494255317740586 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2585278889251251950, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
   m_PrefabInstance: {fileID: 8908602916189424324}
   m_PrefabAsset: {fileID: 0}

@@ -38,15 +38,28 @@ public class DialogueUIPanel : MonoBehaviour
     public void ShowChoices(List<Ink.Runtime.Choice> choices)
     {
         _choiceButtons.Clear();
-        foreach (var choice in choices)
+        for (int i = 0; i < choices.Count; i++)
         {
+            int capturedIndex = i; // 클로저 캡처용
+            var choice = choices[i];
             GameObject btn = Instantiate(_choiceButtonPrefab, choiceContainer.transform);
             btn.GetComponentInChildren<TextMeshProUGUI>().text = choice.text;
             btn.GetComponent<Button>().onClick.AddListener(() => DialogueManager.Instance.OnChoiceSelected(choice.index));
+
+            var highlighter = btn.AddComponent<ChoiceButtonHighlighter>(); // ★ 추가
+            highlighter.index = capturedIndex;
+            highlighter.onPressed = SetSelectedIndex;
+
             _choiceButtons.Add(btn);
         }
         _selectedChoiceIndex = 0;
         HighlightChoice(0);
+    }
+
+    public void SetSelectedIndex(int index) // ★ 신규 — 마우스/키보드 공용 진입점
+    {
+        _selectedChoiceIndex = index;
+        HighlightChoice(index);
     }
 
     public void ClearChoices() 

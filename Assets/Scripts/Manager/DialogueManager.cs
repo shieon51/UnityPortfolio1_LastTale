@@ -15,11 +15,12 @@ public class DialogueManager : Singleton<DialogueManager>
 
     public event Action<EventData> OnDialogueEnd; //다이얼로그가 끝나면 실행됨
 
-    [Header("선택지 등장 딜레이 (텍스트 다 나온 뒤)")]
-    public float choiceRevealDelay = 0.3f;
+    //[Header("선택지 등장 딜레이 (텍스트 다 나온 뒤)")]
+    //public float choiceRevealDelay = 0.3f; //?
 
     public bool IsWaitingForInput { get; private set; }
     public event Action<bool> OnWaitingForInputChanged;
+    public SpeechBubbleController CurrentActiveBubble => _currentActiveBubble; // ★ 추가
 
     private bool isTalking = false; //현재 대화가 진행중일 때 -> EventTrigger에서 Z키 입력 불가, 엔터 키 입력 가능 처리.
     private bool isChoices = false; //선택지가 주어진 상태일 때 -> EventTrigger에서 엔터키 입력에 대한 예외처리
@@ -34,6 +35,7 @@ public class DialogueManager : Singleton<DialogueManager>
     private float _autoAdvanceDelay; // ★ 매 줄마다 리셋됨
     private bool _lockInput;         // ★ 매 줄마다 리셋됨
     private bool _isAutoAdvancing;
+    private bool _choicesReadyToReveal; // ★ "텍스트는 다 나왔고 엔터만 누르면 선택지 뜸" 상태
 
     private List<Ink.Runtime.Choice> _pendingChoices;
     private SpeechBubbleController _currentActiveBubble; // ★ 지금 활성화된 말풍선(있으면) — 타이핑 체크/스킵용
@@ -48,7 +50,7 @@ public class DialogueManager : Singleton<DialogueManager>
     private void Start()
     {
         story = new Story(inkJSON.text);
-        BindMemoryFunctions(); // ★ 추가
+        BindMemoryFunctions(); 
     }
 
     private void Update()
@@ -67,6 +69,8 @@ public class DialogueManager : Singleton<DialogueManager>
 
         bool isTyping = _currentActiveBubble != null ? _currentActiveBubble.IsTyping : UIManager.Instance.dialogue.IsTyping;
         if (isTyping) { SkipCurrentTyping(); return; }
+
+        if (_choicesReadyToReveal) { RevealPendingChoices(); return; } // ★ 5번 — 엔터로 선택지 공개
         if (_isAutoAdvancing) return;
 
         DisplayNextLine();
@@ -76,6 +80,15 @@ public class DialogueManager : Singleton<DialogueManager>
     {
         if (_currentActiveBubble != null) _currentActiveBubble.SkipTyping();
         else UIManager.Instance.dialogue.SkipTyping();
+    }
+
+    private void RevealPendingChoices()
+    {
+        _choicesReadyToReveal = false;
+        SetWaitingForInput(false);
+        UIManager.Instance.ShowChoices(_pendingChoices);
+        isChoices = true;
+        _pendingChoices = null;
     }
 
     private void BindMemoryFunctions()
@@ -127,10 +140,12 @@ public class DialogueManager : Singleton<DialogueManager>
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(text) && hasChoices) // ★ 7번 핵심 수정 — 화면은 그대로 두고 선택지만 이어서
+            if (string.IsNullOrWhiteSpace(text) && hasChoices)
             {
+                // 화면은 그대로 두고(이전 질문 문장 유지), 선택지는 엔터로 공개 대기
                 _pendingChoices = story.currentChoices;
-                StartCoroutine(ShowChoicesAfterDelay(_pendingChoices));
+                _choicesReadyToReveal = true;
+                SetWaitingForInput(true);
             }
             else // 진짜 표시할 텍스트가 있는 정상 케이스
             {
@@ -153,18 +168,21 @@ public class DialogueManager : Singleton<DialogueManager>
                     UIManager.Instance.UpdateDialogueText(text);
                     if (hasChoices) { _pendingChoices = story.currentChoices; UIManager.Instance.dialogue.OnTextFullyDisplayed += HandleTextFullyDisplayed; }
                 }
-            }
 
-            if (_autoAdvanceDelay >= 0f)
-            {
-                SetWaitingForInput(false);
-                _isAutoAdvancing = true;
-                StartCoroutine(AutoAdvanceAfter(_autoAdvanceDelay));
-            }
-            else
-            {
-                _isAutoAdvancing = false;
-                SetWaitingForInput(!hasChoices);
+                if (!hasChoices) // 선택지 없는 정상 줄일 때만 자동진행/대기 로직 적용
+                {
+                    if (_autoAdvanceDelay >= 0f)
+                    {
+                        SetWaitingForInput(false);
+                        _isAutoAdvancing = true;
+                        StartCoroutine(AutoAdvanceAfter(_autoAdvanceDelay));
+                    }
+                    else
+                    {
+                        _isAutoAdvancing = false;
+                        SetWaitingForInput(true); // 타이핑 끝나면 HandleTextFullyDisplayed가 다시 갱신하니 여기선 우선 true로
+                    }
+                }
             }
         }
         else EndDialogue();
@@ -187,19 +205,16 @@ public class DialogueManager : Singleton<DialogueManager>
 
     private Transform ResolveSpeakerTransform(string key) => SpeakerResolver.Resolve(key);
 
-    private void HandleTextFullyDisplayed() // ★ 패널/말풍선 공용으로 하나로 통합
+    private void HandleTextFullyDisplayed() // ★ 타이핑 끝난 시점 — 선택지가 있으면 "엔터로 공개" 대기 상태로 전환
     {
         UIManager.Instance.dialogue.OnTextFullyDisplayed -= HandleTextFullyDisplayed;
         if (_currentActiveBubble != null) _currentActiveBubble.OnTextFullyDisplayed -= HandleTextFullyDisplayed;
-        if (_pendingChoices != null) StartCoroutine(ShowChoicesAfterDelay(_pendingChoices));
-        _pendingChoices = null;
-    }
 
-    private IEnumerator ShowChoicesAfterDelay(List<Ink.Runtime.Choice> choices)
-    {
-        yield return new WaitForSeconds(choiceRevealDelay);
-        UIManager.Instance.ShowChoices(choices);
-        isChoices = true;
+        if (_pendingChoices != null)
+        {
+            _choicesReadyToReveal = true;
+            SetWaitingForInput(true);
+        }
     }
 
     // ★ 태그 파싱 중복 제거 (기존 foreach 두 번 반복되던 걸 메서드로 뽑음)
@@ -234,6 +249,8 @@ public class DialogueManager : Singleton<DialogueManager>
         UIManager.Instance.HideDialogUI();
         SpeechBubbleManager.Instance?.HideAll();
         _currentActiveBubble = null;
+        SetWaitingForInput(false);
+        _choicesReadyToReveal = false;
 
         OnDialogueEnd?.Invoke(curEventData);
 
@@ -267,31 +284,4 @@ public class DialogueManager : Singleton<DialogueManager>
         story = new Story(inkJSON.text);
         BindMemoryFunctions();
     }
-
-    // 플레그 ink에 전달하기 (필요 없을 것 같긴 한데... 일단 넣어놓기)
-    //public void SetFlag(string flagName, bool value)
-    //{
-    //    if (story.variablesState[flagName] != null)
-    //    {
-    //        story.variablesState[flagName] = value;
-    //    }
-    //}
-
-    
-
-
-    //private void HandlePanelTextFullyDisplayed()
-    //{
-    //    UIManager.Instance.dialogue.OnTextFullyDisplayed -= HandlePanelTextFullyDisplayed;
-    //    if (_pendingChoices != null) StartCoroutine(ShowChoicesAfterDelay(_pendingChoices));
-    //    _pendingChoices = null;
-    //}
-
-    //private void HandleBubbleTextFullyDisplayed()
-    //{
-    //    if (_subscribedBubble != null) _subscribedBubble.OnTextFullyDisplayed -= HandleBubbleTextFullyDisplayed;
-    //    _subscribedBubble = null;
-    //    if (_pendingChoices != null) StartCoroutine(ShowChoicesAfterDelay(_pendingChoices));
-    //    _pendingChoices = null;
-    //}
 }

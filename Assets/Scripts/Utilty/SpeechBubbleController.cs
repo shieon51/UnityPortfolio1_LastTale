@@ -14,6 +14,9 @@ public class SpeechBubbleController : MonoBehaviour
 
     public event Action OnTextFullyDisplayed;
 
+    // (카메라가 화자 위치를 알 수 있게)
+    public Vector3 FollowTargetPosition => _followTarget != null ? _followTarget.position : transform.position;
+
     public bool IsTyping => bodyTypewriter.IsTyping;
     public void SkipTyping() => bodyTypewriter.Skip();
 

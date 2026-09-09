@@ -7,6 +7,8 @@ public class NarrativeCue : ScriptableObject
     public string cueId; // ink 태그(#cue:xxx)와 매칭
     [Header("카메라 (흔들림+플래시 다 여기서 처리됨)")]
     public CameraCue cameraCue;
+    [Header("카메라 샷 (연출용, 기존 흔들림/플래시와 별개)")]
+    public CameraShotData cameraShot; // ★ 추가
     [Header("캐릭터 포즈/표정")]
     public string targetCharacterKey;
     public string animationKey;

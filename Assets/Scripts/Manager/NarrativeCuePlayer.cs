@@ -21,6 +21,7 @@ public class NarrativeCuePlayer : Singleton<NarrativeCuePlayer>
     {
         if (!_lookup.TryGetValue(cueId, out var cue)) { Debug.LogWarning($"[NarrativeCuePlayer] 등록 안 된 cueId: {cueId}"); return; }
         if (cue.cameraCue != null) CameraDirector.Instance?.PlayCue(cue.cameraCue); // ★ 흔들림+플래시 다 여기서
+        if (cue.cameraShot != null) CameraDirector.Instance?.PlayShot(cue.cameraShot); // ★ 추가
         if (!string.IsNullOrEmpty(cue.sfxKey)) SoundManager.Instance?.PlaySFX(cue.sfxKey);
         if (!string.IsNullOrEmpty(cue.bgmKey)) SoundManager.Instance?.PlayBGM(cue.bgmKey);
         if (!string.IsNullOrEmpty(cue.animationKey))
