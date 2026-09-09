@@ -12,7 +12,10 @@ public class SpeechBubbleController : MonoBehaviour
     public Vector3 offsetAboveTarget = new Vector3(0, 1.5f, 0);
     private Transform _followTarget;
 
-    public event Action OnTextFullyDisplayed; 
+    public event Action OnTextFullyDisplayed;
+
+    public bool IsTyping => bodyTypewriter.IsTyping;
+    public void SkipTyping() => bodyTypewriter.Skip();
 
     private void Awake()
     {

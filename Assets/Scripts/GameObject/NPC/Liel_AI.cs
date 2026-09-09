@@ -24,6 +24,10 @@ public class Liel_AI : NPC, IBossProfileTarget
     [Tooltip("전투 시작 직후, 플레이어가 반응할 시간을 주기 위한 유예시간(초)")]
     public float battleStartGracePeriod = 2f;
 
+    [Header("전투 대사 트리거")]
+    public List<BattleBarkTrigger> battleBarkTriggers = new();
+    private HashSet<BattleBarkTrigger> _firedTriggers = new();
+
     // 보스 난이도 인터페이스 구현 (기존 필드를 그대로 감싸기만 함 — 인스펙터 노출은 필드가 유지하니까 그대로)
     public BossDifficultyTier CurrentDifficultyTier
     {
@@ -202,6 +206,8 @@ public class Liel_AI : NPC, IBossProfileTarget
     // ==========================================
     protected override void HandleAttackModeAI()
     {
+        CheckBattleBarkTriggers(); // ★ 추가 — 이게 없어서 트리거 자체가 한 번도 검사 안 됐음
+
         // 이제 여기서 if-else를 안 하고, stateMachine만 돌려주면 알아서 행동
         StateMachine.Update();
     }
@@ -212,45 +218,23 @@ public class Liel_AI : NPC, IBossProfileTarget
         base.LookAtPlayer();
     }
 
-
-    //// ==========================================
-    //// 3. 기믹 및 액션 스킬들
-    //// ==========================================
-    //private void EnterGroggyState()
-    //{
-    //    isGroggy = true;
-    //    groggyTimer = 5.0f; // 5초간 그로기
-    //    animator.Play("Groggy");
-    //    Debug.Log("[리엘] 그로기 상태!");
-
-    //    // 이때 방어막(Guard)을 쳐서 대미지를 경감시킴
-    //    isGuarding = true;
-    //}
-
-    //private void HandleGroggyState()
-    //{
-    //    groggyTimer -= Time.deltaTime;
-    //    if (groggyTimer <= 0)
-    //    {
-    //        isGroggy = false;
-    //        isGuarding = false;
-    //        RecoverMana(50); // 마나 회복 후 다시 전투
-    //        animator.Play("Idle");
-    //        Debug.Log("[리엘] 그로기 해제");
-    //    }
-    //}
-
-    //private void ExecuteTeleport()
-    //{
-    //    UseMana(teleportManaCost); // 텔레포트로 마나 소모 (공략의 핵심)
-    //    animator.SetTrigger("Teleport");
-    //    Debug.Log("[리엘] 텔레포트로 플레이어의 공격을 회피합니다!");
-    //    // 플레이어 뒤로 이동하는 로직...
-    //}
-
-    //private void ExecuteLightUltimate() { UseMana(ultimateManaCost); /* 궁극기 */ }
-    //private void ExecuteBasicAttack() { /* 기본 공격 */ }
-
+    // 전투 중 대사 트리거 // *
+    private void CheckBattleBarkTriggers()
+    {
+        float hpPercent = maxHealth > 0 ? (float)currentHealth / maxHealth : 1f;
+        foreach (var trigger in battleBarkTriggers)
+        {
+            if (trigger.onceOnly && _firedTriggers.Contains(trigger)) continue;
+            bool shouldFire = trigger.type switch
+            {
+                BattleBarkTrigger.TriggerType.HealthBelowPercent => hpPercent <= trigger.threshold,
+                BattleBarkTrigger.TriggerType.PhaseEntered => bossPhase == trigger.phaseNumber,
+                BattleBarkTrigger.TriggerType.ManaBelowPercent => (maxMana > 0 ? (float)currentMana / maxMana : 1f) <= trigger.threshold,
+                _ => false
+            };
+            if (shouldFire) { BattleBarkPlayer.Instance.PlayKnot(trigger.barkKnotName, npcName, npcName); _firedTriggers.Add(trigger); }
+        }
+    }
 
     // Liel_AI 기즈모 오버라이드
     protected override void OnDrawGizmosSelected()

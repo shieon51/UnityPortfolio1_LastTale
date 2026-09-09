@@ -15,6 +15,5 @@ MonoBehaviour:
   day: 1
   flagId: liel_likes_apple
   category: Liel
-  displayName: "\uB9AC\uC5D8\uC740 \uC0AC\uACFC\uB97C \uC88B\uC544\uD568."
-  recordText: "\uACFC\uC77C \uC911\uC5D0 \uC0AC\uACFC\uAC00 \uC88B\uB2E4\uACE0 \uD588\uB2E4."
+  localizationKey: liel_likes_apple_text
   isEraseable: 1

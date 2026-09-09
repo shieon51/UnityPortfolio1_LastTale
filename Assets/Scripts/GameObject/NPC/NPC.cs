@@ -13,8 +13,8 @@ public abstract class NPC : CharacterStats, ICombatTargetable
 
     // 인스펙터에서 호감도를 보거나 수정하기 위해 property 대신 직접 접근 가능하게 만듦.
     // 주의: 인스펙터 수정은 실행 중에만 myData에 반영되며, 에디터 수정값을 초기값으로 쓰려면 NPCData 초기화 로직을 건드려야 함.
-    [Header("Relations (Read/Write)")]
-    [SerializeField] private int debugUnderstanding = 0;
+    [Header("Relations (이해도는 기억 조각에서 자동 계산 — 표시 전용)")]
+    [SerializeField] private int debugUnderstandingDisplay = 0;
     [SerializeField] private int debugHiddenAffection = 0;
 
     //------------------------------------------------------------------
@@ -261,15 +261,15 @@ public abstract class NPC : CharacterStats, ICombatTargetable
 
         // 에디터에서 값을 바꾸면 실제 데이터(myData)에도 실시간 반영 (디버깅 편의)
 #if UNITY_EDITOR
-        if (myData.understanding != debugUnderstanding || myData.hiddenAffection != debugHiddenAffection)
+        debugUnderstandingDisplay = myData.CurrentUnderstandingCount; // ★ 매 프레임 표시만 갱신 — 여기 값을 직접 입력해도 다음 프레임에 자동으로 덮어써짐(사실상 읽기 전용)
+
+        if (myData.hiddenAffection != debugHiddenAffection)
         {
-            myData.understanding = debugUnderstanding;
             myData.hiddenAffection = debugHiddenAffection;
             NPCManager.Instance.SaveNPCData(myData);
         }
         else
         {
-            debugUnderstanding = myData.understanding;
             debugHiddenAffection = myData.hiddenAffection;
         }
 #endif

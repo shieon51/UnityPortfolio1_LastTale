@@ -7,8 +7,8 @@ public class NPCData
     public string npcName; // 예: "Liel", "Diavalu"
 
     // 감정 데이터
-    [Obsolete("더 이상 직접 저장 안 함 — CurrentUnderstandingCount/UnderstandingPercent 사용")]
-    public int understanding = 0; // ★ 이제 로직에서 안 씀, 과거 세이브 호환용으로만 남겨둠   // 표면적 이해도 (우정)
+    //[Obsolete("더 이상 직접 저장 안 함 — CurrentUnderstandingCount/UnderstandingPercent 사용")]
+    //public int understanding = 0; // ★ 이제 로직에서 안 씀, 과거 세이브 호환용으로만 남겨둠   // 표면적 이해도 (우정)
 
     public int hiddenAffection = 0; // 숨겨진 호감도 (애정)
 
@@ -35,6 +35,8 @@ public class NPCData
     public float UnderstandingPercent
         => Mathf.Clamp01((float)CurrentUnderstandingCount / Mathf.Max(1, maxObtainableUnderstanding)) * 100f;
 
+    // 호감도 범위 (-50 ~ 100) // *
+    public void AddAffection(int amount) => hiddenAffection = Mathf.Clamp(hiddenAffection + amount, -50, 100);
 
     // 관계 등급 계산 (기존 NPC.cs에 있던 걸 순수 데이터 쪽으로 옮김 - 정보 전문가 패턴)
     public NPC.RelationshipTier GetRelationshipTier()

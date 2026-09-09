@@ -18,8 +18,6 @@ public class DialogueManager : Singleton<DialogueManager>
     [Header("선택지 등장 딜레이 (텍스트 다 나온 뒤)")]
     public float choiceRevealDelay = 0.3f;
 
-    // 자동진행 + Enter표시 관련
-    private float _autoAdvanceDelay = -1f;
     public bool IsWaitingForInput { get; private set; }
     public event Action<bool> OnWaitingForInputChanged;
 
@@ -31,10 +29,14 @@ public class DialogueManager : Singleton<DialogueManager>
     private string pendingBattleLoseNode = "";
     private BossDifficultyTier pendingBattleDifficulty = BossDifficultyTier.Training; // ★ 추가
 
-    private string _pendingSpeakerKey, _pendingSpeakerDisplayName;
-    private bool _forcePanel;
+    private string _pendingSpeakerKey, _pendingSpeakerDisplayName; // ★ #speak/#system으로만 바뀜 — 매번 리셋 안 됨
+    private bool _forcePanel;      // ★ 매 줄마다 리셋됨 — "이 줄만" 적용
+    private float _autoAdvanceDelay; // ★ 매 줄마다 리셋됨
+    private bool _lockInput;         // ★ 매 줄마다 리셋됨
+    private bool _isAutoAdvancing;
+
     private List<Ink.Runtime.Choice> _pendingChoices;
-    private SpeechBubbleController _subscribedBubble;
+    private SpeechBubbleController _currentActiveBubble; // ★ 지금 활성화된 말풍선(있으면) — 타이핑 체크/스킵용
 
     public bool IsTalking
     { get { return isTalking; } }
@@ -45,51 +47,52 @@ public class DialogueManager : Singleton<DialogueManager>
 
     private void Start()
     {
-        //CloseDialog();
         story = new Story(inkJSON.text);
         BindMemoryFunctions(); // ★ 추가
     }
 
     private void Update()
     {
-        //대화 중일 때 엔터 입력하면 -> 다음 대사 출력 (단, 선택지가 있을 경우 엔터 키 입력 막기)
-        if (IsTalking && !IsChoices && Input.GetKeyDown(KeyCode.Return))
+        if (!IsTalking) return;
+
+        if (IsChoices) // 선택지 엔터 선택
         {
-            if (UIManager.Instance.dialogue.IsTyping) UIManager.Instance.dialogue.SkipTyping(); // ★ 타이핑 중 첫 엔터는 스킵
-            else DisplayNextLine(); // 다 나온 뒤 엔터는 다음 줄
+            if (Input.GetKeyDown(KeyCode.UpArrow)) UIManager.Instance.dialogue.NavigateChoice(-1);
+            else if (Input.GetKeyDown(KeyCode.DownArrow)) UIManager.Instance.dialogue.NavigateChoice(1);
+            else if (Input.GetKeyDown(KeyCode.Return)) UIManager.Instance.dialogue.ConfirmSelectedChoice();
+            return;
         }
+
+        if (_lockInput || !Input.GetKeyDown(KeyCode.Return)) return;
+
+        bool isTyping = _currentActiveBubble != null ? _currentActiveBubble.IsTyping : UIManager.Instance.dialogue.IsTyping;
+        if (isTyping) { SkipCurrentTyping(); return; }
+        if (_isAutoAdvancing) return;
+
+        DisplayNextLine();
+    }
+
+    private void SkipCurrentTyping()
+    {
+        if (_currentActiveBubble != null) _currentActiveBubble.SkipTyping();
+        else UIManager.Instance.dialogue.SkipTyping();
     }
 
     private void BindMemoryFunctions()
     {
         story.BindExternalFunction("has_memory", (string flagId) => MemoryManager.Instance.HasMemory(flagId));
-        story.BindExternalFunction("acquire_memory", (string flagId) =>
-        {
-            MemoryManager.Instance.AcquireMemory(flagId);
-            return 0;
-        }, lookaheadSafe: false);
-        story.BindExternalFunction("erase_memory", (string flagId) =>
-        {
-            MemoryManager.Instance.EraseMemory(flagId);
-            return 0;
-        }, lookaheadSafe: false);
-
+        story.BindExternalFunction("acquire_memory", (string flagId) => { MemoryManager.Instance.AcquireMemory(flagId); return 0; }, lookaheadSafe: false);
+        story.BindExternalFunction("erase_memory", (string flagId) => { MemoryManager.Instance.EraseMemory(flagId); return 0; }, lookaheadSafe: false);
         story.BindExternalFunction("get_counter", (string key) => MemoryManager.Instance.GetCounter(key));
-        story.BindExternalFunction("increment_counter", (string key) =>
-        {
-            MemoryManager.Instance.IncrementCounter(key);
-            return 0;
-        }, lookaheadSafe: false);
-
-        story.BindExternalFunction("get_affection", (string npcName) => NPCManager.Instance.GetNPCData(npcName).hiddenAffection); // ★ 신규
-        story.BindExternalFunction("add_affection", (string npcName, int amount) => // ★ 신규
+        story.BindExternalFunction("increment_counter", (string key) => { MemoryManager.Instance.IncrementCounter(key); return 0; }, lookaheadSafe: false);
+        story.BindExternalFunction("get_affection", (string npcName) => NPCManager.Instance.GetNPCData(npcName).hiddenAffection);
+        story.BindExternalFunction("add_affection", (string npcName, int amount) =>
         {
             var data = NPCManager.Instance.GetNPCData(npcName);
-            data.hiddenAffection += amount;
+            data.AddAffection(amount); // ★ 직접 필드 대입 대신 클램프 메서드로
             NPCManager.Instance.SaveNPCData(data);
             return 0;
         }, lookaheadSafe: false);
-
         story.BindExternalFunction("get_understanding_percent", (string npcName) =>
             (int)Mathf.Round(NPCManager.Instance.GetNPCData(npcName).UnderstandingPercent));
     }
@@ -97,11 +100,10 @@ public class DialogueManager : Singleton<DialogueManager>
     public void StartStory(EventData eventData)
     {
         curEventData = eventData;
-        _pendingSpeakerKey = null; _pendingSpeakerDisplayName = null; _forcePanel = false; // ★ 새 대화 시작할 때만 초기화
-        UIManager.Instance.ShowDialogUI();
-        story.ChoosePathString(curEventData.InkNodeName);
+        _pendingSpeakerKey = null; _pendingSpeakerDisplayName = null; // 새 대화 시작할 때만 화자 초기화
+        UIManager.Instance.ShowDialogUI();                             // ★ 복구 — 다이얼로그 UI 컨테이너 활성화
+        story.ChoosePathString(curEventData.InkNodeName);               // ★ 복구 — 이게 핵심, 어느 노드부터 시작할지 지정
         isTalking = true;
-
         DisplayNextLine();
     }
 
@@ -116,53 +118,54 @@ public class DialogueManager : Singleton<DialogueManager>
             ParseTags();
             bool hasChoices = story.currentChoices.Count > 0;
 
-            Debug.Log($"[DBG Ink] text=\"{text}\" hasChoices={hasChoices} canContinue={story.canContinue}"); // ★ 진단용 — 이번엔 확실한 데이터로 접근
+            Debug.Log($"[DBG Ink] text=\"{text}\" hasChoices={hasChoices} canContinue={story.canContinue}");
 
-            if (string.IsNullOrWhiteSpace(text) && !hasChoices) // ★ 순수 빈 스텝만 자동 스킵 (안전한 원래 방식)
+            if (string.IsNullOrWhiteSpace(text) && !hasChoices) // 순수 빈 스텝 — 자동 스킵
             {
                 isProcessingLine = false;
                 DisplayNextLine();
                 return;
             }
 
-            bool useBubble = !string.IsNullOrEmpty(_pendingSpeakerKey) && !_forcePanel; // ★ 6번 — 태그로 명시 제어
-            SpeechBubbleController bubble = useBubble ? ResolveSpeakerTransform(_pendingSpeakerKey)?.GetComponentInChildren<SpeechBubbleController>(true) : null;
-
-            if (bubble != null)
+            if (string.IsNullOrWhiteSpace(text) && hasChoices) // ★ 7번 핵심 수정 — 화면은 그대로 두고 선택지만 이어서
             {
-                UIManager.Instance.HideDialogUI(); // ★ 3번 — 말풍선 쓸 땐 하단 패널 확실히 숨김
-                SpeechBubbleManager.Instance?.ShowBubble(bubble.transform, _pendingSpeakerDisplayName, text);
-                if (hasChoices)
+                _pendingChoices = story.currentChoices;
+                StartCoroutine(ShowChoicesAfterDelay(_pendingChoices));
+            }
+            else // 진짜 표시할 텍스트가 있는 정상 케이스
+            {
+                bool useBubble = !string.IsNullOrEmpty(_pendingSpeakerKey) && !_forcePanel;
+                Transform speaker = useBubble ? ResolveSpeakerTransform(_pendingSpeakerKey) : null;
+                SpeechBubbleController bubble = speaker?.GetComponentInChildren<SpeechBubbleController>(true);
+
+                if (bubble != null)
                 {
-                    _pendingChoices = story.currentChoices;
-                    _subscribedBubble = bubble;
-                    bubble.OnTextFullyDisplayed += HandleBubbleTextFullyDisplayed;
+                    UIManager.Instance.HideDialogUI();
+                    SpeechBubbleManager.Instance?.ShowBubble(speaker, _pendingSpeakerDisplayName, text); // ★ 9번 수정 — bubble.transform 아니라 speaker
+                    _currentActiveBubble = bubble;
+                    if (hasChoices) { _pendingChoices = story.currentChoices; bubble.OnTextFullyDisplayed += HandleTextFullyDisplayed; }
+                }
+                else
+                {
+                    SpeechBubbleManager.Instance?.HideAll(); // ★ 6번 수정 — 패널로 나갈 땐 열린 말풍선 다 닫음
+                    _currentActiveBubble = null;
+                    UIManager.Instance.ShowDialogUI();
+                    UIManager.Instance.UpdateDialogueText(text);
+                    if (hasChoices) { _pendingChoices = story.currentChoices; UIManager.Instance.dialogue.OnTextFullyDisplayed += HandleTextFullyDisplayed; }
                 }
             }
-            else
-            {
-                UIManager.Instance.ShowDialogUI();
-                UIManager.Instance.UpdateDialogueText(text);
-                if (hasChoices)
-                {
-                    _pendingChoices = story.currentChoices;
-                    UIManager.Instance.dialogue.OnTextFullyDisplayed += HandlePanelTextFullyDisplayed;
-                }
-            }
 
-            //?
-            _autoAdvanceDelay = -1f; // 매번 리셋(자동 진행은 "이 줄만"에 해당하는 게 자연스러움)
-            foreach (string tag in story.currentTags) { } // (이미 ParseTags에서 처리됨, 여기선 결과만 사용)
             if (_autoAdvanceDelay >= 0f)
             {
                 SetWaitingForInput(false);
+                _isAutoAdvancing = true;
                 StartCoroutine(AutoAdvanceAfter(_autoAdvanceDelay));
             }
             else
             {
-                SetWaitingForInput(!hasChoices); // 선택지 대기 중엔 버튼 자체가 안내 역할이라 따로 안 켬
+                _isAutoAdvancing = false;
+                SetWaitingForInput(!hasChoices);
             }
-
         }
         else EndDialogue();
 
@@ -178,14 +181,16 @@ public class DialogueManager : Singleton<DialogueManager>
     private IEnumerator AutoAdvanceAfter(float delay)
     {
         yield return new WaitForSeconds(delay);
+        _isAutoAdvancing = false;
         DisplayNextLine();
     }
 
     private Transform ResolveSpeakerTransform(string key) => SpeakerResolver.Resolve(key);
 
-    private void HandleTextFullyDisplayed()
+    private void HandleTextFullyDisplayed() // ★ 패널/말풍선 공용으로 하나로 통합
     {
         UIManager.Instance.dialogue.OnTextFullyDisplayed -= HandleTextFullyDisplayed;
+        if (_currentActiveBubble != null) _currentActiveBubble.OnTextFullyDisplayed -= HandleTextFullyDisplayed;
         if (_pendingChoices != null) StartCoroutine(ShowChoicesAfterDelay(_pendingChoices));
         _pendingChoices = null;
     }
@@ -200,7 +205,10 @@ public class DialogueManager : Singleton<DialogueManager>
     // ★ 태그 파싱 중복 제거 (기존 foreach 두 번 반복되던 걸 메서드로 뽑음)
     private void ParseTags()
     {
-        //_pendingSpeakerKey = null; _pendingSpeakerDisplayName = null; _forcePanel = false; // ★ 매번 리셋
+        _forcePanel = false;      // ★ 매번 리셋 — 한 줄만 적용
+        _autoAdvanceDelay = -1f;  // ★ 매번 리셋 (5번에서 찾은 순서 버그 수정 — ParseTags 안에서 처리)
+        _lockInput = false;       // ★ 매번 리셋
+
         foreach (string tag in story.currentTags)
         {
             string[] args = tag.Split(':');
@@ -211,52 +219,28 @@ public class DialogueManager : Singleton<DialogueManager>
                 pendingBattleLoseNode = args.Length > 3 ? args[3] : $"{pendingBattleNPC}_Battle_Lose";
                 pendingBattleDifficulty = (args.Length > 4 && Enum.TryParse(args[4], out BossDifficultyTier parsedTier)) ? parsedTier : BossDifficultyTier.Training;
             }
-            else if (args[0] == "speak" && args.Length > 2) { _pendingSpeakerKey = args[1]; _pendingSpeakerDisplayName = args[2]; _forcePanel = false; }
+            else if (args[0] == "speak" && args.Length > 2) { _pendingSpeakerKey = args[1]; _pendingSpeakerDisplayName = args[2]; }
             else if (args[0] == "panel") _forcePanel = true;
-            else if (args[0] == "system") { _pendingSpeakerKey = null; _pendingSpeakerDisplayName = null; } // ★ 신규 — 명시적으로 "화자 없음"으로 전환
+            else if (args[0] == "system") { _pendingSpeakerKey = null; _pendingSpeakerDisplayName = null; }
             else if (args[0] == "cue" && args.Length > 1) NarrativeCuePlayer.Instance?.Play(args[1]);
             else if (args[0] == "auto" && args.Length > 1) float.TryParse(args[1], out _autoAdvanceDelay);
+            else if (args[0] == "lockinput") _lockInput = true;
         }
-    }
-
-    private void HandlePanelTextFullyDisplayed()
-    {
-        UIManager.Instance.dialogue.OnTextFullyDisplayed -= HandlePanelTextFullyDisplayed;
-        if (_pendingChoices != null) StartCoroutine(ShowChoicesAfterDelay(_pendingChoices));
-        _pendingChoices = null;
-    }
-
-    private void HandleBubbleTextFullyDisplayed()
-    {
-        if (_subscribedBubble != null) _subscribedBubble.OnTextFullyDisplayed -= HandleBubbleTextFullyDisplayed;
-        _subscribedBubble = null;
-        if (_pendingChoices != null) StartCoroutine(ShowChoicesAfterDelay(_pendingChoices));
-        _pendingChoices = null;
     }
 
     private void EndDialogue()
     {
         isTalking = false;
         UIManager.Instance.HideDialogUI();
-        SpeechBubbleManager.Instance?.HideAll(); // ★ 추가
+        SpeechBubbleManager.Instance?.HideAll();
+        _currentActiveBubble = null;
 
-        // 2. 대화가 끝나는 순간 Ink 속의 호감도 변수를 뽑아와 NPCManager에 전달
-        // (잉크에 선언된 변수 이름과 동일해야 함)
-        //int lielFriendship = (int)story.variablesState["Liel_friendship"];
+        OnDialogueEnd?.Invoke(curEventData);
 
-        //NPCData lielData = NPCManager.Instance.GetNPCData("Liel");
-        //lielData.hiddenAffection = lielFriendship; // 덮어씌우기
-        //NPCManager.Instance.SaveNPCData(lielData); // 영구 저장
-
-        OnDialogueEnd?.Invoke(curEventData); // 다이얼로그가 끝나면 실행하기
-
-        // 대화가 완전히 끝난 직후 예약된 전투가 있다면 실행
         if (!string.IsNullOrEmpty(pendingBattleNPC))
         {
-            NPCManager.Instance.TriggerBossBattle(pendingBattleNPC, pendingBattleDifficulty, pendingBattleWinNode, pendingBattleLoseNode); 
-            pendingBattleNPC = "";
-            pendingBattleWinNode = "";
-            pendingBattleLoseNode = "";
+            NPCManager.Instance.TriggerBossBattle(pendingBattleNPC, pendingBattleDifficulty, pendingBattleWinNode, pendingBattleLoseNode);
+            pendingBattleNPC = ""; pendingBattleWinNode = ""; pendingBattleLoseNode = "";
             pendingBattleDifficulty = BossDifficultyTier.Training;
         }
     }
@@ -268,48 +252,14 @@ public class DialogueManager : Singleton<DialogueManager>
         isProcessingLine = false;
     }
 
-    // 선택지 UI 표시
-    //private void DisplayChoices()
-    //{
-    //    foreach (Choice choice in story.currentChoices)
-    //    {
-    //        GameObject choiceButton = Instantiate(choiceButtonPrefab, choiceContainer.transform);
-    //        choiceButton.GetComponentInChildren<TextMeshProUGUI>().text = choice.text;
-    //        choiceButton.GetComponent<Button>().onClick.AddListener(() => OnChoiceSelected(choice.index));
-    //    }
-    //}
-
     // 선택지를 선택했을 때 실행
     public void OnChoiceSelected(int choiceIndex)
     {
         story.ChooseChoiceIndex(choiceIndex);
-        if (story.canContinue)
-        {
-            story.Continue(); //(선택지 문장은 출력에서 제외)
-        }
-
+        if (story.canContinue) story.Continue();
         UIManager.Instance.ClearChoices();
         isChoices = false;
-
-        DisplayNextLine();  // 선택 후 다음 줄 실행
-    }
-
-    // 선택지 정리 (다음 선택지를 위해 기존 UI 제거)
-    //private void ClearChoices()
-    //{
-    //    foreach (Transform child in choiceContainer.transform)
-    //    {
-    //        Destroy(child.gameObject);
-    //    }
-    //}
-
-    // 플레그 ink에 전달하기 (필요 없을 것 같긴 한데... 일단 넣어놓기)
-    public void SetFlag(string flagName, bool value)
-    {
-        if (story.variablesState[flagName] != null)
-        {
-            story.variablesState[flagName] = value;
-        }
+        DisplayNextLine();
     }
 
     public void ResetStoryState() // ink 자체 지역변수(만남 카운터 등)를 완전히 새로 시작
@@ -317,4 +267,31 @@ public class DialogueManager : Singleton<DialogueManager>
         story = new Story(inkJSON.text);
         BindMemoryFunctions();
     }
+
+    // 플레그 ink에 전달하기 (필요 없을 것 같긴 한데... 일단 넣어놓기)
+    //public void SetFlag(string flagName, bool value)
+    //{
+    //    if (story.variablesState[flagName] != null)
+    //    {
+    //        story.variablesState[flagName] = value;
+    //    }
+    //}
+
+    
+
+
+    //private void HandlePanelTextFullyDisplayed()
+    //{
+    //    UIManager.Instance.dialogue.OnTextFullyDisplayed -= HandlePanelTextFullyDisplayed;
+    //    if (_pendingChoices != null) StartCoroutine(ShowChoicesAfterDelay(_pendingChoices));
+    //    _pendingChoices = null;
+    //}
+
+    //private void HandleBubbleTextFullyDisplayed()
+    //{
+    //    if (_subscribedBubble != null) _subscribedBubble.OnTextFullyDisplayed -= HandleBubbleTextFullyDisplayed;
+    //    _subscribedBubble = null;
+    //    if (_pendingChoices != null) StartCoroutine(ShowChoicesAfterDelay(_pendingChoices));
+    //    _pendingChoices = null;
+    //}
 }

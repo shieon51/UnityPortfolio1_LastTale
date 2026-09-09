@@ -9,7 +9,8 @@ public class MemoryManager : Singleton<MemoryManager>
     public string resourcesFolder = "MemoryFragments";
 
     private Dictionary<string, MemoryFragmentData> _registry = new();
-    private HashSet<string> _acquiredFlags = new();
+    private List<string> _acquiredOrder = new(); // ★ 추가
+    private HashSet<string> _acquiredFlags = new(); // _acquiredFlags(HashSet)는 그대로 빠른 조회용으로 유지
 
     public event Action<string> OnMemoryAcquired; // 기록장 UI 등이 나중에 구독
     public event Action<string> OnMemoryErased;
@@ -51,8 +52,11 @@ public class MemoryManager : Singleton<MemoryManager>
             Debug.LogWarning($"[MemoryManager] 등록 안 된 flagId 획득 시도: '{flagId}' — 애셋을 먼저 만들었는지 확인");
             return;
         }
-        if (_acquiredFlags.Add(flagId))
-            OnMemoryAcquired?.Invoke(flagId);
+        if (_acquiredFlags.Add(flagId)) 
+        { 
+            _acquiredOrder.Add(flagId); 
+            OnMemoryAcquired?.Invoke(flagId); 
+        } // ★ 순서 기록
     }
 
     public void EraseMemory(string flagId)
@@ -63,8 +67,11 @@ public class MemoryManager : Singleton<MemoryManager>
             Debug.LogWarning($"[MemoryManager] '{flagId}'는 지울 수 없는 기억으로 설정됨");
             return;
         }
-        if (_acquiredFlags.Remove(flagId))
-            OnMemoryErased?.Invoke(flagId);
+        if (_acquiredFlags.Remove(flagId)) 
+        { 
+            _acquiredOrder.Remove(flagId); 
+            OnMemoryErased?.Invoke(flagId); 
+        }
     }
 
     public MemoryTopicData.Stage GetCurrentStage(MemoryTopicData topic)
@@ -91,10 +98,15 @@ public class MemoryManager : Singleton<MemoryManager>
 
 
     // 6번(시간 고정/회귀) 시스템 만들 때 이 두 개를 그대로 씀
-    public IEnumerable<string> GetAllAcquired() => _acquiredFlags;
+    public IEnumerable<string> GetAllAcquired() => _acquiredOrder; // ★ 순서 보존된 것 반환
     public void RestoreAcquired(IEnumerable<string> flags)
     {
-        _acquiredFlags.Clear();
-        foreach (var f in flags) _acquiredFlags.Add(f);
+        _acquiredFlags.Clear(); 
+        _acquiredOrder.Clear();
+        foreach (var f in flags) 
+        { 
+            _acquiredFlags.Add(f); 
+            _acquiredOrder.Add(f); 
+        }
     }
 }

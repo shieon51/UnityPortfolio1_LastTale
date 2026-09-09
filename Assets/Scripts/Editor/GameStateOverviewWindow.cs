@@ -10,7 +10,6 @@ public class GameStateOverviewWindow : EditorWindow
     public static void Open() => GetWindow<GameStateOverviewWindow>("전체 상태 관리");
 
     private Vector2 _scroll;
-
     private Dictionary<string, bool> _categoryFoldouts = new();
 
     // DrawMemorySection 관련
@@ -29,10 +28,13 @@ public class GameStateOverviewWindow : EditorWindow
         DrawPlayerSection();
         EditorGUILayout.Space(10);
         DrawNPCSection();
+        EditorGUILayout.Space(10);
+        DrawMemoryTopicSection(); // 공용(NPC 무관) 정보 주제
+        EditorGUILayout.Space(10);
+        DrawMemorySection(); // 날짜/카테고리별 전체 뷰
         EditorGUILayout.EndScrollView();
-        DrawDebugToolsSection(); //?
-        DrawMemorySection(); //?
-        DrawMemoryTopicSection();
+
+        DrawDebugToolsSection();
         DrawTimeAnchorSection();
 
         Repaint(); // 실시간 갱신
@@ -68,45 +70,123 @@ public class GameStateOverviewWindow : EditorWindow
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             EditorGUILayout.LabelField(kvp.Key, EditorStyles.boldLabel);
 
-            EditorGUI.BeginChangeCheck();
             EditorGUILayout.LabelField($"이해도: {data.CurrentUnderstandingCount} (상한 {data.maxObtainableUnderstanding}, {data.UnderstandingPercent:F0}%)");
-            int newA = EditorGUILayout.IntField("호감도", data.hiddenAffection); // 호감도만 편집 가능하게 남김
-            if (data.hiddenAffection != newA) 
-            { 
-                data.hiddenAffection = newA;
-                NPCManager.Instance.SaveNPCData(data);
-            }
+            int newA = EditorGUILayout.IntField("호감도", data.hiddenAffection);
+            if (data.hiddenAffection != newA) { data.hiddenAffection = Mathf.Clamp(newA, -50, 100); NPCManager.Instance.SaveNPCData(data); }
 
             EditorGUILayout.LabelField($"모드: {data.currentMode}   관계 등급: {data.GetRelationshipTier()}");
 
             var live = Object.FindObjectsOfType<NPC>().FirstOrDefault(n => n.npcName == kvp.Key);
-            if (live != null)
-                EditorGUILayout.LabelField($"HP: {live.currentHealth}/{live.maxHealth}   MP: {live.currentMana}/{live.maxMana}");
+            if (live != null) EditorGUILayout.LabelField($"HP: {live.currentHealth}/{live.maxHealth}   MP: {live.currentMana}/{live.maxMana}");
 
-            if (MemoryManager.Instance != null)
-            {
-                string foldKey = $"npc_memory_{kvp.Key}";
-                if (!_categoryFoldouts.ContainsKey(foldKey)) _categoryFoldouts[foldKey] = false;
-
-                var npcFragments = MemoryManager.Instance.GetAllRegistered().Where(d => d.category == kvp.Key).ToList();
-                int haveCount = npcFragments.Count(d => MemoryManager.Instance.HasMemory(d.flagId));
-                _categoryFoldouts[foldKey] = EditorGUILayout.Foldout(_categoryFoldouts[foldKey], $"획득 정보 ({haveCount}/{npcFragments.Count})", true);
-
-                if (_categoryFoldouts[foldKey])
-                {
-                    EditorGUI.indentLevel++;
-                    foreach (var frag in npcFragments.OrderBy(d => d.flagId))
-                    {
-                        bool has = MemoryManager.Instance.HasMemory(frag.flagId);
-                        GUI.color = has ? Color.green : Color.gray;
-                        EditorGUILayout.LabelField($"{(has ? "✔" : "✘")} {frag.displayName} ({frag.flagId})");
-                        GUI.color = Color.white;
-                    }
-                    EditorGUI.indentLevel--;
-                }
-            }
+            DrawNPCMemoryHierarchy(kvp.Key);
 
             EditorGUILayout.EndVertical();
+        }
+    }
+
+    // ★ 신규 — NPC별 "단계별 정보" / "단일 정보" 계층 구조 표시
+    private void DrawNPCMemoryHierarchy(string npcName)
+    {
+        if (MemoryManager.Instance == null || LocalizationManager.Instance == null) return;
+
+        string foldKey = $"npc_memory_{npcName}";
+        if (!_categoryFoldouts.ContainsKey(foldKey)) _categoryFoldouts[foldKey] = false;
+
+        var npcFragments = MemoryManager.Instance.GetAllRegistered().Where(d => d.category == npcName).ToList();
+        var npcTopics = Resources.LoadAll<MemoryTopicData>("MemoryTopics").Where(t => t.category == npcName).ToList();
+        var flagsInTopics = new HashSet<string>(npcTopics.SelectMany(t => t.stages.Select(s => s.requiredFlagId)));
+        var standalone = npcFragments.Where(f => !flagsInTopics.Contains(f.flagId)).ToList();
+        var acquiredOrder = MemoryManager.Instance.GetAllAcquired().ToList();
+
+        int totalHave = standalone.Count(f => MemoryManager.Instance.HasMemory(f.flagId)) + npcTopics.Count(t => MemoryManager.Instance.GetCurrentStage(t) != null);
+        int totalCount = standalone.Count + npcTopics.Count;
+
+        _categoryFoldouts[foldKey] = EditorGUILayout.Foldout(_categoryFoldouts[foldKey], $"획득 정보 ({totalHave}/{totalCount})", true);
+        if (!_categoryFoldouts[foldKey]) return;
+
+        EditorGUI.indentLevel++;
+
+        if (npcTopics.Count > 0)
+        {
+            EditorGUILayout.LabelField("— 단계별 정보 —", EditorStyles.miniBoldLabel);
+            foreach (var topic in npcTopics)
+            {
+                var stage = MemoryManager.Instance.GetCurrentStage(topic);
+                string label = stage != null ? LocalizationManager.Instance.Get(stage.localizationKey) : "(아직 모름)";
+                bool isFinal = stage != null && stage.isFinal;
+                GUI.color = isFinal ? Color.white : (stage != null ? Color.gray : new Color(0.5f, 0.5f, 0.5f, 0.6f));
+                EditorGUILayout.LabelField($"[{topic.topicId}] {label}");
+                GUI.color = Color.white;
+            }
+        }
+
+        if (standalone.Count > 0)
+        {
+            EditorGUILayout.LabelField("— 단일 정보 —", EditorStyles.miniBoldLabel);
+            var ordered = standalone.OrderBy(f => acquiredOrder.Contains(f.flagId) ? acquiredOrder.IndexOf(f.flagId) : int.MaxValue).ThenBy(f => f.flagId);
+            foreach (var frag in ordered)
+            {
+                bool has = MemoryManager.Instance.HasMemory(frag.flagId);
+                string label = has ? LocalizationManager.Instance.Get(frag.localizationKey) : "(아직 모름)";
+                GUI.color = has ? Color.green : Color.gray;
+                EditorGUILayout.LabelField($"{(has ? "✔" : "✘")} {label} ({frag.flagId})");
+                GUI.color = Color.white;
+            }
+        }
+
+        EditorGUI.indentLevel--;
+    }
+
+    private void DrawMemoryTopicSection()
+    {
+        EditorGUILayout.LabelField("공용 정보 주제 (NPC 무관)", EditorStyles.boldLabel);
+        if (MemoryManager.Instance == null || LocalizationManager.Instance == null) return;
+
+        var npcNames = new HashSet<string>(NPCManager.Instance?.AllNPCData.Keys ?? Enumerable.Empty<string>());
+        foreach (var topic in Resources.LoadAll<MemoryTopicData>("MemoryTopics"))
+        {
+            if (npcNames.Contains(topic.category)) continue; // NPC 쪽에서 이미 보여줌
+            var stage = MemoryManager.Instance.GetCurrentStage(topic);
+            string label = stage != null ? LocalizationManager.Instance.Get(stage.localizationKey) : "(아직 모름)";
+            bool isFinal = stage != null && stage.isFinal;
+            GUI.color = isFinal ? Color.white : (stage != null ? Color.gray : new Color(0.5f, 0.5f, 0.5f, 0.6f));
+            EditorGUILayout.LabelField($"[{topic.category}] {topic.topicId}: {label}");
+            GUI.color = Color.white;
+        }
+    }
+
+    private void DrawMemorySection()
+    {
+        EditorGUILayout.LabelField("전체 정보 현황 (날짜/카테고리별)", EditorStyles.boldLabel);
+        if (MemoryManager.Instance == null || LocalizationManager.Instance == null) return;
+
+        _groupMode = GUILayout.Toolbar(_groupMode, _groupModeLabels);
+        var acquired = new HashSet<string>(MemoryManager.Instance.GetAllAcquired());
+        var all = MemoryManager.Instance.GetAllRegistered();
+        var grouped = _groupMode == 0
+            ? all.GroupBy(d => string.IsNullOrEmpty(d.category) ? "(미분류)" : d.category)
+            : all.GroupBy(d => d.day > 0 ? $"Day {d.day}" : "(날짜 무관)");
+
+        foreach (var group in grouped.OrderBy(g => g.Key))
+        {
+            if (!_categoryFoldouts.ContainsKey(group.Key)) _categoryFoldouts[group.Key] = false;
+            int haveCount = group.Count(d => acquired.Contains(d.flagId));
+            _categoryFoldouts[group.Key] = EditorGUILayout.Foldout(_categoryFoldouts[group.Key], $"{group.Key} ({haveCount}/{group.Count()})", true);
+
+            if (_categoryFoldouts[group.Key])
+            {
+                EditorGUI.indentLevel++;
+                foreach (var data in group.OrderBy(d => d.flagId))
+                {
+                    bool has = acquired.Contains(data.flagId);
+                    string label = has ? LocalizationManager.Instance.Get(data.localizationKey) : "(아직 모름)"; // ★ displayName → localizationKey
+                    GUI.color = has ? Color.green : Color.gray;
+                    EditorGUILayout.LabelField($"{(has ? "✔" : "✘")} {label} ({data.flagId})");
+                    GUI.color = Color.white;
+                }
+                EditorGUI.indentLevel--;
+            }
         }
     }
 
@@ -129,39 +209,7 @@ public class GameStateOverviewWindow : EditorWindow
         EditorGUILayout.EndVertical();
     }
 
-    private void DrawMemorySection()
-    {
-        EditorGUILayout.LabelField("기억(정보) 현황", EditorStyles.boldLabel);
-        if (MemoryManager.Instance == null) return;
-
-        _groupMode = GUILayout.Toolbar(_groupMode, _groupModeLabels);
-
-        var acquired = new HashSet<string>(MemoryManager.Instance.GetAllAcquired());
-        var all = MemoryManager.Instance.GetAllRegistered();
-        var grouped = _groupMode == 0
-            ? all.GroupBy(d => string.IsNullOrEmpty(d.category) ? "(미분류)" : d.category)
-            : all.GroupBy(d => d.day > 0 ? $"Day {d.day}" : "(날짜 무관)");
-
-        foreach (var group in grouped.OrderBy(g => g.Key))
-        {
-            if (!_categoryFoldouts.ContainsKey(group.Key)) _categoryFoldouts[group.Key] = false;
-            int haveCount = group.Count(d => acquired.Contains(d.flagId));
-            _categoryFoldouts[group.Key] = EditorGUILayout.Foldout(_categoryFoldouts[group.Key], $"{group.Key} ({haveCount}/{group.Count()})", true);
-
-            if (_categoryFoldouts[group.Key])
-            {
-                EditorGUI.indentLevel++;
-                foreach (var data in group.OrderBy(d => d.flagId))
-                {
-                    bool has = acquired.Contains(data.flagId);
-                    GUI.color = has ? Color.green : Color.gray;
-                    EditorGUILayout.LabelField($"{(has ? "✔" : "✘")} {data.displayName} ({data.flagId})");
-                    GUI.color = Color.white;
-                }
-                EditorGUI.indentLevel--;
-            }
-        }
-    }
+    
 
     private void DrawTimeAnchorSection()
     {
@@ -180,19 +228,5 @@ public class GameStateOverviewWindow : EditorWindow
         }
     }
 
-    private void DrawMemoryTopicSection()
-    {
-        EditorGUILayout.LabelField("정보 주제(단계별) 현황", EditorStyles.boldLabel);
-        if (MemoryManager.Instance == null || LocalizationManager.Instance == null) return;
 
-        foreach (var topic in Resources.LoadAll<MemoryTopicData>("MemoryTopics"))
-        {
-            var stage = MemoryManager.Instance.GetCurrentStage(topic);
-            string label = stage != null ? LocalizationManager.Instance.Get(stage.localizationKey) : "(아직 모름)";
-            bool isFinal = stage != null && stage.isFinal;
-            GUI.color = isFinal ? Color.white : (stage != null ? Color.gray : new Color(0.5f, 0.5f, 0.5f, 0.6f));
-            EditorGUILayout.LabelField($"[{topic.category}] {topic.topicId}: {label}");
-            GUI.color = Color.white;
-        }
-    }
 }

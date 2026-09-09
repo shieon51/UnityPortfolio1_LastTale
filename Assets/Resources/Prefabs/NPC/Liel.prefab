@@ -112,7 +112,7 @@ MonoBehaviour:
     \uB3CC\uD30C \uC784\uACC4\uAC12 8\n\uD328\uB9C1 \uD310\uC815\uCC3D 0.15s | \uBB34\uC801\uC2DC\uAC04
     0.20s"
   statusText: {fileID: 8281881456917337172}
-  debugUnderstanding: 0
+  debugUnderstandingDisplay: 0
   debugHiddenAffection: 0
   npcName: Liel
   myPersonality: 0
@@ -129,6 +129,12 @@ MonoBehaviour:
   - 0.6
   - 0.3
   battleStartGracePeriod: 2
+  battleBarkTriggers:
+  - type: 0
+    threshold: 0.5
+    phaseNumber: 0
+    barkKnotName: Liel_Battle_HalfHealth
+    onceOnly: 1
   teleportManaCost: 20
   ultimateManaCost: 40
   isGroggy: 0

@@ -16,6 +16,10 @@ public class DialogueUIPanel : MonoBehaviour
     public GameObject choiceContainer;
     private GameObject _choiceButtonPrefab;
 
+    // 선택지 엔터 클릭 관련
+    private List<GameObject> _choiceButtons = new();
+    private int _selectedChoiceIndex = 0;
+
     private void Awake()
     {
         _choiceButtonPrefab = Resources.Load<GameObject>("Prefabs/ChoiceButton");
@@ -33,13 +37,43 @@ public class DialogueUIPanel : MonoBehaviour
 
     public void ShowChoices(List<Ink.Runtime.Choice> choices)
     {
+        _choiceButtons.Clear();
         foreach (var choice in choices)
         {
             GameObject btn = Instantiate(_choiceButtonPrefab, choiceContainer.transform);
             btn.GetComponentInChildren<TextMeshProUGUI>().text = choice.text;
             btn.GetComponent<Button>().onClick.AddListener(() => DialogueManager.Instance.OnChoiceSelected(choice.index));
+            _choiceButtons.Add(btn);
         }
+        _selectedChoiceIndex = 0;
+        HighlightChoice(0);
     }
 
-    public void ClearChoices() { foreach (Transform child in choiceContainer.transform) Destroy(child.gameObject); }
+    public void ClearChoices() 
+    { 
+        foreach (Transform c in choiceContainer.transform) 
+            Destroy(c.gameObject); 
+        _choiceButtons.Clear(); 
+    }
+
+    public void NavigateChoice(int direction)
+    {
+        if (_choiceButtons.Count == 0) return;
+        _selectedChoiceIndex = (_selectedChoiceIndex + direction + _choiceButtons.Count) % _choiceButtons.Count;
+        HighlightChoice(_selectedChoiceIndex);
+    }
+    public void ConfirmSelectedChoice()
+    {
+        if (_choiceButtons.Count == 0) return;
+        _choiceButtons[_selectedChoiceIndex].GetComponent<Button>().onClick.Invoke();
+    }
+
+    private void HighlightChoice(int index)
+    {
+        for (int i = 0; i < _choiceButtons.Count; i++)
+        {
+            var outline = _choiceButtons[i].GetComponent<Outline>();
+            if (outline != null) outline.enabled = (i == index);
+        }
+    }
 }

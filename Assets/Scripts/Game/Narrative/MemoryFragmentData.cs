@@ -13,8 +13,7 @@ public class MemoryFragmentData : ScriptableObject
     public string category; // 예: "Liel", "세계관 진실", "소라 과거"
 
     [Header("기록장 표시용")]
-    public string displayName;
-    [TextArea(2, 5)] public string recordText;
+    public string localizationKey; // ★ displayName/recordText 대신 이걸로 통일
 
     [Header("옵션")]
     [Tooltip("체크 해제 시 이 기억은 지울 수 없음(충격적 사건 등)")]
