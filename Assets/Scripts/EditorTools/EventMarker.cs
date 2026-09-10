@@ -26,6 +26,10 @@ public class EventMarker : MonoBehaviour
     public int SceneID;
     public int TimeTaken = 1;
     public bool AutoTrigger = false;
+    [Tooltip("이 이벤트를 최대 몇 번까지 실행할 수 있는지. 0이면 무제한")]
+    public int maxTriggerCount = 0;
+    [Tooltip("횟수를 다 쓰면 이 노드로 대체 (비우면 이벤트 자체가 숨겨짐)")]
+    public string exhaustedInkNode = "";
 
     // 게임 시작 시 자동 삭제 
     private void Awake()

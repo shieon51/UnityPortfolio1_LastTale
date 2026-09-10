@@ -31,4 +31,17 @@ public class SpeechBubbleManager : Singleton<SpeechBubbleManager>
         foreach (var b in _activeBubbles) if (b != null) { sum += b.FollowTargetPosition; count++; }
         return count > 0 ? sum / count : Camera.main.transform.position;
     }
+
+    public SpeechBubbleController FindNearestOtherSpeaker(SpeechBubbleController self)
+    {
+        SpeechBubbleController nearest = null;
+        float best = float.MaxValue;
+        foreach (var b in _activeBubbles)
+        {
+            if (b == null || b == self) continue;
+            float d = Mathf.Abs(b.FollowTargetPosition.x - self.FollowTargetPosition.x);
+            if (d < best) { best = d; nearest = b; }
+        }
+        return nearest;
+    }
 }

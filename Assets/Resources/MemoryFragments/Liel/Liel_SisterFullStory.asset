@@ -14,7 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MemoryFragmentData
   day: 3
   flagId: liel_sister_full_story
-  category: 
-  displayName: 
-  recordText: 
+  category: Liel
+  localizationKey: liel_family_stage3
   isEraseable: 1

@@ -44,11 +44,37 @@ public class EventTrigger : MonoBehaviour
 
     public void StartDialogue() //버튼 클릭 시 실행
     {
-        //Story story = DialogueManager.Instance.GetStory();
-        //story.variablesState["current_time"] = TimeManager.Instance.currentHour; //** Ink 변수 만들기 (타임 변수)
+        var data = eventData;
+        if (EventManager.Instance.IsEventExhausted(data))
+        {
+            if (string.IsNullOrEmpty(data.exhaustedInkNode))
+            {
+                Debug.Log($"[EventTrigger] '{data.EventName}' 이벤트는 소진되어 실행하지 않습니다.");
+                return;
+            } // 숨김 처리된 경우 아예 시작 안 함
+
+            data = CloneWithNode(data, data.exhaustedInkNode); // 대체 노드도 전부 ink에서 관리
+        }
         DialogueManager.Instance.StartStory(eventData);
         
     }
+
+    private EventData CloneWithNode(EventData source, string node) => new EventData
+    {
+        EventID = source.EventID,
+        EventName = source.EventName,
+        InkNodeName = node,
+        IsAnytime = source.IsAnytime,
+        Day = source.Day,
+        StartTime = source.StartTime,
+        EndTime = source.EndTime,
+        SceneID = source.SceneID,
+        Position = source.Position,
+        TimeTaken = 0,
+        AutoTrigger = source.AutoTrigger,
+        maxTriggerCount = source.maxTriggerCount,
+        exhaustedInkNode = source.exhaustedInkNode
+    };
 
     public void UpdateTrigger(EventData data)
     {

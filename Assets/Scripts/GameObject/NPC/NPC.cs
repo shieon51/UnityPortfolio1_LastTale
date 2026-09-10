@@ -16,6 +16,7 @@ public abstract class NPC : CharacterStats, ICombatTargetable
     [Header("Relations (이해도는 기억 조각에서 자동 계산 — 표시 전용)")]
     [SerializeField] private int debugUnderstandingDisplay = 0;
     [SerializeField] private int debugHiddenAffection = 0;
+    private int _lastDebugHiddenAffection; // ★ 추가 — 인스펙터 필드 자체가 "바뀐 순간"만 감지하기 위함
 
     //------------------------------------------------------------------
     // 외부 상태 클래스들이 접근할 수 있도록 Property로 변경
@@ -263,15 +264,13 @@ public abstract class NPC : CharacterStats, ICombatTargetable
 #if UNITY_EDITOR
         debugUnderstandingDisplay = myData.CurrentUnderstandingCount; // ★ 매 프레임 표시만 갱신 — 여기 값을 직접 입력해도 다음 프레임에 자동으로 덮어써짐(사실상 읽기 전용)
 
-        if (myData.hiddenAffection != debugHiddenAffection)
+        if (debugHiddenAffection != _lastDebugHiddenAffection) // ★ 인스펙터에서 직접 타이핑해서 바뀐 경우만 반영
         {
             myData.hiddenAffection = debugHiddenAffection;
             NPCManager.Instance.SaveNPCData(myData);
         }
-        else
-        {
-            debugHiddenAffection = myData.hiddenAffection;
-        }
+        debugHiddenAffection = myData.hiddenAffection; // ★ 항상 실제 값으로 표시 갱신
+        _lastDebugHiddenAffection = debugHiddenAffection;
 #endif
 
         // 내 현재 모드(myData 안에 저장됨)에 따라 행동 분기

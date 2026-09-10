@@ -305,4 +305,9 @@ public class NPCManager : Singleton<NPCManager>
             if (!data.rememberAcrossLoops) data.hiddenAffection = 0;
         // 이해도는 이제 계산값이라 손 댈 필요 없음
     }
+
+    public void ResetAllNPCData() // 디버그 완전 리셋 전용
+    {
+        foreach (var data in npcDataDict.Values) data.hiddenAffection = 0; // rememberAcrossLoops 무시
+    }
 }

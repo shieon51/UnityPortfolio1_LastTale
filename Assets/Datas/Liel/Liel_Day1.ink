@@ -1,7 +1,6 @@
 
 === Liel_Day1_001 ===
 #speak:Liel:???
-#cue:test_shake
 {get_counter("Liel_Day1_001_meet") == 0: 좋은 아침입니다. 초면이군요.}
 {get_counter("Liel_Day1_001_meet") == 1: ->Liel_Day1_001_B}
 {get_counter("Liel_Day1_001_meet") >= 2: ->Liel_Day1_001_A}
@@ -9,8 +8,7 @@
 -> DONE
 
 ===Liel_Day1_001_B===
-#speak:Liel:리엘
-전 리엘이라고 합니다.
+전 리엘이라고 합니다. #speak:Liel:리엘
 -제가 좋아하는 과일이 무엇인지 아십니까?
     + {not has_memory("liel_likes_apple")} 뭔데요?
         -> Liel_Day1_001_B_02
@@ -22,7 +20,7 @@
         -> Liel_Day1_001_B_wrong
 
 ===Liel_Day1_001_B_01===
-맞습니다. 어떻게 아셨습니까?
+맞습니다. 어떻게 아셨습니까? #cue:test_shake
 ~ increment_counter("Liel_Day1_001_meet")
 ->DONE
 
@@ -37,13 +35,9 @@
 -> Liel_Day1_001_B_02
 
 ===Liel_Day1_001_A===
-#speak:Liel:리엘
-이야기하다보니 벌써 시간이 많이 지났네요.
-#auto:1.5
--전 점심을 먹으러 가보겠습니다. 
-#speak:Player:소라
-#auto:1.5
-네, 다녀오세요.
+이야기하다보니 벌써 시간이 많이 지났네요. #speak:Liel:리엘 #auto:1.5
+-전 점심을 먹으러 가보겠습니다. #auto:1.5
+네, 다녀오세요. #speak:Player:소라
 ~ increment_counter("Liel_Day1_001_meet")
 ~ add_affection("Liel", 1)
 -> DONE

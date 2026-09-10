@@ -19,6 +19,11 @@ public class EventData
     public Vector2 Position;
     public int TimeTaken;
     public bool AutoTrigger;
+
+    [Tooltip("이 이벤트를 최대 몇 번까지 실행할 수 있는지. 0이면 무제한")]
+    public int maxTriggerCount = 0;
+    [Tooltip("횟수를 다 쓰면 이 노드로 대체 (비우면 이벤트 자체가 숨겨짐)")]
+    public string exhaustedInkNode = "";
 }
 
 public class EventManager : Singleton<EventManager>
@@ -43,6 +48,9 @@ public class EventManager : Singleton<EventManager>
 
     // 전략 패턴 맵핑을 위한 딕셔너리
     private Dictionary<int, IEventBehavior> eventBehaviors;
+
+    // 이벤트 실행 횟수 판정 헬퍼 추가
+    private string GetTriggerCountKey(EventData data) => $"event_trigger_{data.EventID}";
 
     private void Awake()
     {
@@ -145,6 +153,8 @@ public class EventManager : Singleton<EventManager>
             // 현재 씬과 시간에 유효한 이벤트인지 확인
             if (GameManager.Instance.CurrentGameMode.IsEventValid(eventEntry, currentSceneID))
             {
+                if (IsEventExhausted(eventEntry) && string.IsNullOrEmpty(eventEntry.exhaustedInkNode)) continue; // 이미 소진된 이벤트는 숨김
+
                 // 이벤트 ID가 NPC 대역(10000 ~ 89999)인지 확인
                 if (eventEntry.EventID >= (int)EventID.NPC && eventEntry.EventID < 90000)
                 {
@@ -209,7 +219,10 @@ public class EventManager : Singleton<EventManager>
         canInteract = false;
 
         // 자동 이벤트가 있다면 실행
-        if (closest != null && closest.eventData.AutoTrigger && minDistance <= closest.InteractionRange && !DialogueManager.Instance.IsTalking && !GlobalActionLock.IsLocked)
+        if (closest != null && closest.eventData.AutoTrigger
+            && minDistance <= closest.InteractionRange
+            && !DialogueManager.Instance.IsTalking && !GlobalActionLock.IsLocked
+            && !IsEventExhausted(closest.eventData)) // ★ 추가 — 소진된 자동 이벤트는 재발동 안 함
         {
             closest.StartDialogue();
             return;
@@ -265,9 +278,19 @@ public class EventManager : Singleton<EventManager>
         }
     }
 
+    // 이벤트에 있는 모든 주요 대사가 소진되었을 경우 처리
+    public bool IsEventExhausted(EventData data)
+    {
+        if (data.maxTriggerCount <= 0) return false;
+        return MemoryManager.Instance.GetCounter(GetTriggerCountKey(data)) >= data.maxTriggerCount;
+    }
+
+
     //Dialogue가 끝났을 때 Invoke되는 함수
     public void EventResult(EventData eventData)
     {
+        MemoryManager.Instance.IncrementCounter(GetTriggerCountKey(eventData)); // 이벤트 실행 홧수 카운트
+
         // 시간 코인 소모 로직을 GameMode에게 위임! (1부면 코인 소모, 2부면 행동력 소모)
         GameManager.Instance.CurrentGameMode.ConsumeResourceForEvent(eventData.TimeTaken);
 

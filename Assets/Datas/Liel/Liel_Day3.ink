@@ -23,8 +23,8 @@
 
 === Liel_Day3_001_B ===
 여동생은... 지금은 같이 안 삽니다.
-{get_affection("Liel") <= 0: 사정이 있어서 말입니다. ->DONE}
-{get_affection("Liel") > 0: 예전에 사고가 좀 있어서, 실종되었거든요.}
+{get_affection("Liel") <= 5: 사정이 있어서 말입니다. ->DONE}
+{get_affection("Liel") > 5: 예전에 사고가 좀 있어서, 실종되었거든요.}
 ~ acquire_memory("liel_sister_missing")
 ~ increment_counter("Liel_Day3_001_meet")
 -> DONE

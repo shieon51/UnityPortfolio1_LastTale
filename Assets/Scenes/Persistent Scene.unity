@@ -3508,7 +3508,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2585278889251251950, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7033709181599847822, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
       propertyPath: m_Pivot.x
@@ -3560,15 +3560,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7033709181599847822, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 7033709181599847822, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 7033709181599847822, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 7033709181599847822, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
       propertyPath: m_AnchoredPosition.x
@@ -3598,6 +3598,11 @@ PrefabInstance:
 --- !u!224 &789696663 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 7033709181599847822, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
+  m_PrefabInstance: {fileID: 789696662}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &789696664 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2585278889251251950, guid: 4d38866da26ddde4a80aa25be0da8b8f, type: 3}
   m_PrefabInstance: {fileID: 789696662}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &799746548
@@ -4634,7 +4639,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8968453651853e44f9cb16824402ac97, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnterIconIndicator
-  iconGroup: {fileID: 0}
+  iconObject: {fileID: 789696664}
   ownerBubble: {fileID: 0}
 --- !u!1 &1051826463
 GameObject:

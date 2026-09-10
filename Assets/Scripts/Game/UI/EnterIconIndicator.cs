@@ -1,32 +1,32 @@
 // EnterIconIndicator.cs (재설계)
+using UnityEditor.ShaderGraph.Serialization;
 using UnityEngine;
 
 public class EnterIconIndicator : MonoBehaviour
 {
-    public CanvasGroup iconGroup; // ★ Image가 아니라 CanvasGroup으로 alpha만 제어
+    [Tooltip("실제로 껐다 켤 화살표 아이콘 오브젝트 (이 스크립트는 항상 켜져있는 부모에 붙일 것)")]
+    public GameObject iconObject;
+
     [Tooltip("말풍선 전용이면 연결, 하단 패널용이면 비워둠")]
     public SpeechBubbleController ownerBubble;
 
     private void OnEnable()
     {
-        if (iconGroup == null) 
-        { 
-            Debug.LogWarning($"[EnterIconIndicator] {name}에 Icon Group이 연결 안 됨", this); 
-            return; 
-        } 
-        DialogueManager.Instance.OnWaitingForInputChanged += HandleChanged;
-        SetVisible(false);
+        if (iconObject == null) { Debug.LogWarning($"[EnterIconIndicator] {name}에 Icon Object 미연결", this); return; }
+        if (DialogueManager.Instance != null) DialogueManager.Instance.OnWaitingForInputChanged += HandleChanged;
+        iconObject.SetActive(false);
     }
     private void OnDisable()
     {
         if (DialogueManager.Instance != null) DialogueManager.Instance.OnWaitingForInputChanged -= HandleChanged;
     }
+
     private void HandleChanged(bool waiting)
     {
+        if (iconObject == null) return;
         bool isMine = ownerBubble == null
             ? DialogueManager.Instance.CurrentActiveBubble == null
             : DialogueManager.Instance.CurrentActiveBubble == ownerBubble;
-        SetVisible(waiting && isMine);
+        iconObject.SetActive(waiting && isMine);
     }
-    private void SetVisible(bool visible) => iconGroup.alpha = visible ? 1f : 0f;
 }

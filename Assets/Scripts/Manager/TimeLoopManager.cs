@@ -102,8 +102,9 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     public void TravelToAnchor(TimeAnchorSnapshot anchor)
     {
         if (anchor == null) return;
-        // ★ 디버그/즉시 이동 용도 — 마나 소모나 몸 레벨 선택 없이 그대로 이동
-        //   나중에 실제 SaveLoadWindow는 자기 확인 UI를 먼저 띄운 뒤 이 메서드만 호출하면 됨
+        var sora = PlayerManager.Instance.CurrentCharacter as SoraStats;
+        if (sora != null) sora.loopCount++;              // ★ 추가 — 시간 역행이므로 회차 증가
+        NPCManager.Instance.ResetAffectionForNewLoop();  // ★ 추가
         TimeManager.Instance.SetTime(anchor.day, anchor.hour);
         SceneLoader.Instance.LoadScene(anchor.sceneID, anchor.position);
     }
