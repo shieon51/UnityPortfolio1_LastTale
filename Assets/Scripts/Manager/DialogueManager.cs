@@ -118,8 +118,9 @@ public class DialogueManager : Singleton<DialogueManager>
             NPCManager.Instance.SaveNPCData(data);
             return 0;
         }, lookaheadSafe: false);
-        story.BindExternalFunction("get_understanding_percent", (string npcName) =>
-            (int)Mathf.Round(NPCManager.Instance.GetNPCData(npcName).UnderstandingPercent));
+        story.BindExternalFunction("get_understanding_percent", (string npcName) => (int)Mathf.Round(NPCManager.Instance.GetNPCData(npcName).UnderstandingPercent));
+        story.BindExternalFunction("add_suspicion", (string npcName, int amount) => { SuspicionManager.Instance.AddSuspicion(npcName, amount); return 0; }, lookaheadSafe: false);
+        story.BindExternalFunction("get_suspicion", (string npcName) => SuspicionManager.Instance.GetSuspicion(npcName));
     }
 
     public void StartStory(EventData eventData)

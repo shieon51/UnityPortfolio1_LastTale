@@ -121,7 +121,7 @@ MonoBehaviour:
   bubbleRoot: {fileID: 2018004290659192783}
   nameText: {fileID: 6101423250343992033}
   bodyTypewriter: {fileID: 8645758678934787416}
-  offsetAboveTarget: {x: 0, y: 3.5, z: 0}
+  offsetAboveTarget: {x: 0, y: 3, z: 0}
 --- !u!1 &3039445715083555877
 GameObject:
   m_ObjectHideFlags: 0

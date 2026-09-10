@@ -304,6 +304,8 @@ public class NPCManager : Singleton<NPCManager>
         foreach (var data in npcDataDict.Values)
             if (!data.rememberAcrossLoops) data.hiddenAffection = 0;
         // 이해도는 이제 계산값이라 손 댈 필요 없음
+
+        SuspicionManager.Instance.ResetForNewLoop();
     }
 
     public void ResetAllNPCData() // 디버그 완전 리셋 전용

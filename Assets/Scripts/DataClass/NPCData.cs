@@ -15,6 +15,11 @@ public class NPCData
     [Tooltip("이 NPC를 '완전히' 이해하는 데 필요한 총량. 실제 만든 정보 개수보다 크게 잡으면 100% 도달이 원천적으로 불가능해짐 (일부러 그런 캐릭터를 만들고 싶을 때)")]
     public int maxObtainableUnderstanding = 100; // ★ 신규
 
+    [Tooltip("이 NPC가 소문을 전달할 대상들")]
+    public string[] relatedNPCs;
+    [Tooltip("소문이 전파될 때 남는 강도 비율 (0~1)")]
+    public float rumorSpreadRatio = 0.5f;
+
     // 전투 및 스토리 상태 데이터
     public NPC.NPCMode currentMode = NPC.NPCMode.Normal; // 평상시인지 보스전인지
     public int bossPhase = 1; // 보스전 돌입 시 현재 페이즈

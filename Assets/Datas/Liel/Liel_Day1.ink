@@ -36,7 +36,7 @@
 
 ===Liel_Day1_001_A===
 이야기하다보니 벌써 시간이 많이 지났네요. #speak:Liel:리엘 #auto:1.5
--전 점심을 먹으러 가보겠습니다. #auto:1.5
+-전 점심을 먹으러 가보겠습니다. #speak:Liel:리엘 #auto:1.5
 네, 다녀오세요. #speak:Player:소라
 ~ increment_counter("Liel_Day1_001_meet")
 ~ add_affection("Liel", 1)

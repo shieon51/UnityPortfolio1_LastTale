@@ -104,7 +104,9 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         if (anchor == null) return;
         var sora = PlayerManager.Instance.CurrentCharacter as SoraStats;
         if (sora != null) sora.loopCount++;              // ★ 추가 — 시간 역행이므로 회차 증가
+
         NPCManager.Instance.ResetAffectionForNewLoop();  // ★ 추가
+        SuspicionManager.Instance.ResetForNewLoop();
         TimeManager.Instance.SetTime(anchor.day, anchor.hour);
         SceneLoader.Instance.LoadScene(anchor.sceneID, anchor.position);
     }
