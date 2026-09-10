@@ -308,6 +308,20 @@ public class NPCManager : Singleton<NPCManager>
         SuspicionManager.Instance.ResetForNewLoop();
     }
 
+    // 호감도 스냅샷/복원
+    public Dictionary<string, int> SnapshotAffections()
+    {
+        var result = new Dictionary<string, int>();
+        foreach (var kvp in npcDataDict) result[kvp.Key] = kvp.Value.hiddenAffection;
+        return result;
+    }
+
+    public void RestoreAffections(Dictionary<string, int> snapshot)
+    {
+        foreach (var kvp in snapshot)
+            if (npcDataDict.TryGetValue(kvp.Key, out var data)) data.hiddenAffection = kvp.Value;
+    }
+
     public void ResetAllNPCData() // 디버그 완전 리셋 전용
     {
         foreach (var data in npcDataDict.Values) data.hiddenAffection = 0; // rememberAcrossLoops 무시

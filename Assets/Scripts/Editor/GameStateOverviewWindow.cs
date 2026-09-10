@@ -16,6 +16,8 @@ public class GameStateOverviewWindow : EditorWindow
     private int _groupMode = 0;
     private readonly string[] _groupModeLabels = { "카테고리별", "날짜별" };
 
+    private Dictionary<int, bool> _anchorFoldouts = new();
+
     private void OnGUI()
     {
         if (!Application.isPlaying)
@@ -80,6 +82,7 @@ public class GameStateOverviewWindow : EditorWindow
             if (live != null) EditorGUILayout.LabelField($"HP: {live.currentHealth}/{live.maxHealth}   MP: {live.currentMana}/{live.maxMana}");
 
             DrawNPCMemoryHierarchy(kvp.Key);
+            DrawNPCObservedActions(kvp.Key);
 
             EditorGUILayout.EndVertical();
         }
@@ -135,6 +138,44 @@ public class GameStateOverviewWindow : EditorWindow
             }
         }
 
+        EditorGUI.indentLevel--;
+    }
+
+    private void DrawNPCObservedActions(string npcName)
+    {
+        if (MemoryManager.Instance == null) return;
+        string foldKey = $"npc_actions_{npcName}";
+        if (!_categoryFoldouts.ContainsKey(foldKey)) _categoryFoldouts[foldKey] = false;
+
+        var data = NPCManager.Instance.GetNPCData(npcName);
+        var observable = data.observableCounterKeys ?? new string[0];
+
+        _categoryFoldouts[foldKey] = EditorGUILayout.Foldout(_categoryFoldouts[foldKey],
+            $"이 NPC가 기억하는 행적 ({observable.Length}개 구독)", true);
+        if (!_categoryFoldouts[foldKey]) return;
+
+        EditorGUI.indentLevel++;
+        EditorGUILayout.LabelField($"의심도: {SuspicionManager.Instance?.GetSuspicion(npcName) ?? 0} / 100");
+
+        if (observable.Length == 0) EditorGUILayout.LabelField("(구독 중인 행적 없음)");
+        foreach (var key in observable)
+        {
+            int count = MemoryManager.Instance.GetCounter(key);
+            GUI.color = count > 0 ? Color.green : Color.gray;
+            EditorGUILayout.LabelField($"{(count > 0 ? "✔" : "✘")} {key}: {count}회");
+            GUI.color = Color.white;
+        }
+
+        // 시간순 행적 (이 NPC가 관찰 가능한 것만)
+        if (PlayerActionLog.Instance != null)
+        {
+            EditorGUILayout.LabelField("— 시간순 기록 —", EditorStyles.miniBoldLabel);
+            foreach (var r in PlayerActionLog.Instance.Records)
+            {
+                if (System.Array.IndexOf(observable, r.actionKey) < 0) continue;
+                EditorGUILayout.LabelField($"[{r.loopCount}회차 Day{r.day} {r.hour}시] {r.actionKey} @{r.sceneName}");
+            }
+        }
         EditorGUI.indentLevel--;
     }
 
@@ -220,11 +261,52 @@ public class GameStateOverviewWindow : EditorWindow
         for (int i = 0; i < anchors.Count; i++)
         {
             var a = anchors[i];
-            EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
-            EditorGUILayout.LabelField($"#{i + 1}  Scene {a.sceneID}  Day {a.day} {a.hour}시  Lv.{a.level}");
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+
+            EditorGUILayout.BeginHorizontal();
+            if (!_anchorFoldouts.ContainsKey(i)) _anchorFoldouts[i] = false;
+            _anchorFoldouts[i] = EditorGUILayout.Foldout(_anchorFoldouts[i],
+                $"#{i + 1}  Scene {a.sceneID}  Day {a.day} {a.hour}시  Lv.{a.level}  ({a.loopCountAtSave}회차에 저장)", true);
             if (GUILayout.Button("이동", GUILayout.Width(60))) TimeLoopManager.Instance.TravelToAnchor(a);
             if (GUILayout.Button("삭제", GUILayout.Width(60))) TimeLoopManager.Instance.RemoveAnchor(a);
             EditorGUILayout.EndHorizontal();
+
+            if (_anchorFoldouts[i])
+            {
+                EditorGUI.indentLevel++;
+
+                EditorGUILayout.LabelField("— NPC 호감도 —", EditorStyles.miniBoldLabel);
+                if (a.npcAffections != null)
+                    foreach (var kvp in a.npcAffections)
+                        EditorGUILayout.LabelField($"{kvp.Key}: {kvp.Value}");
+
+                EditorGUILayout.LabelField("— NPC 의심도 —", EditorStyles.miniBoldLabel);
+                if (a.npcSuspicions != null && a.npcSuspicions.Count > 0)
+                    foreach (var kvp in a.npcSuspicions)
+                        EditorGUILayout.LabelField($"{kvp.Key}: {kvp.Value}");
+                else EditorGUILayout.LabelField("(없음)");
+
+                EditorGUILayout.LabelField("— NPC가 기억하는 행적/선택 (카운터) —", EditorStyles.miniBoldLabel);
+                if (a.counters != null && a.counters.Count > 0)
+                    foreach (var kvp in a.counters.OrderBy(k => k.Key))
+                        EditorGUILayout.LabelField($"{kvp.Key}: {kvp.Value}");
+                else EditorGUILayout.LabelField("(없음)");
+
+                EditorGUILayout.LabelField("— 이 시점에 보유한 정보 —", EditorStyles.miniBoldLabel);
+                if (a.acquiredMemoryFlags != null && a.acquiredMemoryFlags.Count > 0)
+                    foreach (var flag in a.acquiredMemoryFlags)
+                    {
+                        var frag = MemoryManager.Instance?.GetData(flag);
+                        string label = frag != null && LocalizationManager.Instance != null
+                            ? LocalizationManager.Instance.Get(frag.localizationKey) : flag;
+                        EditorGUILayout.LabelField($"✔ {label} ({flag})");
+                    }
+                else EditorGUILayout.LabelField("(없음)");
+
+                EditorGUI.indentLevel--;
+            }
+
+            EditorGUILayout.EndVertical();
         }
     }
 

@@ -46,6 +46,9 @@ public class DataManager : Singleton<DataManager>
             SceneID = int.Parse(v[7]),
             Position = new Vector2(float.Parse(v[8]), float.Parse(v[9])),
             TimeTaken = int.Parse(v[10]),
+            AutoTrigger = CsvTableLoader.GetBool(v, 11),        // ≮ 后 蔼 救傈
+            maxTriggerCount = CsvTableLoader.GetInt(v, 12, 0),  // ≮ 后 蔼捞搁 0 = 公力茄
+            exhaustedInkNode = CsvTableLoader.Get(v, 13, ""),   // ≮ 后 蔼捞搁 见辫 贸府
         });
 
 #if UNITY_EDITOR

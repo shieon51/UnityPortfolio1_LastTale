@@ -35,6 +35,10 @@ public class DialogueManager : Singleton<DialogueManager>
     private bool _choicesReadyToReveal; // ★ "텍스트는 다 나왔고 엔터만 누르면 선택지 뜸" 상태
     private Coroutine _autoAdvanceCoroutine;
 
+    private float _queuedAutoDelay;
+    private bool _queuedForcePanel, _queuedLockInput;
+    private string _queuedSpeakerKey, _queuedSpeakerName;
+
     private string _queuedText; // ★ 신규 — 엿보다 발견한 "진짜 다음 줄"을 저장해두는 큐
     private bool _queuedHasChoices;
 
@@ -119,8 +123,9 @@ public class DialogueManager : Singleton<DialogueManager>
             return 0;
         }, lookaheadSafe: false);
         story.BindExternalFunction("get_understanding_percent", (string npcName) => (int)Mathf.Round(NPCManager.Instance.GetNPCData(npcName).UnderstandingPercent));
-        story.BindExternalFunction("add_suspicion", (string npcName, int amount) => { SuspicionManager.Instance.AddSuspicion(npcName, amount); return 0; }, lookaheadSafe: false);
-        story.BindExternalFunction("get_suspicion", (string npcName) => SuspicionManager.Instance.GetSuspicion(npcName));
+        story.BindExternalFunction("add_suspicion", (string npcName, int amount) => { SuspicionManager.Instance.AddDirectSuspicion(npcName, amount); return 0; }, lookaheadSafe: false);
+        story.BindExternalFunction("add_suspicion_for", (string npcName, int amount, string counterKey) => { SuspicionManager.Instance.AddDirectSuspicion(npcName, amount, counterKey); return 0; }, lookaheadSafe: false);
+        story.BindExternalFunction("can_observe", (string npcName, string counterKey) => SuspicionManager.Instance.CanObserve(npcName, counterKey));
     }
 
     public void StartStory(EventData eventData)
@@ -146,6 +151,9 @@ public class DialogueManager : Singleton<DialogueManager>
         {
             text = _queuedText;
             hasChoices = _queuedHasChoices;
+            _autoAdvanceDelay = _queuedAutoDelay;    // ★ 저장해둔 태그 복원
+            _forcePanel = _queuedForcePanel; _lockInput = _queuedLockInput;
+            _pendingSpeakerKey = _queuedSpeakerKey; _pendingSpeakerDisplayName = _queuedSpeakerName;
             _queuedText = null;
         }
         else if (story.canContinue)
@@ -163,7 +171,7 @@ public class DialogueManager : Singleton<DialogueManager>
         }
         else { EndDialogue(); StartCoroutine(ResetProcessingFlag()); return; }
 
-        Debug.Log($"[DBG Ink] text=\"{text}\" hasChoices={hasChoices} canContinue={story.canContinue}");
+        //Debug.Log($"[DBG Ink] text=\"{text}\" hasChoices={hasChoices} canContinue={story.canContinue}");
 
         if (string.IsNullOrWhiteSpace(text) && !hasChoices)
         {
@@ -189,20 +197,32 @@ public class DialogueManager : Singleton<DialogueManager>
         // ★ 선택지가 아직 없으면, "조건 확정용 빈 스텝인지" 딱 한 번 엿봄 (표시 전에 처리)
         if (!hasChoices && story.canContinue)
         {
+            float savedAuto = _autoAdvanceDelay;      // ★ 현재 줄의 태그 값을 백업
+            bool savedPanel = _forcePanel, savedLock = _lockInput;
+            string savedSpeakerKey = _pendingSpeakerKey, savedSpeakerName = _pendingSpeakerDisplayName;
+
             string peek = story.Continue();
             ParseTags();
             bool peekHasChoices = story.currentChoices.Count > 0;
 
-            Debug.Log($"[DBG Ink Peek] peek=\"{peek}\" peekHasChoices={peekHasChoices} canContinue={story.canContinue}"); // ★ 추가 — 이게 빠져있어서 여기서 무슨 일이 있었는지 안 보였음
+            //Debug.Log($"[DBG Ink Peek] peek=\"{peek}\" peekHasChoices={peekHasChoices} canContinue={story.canContinue}"); // ★ 추가 — 이게 빠져있어서 여기서 무슨 일이 있었는지 안 보였음
 
             if (string.IsNullOrWhiteSpace(peek))
             {
                 hasChoices = peekHasChoices; // 예상한 케이스 — 이번 줄에 선택지 귀속
+                _autoAdvanceDelay = savedAuto; _forcePanel = savedPanel; _lockInput = savedLock; // ★ 복원
+                _pendingSpeakerKey = savedSpeakerKey; _pendingSpeakerDisplayName = savedSpeakerName;
             }
             else
             {
-                _queuedText = peek; // 진짜 다음 줄 — 다음 엔터에 그대로 씀
+                _queuedText = peek;                    // 다음 줄용으로 태그도 함께 저장
                 _queuedHasChoices = peekHasChoices;
+                _queuedAutoDelay = _autoAdvanceDelay;
+                _queuedForcePanel = _forcePanel; _queuedLockInput = _lockInput;
+                _queuedSpeakerKey = _pendingSpeakerKey; _queuedSpeakerName = _pendingSpeakerDisplayName;
+
+                _autoAdvanceDelay = savedAuto; _forcePanel = savedPanel; _lockInput = savedLock; // ★ 현재 줄 값 복원
+                _pendingSpeakerKey = savedSpeakerKey; _pendingSpeakerDisplayName = savedSpeakerName;
             }
         }
 

@@ -8,6 +8,9 @@ EXTERNAL add_affection(npcName, amount)
 EXTERNAL get_understanding_percent(npcName)
 EXTERNAL add_suspicion(npcName, amount)
 EXTERNAL get_suspicion(npcName)
+EXTERNAL add_suspicion_for(npcName, amount, counterKey)
+EXTERNAL can_observe(npcName, counterKey)
+
 
 VAR player_name = "소라"
 

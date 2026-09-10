@@ -2,7 +2,7 @@
 #speak:Liel:리엘
 {get_counter("Liel_Day3_001_meet") == 0: 이 시간에 무슨 일이십니까?}
 {get_counter("Liel_Day3_001_meet") >= 1: 궁금한 게 있습니까?}
- + {not has_memory("liel_sister_exists")} 가족에 대해서
+ + 가족에 대해서
   -> Liel_Day3_001_A
  + {has_memory("liel_sister_exists")} 여동생에 대해서
   -> Liel_Day3_001_B
@@ -11,7 +11,7 @@
  + {has_memory("liel_sister_exists")} 여동생분은 잘 지내시나요?
     ~ add_suspicion("Liel", 5)      // 은근한 떠보기 — 낮은 위험
     -> Liel_Day3_001_B
- + {has_memory("liel_sister_full_story")} 5년 전에 실종된 거죠?
+ + {has_memory("liel_sister_full_story")} 여동생은 실종된 거죠?
     ~ add_suspicion("Liel", 30)     // 절대 알 수 없는 걸 정확히 앎 — 높은 위험
     -> Liel_Day3_001_Shock
  + 아무것도 아니예요

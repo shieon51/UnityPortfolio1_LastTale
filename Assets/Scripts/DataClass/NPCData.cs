@@ -6,19 +6,30 @@ public class NPCData
 {
     public string npcName; // 예: "Liel", "Diavalu"
 
-    // 감정 데이터
-    //[Obsolete("더 이상 직접 저장 안 함 — CurrentUnderstandingCount/UnderstandingPercent 사용")]
-    //public int understanding = 0; // ★ 이제 로직에서 안 씀, 과거 세이브 호환용으로만 남겨둠   // 표면적 이해도 (우정)
-
     public int hiddenAffection = 0; // 숨겨진 호감도 (애정)
 
     [Tooltip("이 NPC를 '완전히' 이해하는 데 필요한 총량. 실제 만든 정보 개수보다 크게 잡으면 100% 도달이 원천적으로 불가능해짐 (일부러 그런 캐릭터를 만들고 싶을 때)")]
     public int maxObtainableUnderstanding = 100; // ★ 신규
 
-    [Tooltip("이 NPC가 소문을 전달할 대상들")]
-    public string[] relatedNPCs;
-    [Tooltip("소문이 전파될 때 남는 강도 비율 (0~1)")]
+    // ------------------ 의심 시스템 ---------
+    [Tooltip("소문이 전파될 때 남는 강도 비율 (0~1)")] //? 
     public float rumorSpreadRatio = 0.5f;
+
+    [Header("의심 시스템")]
+    [Tooltip("이 NPC가 직접 관찰할 수 있는 행적 카운터 키들. 여기 없는 행적은 이 NPC가 알 수 없음")]
+    public string[] observableCounterKeys;
+
+    [Tooltip("이 NPC가 소문을 전달하는 상대들")]
+    public string[] relatedNPCs;
+
+    [Tooltip("이 NPC가 각 상대를 얼마나 신뢰하는지(소문 수용도). relatedNPCs와 같은 순서")]
+    public float[] trustInRelatedNPCs;
+
+    [Tooltip("이 NPC의 기본 의심 성향. 낮을수록 의심을 잘 안하고 넘어감")]
+    [Range(0f, 2f)] public float suspicionSensitivity = 1f;
+
+    [Tooltip("소라와의 호감도가 이 값 이상이면 의심을 상당히 완화함")]
+    public int trustThresholdForSora = 20;
 
     // 전투 및 스토리 상태 데이터
     public NPC.NPCMode currentMode = NPC.NPCMode.Normal; // 평상시인지 보스전인지

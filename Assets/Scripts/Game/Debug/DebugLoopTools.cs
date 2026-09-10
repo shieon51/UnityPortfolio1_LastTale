@@ -11,6 +11,7 @@ public static class DebugLoopTools
         TimeManager.Instance.ResetToDay1();
         MemoryManager.Instance.ClearAllCounters(); // ★ 만남 카운터는 리셋(회차마다 "오늘 처음 만남"이어야 하니까)
         DialogueManager.Instance.ResetStoryState(); // ink 자체 지역변수(친밀도 등)도 새로 시작
+        PlayerActionLog.Instance.ClearAll(); // ★ 추가
         // MemoryManager._acquiredFlags(정보/기억)는 절대 안 건드림 — 이게 유지되는지 확인하는 게 목적
 
         var cfg = SceneLoader.Instance.startConfig;
@@ -24,6 +25,7 @@ public static class DebugLoopTools
         MemoryManager.Instance.ClearAllCounters();
         NPCManager.Instance.ResetAllNPCData(); // ★ 추가 — 완전 리셋은 rememberAcrossLoops도 무시하고 전부 초기화
         DialogueManager.Instance.ResetStoryState();
+        PlayerActionLog.Instance.ClearAll(); // ★ 추가
         TimeManager.Instance.ResetToDay1();
 
         if (PlayerManager.Instance.CurrentCharacter is SoraStats sora)

@@ -55,6 +55,11 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     private PlayerDodge _dodge;
     protected override bool IsDodgeInvincible => _dodge != null && _dodge.IsDodging;
 
+    // 플로팅 텍스트 오프셋
+    [Header("알림 표시")]
+    [Tooltip("플로팅 텍스트가 뜰 높이")]
+    public float notificationHeightOffset = 1.5f;
+
     // 소라의 특수 스탯은 '피로도'임을 UI에게 알려줌
     public override bool HasSpecialStat => true;
     public override float SpecialStatPercentage => (float)currentFatigue / maxFatigue;
@@ -193,6 +198,7 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     {
         timeCrystals++;
         Debug.Log($"[시간 결정체] 획득! 소라의 기억이 돌아옵니다. (현재: {timeCrystals}개)");
+        FloatingTextManager.Instance?.ShowTimeCrystal(transform.position + Vector3.up * notificationHeightOffset);
         GainExperience(500);
         CallSpecialStatChanged();
     }

@@ -13,6 +13,9 @@ public class SpeechBubbleController : MonoBehaviour
     public float crowdDistance = 3f;
     public float crowdPushX = 1.2f;
 
+    [Tooltip("화면 가장자리에서 이만큼은 안쪽에 머무름 (0~0.5)")]
+    [Range(0f, 0.5f)] public float screenMargin = 0.08f;
+
     public GameObject bubbleRoot;
     public TextMeshProUGUI nameText;
     public TypewriterText bodyTypewriter; // 6번에서 만든 거 재사용
@@ -52,9 +55,9 @@ public class SpeechBubbleController : MonoBehaviour
         if (cam == null) { transform.position = desiredWorldPos; return; }
 
         Vector3 viewportPos = cam.WorldToViewportPoint(desiredWorldPos);
-        float margin = 0.08f;
-        viewportPos.x = Mathf.Clamp(viewportPos.x, margin, 1f - margin);
-        viewportPos.y = Mathf.Clamp(viewportPos.y, margin, 1f - margin);
+
+        viewportPos.x = Mathf.Clamp(viewportPos.x, screenMargin, 1f - screenMargin);
+        viewportPos.y = Mathf.Clamp(viewportPos.y, screenMargin, 1f - screenMargin);
         transform.position = cam.ViewportToWorldPoint(viewportPos);
     }
 

@@ -35,4 +35,13 @@ public static class CsvTableLoader
         return result.ToArray();
     }
 
+    public static string Get(string[] cols, int index, string fallback = "")
+        => cols.Length > index && !string.IsNullOrWhiteSpace(cols[index]) ? cols[index].Trim() : fallback;
+
+    public static int GetInt(string[] cols, int index, int fallback = 0)
+        => int.TryParse(Get(cols, index), out var v) ? v : fallback;
+
+    public static bool GetBool(string[] cols, int index, bool fallback = false)
+        => bool.TryParse(Get(cols, index), out var v) ? v : fallback;
+
 }

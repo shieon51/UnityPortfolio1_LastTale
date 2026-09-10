@@ -18,7 +18,13 @@ public class MemoryManager : Singleton<MemoryManager>
     private Dictionary<string, int> _counters = new();
 
     public int GetCounter(string key) => _counters.TryGetValue(key, out var v) ? v : 0;
-    public void IncrementCounter(string key) => _counters[key] = GetCounter(key) + 1;
+
+    //IncrementCounter가 자동으로 로그도 남기게
+    public void IncrementCounter(string key)
+    {
+        _counters[key] = GetCounter(key) + 1;
+        PlayerActionLog.Instance?.Record(key); // ★ 추가 — 별도 호출 없이 자동 기록
+    }
 
     public IEnumerable<MemoryFragmentData> GetAllRegistered() => _registry.Values;
 
@@ -108,5 +114,13 @@ public class MemoryManager : Singleton<MemoryManager>
             _acquiredFlags.Add(f); 
             _acquiredOrder.Add(f); 
         }
+    }
+
+    // MemoryManager.cs — 카운터 전체 스냅샷/복원
+    public Dictionary<string, int> SnapshotCounters() => new Dictionary<string, int>(_counters);
+    public void RestoreCounters(Dictionary<string, int> snapshot)
+    {
+        _counters.Clear();
+        foreach (var kvp in snapshot) _counters[kvp.Key] = kvp.Value;
     }
 }

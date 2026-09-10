@@ -76,6 +76,11 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             maxMana = sora.maxMana,
             experience = sora.experience,
             acquiredMemoryFlags = new HashSet<string>(MemoryManager.Instance.GetAllAcquired()),
+            npcAffections = NPCManager.Instance.SnapshotAffections(),    
+            npcSuspicions = SuspicionManager.Instance.Snapshot(),          
+            counters = MemoryManager.Instance.SnapshotCounters(),          
+            loopCountAtSave = sora.loopCount,                              
+            actionLog = PlayerActionLog.Instance.Snapshot(),
         };
         _anchors.Add(snapshot);
 
@@ -105,8 +110,12 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         var sora = PlayerManager.Instance.CurrentCharacter as SoraStats;
         if (sora != null) sora.loopCount++;              // ★ 추가 — 시간 역행이므로 회차 증가
 
-        NPCManager.Instance.ResetAffectionForNewLoop();  // ★ 추가
-        SuspicionManager.Instance.ResetForNewLoop();
+        // ★ 리셋이 아니라 "그 시점 상태로 복원" — 이게 핵심
+        NPCManager.Instance.RestoreAffections(anchor.npcAffections);
+        SuspicionManager.Instance.Restore(anchor.npcSuspicions);
+        MemoryManager.Instance.RestoreCounters(anchor.counters);
+        PlayerActionLog.Instance.Restore(anchor.actionLog); // ★ 추가
+
         TimeManager.Instance.SetTime(anchor.day, anchor.hour);
         SceneLoader.Instance.LoadScene(anchor.sceneID, anchor.position);
     }
@@ -114,30 +123,51 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     public void HandleDeath(bool keepBodyLevel = true)
     {
         var sora = PlayerManager.Instance.CurrentCharacter as SoraStats;
+        if (sora == null) return;
         sora.loopCount++;
-        NPCManager.Instance.ResetAffectionForNewLoop(); // ★ 4번 반영
 
         bool hasAnchor = _anchors.Count > 0;
         var latest = hasAnchor ? _anchors[_anchors.Count - 1] : null;
         bool canReturn = hasAnchor && sora.currentMana >= returnManaCost;
 
-        if (canReturn)
+        if (canReturn) // [경로 1] 앵커로 정상 복귀 — 그 시점 NPC 상태를 그대로 복원
         {
             sora.UseMana(returnManaCost);
-            if (!keepBodyLevel) { sora.level = latest.level; sora.maxHealth = latest.maxHealth; sora.maxMana = latest.maxMana; sora.experience = latest.experience; }
+
+            NPCManager.Instance.RestoreAffections(latest.npcAffections);  
+            SuspicionManager.Instance.Restore(latest.npcSuspicions);      
+            MemoryManager.Instance.RestoreCounters(latest.counters);      
+            PlayerActionLog.Instance.Restore(latest.actionLog); // ★ 추가
+
+            if (!keepBodyLevel)
+            {
+                sora.level = latest.level; sora.maxHealth = latest.maxHealth;
+                sora.maxMana = latest.maxMana; sora.experience = latest.experience;
+            }
             sora.currentHealth = Mathf.Max(10, sora.currentHealth);
             LoadScene(latest.sceneID, latest.position, latest.day, latest.hour);
         }
-        else if (hasAnchor)
+        else if (hasAnchor) // [경로 2] 마나 부족 강제 복귀 — 기억까지 앵커 시점으로 되돌아감
         {
             MemoryManager.Instance.RestoreAcquired(latest.acquiredMemoryFlags);
-            sora.level = latest.level; sora.maxHealth = latest.maxHealth; sora.maxMana = latest.maxMana; sora.experience = latest.experience;
+
+            NPCManager.Instance.RestoreAffections(latest.npcAffections);    
+            SuspicionManager.Instance.Restore(latest.npcSuspicions);       
+            MemoryManager.Instance.RestoreCounters(latest.counters);
+            PlayerActionLog.Instance.Restore(latest.actionLog); // ★ 추가
+
+            sora.level = latest.level; sora.maxHealth = latest.maxHealth;
+            sora.maxMana = latest.maxMana; sora.experience = latest.experience;
             sora.currentHealth = Mathf.Max(10, sora.maxHealth / 2);
             LoadScene(latest.sceneID, latest.position, latest.day, latest.hour);
         }
-        else
+        else // [경로 3] 앵커 없음 — Day1부터 완전히 새로 (복원이 아니라 리셋)
         {
             MemoryManager.Instance.ClearAllAcquired();
+            MemoryManager.Instance.ClearAllCounters();          // ★ 추가 — 만남/선택 기록도 초기화
+            NPCManager.Instance.ResetAffectionForNewLoop();     // ★ 추가 (SuspicionManager 리셋도 이 안에 포함됨)
+            PlayerActionLog.Instance.ClearAll(); // ★ 추가
+
             var cfg = SceneLoader.Instance.startConfig;
             TimeManager.Instance.ResetToDay1();
             LoadScene(cfg.startSceneID, cfg.startPosition, 1, 0);

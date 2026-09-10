@@ -1,13 +1,13 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.LightTransport;
 
-// ÀÌ ½ºÅ©¸³Æ®´Â ¾À¿¡ ¹èÄ¡µÉ 'ÀÌº¥Æ® ±ê¹ß'¿¡ µé¾î°¨
+// ì´ ìŠ¤í¬ë¦½íŠ¸ëŠ” ì”¬ì— ë°°ì¹˜ë  'ì´ë²¤íŠ¸ ê¹ƒë°œ'ì— ë“¤ì–´ê°
 
-// ¸¶Ä¿ÀÇ Á¾·ù ±¸ºĞ (¾ÆÀÌÄÜ »ö»ó¿ë)
+// ë§ˆì»¤ì˜ ì¢…ë¥˜ êµ¬ë¶„ (ì•„ì´ì½˜ ìƒ‰ìƒìš©)
 public enum EventMarkerType
 {
-    Normal_NPC = 0, // 10000¹ø´ë (ÃÊ·Ï»ö)
-    System_Repeat = 1 // 90000¹ø´ë (»¡°£»ö)
+    Normal_NPC = 0, // 10000ë²ˆëŒ€ (ì´ˆë¡ìƒ‰)
+    System_Repeat = 1 // 90000ë²ˆëŒ€ (ë¹¨ê°„ìƒ‰)
 }
 
 public class EventMarker : MonoBehaviour
@@ -26,29 +26,46 @@ public class EventMarker : MonoBehaviour
     public int SceneID;
     public int TimeTaken = 1;
     public bool AutoTrigger = false;
-    [Tooltip("ÀÌ ÀÌº¥Æ®¸¦ ÃÖ´ë ¸î ¹ø±îÁö ½ÇÇàÇÒ ¼ö ÀÖ´ÂÁö. 0ÀÌ¸é ¹«Á¦ÇÑ")]
+    [Tooltip("ì´ ì´ë²¤íŠ¸ë¥¼ ìµœëŒ€ ëª‡ ë²ˆê¹Œì§€ ì‹¤í–‰í•  ìˆ˜ ìˆëŠ”ì§€. 0ì´ë©´ ë¬´ì œí•œ")]
     public int maxTriggerCount = 0;
-    [Tooltip("È½¼ö¸¦ ´Ù ¾²¸é ÀÌ ³ëµå·Î ´ëÃ¼ (ºñ¿ì¸é ÀÌº¥Æ® ÀÚÃ¼°¡ ¼û°ÜÁü)")]
+    [Tooltip("íšŸìˆ˜ë¥¼ ë‹¤ ì“°ë©´ ì´ ë…¸ë“œë¡œ ëŒ€ì²´ (ë¹„ìš°ë©´ ì´ë²¤íŠ¸ ìì²´ê°€ ìˆ¨ê²¨ì§)")]
     public string exhaustedInkNode = "";
 
-    // °ÔÀÓ ½ÃÀÛ ½Ã ÀÚµ¿ »èÁ¦ 
+    // ê²Œì„ ì‹œì‘ ì‹œ ìë™ ì‚­ì œ 
     private void Awake()
     {
-        // °ÔÀÓ ÇÃ·¹ÀÌ ¸ğµå¶ó¸é? -> ³ª(¸¶Ä¿)´Â ÇÊ¿ä ¾øÀ¸´Ï »ç¶óÁø´Ù!
+        // ê²Œì„ í”Œë ˆì´ ëª¨ë“œë¼ë©´? -> ë‚˜(ë§ˆì»¤)ëŠ” í•„ìš” ì—†ìœ¼ë‹ˆ ì‚¬ë¼ì§„ë‹¤!
         if (Application.isPlaying)
         {
             Destroy(gameObject);
         }
     }
 
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (IsAnytime) return; // í•­ì‹œ ì´ë²¤íŠ¸ëŠ” ì‹œê°„ ì œì•½ ì—†ìŒ
+
+        int availableHours = EndTime - StartTime;
+        if (maxTriggerCount > 0 && TimeTaken > 0)
+        {
+            int maxPossible = availableHours / TimeTaken;
+            if (maxTriggerCount > maxPossible)
+                Debug.LogWarning($"[EventMarker] '{EventName}'(ID:{EventID}) â€” ì´ë²¤íŠ¸ ê°€ëŠ¥ ì‹œê°„({StartTime}~{EndTime}ì‹œ, {availableHours}ì‹œê°„) ì•ˆì— {TimeTaken}ì‹œê°„ì§œë¦¬ ì´ë²¤íŠ¸ë¥¼ {maxTriggerCount}ë²ˆ ì‹¤í–‰í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤. ìµœëŒ€ {maxPossible}ë²ˆê¹Œì§€ ê°€ëŠ¥í•©ë‹ˆë‹¤.", this);
+        }
+        if (availableHours <= 0)
+            Debug.LogWarning($"[EventMarker] '{EventName}'(ID:{EventID}) â€” EndTime({EndTime})ì´ StartTime({StartTime})ë³´ë‹¤ í¬ì§€ ì•ŠìŠµë‹ˆë‹¤.", this);
+    }
+#endif
+
     private void OnDrawGizmos()
     {
-        // Å¸ÀÔ¿¡ µû¶ó »ö»ó ´Ù¸£°Ô Ç¥½Ã
+        // íƒ€ì…ì— ë”°ë¼ ìƒ‰ìƒ ë‹¤ë¥´ê²Œ í‘œì‹œ
         Gizmos.color = markerType == EventMarkerType.Normal_NPC ? Color.green : Color.red;
         Gizmos.DrawSphere(transform.position, 0.5f);
 
         #if UNITY_EDITOR
-        // ¾À ºä¿¡¼­ ID¿Í ÀÌ¸§ÀÌ º¸ÀÌµµ·Ï ¶óº§ Ç¥½Ã
+        // ì”¬ ë·°ì—ì„œ IDì™€ ì´ë¦„ì´ ë³´ì´ë„ë¡ ë¼ë²¨ í‘œì‹œ
         UnityEditor.Handles.Label(transform.position + Vector3.up * 0.8f, $"ID:{EventID}\n{EventName}");
         #endif
     }

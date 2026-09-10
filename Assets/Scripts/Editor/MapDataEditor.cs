@@ -32,9 +32,6 @@ public class MapDataEditor : EditorWindow
     private Vector2 scrollPos;
     private bool showHelp = false;
 
-    // 자동 이벤트인지 아닌지
-    public bool AutoTrigger = false;
-
     // 플레이어 게임 시작 위치
     private GameStartConfig startConfig;
 
@@ -369,7 +366,7 @@ public class MapDataEditor : EditorWindow
     {
         string pX = m.transform.position.x.ToString("F2");
         string pY = m.transform.position.y.ToString("F2");
-        return $"{m.EventID},{m.EventName},{m.IsAnytime},{m.Day},{m.StartTime},{m.EndTime},{m.InkNodeName},{m.SceneID},{pX},{pY},{m.TimeTaken},{m.AutoTrigger}";
+        return $"{m.EventID},{m.EventName},{m.IsAnytime},{m.Day},{m.StartTime},{m.EndTime},{m.InkNodeName},{m.SceneID},{pX},{pY},{m.TimeTaken},{m.AutoTrigger},{m.maxTriggerCount},{m.exhaustedInkNode}";
     }
 
     // 3. CSV 읽은 줄 -> 비교용 표준 포맷 변환
@@ -380,17 +377,36 @@ public class MapDataEditor : EditorWindow
         float y = float.Parse(cols[9]);
         string pX = x.ToString("F2");
         string pY = y.ToString("F2");
-        string autoTrigger = cols.Length > 11 ? cols[11] : "False";
-        return $"{cols[0]},{cols[1]},{cols[2]},{cols[3]},{cols[4]},{cols[5]},{cols[6]},{cols[7]},{pX},{pY},{cols[10]},{autoTrigger}";
+        string autoTrigger = CsvTableLoader.GetBool(cols, 11).ToString();      // ★ 안전 파싱
+        string maxCount = CsvTableLoader.GetInt(cols, 12, 0).ToString();       // ★ 안전 파싱
+        string exhausted = CsvTableLoader.Get(cols, 13, "");                    // ★ 안전 파싱
+        return $"{cols[0]},{cols[1]},{cols[2]},{cols[3]},{cols[4]},{cols[5]},{cols[6]},{cols[7]},{pX},{pY},{cols[10]},{autoTrigger},{maxCount},{exhausted}";
     }
 
     private void SaveMarkers(int saveAsID)
     {
+        var markersToCheck = FindObjectsOfType<EventMarker>(true);
+        var problems = new List<string>();
+        foreach (var m in markersToCheck)
+        {
+            if (m.IsAnytime || m.TimeTaken <= 0 || m.maxTriggerCount <= 0) continue;
+            int maxPossible = (m.EndTime - m.StartTime) / m.TimeTaken;
+            if (m.maxTriggerCount > maxPossible)
+                problems.Add($"· {m.EventName}(ID:{m.EventID}): {m.StartTime}~{m.EndTime}시에 {m.TimeTaken}시간짜리 → 최대 {maxPossible}회 가능한데 {m.maxTriggerCount}회로 설정됨");
+        }
+        if (problems.Count > 0)
+        {
+            bool proceed = EditorUtility.DisplayDialog("설정 확인 필요",
+                "다음 이벤트는 시간 안에 지정한 횟수만큼 실행할 수 없습니다:\n\n" + string.Join("\n", problems) + "\n\n그래도 저장할까요?",
+                "저장", "취소");
+            if (!proceed) return;
+        }
+
         CreateBackup();
         AutoAssignIDs();
 
         List<string> allRows = new List<string>();
-        string header = "EventID,EventName,IsAnytime,EventDay,StartTime,EndTime,NodeName,SceneID,PositionX,PositionY,TimeTaken,AutoTrigger";
+        string header = "EventID,EventName,IsAnytime,EventDay,StartTime,EndTime,NodeName,SceneID,PositionX,PositionY,TimeTaken,AutoTrigger,MaxTriggerCount,ExhaustedInkNode";
 
         if (File.Exists(eventCsvPath))
         {
@@ -409,7 +425,7 @@ public class MapDataEditor : EditorWindow
             m.SceneID = saveAsID;
             string pX = m.transform.position.x.ToString("F2");
             string pY = m.transform.position.y.ToString("F2");
-            allRows.Add($"{m.EventID},{m.EventName},{m.IsAnytime},{m.Day},{m.StartTime},{m.EndTime},{m.InkNodeName},{m.SceneID},{pX},{pY},{m.TimeTaken},{m.AutoTrigger}"); // ★ 추가
+            allRows.Add($"{m.EventID},{m.EventName},{m.IsAnytime},{m.Day},{m.StartTime},{m.EndTime},{m.InkNodeName},{m.SceneID},{pX},{pY},{m.TimeTaken},{m.AutoTrigger},{m.maxTriggerCount},{m.exhaustedInkNode}"); // ★ 수정
         }
 
         allRows.Sort((a, b) => int.Parse(a.Split(',')[0]).CompareTo(int.Parse(b.Split(',')[0])));
@@ -453,7 +469,9 @@ public class MapDataEditor : EditorWindow
             m.InkNodeName = cols[6];
             m.SceneID = int.Parse(cols[7]);
             m.TimeTaken = int.Parse(cols[10]);
-            m.AutoTrigger = cols.Length > 11 && bool.Parse(cols[11]); // ★ 추가 — 구버전 CSV 호환
+            m.AutoTrigger = CsvTableLoader.GetBool(cols, 11);
+            m.maxTriggerCount = CsvTableLoader.GetInt(cols, 12, 0);
+            m.exhaustedInkNode = CsvTableLoader.Get(cols, 13, "");
             m.markerType = m.EventID >= 90000 ? EventMarkerType.System_Repeat : EventMarkerType.Normal_NPC;
             go.name = $"Marker_{m.EventID}_{m.EventName}";
         }
