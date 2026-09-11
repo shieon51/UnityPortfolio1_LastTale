@@ -1,4 +1,4 @@
-using Ink.Runtime;
+ï»¿using Ink.Runtime;
 using System;
 using System.Xml;
 using TMPro;
@@ -8,10 +8,10 @@ using UnityEngine.UI;
 
 public class EventTrigger : MonoBehaviour
 {
-    //ÀÌº¥Æ® Á¤º¸
+    //ì´ë²¤íŠ¸ ì •ë³´
     public EventData eventData;
 
-    //ÀÌº¥Æ® ¹öÆ° Ç¥½Ã ÀÌ¹ÌÁö & ÅØ½ºÆ®
+    //ì´ë²¤íŠ¸ ë²„íŠ¼ í‘œì‹œ ì´ë¯¸ì§€ & í…ìŠ¤íŠ¸
     private TextMeshProUGUI tmpText;
     private Image buttonImage;
 
@@ -33,7 +33,7 @@ public class EventTrigger : MonoBehaviour
     {
         //tmpText.gameObject.SetActive(false);
         //buttonImage.gameObject.SetActive(false);
-        // ÃÊ±âÈ­ ½Ã È®½ÇÇÏ°Ô ²ô±â
+        // ì´ˆê¸°í™” ì‹œ í™•ì‹¤í•˜ê²Œ ë„ê¸°
         ShowInteractionButton(false);
     }
 
@@ -42,21 +42,29 @@ public class EventTrigger : MonoBehaviour
         eventData.InkNodeName = node;
     }
 
-    public void StartDialogue() //¹öÆ° Å¬¸¯ ½Ã ½ÇÇà
+    public void StartDialogue() //ë²„íŠ¼ í´ë¦­ ì‹œ ì‹¤í–‰
     {
         var data = eventData;
         if (EventManager.Instance.IsEventExhausted(data))
         {
             if (string.IsNullOrEmpty(data.exhaustedInkNode))
             {
-                Debug.Log($"[EventTrigger] '{data.EventName}' ÀÌº¥Æ®´Â ¼ÒÁøµÇ¾î ½ÇÇàÇÏÁö ¾Ê½À´Ï´Ù.");
+                Debug.Log($"[EventTrigger] '{data.EventName}' ì´ë²¤íŠ¸ëŠ” ì†Œì§„ë˜ì–´ ì‹¤í–‰í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.");
                 return;
-            } // ¼û±è Ã³¸®µÈ °æ¿ì ¾Æ¿¹ ½ÃÀÛ ¾È ÇÔ
-
-            data = CloneWithNode(data, data.exhaustedInkNode); // ´ëÃ¼ ³ëµåµµ ÀüºÎ ink¿¡¼­ °ü¸®
+            }
+            Debug.Log($"[EventTrigger] '{data.EventName}' ì†Œì§„ â†’ ëŒ€ì²´ ë…¸ë“œ '{data.exhaustedInkNode}' ì‹¤í–‰");
+            data = CloneWithNode(data, data.exhaustedInkNode);
         }
-        DialogueManager.Instance.StartStory(eventData);
-        
+
+        if (!string.IsNullOrEmpty(data.summonNPCs)) // â˜… ì¶”ê°€ â€” ì—°ì¶œìš© NPC ì†Œí™˜
+        {
+            foreach (var name in data.summonNPCs.Split(','))
+            {
+                string trimmed = name.Trim();
+                if (!string.IsNullOrEmpty(trimmed)) NPCManager.Instance.SummonNPCAt(trimmed, data.Position);
+            }
+        }
+        DialogueManager.Instance.StartStory(data);
     }
 
     private EventData CloneWithNode(EventData source, string node) => new EventData
@@ -70,32 +78,28 @@ public class EventTrigger : MonoBehaviour
         EndTime = source.EndTime,
         SceneID = source.SceneID,
         Position = source.Position,
-        TimeTaken = 0,
+        TimeTaken = 0, // ëŒ€ì²´ ëŒ€ì‚¬ëŠ” ì‹œê°„ ì†Œëª¨ ì—†ìŒ
         AutoTrigger = source.AutoTrigger,
         maxTriggerCount = source.maxTriggerCount,
-        exhaustedInkNode = source.exhaustedInkNode
+        exhaustedInkNode = source.exhaustedInkNode,
+        summonNPCs = source.summonNPCs,
+        despawnAfterEvent = source.despawnAfterEvent,
     };
 
     public void UpdateTrigger(EventData data)
     {
-        //±âÁ¸ ¹öÆ° ÇÁ¸®Æé Active ²ô±â (¿¹¿ÜÃ³¸®)
-        //if (buttonImage != null)
-        //{
-        //Vector3 pos = new Vector3(data.Position.x, data.Position.y, 0);
-        //tmpText.transform.position = Vector3.zero;
-        //buttonImage.transform.position = Vector3.zero;
-        //}
-
-        // µ¥ÀÌÅÍ °»½Å ½Ã »óÅÂ ÃÊ±âÈ­ 
+        // ë°ì´í„° ê°±ì‹  ì‹œ ìƒíƒœ ì´ˆê¸°í™” 
         ShowInteractionButton(false);
 
         eventData = data;
         tmpText.text = eventData.EventName;
+
+        Debug.Log($"[EventTrigger] {data.EventName} ë¡œë“œë¨ â€” Auto:{data.AutoTrigger} Max:{data.maxTriggerCount} Exhausted:'{data.exhaustedInkNode}'");
     }
 
-    public void ShowInteractionButton(bool show) //**ÀÌº¥Æ® ¸Å´ÏÀú¿¡¼­ È£Ãâ
+    public void ShowInteractionButton(bool show) //**ì´ë²¤íŠ¸ ë§¤ë‹ˆì €ì—ì„œ í˜¸ì¶œ
     {
-        // UI¸¸ ²°´Ù Ä×´Ù ÇÔ
+        // UIë§Œ ê»ë‹¤ ì¼°ë‹¤ í•¨
         if (tmpText != null) tmpText.gameObject.SetActive(show);
         if (buttonImage != null) buttonImage.gameObject.SetActive(show);
     }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // 기록 타입
-public enum RecordType { Counter, AffectionChange, SuspicionChange, MemoryAcquired, MemoryErased, LevelUp, EventCompleted, Loop }
+public enum RecordType { Counter, AffectionChange, SuspicionChange, MemoryAcquired, MemoryErased, LevelUp, EventCompleted, Loop, TrustEarned, LineCrossed }
 
 [Serializable]
 public class ActionRecord

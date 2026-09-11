@@ -32,6 +32,9 @@ public class NPCManager : Singleton<NPCManager>
     // 씬 내에서 껐다 켜기 위한 껍데기(프리팹) 보관소
     private Dictionary<string, GameObject> npcPool = new Dictionary<string, GameObject>();
 
+    // 이벤트 실행 시 연출용 소환/퇴장 관련
+    private HashSet<string> _summonedForEvent = new();
+
     private void Awake()
     {
         // 나중에는 여기서 Save 파일 데이터를 불러와서 npcDataDict에 덮어씌울 것.
@@ -349,5 +352,28 @@ public class NPCManager : Singleton<NPCManager>
     public void ResetAllNPCData() // 디버그 완전 리셋 전용
     {
         foreach (var data in npcDataDict.Values) data.hiddenAffection = 0; // rememberAcrossLoops 무시
+    }
+
+    // 연출용 이벤트 npc 등장 관리
+    public void SummonNPCAt(string npcName, Vector2 position)
+    {
+        if (!npcPool.TryGetValue(npcName, out GameObject npcObj) || npcObj == null)
+        {
+            GameObject prefab = Resources.Load<GameObject>($"Prefabs/NPC/{npcName}");
+            if (prefab == null) { Debug.LogWarning($"[NPCManager] 소환 실패 — 프리팹 없음: {npcName}"); return; }
+            npcObj = Instantiate(prefab);
+            npcPool[npcName] = npcObj;
+        }
+        npcObj.SetActive(true);
+        npcObj.transform.position = ComputeSnappedPosition(npcObj, position);
+        _summonedForEvent.Add(npcName);
+        Debug.Log($"[NPCManager] 연출용 소환: {npcName}");
+    }
+
+    public void DespawnEventNPCs()
+    {
+        foreach (var name in _summonedForEvent)
+            if (npcPool.TryGetValue(name, out var obj) && obj != null) obj.SetActive(false);
+        _summonedForEvent.Clear();
     }
 }

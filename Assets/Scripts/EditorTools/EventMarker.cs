@@ -6,8 +6,10 @@ using UnityEngine.LightTransport;
 // 마커의 종류 구분 (아이콘 색상용)
 public enum EventMarkerType
 {
-    Normal_NPC = 0, // 10000번대 (초록색)
-    System_Repeat = 1 // 90000번대 (빨간색)
+    Normal_NPC = 0,      // 10000번대 — 스케줄에 따라 배치되는 NPC
+    System_Repeat = 1,   // 90000번대 — 잠자기/훈련 등 정적 이벤트
+    Cutscene = 2,        // 50000번대 — 연출 전용, 등장 인물을 이 이벤트가 직접 소환
+    Interactable = 3,    // 60000번대 — 사물 탐색/조사
 }
 
 public class EventMarker : MonoBehaviour
@@ -30,6 +32,11 @@ public class EventMarker : MonoBehaviour
     public int maxTriggerCount = 0;
     [Tooltip("횟수를 다 쓰면 이 노드로 대체 (비우면 이벤트 자체가 숨겨짐)")]
     public string exhaustedInkNode = "";
+
+    [Tooltip("연출 시작 시 이 위치로 소환할 NPC 이름들 (쉼표 구분)")]
+    public string summonNPCs = "";
+    [Tooltip("소환된 NPC가 연출 후 사라질지")]
+    public bool despawnAfterEvent = true;
 
     // 게임 시작 시 자동 삭제 
     private void Awake()
@@ -61,7 +68,14 @@ public class EventMarker : MonoBehaviour
     private void OnDrawGizmos()
     {
         // 타입에 따라 색상 다르게 표시
-        Gizmos.color = markerType == EventMarkerType.Normal_NPC ? Color.green : Color.red;
+        Gizmos.color = markerType switch
+        {
+            EventMarkerType.Normal_NPC => Color.green,
+            EventMarkerType.System_Repeat => Color.red,
+            EventMarkerType.Cutscene => Color.magenta,
+            EventMarkerType.Interactable => Color.yellow,
+            _ => Color.white,
+        };
         Gizmos.DrawSphere(transform.position, 0.5f);
 
         #if UNITY_EDITOR

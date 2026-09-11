@@ -2,8 +2,12 @@
 // Day 4 — 아침 (8~12시) : 이해도/의심 종합 테스트
 // ============================================
 === Liel_Day4_001 ===
-{get_counter("Liel_Day4_001_meet") == 0: 좋은 아침입니다. 오늘도 뵙는군요. #speak:Liel:리엘}
-{get_counter("Liel_Day4_001_meet") >= 1: 아직 하실 말씀이 남으셨습니까? #speak:Liel:리엘}
+{get_counter("Liel_Day4_001_meet") == 0: 
+좋은 아침입니다. 오늘도 뵙는군요. #speak:Liel:리엘
+}
+{get_counter("Liel_Day4_001_meet") >= 1: 
+아직 하실 말씀이 남으셨습니까? #speak:Liel:리엘
+}
 + {get_understanding_percent("Liel") >= 3} 리엘 씨는 왜 기사단에 들어가셨어요?
     -> Liel_Day4_001_Knight
 + {has_memory("liel_sister_exists") and not has_memory("liel_monster_incident")} 여동생분 일은... 괜찮으세요?
@@ -41,13 +45,13 @@
 
 === Liel_Day4_001_Incident ===
 {get_suspicion("Liel") >= 40: 
-- ...제가 그 얘길 한 적이 있었던가요? #speak:Liel:리엘
+...제가 그 얘길 한 적이 있었던가요? #speak:Liel:리엘
 }
 {get_suspicion("Liel") >= 15 and get_suspicion("Liel") < 40: 
-- 그 일을 어떻게 아십니까? #speak:Liel:리엘
+그 일을 어떻게 아십니까? #speak:Liel:리엘
 }
 {get_suspicion("Liel") < 15: 
-- 아, 그 사건 말이군요. 소문이 돌긴 했겠죠. #speak:Liel:리엘
+아, 그 사건 말이군요. 소문이 돌긴 했겠죠. #speak:Liel:리엘
 }
 - 6년 전, 마물이 마을을 덮쳤습니다. 그날 여동생을 잃어버렸지요.
 ~ acquire_memory("liel_monster_incident")
@@ -58,9 +62,11 @@
 === Liel_Day4_001_NeverMet ===
 ...어제 낮이요? #speak:Liel:리엘
 - 저는 어제 낮에 {player_name} 씨를 뵌 적이 없습니다만.
-{get_suspicion("Liel") >= 50: - ...무슨 말씀을 하시는 겁니까, 대체.}
+{get_suspicion("Liel") >= 50: 
+...무슨 말씀을 하시는 겁니까, 대체.
+}
 {get_suspicion("Liel") < 50: 
-- 사람을 잘못 보신 게 아닐까요.
+사람을 잘못 보신 게 아닐까요.
 }
 ~ add_affection("Liel", -2)
 ~ increment_counter("Liel_Day4_001_meet")
@@ -104,9 +110,15 @@
 // Day 4 — 저녁 (19~23시) : 의심 누적 결과 확인
 // ============================================
 === Liel_Day4_003 ===
-{get_suspicion("Liel") >= 50: ...또 오셨군요. #speak:Liel:리엘}
-{get_suspicion("Liel") >= 20 and get_suspicion("Liel") < 50: 밤늦게 무슨 일이십니까. #speak:Liel:리엘}
-{get_suspicion("Liel") < 20: 좋은 저녁입니다. #speak:Liel:리엘}
+{get_suspicion("Liel") >= 50: 
+...또 오셨군요. #speak:Liel:리엘
+}
+{get_suspicion("Liel") >= 20 and get_suspicion("Liel") < 50: 
+밤늦게 무슨 일이십니까. #speak:Liel:리엘
+}
+{get_suspicion("Liel") < 20: 
+좋은 저녁입니다. #speak:Liel:리엘
+}
 + {has_memory("liel_hates_rain") and get_counter("Liel_Day4_002_meet") >= 1} 낮에 하신 비 얘기요
     -> Liel_Day4_003_Rain
 + {has_memory("liel_hates_rain") and get_counter("Liel_Day4_002_meet") == 0} 비 오는 날 싫어하신다면서요
@@ -137,8 +149,12 @@
 -> DONE
 
 === Liel_Day4_003_Star ===
-{get_counter("Liel_told_about_star") >= 2: 별 얘기를 참 좋아하시는군요. #speak:Liel:리엘}
-{get_counter("Liel_told_about_star") < 2: 오늘은 구름이 많아서요. 아쉽게 됐습니다. #speak:Liel:리엘}
+{get_counter("Liel_told_about_star") >= 2: 
+별 얘기를 참 좋아하시는군요. #speak:Liel:리엘
+}
+{get_counter("Liel_told_about_star") < 2: 
+오늘은 구름이 많아서요. 아쉽게 됐습니다. #speak:Liel:리엘
+}
 ~ add_affection("Liel", 1)
 ~ increment_counter("Liel_Day4_003_meet")
 -> DONE

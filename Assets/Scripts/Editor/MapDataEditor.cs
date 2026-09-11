@@ -72,6 +72,23 @@ public class MapDataEditor : EditorWindow
         Debug.Log($"[MapEditor] 씬 진입: {scene.name} (ID: {targetSceneID}) - 유령 마커 정리 완료");
     }
 
+    private int GetBaseIdFor(EventMarkerType type) => type switch
+    {
+        EventMarkerType.Normal_NPC => 10000,
+        EventMarkerType.Cutscene => 50000,
+        EventMarkerType.Interactable => 60000,
+        EventMarkerType.System_Repeat => 90000,
+        _ => 10000,
+    };
+
+    private EventMarkerType GetTypeFromId(int id)
+    {
+        if (id >= 90000) return EventMarkerType.System_Repeat;
+        if (id >= 60000) return EventMarkerType.Interactable;
+        if (id >= 50000) return EventMarkerType.Cutscene;
+        return EventMarkerType.Normal_NPC;
+    }
+
     private void OnGUI()
     {
         GUILayout.Space(10);
@@ -117,6 +134,8 @@ public class MapDataEditor : EditorWindow
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("+ NPC")) CreateNewMarker(EventMarkerType.Normal_NPC);
         if (GUILayout.Button("+ System")) CreateNewMarker(EventMarkerType.System_Repeat);
+        if (GUILayout.Button("+ Cutscene")) CreateNewMarker(EventMarkerType.Cutscene);
+        if (GUILayout.Button("+ Interactable")) CreateNewMarker(EventMarkerType.Interactable);
         GUILayout.EndHorizontal();
 
         GUILayout.BeginHorizontal();
@@ -366,7 +385,7 @@ public class MapDataEditor : EditorWindow
     {
         string pX = m.transform.position.x.ToString("F2");
         string pY = m.transform.position.y.ToString("F2");
-        return $"{m.EventID},{m.EventName},{m.IsAnytime},{m.Day},{m.StartTime},{m.EndTime},{m.InkNodeName},{m.SceneID},{pX},{pY},{m.TimeTaken},{m.AutoTrigger},{m.maxTriggerCount},{m.exhaustedInkNode}";
+        return $"{m.EventID},{m.EventName},{m.IsAnytime},{m.Day},{m.StartTime},{m.EndTime},{m.InkNodeName},{m.SceneID},{pX},{pY},{m.TimeTaken},{m.AutoTrigger},{m.maxTriggerCount},{m.exhaustedInkNode},{m.summonNPCs},{m.despawnAfterEvent}";
     }
 
     // 3. CSV 읽은 줄 -> 비교용 표준 포맷 변환
@@ -380,7 +399,9 @@ public class MapDataEditor : EditorWindow
         string autoTrigger = CsvTableLoader.GetBool(cols, 11).ToString();      // ★ 안전 파싱
         string maxCount = CsvTableLoader.GetInt(cols, 12, 0).ToString();       // ★ 안전 파싱
         string exhausted = CsvTableLoader.Get(cols, 13, "");                    // ★ 안전 파싱
-        return $"{cols[0]},{cols[1]},{cols[2]},{cols[3]},{cols[4]},{cols[5]},{cols[6]},{cols[7]},{pX},{pY},{cols[10]},{autoTrigger},{maxCount},{exhausted}";
+        string summon = CsvTableLoader.Get(cols, 14, "");
+        string despawn = CsvTableLoader.GetBool(cols, 15, true).ToString();
+        return $"{cols[0]},{cols[1]},{cols[2]},{cols[3]},{cols[4]},{cols[5]},{cols[6]},{cols[7]},{pX},{pY},{cols[10]},{autoTrigger},{maxCount},{exhausted},{summon},{despawn}";
     }
 
     private void SaveMarkers(int saveAsID)
@@ -406,7 +427,7 @@ public class MapDataEditor : EditorWindow
         AutoAssignIDs();
 
         List<string> allRows = new List<string>();
-        string header = "EventID,EventName,IsAnytime,EventDay,StartTime,EndTime,NodeName,SceneID,PositionX,PositionY,TimeTaken,AutoTrigger,MaxTriggerCount,ExhaustedInkNode";
+        string header = "EventID,EventName,IsAnytime,EventDay,StartTime,EndTime,NodeName,SceneID,PositionX,PositionY,TimeTaken,AutoTrigger,MaxTriggerCount,ExhaustedInkNode,SummonNPCs,DespawnAfterEvent";
 
         if (File.Exists(eventCsvPath))
         {
@@ -425,7 +446,7 @@ public class MapDataEditor : EditorWindow
             m.SceneID = saveAsID;
             string pX = m.transform.position.x.ToString("F2");
             string pY = m.transform.position.y.ToString("F2");
-            allRows.Add($"{m.EventID},{m.EventName},{m.IsAnytime},{m.Day},{m.StartTime},{m.EndTime},{m.InkNodeName},{m.SceneID},{pX},{pY},{m.TimeTaken},{m.AutoTrigger},{m.maxTriggerCount},{m.exhaustedInkNode}"); // ★ 수정
+            allRows.Add($"{m.EventID},{m.EventName},{m.IsAnytime},{m.Day},{m.StartTime},{m.EndTime},{m.InkNodeName},{m.SceneID},{pX},{pY},{m.TimeTaken},{m.AutoTrigger},{m.maxTriggerCount},{m.exhaustedInkNode},{m.summonNPCs},{m.despawnAfterEvent}");
         }
 
         allRows.Sort((a, b) => int.Parse(a.Split(',')[0]).CompareTo(int.Parse(b.Split(',')[0])));
@@ -472,7 +493,9 @@ public class MapDataEditor : EditorWindow
             m.AutoTrigger = CsvTableLoader.GetBool(cols, 11);
             m.maxTriggerCount = CsvTableLoader.GetInt(cols, 12, 0);
             m.exhaustedInkNode = CsvTableLoader.Get(cols, 13, "");
-            m.markerType = m.EventID >= 90000 ? EventMarkerType.System_Repeat : EventMarkerType.Normal_NPC;
+            m.summonNPCs = CsvTableLoader.Get(cols, 14, "");           // ★ 추가
+            m.despawnAfterEvent = CsvTableLoader.GetBool(cols, 15, true); // ★ 추가
+            m.markerType = GetTypeFromId(m.EventID);
             go.name = $"Marker_{m.EventID}_{m.EventName}";
         }
         if (filterEnable) ApplyFilter();
@@ -489,36 +512,42 @@ public class MapDataEditor : EditorWindow
         float y = Mathf.Round(spawnPos.y / gridSize) * gridSize;
         GameObject go = (GameObject)PrefabUtility.InstantiatePrefab(markerPrefab);
         go.transform.position = new Vector3(x, y, 0);
+
         var m = go.GetComponent<EventMarker>();
-        m.markerType = type; m.EventID = 0; m.SceneID = targetSceneID; m.EventName = (type == EventMarkerType.Normal_NPC) ? "NPC" : "System";
+        m.markerType = type; 
+        m.EventID = 0; 
+        m.SceneID = targetSceneID;
+        m.EventName = type switch
+        {
+            EventMarkerType.Normal_NPC => "NPC",
+            EventMarkerType.System_Repeat => "System",
+            EventMarkerType.Cutscene => "Cutscene",
+            EventMarkerType.Interactable => "Object",
+            _ => "Event",
+        };
+        if (type == EventMarkerType.Cutscene) m.AutoTrigger = true; // 연출은 보통 자동 발동
         Selection.activeGameObject = go;
     }
 
     private void AutoAssignIDs()
     {
         HashSet<int> used = new HashSet<int>();
-        if (File.Exists(eventCsvPath)) 
-        { 
-            var lines = File.ReadAllLines(eventCsvPath); 
-            for (int i = 1; i < lines.Length; i++) 
-                if (!string.IsNullOrEmpty(lines[i])) 
-                    used.Add(int.Parse(lines[i].Split(',')[0])); 
+        if (File.Exists(eventCsvPath))
+        {
+            var lines = File.ReadAllLines(eventCsvPath);
+            for (int i = 1; i < lines.Length; i++)
+                if (!string.IsNullOrEmpty(lines[i])) used.Add(int.Parse(lines[i].Split(',')[0]));
         }
 
-        int n = 10000, s = 90000;
-        foreach (var m in FindObjectsOfType<EventMarker>(true)) 
-        { 
-            if (m.EventID == 0) 
-            { 
-                int newID = m.markerType == EventMarkerType.Normal_NPC ? n : s; 
-                while (used.Contains(newID)) 
-                    newID++; 
-                m.EventID = newID; 
-                used.Add(newID); 
-                m.name = $"Marker_{newID}_{m.EventName}"; 
-                if (m.markerType == EventMarkerType.Normal_NPC) n = newID + 1; 
-                else s = newID + 1; EditorUtility.SetDirty(m); 
-            } 
+        foreach (var m in FindObjectsOfType<EventMarker>(true))
+        {
+            if (m.EventID != 0) continue;
+            int newID = GetBaseIdFor(m.markerType);
+            while (used.Contains(newID)) newID++;
+            m.EventID = newID;
+            used.Add(newID);
+            m.name = $"Marker_{newID}_{m.EventName}";
+            EditorUtility.SetDirty(m);
         }
     }
 

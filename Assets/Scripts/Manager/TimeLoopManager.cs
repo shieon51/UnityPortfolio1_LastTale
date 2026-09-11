@@ -77,7 +77,10 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             experience = sora.experience,
             acquiredMemoryFlags = new HashSet<string>(MemoryManager.Instance.GetAllAcquired()),
             npcAffections = NPCManager.Instance.SnapshotAffections(),    
-            npcSuspicions = SuspicionManager.Instance.Snapshot(),          
+            npcSuspicions = SuspicionManager.Instance.Snapshot(),
+            npcTrustEarned = SuspicionManager.Instance.SnapshotTrust(),
+            npcLineCrossed = SuspicionManager.Instance.SnapshotLineCrossed(),
+            soraPersonalBond = sora.SnapshotPersonalBond(),
             counters = MemoryManager.Instance.SnapshotCounters(),          
             loopCountAtSave = sora.loopCount,                              
             actionLog = PlayerActionLog.Instance.Snapshot(),
@@ -113,6 +116,9 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         // ★ 리셋이 아니라 "그 시점 상태로 복원" — 이게 핵심
         NPCManager.Instance.RestoreAffections(anchor.npcAffections);
         SuspicionManager.Instance.Restore(anchor.npcSuspicions);
+        SuspicionManager.Instance.RestoreTrust(anchor.npcTrustEarned);
+        SuspicionManager.Instance.RestoreLineCrossed(anchor.npcLineCrossed);
+        sora.RestorePersonalBond(anchor.soraPersonalBond);
         MemoryManager.Instance.RestoreCounters(anchor.counters);
         PlayerActionLog.Instance.Restore(anchor.actionLog); // ★ 추가
 
@@ -135,7 +141,10 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             sora.UseMana(returnManaCost);
 
             NPCManager.Instance.RestoreAffections(latest.npcAffections);  
-            SuspicionManager.Instance.Restore(latest.npcSuspicions);      
+            SuspicionManager.Instance.Restore(latest.npcSuspicions);
+            SuspicionManager.Instance.RestoreTrust(latest.npcTrustEarned);
+            SuspicionManager.Instance.RestoreLineCrossed(latest.npcLineCrossed);
+            sora.RestorePersonalBond(latest.soraPersonalBond);
             MemoryManager.Instance.RestoreCounters(latest.counters);      
             PlayerActionLog.Instance.Restore(latest.actionLog); // ★ 추가
 
@@ -152,7 +161,10 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             MemoryManager.Instance.RestoreAcquired(latest.acquiredMemoryFlags);
 
             NPCManager.Instance.RestoreAffections(latest.npcAffections);    
-            SuspicionManager.Instance.Restore(latest.npcSuspicions);       
+            SuspicionManager.Instance.Restore(latest.npcSuspicions);
+            SuspicionManager.Instance.RestoreTrust(latest.npcTrustEarned);           // ★ 추가
+            SuspicionManager.Instance.RestoreLineCrossed(latest.npcLineCrossed);     // ★ 추가
+            sora.RestorePersonalBond(latest.soraPersonalBond);                       // ★ 추가
             MemoryManager.Instance.RestoreCounters(latest.counters);
             PlayerActionLog.Instance.Restore(latest.actionLog); // ★ 추가
 

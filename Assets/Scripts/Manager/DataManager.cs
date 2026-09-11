@@ -49,6 +49,8 @@ public class DataManager : Singleton<DataManager>
             AutoTrigger = CsvTableLoader.GetBool(v, 11),        // ¡Ú ºó °ª ¾ÈÀü
             maxTriggerCount = CsvTableLoader.GetInt(v, 12, 0),  // ¡Ú ºó °ªÀÌ¸é 0 = ¹«Á¦ÇÑ
             exhaustedInkNode = CsvTableLoader.Get(v, 13, ""),   // ¡Ú ºó °ªÀÌ¸é ¼û±è Ã³¸®
+            summonNPCs = CsvTableLoader.Get(v, 14, ""),              // ¡Ú Ãß°¡
+            despawnAfterEvent = CsvTableLoader.GetBool(v, 15, true), // ¡Ú Ãß°¡
         });
 
 #if UNITY_EDITOR

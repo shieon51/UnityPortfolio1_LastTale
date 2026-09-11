@@ -24,6 +24,11 @@ public class EventData
     public int maxTriggerCount = 0;
     [Tooltip("횟수를 다 쓰면 이 노드로 대체 (비우면 이벤트 자체가 숨겨짐)")]
     public string exhaustedInkNode = "";
+
+    [Tooltip("연출 시작 시 이 위치로 소환할 NPC 이름들 (쉼표 구분)")]
+    public string summonNPCs = "";
+    [Tooltip("소환된 NPC가 연출 후 사라질지")]
+    public bool despawnAfterEvent = true;
 }
 
 public class EventManager : Singleton<EventManager>
@@ -35,6 +40,11 @@ public class EventManager : Singleton<EventManager>
         Practice = 90001,
         Sleep = 90002
     }
+
+    [Header("자동 이벤트")]
+    [Tooltip("자동 이벤트가 끝난 뒤, 다시 발동 가능해지기까지의 최소 대기 시간(초)")]
+    public float autoTriggerCooldown = 1f;
+    private float _lastAutoTriggerEndTime = -99f;
 
     private Transform player;
     private GameObject eventTriggerPrefab;
@@ -51,6 +61,11 @@ public class EventManager : Singleton<EventManager>
 
     // 이벤트 실행 횟수 판정 헬퍼 추가
     private string GetTriggerCountKey(EventData data) => $"event_trigger_{data.EventID}";
+
+    private string GetAutoFiredKey(EventData data) => $"auto_fired_{data.EventID}";
+
+    public bool HasAutoTriggered(EventData data)
+        => MemoryManager.Instance.GetCounter(GetAutoFiredKey(data)) > 0;
 
     private void Awake()
     {
@@ -153,7 +168,8 @@ public class EventManager : Singleton<EventManager>
             // 현재 씬과 시간에 유효한 이벤트인지 확인
             if (GameManager.Instance.CurrentGameMode.IsEventValid(eventEntry, currentSceneID))
             {
-                if (IsEventExhausted(eventEntry) && string.IsNullOrEmpty(eventEntry.exhaustedInkNode)) continue; // 이미 소진된 이벤트는 숨김
+                // ★ 추가 — 횟수를 다 썼고 대체 노드도 없으면 목록에서 완전히 제외
+                if (IsEventExhausted(eventEntry) && string.IsNullOrEmpty(eventEntry.exhaustedInkNode)) continue;
 
                 // 이벤트 ID가 NPC 대역(10000 ~ 89999)인지 확인
                 if (eventEntry.EventID >= (int)EventID.NPC && eventEntry.EventID < 90000)
@@ -276,12 +292,32 @@ public class EventManager : Singleton<EventManager>
                 temp.ShowInteractionButton(false); //이전에 남아있던 것도 없애기
             }
         }
+
+        // ★ 여기부터 추가 — 자동 발동 이벤트 처리
+        if (closest != null
+            && closest.eventData != null
+            && closest.eventData.AutoTrigger
+            && minDistance <= closest.InteractionRange
+            && !DialogueManager.Instance.IsTalking
+            && !GlobalActionLock.IsLocked
+            && !HasAutoTriggered(closest.eventData)      // ★ 핵심 — 이미 자동 발동한 적 있으면 영구히 안 함
+            && !IsEventExhausted(closest.eventData))
+        {
+            Debug.Log($"[자동 이벤트 발동] {closest.eventData.EventName} ({closest.eventData.InkNodeName})");
+            MemoryManager.Instance.IncrementCounter(GetAutoFiredKey(closest.eventData)); // ★ 발동 직전에 즉시 기록
+
+            if (closest.eventData.EventID >= (int)EventID.NPC && closest.eventData.EventID < 90000)
+                NPCManager.Instance.StartNPCDialogue(closest.eventData.EventName);
+
+            closest.ShowInteractionButton(false);
+            closest.StartDialogue();
+        }
     }
 
     // 이벤트에 있는 모든 주요 대사가 소진되었을 경우 처리
     public bool IsEventExhausted(EventData data)
     {
-        if (data.maxTriggerCount <= 0) return false;
+        if (data == null || data.maxTriggerCount <= 0) return false; // 0이면 무제한
         return MemoryManager.Instance.GetCounter(GetTriggerCountKey(data)) >= data.maxTriggerCount;
     }
 
@@ -289,7 +325,11 @@ public class EventManager : Singleton<EventManager>
     //Dialogue가 끝났을 때 Invoke되는 함수
     public void EventResult(EventData eventData)
     {
-        MemoryManager.Instance.IncrementCounter(GetTriggerCountKey(eventData)); // 이벤트 실행 홧수 카운트
+        MemoryManager.Instance.IncrementCounter(GetTriggerCountKey(eventData)); // ★ 추가 — 실행 횟수 누적
+        _lastAutoTriggerEndTime = Time.time;                                    // ★ 추가 — 끝나자마자 재발동 방지
+
+        if (eventData.despawnAfterEvent && !string.IsNullOrEmpty(eventData.summonNPCs)) // ★ 추가
+            NPCManager.Instance.DespawnEventNPCs();
 
         // 시간 코인 소모 로직을 GameMode에게 위임! (1부면 코인 소모, 2부면 행동력 소모)
         GameManager.Instance.CurrentGameMode.ConsumeResourceForEvent(eventData.TimeTaken);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 // PlayableCharacter를 상속받는 1부 전용 주인공 '소라'
@@ -67,6 +68,16 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
 
     [Header("Hostility (실제 트리거 조건은 추후 스토리/정신력 시스템과 연동 예정)")]
     public bool IsHostileState = false; // npc 공격 가능한지?
+
+    // 소라 본인이 느끼는 친밀도, 플레이어에겐 비공개
+    private Dictionary<string, int> _soraPersonalBond = new();
+    public int GetPersonalBond(string npc) => _soraPersonalBond.TryGetValue(npc, out var v) ? v : 0;
+    public void AddPersonalBond(string npc, int amount) => _soraPersonalBond[npc] = GetPersonalBond(npc) + amount;
+    public float MentalRatio => (float)currentMental / maxMental;
+
+    // 개인 친밀도 스냅샷/복원 관련
+    public Dictionary<string, int> SnapshotPersonalBond() => new Dictionary<string, int>(_soraPersonalBond);
+    public void RestorePersonalBond(Dictionary<string, int> s) { _soraPersonalBond.Clear(); if (s != null) foreach (var k in s) _soraPersonalBond[k.Key] = k.Value; }
 
     protected override void Awake()
     {

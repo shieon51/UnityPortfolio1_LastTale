@@ -18,4 +18,9 @@ public class TimeAnchorSnapshot
 
     // 플레이어 행적 로그
     public List<ActionRecord> actionLog;
+
+    // npc 신뢰도/선넘음, 소라 개인 친밀도 관련
+    public Dictionary<string, int> npcTrustEarned;
+    public Dictionary<string, int> npcLineCrossed;
+    public Dictionary<string, int> soraPersonalBond;
 }

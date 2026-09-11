@@ -131,6 +131,14 @@ public class DialogueManager : Singleton<DialogueManager>
         { SuspicionManager.Instance.AddDirectSuspicion(npcName, amount, counterKey); return 0; }, lookaheadSafe: false);
         story.BindExternalFunction("can_observe", (string npcName, string counterKey) =>
             SuspicionManager.Instance.CanObserve(npcName, counterKey));
+        story.BindExternalFunction("resolve_confession", (string npc) => SuspicionManager.Instance.ResolveConfession(npc), lookaheadSafe: false);
+        story.BindExternalFunction("get_trust_earned", (string npc) => SuspicionManager.Instance.GetTrustEarned(npc));
+        story.BindExternalFunction("add_trust_earned", (string npc, int amt) => { SuspicionManager.Instance.AddTrustEarned(npc, amt); return 0; }, lookaheadSafe: false);
+        story.BindExternalFunction("get_line_crossed", (string npc) => SuspicionManager.Instance.GetLineCrossed(npc));
+        story.BindExternalFunction("add_line_crossed", (string npc, int amt) => { SuspicionManager.Instance.AddLineCrossed(npc, amt); return 0; }, lookaheadSafe: false);
+        story.BindExternalFunction("get_personal_bond", (string npc) => (PlayerManager.Instance.CurrentCharacter as SoraStats)?.GetPersonalBond(npc) ?? 0);
+        story.BindExternalFunction("add_personal_bond", (string npc, int amt) => { (PlayerManager.Instance.CurrentCharacter as SoraStats)?.AddPersonalBond(npc, amt); return 0; }, lookaheadSafe: false);
+        story.BindExternalFunction("get_mental_ratio", () => (int)(((PlayerManager.Instance.CurrentCharacter as SoraStats)?.MentalRatio ?? 1f) * 100f));
     }
 
     public void StartStory(EventData eventData)

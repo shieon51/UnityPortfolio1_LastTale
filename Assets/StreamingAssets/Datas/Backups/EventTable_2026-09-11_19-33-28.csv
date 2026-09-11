@@ -1,0 +1,12 @@
+﻿EventID,EventName,IsAnytime,EventDay,StartTime,EndTime,NodeName,SceneID,PositionX,PositionY,TimeTaken,AutoTrigger,MaxTriggerCount,ExhaustedInkNode
+10000,Liel,FALSE,1,19,21,Liel_Day1_003,1,7.43,2,1,FALSE,2,
+10001,Liel,FALSE,1,14,17,Liel_Day1_002,1,18,2,1,FALSE,3,
+10002,Liel,False,1,8,11,Liel_Day1_001,2,2.00,0.00,1,False,3,
+10003,Liel,False,2,7,12,Liel_Day2_001,2,22.00,0.00,0,False,5,
+10004,Liel,False,3,0,3,Liel_Day3_001,2,12.00,0.00,1,True,3,
+10005,Liel,False,4,19,23,Liel_Day4_003,2,7.00,0.00,2,False,2,Liel_Day4_Exhausted
+10006,Liel,False,4,13,16,Liel_Day4_002,2,7.00,0.00,1,True,0,
+10007,Liel,False,4,8,12,Liel_Day4_001,2,7.00,0.00,1,False,3,Liel_Day4_Exhausted
+90000,Training,TRUE,0,0,24,training,1,4,2,2,FALSE,0,
+90001,Practice,TRUE,0,0,24,practice,1,-3,0,1,FALSE,0,
+90002,Sleep,TRUE,0,0,24,sleep,1,-8,0,8,FALSE,0,
