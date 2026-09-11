@@ -52,7 +52,9 @@ public class SuspicionManager : Singleton<SuspicionManager>
         int final = Mathf.RoundToInt(amount);
         if (final <= 0) return;
 
-        _suspicion[npcName] = Mathf.Clamp(GetSuspicion(npcName) + final, minSuspicion, maxSuspicion);
+        int before = GetSuspicion(npcName);
+        _suspicion[npcName] = Mathf.Clamp(before + final, minSuspicion, maxSuspicion);
+        PlayerActionLog.Instance?.Record(RecordType.SuspicionChange, npcName, before, GetSuspicion(npcName)); // ★ 추가
         Debug.Log($"[Suspicion] {npcName} 직접 의심 +{final} (현재 {GetSuspicion(npcName)})");
 
         PropagateRumor(npcName, final);
@@ -85,7 +87,9 @@ public class SuspicionManager : Singleton<SuspicionManager>
                 continue;
             }
 
-            _suspicion[listener] = Mathf.Clamp(GetSuspicion(listener) + final, minSuspicion, maxSuspicion);
+            int beforeSpread = GetSuspicion(listener);                                              // ★ 추가
+            _suspicion[listener] = Mathf.Clamp(beforeSpread + final, minSuspicion, maxSuspicion);
+            PlayerActionLog.Instance?.Record(RecordType.SuspicionChange, listener, beforeSpread, GetSuspicion(listener)); // ★ 추가
             Debug.Log($"[Suspicion] {listener} 소문으로 +{final} (출처: {sourceNpc}, 현재 {GetSuspicion(listener)})");
         }
     }

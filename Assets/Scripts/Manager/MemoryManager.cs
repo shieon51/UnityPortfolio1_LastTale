@@ -22,8 +22,9 @@ public class MemoryManager : Singleton<MemoryManager>
     //IncrementCounter가 자동으로 로그도 남기게
     public void IncrementCounter(string key)
     {
-        _counters[key] = GetCounter(key) + 1;
-        PlayerActionLog.Instance?.Record(key); // ★ 추가 — 별도 호출 없이 자동 기록
+        int before = GetCounter(key);
+        _counters[key] = before + 1;
+        PlayerActionLog.Instance?.Record(RecordType.Counter, key, before, before + 1); // ★ 인자 4개
     }
 
     public IEnumerable<MemoryFragmentData> GetAllRegistered() => _registry.Values;
@@ -58,11 +59,12 @@ public class MemoryManager : Singleton<MemoryManager>
             Debug.LogWarning($"[MemoryManager] 등록 안 된 flagId 획득 시도: '{flagId}' — 애셋을 먼저 만들었는지 확인");
             return;
         }
-        if (_acquiredFlags.Add(flagId)) 
-        { 
-            _acquiredOrder.Add(flagId); 
-            OnMemoryAcquired?.Invoke(flagId); 
-        } // ★ 순서 기록
+        if (_acquiredFlags.Add(flagId))
+        {
+            _acquiredOrder.Add(flagId);
+            OnMemoryAcquired?.Invoke(flagId);
+            PlayerActionLog.Instance?.Record(RecordType.MemoryAcquired, flagId); 
+        }
     }
 
     public void EraseMemory(string flagId)
@@ -93,7 +95,7 @@ public class MemoryManager : Singleton<MemoryManager>
         return stage != null && stage.isFinal;
     }
 
-    public void ClearAllAcquired() => _acquiredFlags.Clear();
+    public void ClearAllAcquired() { _acquiredFlags.Clear(); _acquiredOrder.Clear(); } // ★ 수정
     public void ClearAllCounters() => _counters.Clear(); // 5번에서 만들 카운터 시스템
 
     public MemoryFragmentData GetData(string flagId)

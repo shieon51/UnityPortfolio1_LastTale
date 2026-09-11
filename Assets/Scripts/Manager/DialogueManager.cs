@@ -118,14 +118,19 @@ public class DialogueManager : Singleton<DialogueManager>
         story.BindExternalFunction("add_affection", (string npcName, int amount) =>
         {
             var data = NPCManager.Instance.GetNPCData(npcName);
-            data.AddAffection(amount); // ★ 직접 필드 대입 대신 클램프 메서드로
+            data.AddAffection(amount);
             NPCManager.Instance.SaveNPCData(data);
             return 0;
         }, lookaheadSafe: false);
-        story.BindExternalFunction("get_understanding_percent", (string npcName) => (int)Mathf.Round(NPCManager.Instance.GetNPCData(npcName).UnderstandingPercent));
-        story.BindExternalFunction("add_suspicion", (string npcName, int amount) => { SuspicionManager.Instance.AddDirectSuspicion(npcName, amount); return 0; }, lookaheadSafe: false);
-        story.BindExternalFunction("add_suspicion_for", (string npcName, int amount, string counterKey) => { SuspicionManager.Instance.AddDirectSuspicion(npcName, amount, counterKey); return 0; }, lookaheadSafe: false);
-        story.BindExternalFunction("can_observe", (string npcName, string counterKey) => SuspicionManager.Instance.CanObserve(npcName, counterKey));
+        story.BindExternalFunction("get_understanding_percent", (string npcName) =>
+            (int)Mathf.Round(NPCManager.Instance.GetNPCData(npcName).UnderstandingPercent));
+        story.BindExternalFunction("add_suspicion", (string npcName, int amount) =>
+        { SuspicionManager.Instance.AddDirectSuspicion(npcName, amount); return 0; }, lookaheadSafe: false);
+        story.BindExternalFunction("get_suspicion", (string npcName) => SuspicionManager.Instance.GetSuspicion(npcName));
+        story.BindExternalFunction("add_suspicion_for", (string npcName, int amount, string counterKey) =>
+        { SuspicionManager.Instance.AddDirectSuspicion(npcName, amount, counterKey); return 0; }, lookaheadSafe: false);
+        story.BindExternalFunction("can_observe", (string npcName, string counterKey) =>
+            SuspicionManager.Instance.CanObserve(npcName, counterKey));
     }
 
     public void StartStory(EventData eventData)

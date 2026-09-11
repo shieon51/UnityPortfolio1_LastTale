@@ -96,7 +96,10 @@
 
 === Liel_Day1_003_A ===
 오늘 정말 자주 마주치는군요. 좋은 저녁입니다.
-{get_affection("Liel") > 3: 전 밤하늘 구경하는 걸 좋아합니다. 제가 별을 참 좋아하거든요.} # ?
+{get_affection("Liel") > 3: 
+전 밤하늘 구경하는 걸 좋아합니다. 제가 별을 참 좋아하거든요.
+ ~ acquire_memory("liel_star_hobby")
+} 
 {get_affection("Liel") <= 3: 밤산책을 나왔습니다. {player_name} 씨는 어쩐 일인가요?}
 ~ increment_counter("Liel_Day1_003_meet")
 ~ add_affection("Liel", 1)

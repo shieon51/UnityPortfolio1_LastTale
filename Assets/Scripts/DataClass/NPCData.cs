@@ -52,7 +52,12 @@ public class NPCData
         => Mathf.Clamp01((float)CurrentUnderstandingCount / Mathf.Max(1, maxObtainableUnderstanding)) * 100f;
 
     // 호감도 범위 (-50 ~ 100) // *
-    public void AddAffection(int amount) => hiddenAffection = Mathf.Clamp(hiddenAffection + amount, -50, 100);
+    public void AddAffection(int amount)
+    {
+        int before = hiddenAffection;
+        hiddenAffection = Mathf.Clamp(hiddenAffection + amount, -50, 100);
+        PlayerActionLog.Instance?.Record(RecordType.AffectionChange, npcName, before, hiddenAffection);
+    }
 
     // 관계 등급 계산 (기존 NPC.cs에 있던 걸 순수 데이터 쪽으로 옮김 - 정보 전문가 패턴)
     public NPC.RelationshipTier GetRelationshipTier()

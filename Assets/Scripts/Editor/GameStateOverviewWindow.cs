@@ -18,6 +18,8 @@ public class GameStateOverviewWindow : EditorWindow
 
     private Dictionary<int, bool> _anchorFoldouts = new();
 
+    private bool _showFullLog = false;
+
     private void OnGUI()
     {
         if (!Application.isPlaying)
@@ -34,6 +36,8 @@ public class GameStateOverviewWindow : EditorWindow
         DrawMemoryTopicSection(); // 공용(NPC 무관) 정보 주제
         EditorGUILayout.Space(10);
         DrawMemorySection(); // 날짜/카테고리별 전체 뷰
+        EditorGUILayout.Space(10);
+        DrawFullActionLogSection();
         EditorGUILayout.EndScrollView();
 
         DrawDebugToolsSection();
@@ -170,11 +174,15 @@ public class GameStateOverviewWindow : EditorWindow
         if (PlayerActionLog.Instance != null)
         {
             EditorGUILayout.LabelField("— 시간순 기록 —", EditorStyles.miniBoldLabel);
+            bool any = false;
             foreach (var r in PlayerActionLog.Instance.Records)
             {
-                if (System.Array.IndexOf(observable, r.actionKey) < 0) continue;
-                EditorGUILayout.LabelField($"[{r.loopCount}회차 Day{r.day} {r.hour}시] {r.actionKey} @{r.sceneName}");
+                if (r.type != RecordType.Counter) continue;                      // ★ 카운터 기록만
+                if (System.Array.IndexOf(observable, r.key) < 0) continue;       // ★ actionKey → key
+                EditorGUILayout.LabelField($"[{r.loopCount}회차 Day{r.day} {r.hour}시] {r.key} @{r.sceneName}");
+                any = true;
             }
+            if (!any) EditorGUILayout.LabelField("(기록 없음)");
         }
         EditorGUI.indentLevel--;
     }
@@ -310,5 +318,29 @@ public class GameStateOverviewWindow : EditorWindow
         }
     }
 
+    private void DrawFullActionLogSection()
+    {
+        EditorGUILayout.LabelField("전체 행적 로그 (시간순)", EditorStyles.boldLabel);
+        if (PlayerActionLog.Instance == null) return;
 
+        var records = PlayerActionLog.Instance.Records;
+        _showFullLog = EditorGUILayout.Foldout(_showFullLog, $"전체 기록 ({records.Count}건)", true);
+        if (!_showFullLog) return;
+
+        EditorGUI.indentLevel++;
+        foreach (var r in records)
+        {
+            string detail = r.valueBefore == r.valueAfter ? r.key : $"{r.key}: {r.valueBefore} → {r.valueAfter}";
+            GUI.color = r.type switch
+            {
+                RecordType.MemoryAcquired => Color.cyan,
+                RecordType.SuspicionChange => new Color(1f, 0.6f, 0.6f),
+                RecordType.AffectionChange => new Color(1f, 0.85f, 0.5f),
+                _ => Color.white,
+            };
+            EditorGUILayout.LabelField($"[{r.loopCount}회차 Day{r.day} {r.hour}시] ({r.type}) {detail} @{r.sceneName}");
+            GUI.color = Color.white;
+        }
+        EditorGUI.indentLevel--;
+    }
 }

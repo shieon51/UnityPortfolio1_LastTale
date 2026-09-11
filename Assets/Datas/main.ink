@@ -5,3 +5,4 @@ INCLUDE Liel\Liel_Day1.ink
 INCLUDE Liel\Liel_Day2.ink
 
 INCLUDE Liel\Liel_Day3.ink
+INCLUDE Liel\Liel_Day4.ink

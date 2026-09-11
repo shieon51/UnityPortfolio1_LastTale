@@ -6,6 +6,10 @@ using static EventManager;
 
 public class NPCManager : Singleton<NPCManager>
 {
+    [Header("NPC 정의")]
+    [Tooltip("Resources 하위 폴더 — 이 안의 모든 NPCDefinition을 자동으로 읽어옴")]
+    public string npcDefinitionFolder = "NPCDefinitions";
+
     // NPCManager.cs 에 추가 (private dict를 안전하게 읽기 전용으로 노출)
     public IReadOnlyDictionary<string, NPCData> AllNPCData => npcDataDict;
 
@@ -37,12 +41,32 @@ public class NPCManager : Singleton<NPCManager>
 
     private void InitializeDefaultNPCData()
     {
-        Debug.LogWarning("[NPCManager] InitializeDefaultNPCData 호출됨 — 데이터가 새로 초기화됩니다!\n" + System.Environment.StackTrace); // ★ 추가
+        var definitions = Resources.LoadAll<NPCDefinition>(npcDefinitionFolder);
+        foreach (var def in definitions)
+        {
+            if (string.IsNullOrEmpty(def.npcName)) continue;
+            if (npcDataDict.ContainsKey(def.npcName))
+            {
+                Debug.LogError($"[NPCManager] NPC 이름 중복: '{def.npcName}' — '{def.name}' 애셋 확인 필요");
+                continue;
+            }
+            npcDataDict[def.npcName] = CreateFromDefinition(def);
+        }
+        Debug.Log($"[NPCManager] NPC 정의 {npcDataDict.Count}개 로드 완료");
+    }
 
-        // 게임에 등장하는 모든 NPC의 초기 상태를 등록
-        npcDataDict.Add("Liel", new NPCData("Liel"));
-        //npcDataDict.Add("Diaber", new NPCData("Diavalu"));
-        //npcDataDict.Add("Gaon", new NPCData("Gaon"));
+    private NPCData CreateFromDefinition(NPCDefinition def)
+    {
+        var data = new NPCData(def.npcName);
+        data.hiddenAffection = def.initialAffection;
+        data.rememberAcrossLoops = def.rememberAcrossLoops;
+        data.maxObtainableUnderstanding = def.maxObtainableUnderstanding;
+        data.observableCounterKeys = def.observableCounterKeys;
+        data.relatedNPCs = def.relatedNPCs;
+        data.trustInRelatedNPCs = def.trustInRelatedNPCs;
+        data.suspicionSensitivity = def.suspicionSensitivity;
+        data.trustThresholdForSora = def.trustThresholdForSora;
+        return data;
     }
 
     // NPC가 스폰될 때 자신의 데이터를 요구하는 함수
