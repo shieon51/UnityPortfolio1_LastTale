@@ -50,12 +50,23 @@ public class EventManager : Singleton<EventManager>
     private Transform player;
     private GameObject eventTriggerPrefab;
 
+    [Header("이벤트 선택 우선순위")]
+    [Tooltip("바라보는 방향에 있는 이벤트를 우선할지")]
+    public bool preferFacingDirection = true;
+    [Tooltip("방향 판정 시 무시할 x축 오차 (이보다 가까우면 정면으로 간주)")]
+    public float facingDeadzone = 0.3f;
+
+    private float _lastFacingDir = 1f; // 1 = 오른쪽, -1 = 왼쪽
+
     // [트리거 관리 풀]
     private List<EventTrigger> activeTriggers = new List<EventTrigger>(); // 최대 10개까지만 관리
     private List<EventTrigger> dynamicTriggers = new List<EventTrigger>(); // NPC들이 씬에 나타나면 스스로 등록하는 리스트
 
     private EventTrigger closest = null;
     private bool canInteract = false;    // 상호작용 가능 여부 플래그
+
+    // EventManager.cs — 필드 추가 (매 프레임 리스트 생성하던 것도 같이 해결)
+    private List<EventTrigger> _allTriggersCache = new List<EventTrigger>();
 
     // 전략 패턴 맵핑을 위한 딕셔너리
     private Dictionary<int, IEventBehavior> eventBehaviors;
@@ -67,6 +78,8 @@ public class EventManager : Singleton<EventManager>
 
     public bool HasAutoTriggered(EventData data)
         => MemoryManager.Instance.GetCounter(GetAutoFiredKey(data)) > 0;
+
+    public static bool IsNPCEvent(int eventID) => eventID >= 10000 && eventID < 50000;
 
     private void Awake()
     {
@@ -96,6 +109,9 @@ public class EventManager : Singleton<EventManager>
 
     private void Update()
     {
+        float inputX = Input.GetAxisRaw("Horizontal");
+        if (Mathf.Abs(inputX) > 0.01f) _lastFacingDir = Mathf.Sign(inputX);
+
         UpdateNearestEvent();
 
         // Z키 입력 시 상호작용
@@ -109,7 +125,7 @@ public class EventManager : Singleton<EventManager>
             Debug.Log($"상호작용 시작: {closest.eventData.EventName}");
 
             // 상호작용 대상이 NPC라면 대화가 시작되었다고 알림
-            if (closest.eventData.EventID >= (int)EventID.NPC && closest.eventData.EventID < 90000)
+            if (IsNPCEvent(closest.eventData.EventID))
             {
                 NPCManager.Instance.StartNPCDialogue(closest.eventData.EventName);
             }
@@ -172,8 +188,8 @@ public class EventManager : Singleton<EventManager>
                 // ★ 추가 — 횟수를 다 썼고 대체 노드도 없으면 목록에서 완전히 제외
                 if (IsEventExhausted(eventEntry) && string.IsNullOrEmpty(eventEntry.exhaustedInkNode)) continue;
 
-                // 이벤트 ID가 NPC 대역(10000 ~ 89999)인지 확인
-                if (eventEntry.EventID >= (int)EventID.NPC && eventEntry.EventID < 90000)
+                // 이벤트 ID가 NPC 대역인지 확인
+                if (IsNPCEvent(eventEntry.EventID))
                 {
                     validNPCEvents.Add(eventEntry); // NPC 리스트에 추가
                 }
@@ -184,6 +200,10 @@ public class EventManager : Singleton<EventManager>
                 }
             }
         }
+
+        // **
+        //Debug.Log($"[EventManager] 유효 이벤트 — 정적:{validEvents.Count}개, NPC:{validNPCEvents.Count}개");
+        //foreach (var e in validEvents) Debug.Log($"  · 정적: {e.EventName}(ID:{e.EventID}) Auto:{e.AutoTrigger} Zone:{e.triggerZoneSize}");
 
         // NPC 배치는 NPCManager에게 위임
         if (NPCManager.Instance != null)
@@ -215,99 +235,78 @@ public class EventManager : Singleton<EventManager>
         }
 
         // 씬 이동 직후 closest 초기화
+        foreach (var t in activeTriggers) t.ShowInteractionButton(false);   // ★ 추가
+        foreach (var t in dynamicTriggers) t.ShowInteractionButton(false);  // ★ 추가
         closest = null;
         canInteract = false;
     }
 
     private void UpdateNearestEvent() //가장 가까운 트리거 찾기
     {
+        _allTriggersCache.Clear();
+        _allTriggersCache.AddRange(activeTriggers);
+        _allTriggersCache.AddRange(dynamicTriggers);
+
         if (DialogueManager.Instance.IsTalking) // ★ 대화 중엔 근접 판정 자체를 건너뜀
         {
-            closest?.ShowInteractionButton(false);
+            foreach (var t in _allTriggersCache) t.ShowInteractionButton(false); // ★ 전부 끔
+            closest = null;
             canInteract = false;
             return;
         }
 
-        float minDistance = Mathf.Infinity;
-        EventTrigger temp = closest;
-        closest = null;
+        // 1. 후보 선별: 범위 안에 있는 것들만
+        EventTrigger bestFacing = null, bestAny = null;
+        float bestFacingDist = Mathf.Infinity, bestAnyDist = Mathf.Infinity;
 
-        // 매 프레임 초기화
-        canInteract = false;
-
-        // 자동 이벤트가 있다면 실행
-        //if (closest != null && closest.eventData.AutoTrigger
-        //    && minDistance <= closest.InteractionRange
-        //    && !DialogueManager.Instance.IsTalking && !GlobalActionLock.IsLocked
-        //    && !IsEventExhausted(closest.eventData)) // ★ 추가 — 소진된 자동 이벤트는 재발동 안 함
-        //{
-        //    closest.StartDialogue();
-        //    return;
-        //}
-
-        // 1. 정적 이벤트(activeTriggers) + 동적 NPC 이벤트(dynamicTriggers) 모두 검사
-        List<EventTrigger> allTriggers = new List<EventTrigger>(); // ==> ? 여기 왜 매번 생성 중인가? -> 수정 예정
-        allTriggers.AddRange(activeTriggers);
-        allTriggers.AddRange(dynamicTriggers); // 합쳐서 검사
-
-        // 1. 가장 가까운 트리거 위치 찾기
-        foreach (EventTrigger trigger in allTriggers) 
+        foreach (EventTrigger trigger in _allTriggersCache)
         {
             if (!trigger.gameObject.activeSelf) continue;
 
-            float distance = Vector2.Distance(player.position, trigger.transform.position);
-            if (distance < minDistance)
-            {
-                minDistance = distance;
-                closest = trigger;
-            }
+            float dx = trigger.transform.position.x - player.position.x;
+            float dist = Vector2.Distance(player.position, trigger.transform.position);
+            bool inRange = trigger.IsPlayerInRange(player.position);
+
+            if (inRange && dist < bestAnyDist) { bestAnyDist = dist; bestAny = trigger; }
+
+            // 바라보는 방향에 있는가 (거의 정면이면 방향 무관하게 인정)
+            bool isFacing = Mathf.Abs(dx) <= facingDeadzone || Mathf.Sign(dx) == _lastFacingDir;
+            if (inRange && isFacing && dist < bestFacingDist) { bestFacingDist = dist; bestFacing = trigger; }
         }
 
-        // 2. 해당 트리거가 플레이어 범위 내에 들어왔는지 확인
-        // (범위 내로 들어왔으면 버튼 상호작용 가능)
-        if (closest != null) 
+        // 2. 방향 우선, 없으면 아무거나 (범위 안 대상이 아예 없으면 가장 가까운 것을 closest로 유지 — 버튼은 안 켜짐)
+        closest = preferFacingDirection ? (bestFacing ?? bestAny) : bestAny;
+
+        if (closest == null) // 범위 안에 아무것도 없을 때: 가장 가까운 것만 참조용으로 잡아둠
         {
-            //가장 가까운 트리거 범위 내에 플레이어가 있다면
-            if (closest.IsPlayerInRange(player.position)) // ★ 기존 minDistance <= InteractionRange 대체
+            float minDist = Mathf.Infinity;
+            foreach (var t in _allTriggersCache)
             {
-                closest.ShowInteractionButton(true);
-                canInteract = true; // 플래그 ON
-
-                //만약 가장 가까운 트리거가 다른 것으로 변경된 경우엔
-                //이전 것은 범위 내에 있어도 활성화 끄기
-                if (temp != null && temp != closest) 
-                {
-                    temp.ShowInteractionButton(false);
-                }
-            }
-            else
-            {
-                closest.ShowInteractionButton(false); //멀어지면 끄기
-                canInteract = false; // 플래그 OFF
-            }
-        }
-        else //트리거가 아무것도 없다면
-        {
-            if (temp != null)
-            {
-                temp.ShowInteractionButton(false); //이전에 남아있던 것도 없애기
+                if (!t.gameObject.activeSelf) continue;
+                float d = Vector2.Distance(player.position, t.transform.position);
+                if (d < minDist) { minDist = d; closest = t; }
             }
         }
 
-        // ★ 여기부터 추가 — 자동 발동 이벤트 처리
+        bool closestInRange = closest != null && closest.IsPlayerInRange(player.position);
+        foreach (var t in _allTriggersCache)
+            t.ShowInteractionButton(t == closest && closestInRange);
+
+        canInteract = closestInRange;
+
+        // 3. 자동 발동 이벤트 처리
         if (closest != null
             && closest.eventData != null
             && closest.eventData.AutoTrigger
-            && closest.IsPlayerInRange(player.position)
-            && !DialogueManager.Instance.IsTalking
+            && closestInRange
             && !GlobalActionLock.IsLocked
-            && !HasAutoTriggered(closest.eventData)      // ★ 핵심 — 이미 자동 발동한 적 있으면 영구히 안 함
+            && !HasAutoTriggered(closest.eventData)
             && !IsEventExhausted(closest.eventData))
         {
             Debug.Log($"[자동 이벤트 발동] {closest.eventData.EventName} ({closest.eventData.InkNodeName})");
-            MemoryManager.Instance.IncrementCounter(GetAutoFiredKey(closest.eventData)); // ★ 발동 직전에 즉시 기록
+            MemoryManager.Instance.IncrementCounter(GetAutoFiredKey(closest.eventData));
 
-            if (closest.eventData.EventID >= (int)EventID.NPC && closest.eventData.EventID < 90000)
+            if (IsNPCEvent(closest.eventData.EventID))
                 NPCManager.Instance.StartNPCDialogue(closest.eventData.EventName);
 
             closest.ShowInteractionButton(false);
@@ -335,7 +334,7 @@ public class EventManager : Singleton<EventManager>
         GameManager.Instance.CurrentGameMode.ConsumeResourceForEvent(eventData.TimeTaken);
 
         // 대화가 끝난 게 NPC라면 대화 종료 알림
-        if (eventData.EventID >= (int)EventID.NPC && eventData.EventID < 90000)
+        if (IsNPCEvent(eventData.EventID))
         {
             NPCManager.Instance.EndNPCDialogue(eventData.EventName);
         }

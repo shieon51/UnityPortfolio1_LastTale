@@ -16,6 +16,12 @@ public class SpeechBubbleController : MonoBehaviour
     [Tooltip("화면 가장자리에서 이만큼은 안쪽에 머무름 (0~0.5)")]
     [Range(0f, 0.5f)] public float screenMargin = 0.08f;
 
+    [Header("화면 클램프")]
+    [Tooltip("화면 가장자리에서 이만큼 여백을 둠 (월드 단위)")]
+    public float screenEdgePadding = 0.3f;
+    [Tooltip("말풍선 박스의 RectTransform (비우면 자동으로 bubbleRoot에서 찾음)")]
+    public RectTransform bubbleRect;
+
     public GameObject bubbleRoot;
     public TextMeshProUGUI nameText;
     public TypewriterText bodyTypewriter; // 6번에서 만든 거 재사용
@@ -33,6 +39,7 @@ public class SpeechBubbleController : MonoBehaviour
     private void Awake()
     {
         bodyTypewriter.OnFullyDisplayed += () => OnTextFullyDisplayed?.Invoke(); // ★ 추가 — TypewriterText 완료 신호를 그대로 전달
+        if (bubbleRect == null && bubbleRoot != null) bubbleRect = bubbleRoot.GetComponent<RectTransform>();
     }
 
     public void Show(Transform target, string speakerName, string text)
@@ -48,17 +55,40 @@ public class SpeechBubbleController : MonoBehaviour
     {
         if (_followTarget == null || !bubbleRoot.activeSelf) return;
 
-        Vector3 desiredWorldPos = _followTarget.position + offsetAboveTarget;
-        desiredWorldPos.x += CalculateHorizontalOffset(); // ★ 추가
+        Vector3 desired = _followTarget.position + offsetAboveTarget;
+        desired.x += CalculateHorizontalOffset();
 
         Camera cam = Camera.main;
-        if (cam == null) { transform.position = desiredWorldPos; return; }
+        if (cam == null || !cam.orthographic || bubbleRect == null) { transform.position = desired; return; }
 
-        Vector3 viewportPos = cam.WorldToViewportPoint(desiredWorldPos);
+        // 말풍선의 실제 월드 크기 (스케일 반영)
+        Vector2 size = bubbleRect.rect.size;
+        Vector3 scale = bubbleRect.lossyScale;
+        float worldW = size.x * Mathf.Abs(scale.x);
+        float worldH = size.y * Mathf.Abs(scale.y);
 
-        viewportPos.x = Mathf.Clamp(viewportPos.x, screenMargin, 1f - screenMargin);
-        viewportPos.y = Mathf.Clamp(viewportPos.y, screenMargin, 1f - screenMargin);
-        transform.position = cam.ViewportToWorldPoint(viewportPos);
+        // Pivot 기준으로 기준점에서 각 방향으로 얼마나 뻗는지 계산
+        Vector2 pivot = bubbleRect.pivot;
+        float extendLeft = worldW * pivot.x;
+        float extendRight = worldW * (1f - pivot.x);
+        float extendDown = worldH * pivot.y;
+        float extendUp = worldH * (1f - pivot.y);
+
+        // 카메라 가시 영역
+        float camHalfH = cam.orthographicSize;
+        float camHalfW = camHalfH * cam.aspect;
+        Vector3 camPos = cam.transform.position;
+
+        float minX = camPos.x - camHalfW + extendLeft + screenEdgePadding;
+        float maxX = camPos.x + camHalfW - extendRight - screenEdgePadding;
+        float minY = camPos.y - camHalfH + extendDown + screenEdgePadding;
+        float maxY = camPos.y + camHalfH - extendUp - screenEdgePadding;
+
+        // 말풍선이 화면보다 크면 클램프 범위가 뒤집히므로 중앙 고정
+        desired.x = minX <= maxX ? Mathf.Clamp(desired.x, minX, maxX) : camPos.x;
+        desired.y = minY <= maxY ? Mathf.Clamp(desired.y, minY, maxY) : camPos.y;
+
+        transform.position = new Vector3(desired.x, desired.y, transform.position.z);
     }
 
     private float CalculateHorizontalOffset()

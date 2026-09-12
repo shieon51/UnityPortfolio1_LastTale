@@ -1,7 +1,7 @@
 === Cutscene_Day4_001 ===
 해질 무렵. 인기척 하나 없던 길목이었다. #system
 그런데 어딘가에서 발소리가 들려온다. #cue:test_shake #lockinput #auto:1.5
-~ move_npc_rel("Liel", -2, 0, 2.0)
+//~ move_npc_rel("Liel", -2, 0, 2.0)
 ...드디어 나타났군. #speak:Liel:??? #auto:2.5
 + 누구세요?
     -> Cutscene_Day4_001_Who

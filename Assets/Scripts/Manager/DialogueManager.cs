@@ -60,6 +60,13 @@ public class DialogueManager : Singleton<DialogueManager>
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.F9))
+        {
+            Debug.Log($"[진단] IsTalking={isTalking} IsChoices={isChoices} choicesReady={_choicesReadyToReveal} " +
+                      $"autoAdvancing={_isAutoAdvancing} lockInput={_lockInput} GlobalLock={GlobalActionLock.IsLocked}");
+        }
+        //*
+
         if (!IsTalking) return;
 
         if (IsChoices) // 선택지 엔터 선택

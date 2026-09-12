@@ -25,6 +25,12 @@ public class NPCManager : Singleton<NPCManager>
     [Header("Ground Snap")]
     [Tooltip("NPC가 자동으로 안착할 바닥으로 인정할 레이어들 (Ground + OneWayPlatform 둘 다 체크)")]
     public LayerMask groundSnapLayer;
+    [Tooltip("일반 배치 시 바닥 탐지 거리")]
+    public float snapRayDistance = 3f;
+    [Tooltip("연출 소환 시 바닥 탐지 거리 (공중에 배치될 수 있어 더 길게)")]
+    public float summonSnapRayDistance = 20f;
+    [Tooltip("바닥 탐지를 시작할 높이")]
+    public float snapStartOffset = 1f;
 
     // NPC 이름을 Key로 하여 데이터를 영구 보관하는 딕셔너리
     private Dictionary<string, NPCData> npcDataDict = new Dictionary<string, NPCData>();
@@ -168,8 +174,11 @@ public class NPCManager : Singleton<NPCManager>
 
     // 기존 SpawnOrUpdateNPC()의 '바닥 자동 안착 기능' 블록과
     // TriggerBossBattle()의 위치 보정 블록을 아래 헬퍼 하나로 교체
-    private Vector3 ComputeSnappedPosition(GameObject npcObj, Vector2 desiredPos, float startOffset = 1f, float rayDistance = 3f)
+    private Vector3 ComputeSnappedPosition(GameObject npcObj, Vector2 desiredPos, float startOffset = -1f, float rayDistance = -1f)
     {
+        if (startOffset < 0f) startOffset = snapStartOffset;
+        if (rayDistance < 0f) rayDistance = snapRayDistance;
+
         Vector2 rayStart = desiredPos + Vector2.up * startOffset;
         RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, rayDistance, groundSnapLayer);
         Debug.DrawRay(rayStart, Vector2.down * rayDistance, Color.magenta, 5f);
@@ -184,6 +193,7 @@ public class NPCManager : Singleton<NPCManager>
                 return new Vector3(desiredPos.x, hit.point.y + pivotToBottom, 0);
             }
         }
+        Debug.LogWarning($"[NPCManager] 바닥을 찾지 못해 지정 위치에 그대로 배치: {desiredPos}");
         return new Vector3(desiredPos.x, desiredPos.y, 0);
     }
 
@@ -355,20 +365,6 @@ public class NPCManager : Singleton<NPCManager>
     }
 
     // 연출용 이벤트 npc 등장 관리
-    public void SummonNPCAt(string npcName, Vector2 position)
-    {
-        if (!npcPool.TryGetValue(npcName, out GameObject npcObj) || npcObj == null)
-        {
-            GameObject prefab = Resources.Load<GameObject>($"Prefabs/NPC/{npcName}");
-            if (prefab == null) { Debug.LogWarning($"[NPCManager] 소환 실패 — 프리팹 없음: {npcName}"); return; }
-            npcObj = Instantiate(prefab);
-            npcPool[npcName] = npcObj;
-        }
-        npcObj.SetActive(true);
-        npcObj.transform.position = ComputeSnappedPosition(npcObj, position);
-        _summonedForEvent.Add(npcName);
-        Debug.Log($"[NPCManager] 연출용 소환: {npcName}");
-    }
 
     public void SummonNPCAt(string npcName, Vector2 position, bool snapToGround = true)
     {
@@ -380,7 +376,9 @@ public class NPCManager : Singleton<NPCManager>
             npcPool[npcName] = npcObj;
         }
         npcObj.SetActive(true);
-        npcObj.transform.position = snapToGround ? ComputeSnappedPosition(npcObj, position) : (Vector3)position;
+        npcObj.transform.position = snapToGround
+            ? ComputeSnappedPosition(npcObj, position, snapStartOffset, summonSnapRayDistance) // ★ 긴 레이
+            : (Vector3)position;
         _summonedForEvent.Add(npcName);
         Debug.Log($"[NPCManager] 연출용 소환: {npcName} @ {position}");
     }

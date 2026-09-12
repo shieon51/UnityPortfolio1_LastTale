@@ -7,7 +7,7 @@
 10005,Liel,FALSE,4,19,23,Liel_Day4_003,2,7,0,2,FALSE,2,Liel_Day4_Exhausted,,TRUE,,,,
 10006,Liel,FALSE,4,13,16,Liel_Day4_002,2,7,0,1,TRUE,1,,,TRUE,,,,
 10007,Liel,FALSE,4,8,12,Liel_Day4_001,2,7,0,1,FALSE,3,Liel_Day4_Exhausted,,TRUE,,,,
-50000,Cutscene,False,4,17,18,Cutscene_Day4_001,1,7.00,2.00,1,True,1,,Liel@6.09;0.14,True,2.57,13.76,0.00,5.01
+50000,Cutscene,False,4,17,18,Cutscene_Day4_001,1,7.00,2.00,1,True,1,,Liel@12.37;0.14,True,2.84,14.81,0.00,5.50
 90000,Training,True,0,0,24,training,1,4.00,2.00,2,False,0,,,True,0.00,0.00,0.00,0.00
 90001,Practice,True,0,0,24,practice,1,-3.00,0.00,1,False,0,,,True,0.00,0.00,0.00,0.00
 90002,Sleep,True,0,0,24,sleep,1,-8.00,0.00,8,False,0,,,True,0.00,0.00,0.00,0.00

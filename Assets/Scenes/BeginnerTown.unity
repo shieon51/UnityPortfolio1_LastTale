@@ -129,11 +129,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 19.43
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.97
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 241294756925489600, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
       propertyPath: m_LocalPosition.z
@@ -209,7 +209,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7036105444891270491, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
       propertyPath: summonNPCs
-      value: Liel
+      value: Liel@12.37;0.14
       objectReference: {fileID: 0}
     - target: {fileID: 7036105444891270491, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
       propertyPath: AutoTrigger
@@ -233,7 +233,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7036105444891270491, guid: ca2ad018f7522604b8094f316cc5afc6, type: 3}
       propertyPath: triggerZoneOffset.y
-      value: 4.93
+      value: 5.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -822,7 +822,7 @@ Transform:
   m_GameObject: {fileID: 1746465875}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 8.83, y: 4.31, z: 0}
+  m_LocalPosition: {x: 12.37, y: 0.14, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

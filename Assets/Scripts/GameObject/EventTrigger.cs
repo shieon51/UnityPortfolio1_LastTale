@@ -15,7 +15,7 @@ public class EventTrigger : MonoBehaviour
     private TextMeshProUGUI tmpText;
     private Image buttonImage;
 
-    private float interactionRange = 2.5f;
+    private float interactionRange = 2.0f;
     public float InteractionRange => interactionRange;
 
     public bool UsesZone => eventData != null && eventData.triggerZoneSize.x > 0f && eventData.triggerZoneSize.y > 0f;
