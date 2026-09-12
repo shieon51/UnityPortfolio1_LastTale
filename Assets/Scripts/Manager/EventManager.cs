@@ -29,6 +29,12 @@ public class EventData
     public string summonNPCs = "";
     [Tooltip("소환된 NPC가 연출 후 사라질지")]
     public bool despawnAfterEvent = true;
+
+    [Header("발동 영역")]
+    [Tooltip("사각 발동 영역 크기. (0,0)이면 기존 원형 반경 방식 사용")]
+    public Vector2 triggerZoneSize = Vector2.zero;
+    [Tooltip("마커 기준 영역 중심 오프셋")]
+    public Vector2 triggerZoneOffset = Vector2.zero;
 }
 
 public class EventManager : Singleton<EventManager>
@@ -40,11 +46,6 @@ public class EventManager : Singleton<EventManager>
         Practice = 90001,
         Sleep = 90002
     }
-
-    [Header("자동 이벤트")]
-    [Tooltip("자동 이벤트가 끝난 뒤, 다시 발동 가능해지기까지의 최소 대기 시간(초)")]
-    public float autoTriggerCooldown = 1f;
-    private float _lastAutoTriggerEndTime = -99f;
 
     private Transform player;
     private GameObject eventTriggerPrefab;
@@ -235,14 +236,14 @@ public class EventManager : Singleton<EventManager>
         canInteract = false;
 
         // 자동 이벤트가 있다면 실행
-        if (closest != null && closest.eventData.AutoTrigger
-            && minDistance <= closest.InteractionRange
-            && !DialogueManager.Instance.IsTalking && !GlobalActionLock.IsLocked
-            && !IsEventExhausted(closest.eventData)) // ★ 추가 — 소진된 자동 이벤트는 재발동 안 함
-        {
-            closest.StartDialogue();
-            return;
-        }
+        //if (closest != null && closest.eventData.AutoTrigger
+        //    && minDistance <= closest.InteractionRange
+        //    && !DialogueManager.Instance.IsTalking && !GlobalActionLock.IsLocked
+        //    && !IsEventExhausted(closest.eventData)) // ★ 추가 — 소진된 자동 이벤트는 재발동 안 함
+        //{
+        //    closest.StartDialogue();
+        //    return;
+        //}
 
         // 1. 정적 이벤트(activeTriggers) + 동적 NPC 이벤트(dynamicTriggers) 모두 검사
         List<EventTrigger> allTriggers = new List<EventTrigger>(); // ==> ? 여기 왜 매번 생성 중인가? -> 수정 예정
@@ -267,7 +268,7 @@ public class EventManager : Singleton<EventManager>
         if (closest != null) 
         {
             //가장 가까운 트리거 범위 내에 플레이어가 있다면
-            if (minDistance <= closest.InteractionRange) 
+            if (closest.IsPlayerInRange(player.position)) // ★ 기존 minDistance <= InteractionRange 대체
             {
                 closest.ShowInteractionButton(true);
                 canInteract = true; // 플래그 ON
@@ -297,7 +298,7 @@ public class EventManager : Singleton<EventManager>
         if (closest != null
             && closest.eventData != null
             && closest.eventData.AutoTrigger
-            && minDistance <= closest.InteractionRange
+            && closest.IsPlayerInRange(player.position)
             && !DialogueManager.Instance.IsTalking
             && !GlobalActionLock.IsLocked
             && !HasAutoTriggered(closest.eventData)      // ★ 핵심 — 이미 자동 발동한 적 있으면 영구히 안 함
@@ -326,7 +327,6 @@ public class EventManager : Singleton<EventManager>
     public void EventResult(EventData eventData)
     {
         MemoryManager.Instance.IncrementCounter(GetTriggerCountKey(eventData)); // ★ 추가 — 실행 횟수 누적
-        _lastAutoTriggerEndTime = Time.time;                                    // ★ 추가 — 끝나자마자 재발동 방지
 
         if (eventData.despawnAfterEvent && !string.IsNullOrEmpty(eventData.summonNPCs)) // ★ 추가
             NPCManager.Instance.DespawnEventNPCs();

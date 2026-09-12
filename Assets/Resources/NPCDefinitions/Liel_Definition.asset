@@ -12,11 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 63dff5c0b80f7a9459b27da86acc8cfb, type: 3}
   m_Name: Liel_Definition
   m_EditorClassIdentifier: Assembly-CSharp::NPCDefinition
-  npcName: 
+  npcName: Liel
   initialAffection: 0
   rememberAcrossLoops: 0
   maxObtainableUnderstanding: 100
-  observableCounterKeys: []
+  observableCounterKeys:
+  - Liel_Day4_001_meet
+  - Liel_Day4_002_meet
+  - Liel_Day4_003_meet
+  - Liel_told_about_star
   relatedNPCs: []
   trustInRelatedNPCs: []
   suspicionSensitivity: 1

@@ -15,9 +15,21 @@ public class EventTrigger : MonoBehaviour
     private TextMeshProUGUI tmpText;
     private Image buttonImage;
 
-    private float interactionRange = 1.5f;
+    private float interactionRange = 2.5f;
     public float InteractionRange => interactionRange;
 
+    public bool UsesZone => eventData != null && eventData.triggerZoneSize.x > 0f && eventData.triggerZoneSize.y > 0f;
+
+    public bool IsInsideZone(Vector2 playerPos)
+    {
+        if (!UsesZone) return false;
+        Vector2 center = (Vector2)transform.position + eventData.triggerZoneOffset;
+        Vector2 half = eventData.triggerZoneSize * 0.5f;
+        return Mathf.Abs(playerPos.x - center.x) <= half.x && Mathf.Abs(playerPos.y - center.y) <= half.y;
+    }
+
+    public bool IsPlayerInRange(Vector2 playerPos)
+        => UsesZone ? IsInsideZone(playerPos) : Vector2.Distance(playerPos, transform.position) <= InteractionRange;
 
     private void Awake()
     {
@@ -58,10 +70,25 @@ public class EventTrigger : MonoBehaviour
 
         if (!string.IsNullOrEmpty(data.summonNPCs)) // ★ 추가 — 연출용 NPC 소환
         {
-            foreach (var name in data.summonNPCs.Split(','))
+            foreach (var entry in data.summonNPCs.Split('|')) // ★ ',' → '|'
             {
-                string trimmed = name.Trim();
-                if (!string.IsNullOrEmpty(trimmed)) NPCManager.Instance.SummonNPCAt(trimmed, data.Position);
+                string trimmed = entry.Trim();
+                if (string.IsNullOrEmpty(trimmed)) continue;
+
+                string npcName = trimmed;
+                Vector2 spawnPos = data.Position;
+
+                int at = trimmed.IndexOf('@'); // "Liel@-10,0" 형식
+                if (at > 0)
+                {
+                    npcName = trimmed.Substring(0, at).Trim();
+                    var parts = trimmed.Substring(at + 1).Split(';'); // 쉼표는 CSV와 충돌하므로 세미콜론
+                    if (parts.Length >= 2
+                        && float.TryParse(parts[0], out float ox)
+                        && float.TryParse(parts[1], out float oy))
+                        spawnPos = data.Position + new Vector2(ox, oy);
+                }
+                NPCManager.Instance.SummonNPCAt(npcName, spawnPos);
             }
         }
         DialogueManager.Instance.StartStory(data);
@@ -94,7 +121,7 @@ public class EventTrigger : MonoBehaviour
         eventData = data;
         tmpText.text = eventData.EventName;
 
-        Debug.Log($"[EventTrigger] {data.EventName} 로드됨 — Auto:{data.AutoTrigger} Max:{data.maxTriggerCount} Exhausted:'{data.exhaustedInkNode}'");
+        //Debug.Log($"[EventTrigger] {data.EventName} 로드됨 — Auto:{data.AutoTrigger} Max:{data.maxTriggerCount} Exhausted:'{data.exhaustedInkNode}'");
     }
 
     public void ShowInteractionButton(bool show) //**이벤트 매니저에서 호출

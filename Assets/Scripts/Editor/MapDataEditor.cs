@@ -257,8 +257,32 @@ public class MapDataEditor : EditorWindow
                 Start = int.Parse(cols[4]),
                 End = int.Parse(cols[5]),
                 SceneID = int.Parse(cols[7]),
-                Pos = new Vector2(float.Parse(cols[8]), float.Parse(cols[9]))
+                Pos = new Vector2(float.Parse(cols[8]), float.Parse(cols[9])),
+                IsCutscene = false,
             });
+
+            // ★ 컷씬이 소환하는 NPC를 그 NPC의 스케줄로도 표시
+            string summon = CsvTableLoader.Get(cols, 14, "");
+            if (!string.IsNullOrEmpty(summon))
+            {
+                foreach (var entry in summon.Split(','))
+                {
+                    string npcName = entry.Trim();
+                    int at = npcName.IndexOf('@');
+                    if (at > 0) npcName = npcName.Substring(0, at).Trim();
+                    if (string.IsNullOrEmpty(npcName)) continue;
+                    scheduleList.Add(new ScheduleItem
+                    {
+                        Name = npcName,
+                        Day = int.Parse(cols[3]),
+                        Start = int.Parse(cols[4]),
+                        End = int.Parse(cols[5]),
+                        SceneID = int.Parse(cols[7]),
+                        Pos = new Vector2(float.Parse(cols[8]), float.Parse(cols[9])),
+                        IsCutscene = true,
+                    });
+                }
+            }
         }
 
         // 이름 -> 날짜 -> 시간 순 정렬
@@ -278,13 +302,13 @@ public class MapDataEditor : EditorWindow
             foreach (var item in group)
             {
                 GUILayout.BeginHorizontal();
+                if (item.IsCutscene) GUI.color = Color.magenta;
                 GUILayout.Label($"Day {item.Day}", GUILayout.Width(50));
-
                 string timeStr = (item.Start == 0 && item.End == 24) ? "All Day" : $"{item.Start}시 ~ {item.End}시";
                 GUILayout.Label(timeStr, GUILayout.Width(100));
-
                 GUILayout.Label($"Scene {item.SceneID}", GUILayout.Width(80));
-                GUILayout.Label($"Pos {item.Pos}");
+                GUILayout.Label(item.IsCutscene ? $"[컷씬 등장] Pos {item.Pos}" : $"Pos {item.Pos}");
+                GUI.color = Color.white;
                 GUILayout.EndHorizontal();
             }
             GUILayout.EndVertical();
@@ -341,6 +365,7 @@ public class MapDataEditor : EditorWindow
         // A. 현재 화면에 있는 마커들을 문자열 리스트로 변환
         List<string> currentMarkerData = new List<string>();
         var markers = FindObjectsOfType<EventMarker>(true);
+        foreach (var m in markers) SyncSummonPointsToData(m); // ★ 추가
         foreach (var m in markers)
         {
             m.SceneID = sceneID; // 비교를 위해 ID 잠시 동기화
@@ -385,7 +410,7 @@ public class MapDataEditor : EditorWindow
     {
         string pX = m.transform.position.x.ToString("F2");
         string pY = m.transform.position.y.ToString("F2");
-        return $"{m.EventID},{m.EventName},{m.IsAnytime},{m.Day},{m.StartTime},{m.EndTime},{m.InkNodeName},{m.SceneID},{pX},{pY},{m.TimeTaken},{m.AutoTrigger},{m.maxTriggerCount},{m.exhaustedInkNode},{m.summonNPCs},{m.despawnAfterEvent}";
+        return $"{m.EventID},{m.EventName},{m.IsAnytime},{m.Day},{m.StartTime},{m.EndTime},{m.InkNodeName},{m.SceneID},{pX},{pY},{m.TimeTaken},{m.AutoTrigger},{m.maxTriggerCount},{m.exhaustedInkNode},{m.summonNPCs},{m.despawnAfterEvent},{m.triggerZoneSize.x:F2},{m.triggerZoneSize.y:F2},{m.triggerZoneOffset.x:F2},{m.triggerZoneOffset.y:F2}";
     }
 
     // 3. CSV 읽은 줄 -> 비교용 표준 포맷 변환
@@ -401,24 +426,54 @@ public class MapDataEditor : EditorWindow
         string exhausted = CsvTableLoader.Get(cols, 13, "");                    // ★ 안전 파싱
         string summon = CsvTableLoader.Get(cols, 14, "");
         string despawn = CsvTableLoader.GetBool(cols, 15, true).ToString();
-        return $"{cols[0]},{cols[1]},{cols[2]},{cols[3]},{cols[4]},{cols[5]},{cols[6]},{cols[7]},{pX},{pY},{cols[10]},{autoTrigger},{maxCount},{exhausted},{summon},{despawn}";
+        string zoneW = CsvTableLoader.GetFloat(cols, 16, 0f).ToString("F2");
+        string zoneH = CsvTableLoader.GetFloat(cols, 17, 0f).ToString("F2");
+        string zoneOX = CsvTableLoader.GetFloat(cols, 18, 0f).ToString("F2");
+        string zoneOY = CsvTableLoader.GetFloat(cols, 19, 0f).ToString("F2");
+        return $"{cols[0]},{cols[1]},{cols[2]},{cols[3]},{cols[4]},{cols[5]},{cols[6]},{cols[7]},{pX},{pY},{cols[10]},{autoTrigger},{maxCount},{exhausted},{summon},{despawn},{zoneW},{zoneH},{zoneOX},{zoneOY}";
     }
 
     private void SaveMarkers(int saveAsID)
     {
         var markersToCheck = FindObjectsOfType<EventMarker>(true);
+        foreach (var m in markersToCheck) SyncSummonPointsToData(m); // ★ 검증 전에 먼저 동기화
+
         var problems = new List<string>();
+
+        // 검증 1 — 시간 대비 실행 횟수 (복구)
         foreach (var m in markersToCheck)
         {
             if (m.IsAnytime || m.TimeTaken <= 0 || m.maxTriggerCount <= 0) continue;
             int maxPossible = (m.EndTime - m.StartTime) / m.TimeTaken;
             if (m.maxTriggerCount > maxPossible)
-                problems.Add($"· {m.EventName}(ID:{m.EventID}): {m.StartTime}~{m.EndTime}시에 {m.TimeTaken}시간짜리 → 최대 {maxPossible}회 가능한데 {m.maxTriggerCount}회로 설정됨");
+                problems.Add($"· [횟수 초과] {m.EventName}(ID:{m.EventID}): {m.StartTime}~{m.EndTime}시에 {m.TimeTaken}시간짜리 → 최대 {maxPossible}회 가능한데 {m.maxTriggerCount}회로 설정됨");
         }
+
+        // 검증 2 — 컷씬 소환 NPC와 일반 스케줄 충돌
+        foreach (var m in markersToCheck)
+        {
+            if (string.IsNullOrEmpty(m.summonNPCs)) continue;
+            foreach (var entry in m.summonNPCs.Split('|'))
+            {
+                string npcName = entry.Trim();
+                int at = npcName.IndexOf('@');
+                if (at > 0) npcName = npcName.Substring(0, at).Trim();
+                if (string.IsNullOrEmpty(npcName)) continue;
+
+                foreach (var other in markersToCheck)
+                {
+                    if (other == m || other.markerType != EventMarkerType.Normal_NPC) continue;
+                    if (other.EventName != npcName || other.Day != m.Day) continue;
+                    if (m.StartTime < other.EndTime && other.StartTime < m.EndTime)
+                        problems.Add($"· [컷씬 충돌] {m.EventName}(ID:{m.EventID})이 Day{m.Day} {m.StartTime}~{m.EndTime}시에 '{npcName}'을 소환하는데, 같은 시간대에 {npcName}의 일반 스케줄(ID:{other.EventID}, {other.StartTime}~{other.EndTime}시)이 있습니다");
+                }
+            }
+        }
+
         if (problems.Count > 0)
         {
             bool proceed = EditorUtility.DisplayDialog("설정 확인 필요",
-                "다음 이벤트는 시간 안에 지정한 횟수만큼 실행할 수 없습니다:\n\n" + string.Join("\n", problems) + "\n\n그래도 저장할까요?",
+                "다음 문제가 발견되었습니다:\n\n" + string.Join("\n", problems) + "\n\n그래도 저장할까요?",
                 "저장", "취소");
             if (!proceed) return;
         }
@@ -427,7 +482,7 @@ public class MapDataEditor : EditorWindow
         AutoAssignIDs();
 
         List<string> allRows = new List<string>();
-        string header = "EventID,EventName,IsAnytime,EventDay,StartTime,EndTime,NodeName,SceneID,PositionX,PositionY,TimeTaken,AutoTrigger,MaxTriggerCount,ExhaustedInkNode,SummonNPCs,DespawnAfterEvent";
+        string header = "EventID,EventName,IsAnytime,EventDay,StartTime,EndTime,NodeName,SceneID,PositionX,PositionY,TimeTaken,AutoTrigger,MaxTriggerCount,ExhaustedInkNode,SummonNPCs,DespawnAfterEvent,ZoneW,ZoneH,ZoneOffsetX,ZoneOffsetY";
 
         if (File.Exists(eventCsvPath))
         {
@@ -446,7 +501,7 @@ public class MapDataEditor : EditorWindow
             m.SceneID = saveAsID;
             string pX = m.transform.position.x.ToString("F2");
             string pY = m.transform.position.y.ToString("F2");
-            allRows.Add($"{m.EventID},{m.EventName},{m.IsAnytime},{m.Day},{m.StartTime},{m.EndTime},{m.InkNodeName},{m.SceneID},{pX},{pY},{m.TimeTaken},{m.AutoTrigger},{m.maxTriggerCount},{m.exhaustedInkNode},{m.summonNPCs},{m.despawnAfterEvent}");
+            allRows.Add($"{m.EventID},{m.EventName},{m.IsAnytime},{m.Day},{m.StartTime},{m.EndTime},{m.InkNodeName},{m.SceneID},{pX},{pY},{m.TimeTaken},{m.AutoTrigger},{m.maxTriggerCount},{m.exhaustedInkNode},{m.summonNPCs},{m.despawnAfterEvent},{m.triggerZoneSize.x:F2},{m.triggerZoneSize.y:F2},{m.triggerZoneOffset.x:F2},{m.triggerZoneOffset.y:F2}");
         }
 
         allRows.Sort((a, b) => int.Parse(a.Split(',')[0]).CompareTo(int.Parse(b.Split(',')[0])));
@@ -494,7 +549,25 @@ public class MapDataEditor : EditorWindow
             m.maxTriggerCount = CsvTableLoader.GetInt(cols, 12, 0);
             m.exhaustedInkNode = CsvTableLoader.Get(cols, 13, "");
             m.summonNPCs = CsvTableLoader.Get(cols, 14, "");           // ★ 추가
+            if (!string.IsNullOrEmpty(m.summonNPCs))
+            {
+                foreach (var entry in m.summonNPCs.Split('|'))
+                {
+                    int at = entry.IndexOf('@');
+                    if (at <= 0) continue;
+                    string npcName = entry.Substring(0, at);
+                    var parts = entry.Substring(at + 1).Split(';');
+                    if (parts.Length < 2 || !float.TryParse(parts[0], out float ox) || !float.TryParse(parts[1], out float oy)) continue;
+
+                    var pointGo = new GameObject("SummonPoint");
+                    pointGo.transform.SetParent(go.transform);
+                    pointGo.transform.position = go.transform.position + new Vector3(ox, oy, 0);
+                    pointGo.AddComponent<SummonPointMarker>().npcName = npcName;
+                }
+            }
             m.despawnAfterEvent = CsvTableLoader.GetBool(cols, 15, true); // ★ 추가
+            m.triggerZoneSize = new Vector2(CsvTableLoader.GetFloat(cols, 16, 0f), CsvTableLoader.GetFloat(cols, 17, 0f));
+            m.triggerZoneOffset = new Vector2(CsvTableLoader.GetFloat(cols, 18, 0f), CsvTableLoader.GetFloat(cols, 19, 0f));
             m.markerType = GetTypeFromId(m.EventID);
             go.name = $"Marker_{m.EventID}_{m.EventName}";
         }
@@ -581,7 +654,7 @@ public class MapDataEditor : EditorWindow
     }
     private void DetectCurrentSceneID() { int id = GetSceneIDByName(EditorSceneManager.GetActiveScene().name); if (id != -1) targetSceneID = id; }
 
-    class ScheduleItem { public string Name; public int Day; public int Start; public int End; public int SceneID; public Vector2 Pos; }
+    class ScheduleItem { public string Name; public int Day; public int Start; public int End; public int SceneID; public Vector2 Pos; public bool IsCutscene; }
 
     // ------ 시작 위치 지정 관련
     private void DrawStartPositionUI()
@@ -636,5 +709,22 @@ public class MapDataEditor : EditorWindow
                 AssetDatabase.SaveAssets();
             }
         }
+    }
+
+    // MapDataEditor.cs — 저장 직전에 자식 마커를 summonNPCs 문자열로 자동 변환
+    private void SyncSummonPointsToData(EventMarker m)
+    {
+        var points = m.GetComponentsInChildren<SummonPointMarker>();
+        if (points.Length == 0) return;
+
+        var entries = new List<string>();
+        foreach (var p in points)
+        {
+            if (string.IsNullOrEmpty(p.npcName)) continue;
+            Vector2 offset = (Vector2)(p.transform.position - m.transform.position);
+            entries.Add($"{p.npcName}@{offset.x:F2};{offset.y:F2}");
+        }
+        m.summonNPCs = string.Join("|", entries); // ★ 쉼표 대신 파이프 — CSV 충돌 회피
+        EditorUtility.SetDirty(m);
     }
 }

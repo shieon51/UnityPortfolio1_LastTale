@@ -370,10 +370,53 @@ public class NPCManager : Singleton<NPCManager>
         Debug.Log($"[NPCManager] 연출용 소환: {npcName}");
     }
 
+    public void SummonNPCAt(string npcName, Vector2 position, bool snapToGround = true)
+    {
+        if (!npcPool.TryGetValue(npcName, out GameObject npcObj) || npcObj == null)
+        {
+            GameObject prefab = Resources.Load<GameObject>($"Prefabs/NPC/{npcName}");
+            if (prefab == null) { Debug.LogWarning($"[NPCManager] 소환 실패 — 프리팹 없음: {npcName}"); return; }
+            npcObj = Instantiate(prefab);
+            npcPool[npcName] = npcObj;
+        }
+        npcObj.SetActive(true);
+        npcObj.transform.position = snapToGround ? ComputeSnappedPosition(npcObj, position) : (Vector3)position;
+        _summonedForEvent.Add(npcName);
+        Debug.Log($"[NPCManager] 연출용 소환: {npcName} @ {position}");
+    }
+
     public void DespawnEventNPCs()
     {
         foreach (var name in _summonedForEvent)
             if (npcPool.TryGetValue(name, out var obj) && obj != null) obj.SetActive(false);
         _summonedForEvent.Clear();
+    }
+
+    /// <summary>NPC를 지정 위치까지 걸어오게 함 (연출용)</summary>
+    public void MoveNPCTo(string npcName, Vector2 targetPos, float duration)
+    {
+        if (npcPool.TryGetValue(npcName, out var obj) && obj != null)
+            StartCoroutine(MoveRoutine(obj, targetPos, duration));
+    }
+
+    private System.Collections.IEnumerator MoveRoutine(GameObject obj, Vector2 target, float duration)
+    {
+        var npc = obj.GetComponent<NPC>();
+        var visual = obj.GetComponentInChildren<NPCVisual>();
+        Vector3 start = obj.transform.position;
+        Vector3 end = ComputeSnappedPosition(obj, target);
+
+        if (npc != null && npc.SpriteRenderer != null) npc.SpriteRenderer.flipX = end.x > start.x;
+        visual?.PlayIfChanged(NPCAnimStateNames.Walk);
+
+        float t = 0f;
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            obj.transform.position = Vector3.Lerp(start, end, Mathf.Clamp01(t / duration));
+            yield return null;
+        }
+        obj.transform.position = end;
+        visual?.PlayIfChanged(NPCAnimStateNames.Idle);
     }
 }

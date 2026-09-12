@@ -139,6 +139,17 @@ public class DialogueManager : Singleton<DialogueManager>
         story.BindExternalFunction("get_personal_bond", (string npc) => (PlayerManager.Instance.CurrentCharacter as SoraStats)?.GetPersonalBond(npc) ?? 0);
         story.BindExternalFunction("add_personal_bond", (string npc, int amt) => { (PlayerManager.Instance.CurrentCharacter as SoraStats)?.AddPersonalBond(npc, amt); return 0; }, lookaheadSafe: false);
         story.BindExternalFunction("get_mental_ratio", () => (int)(((PlayerManager.Instance.CurrentCharacter as SoraStats)?.MentalRatio ?? 1f) * 100f));
+        story.BindExternalFunction("move_npc", (string npcName, float x, float y, float duration) => // ink에서 걸어오게 하기 // *
+        {
+            NPCManager.Instance.MoveNPCTo(npcName, new Vector2(x, y), duration);
+            return 0;
+        }, lookaheadSafe: false);
+        story.BindExternalFunction("move_npc_rel", (string npcName, float ox, float oy, float duration) =>
+        {
+            Vector2 target = (curEventData != null ? curEventData.Position : Vector2.zero) + new Vector2(ox, oy);
+            NPCManager.Instance.MoveNPCTo(npcName, target, duration);
+            return 0;
+        }, lookaheadSafe: false);
     }
 
     public void StartStory(EventData eventData)

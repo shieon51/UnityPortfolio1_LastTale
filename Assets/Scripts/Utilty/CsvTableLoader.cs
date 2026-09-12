@@ -44,4 +44,7 @@ public static class CsvTableLoader
     public static bool GetBool(string[] cols, int index, bool fallback = false)
         => bool.TryParse(Get(cols, index), out var v) ? v : fallback;
 
+    public static float GetFloat(string[] cols, int index, float fallback = 0f)
+    => float.TryParse(Get(cols, index), out var v) ? v : fallback;
+
 }

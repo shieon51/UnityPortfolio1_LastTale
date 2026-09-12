@@ -38,6 +38,12 @@ public class EventMarker : MonoBehaviour
     [Tooltip("소환된 NPC가 연출 후 사라질지")]
     public bool despawnAfterEvent = true;
 
+    [Header("발동 영역")]
+    [Tooltip("사각 발동 영역 크기. (0,0)이면 기존 원형 반경 방식 사용")]
+    public Vector2 triggerZoneSize = Vector2.zero;
+    [Tooltip("마커 기준 영역 중심 오프셋")]
+    public Vector2 triggerZoneOffset = Vector2.zero;
+
     // 게임 시작 시 자동 삭제 
     private void Awake()
     {
@@ -78,9 +84,18 @@ public class EventMarker : MonoBehaviour
         };
         Gizmos.DrawSphere(transform.position, 0.5f);
 
-        #if UNITY_EDITOR
+        if (triggerZoneSize.x > 0f && triggerZoneSize.y > 0f)
+        {
+            Vector3 center = transform.position + (Vector3)triggerZoneOffset;
+            Gizmos.color = new Color(1f, 0.9f, 0.2f, 0.15f);
+            Gizmos.DrawCube(center, triggerZoneSize);
+            Gizmos.color = new Color(1f, 0.9f, 0.2f, 0.8f);
+            Gizmos.DrawWireCube(center, triggerZoneSize);
+        }
+
+#if UNITY_EDITOR
         // 씬 뷰에서 ID와 이름이 보이도록 라벨 표시
         UnityEditor.Handles.Label(transform.position + Vector3.up * 0.8f, $"ID:{EventID}\n{EventName}");
-        #endif
+#endif
     }
 }

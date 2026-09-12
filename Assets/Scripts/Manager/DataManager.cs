@@ -51,6 +51,8 @@ public class DataManager : Singleton<DataManager>
             exhaustedInkNode = CsvTableLoader.Get(v, 13, ""),   // ¡Ú ºó °ªÀÌ¸é ¼û±è Ã³¸®
             summonNPCs = CsvTableLoader.Get(v, 14, ""),              // ¡Ú Ãß°¡
             despawnAfterEvent = CsvTableLoader.GetBool(v, 15, true), // ¡Ú Ãß°¡
+            triggerZoneSize = new Vector2(CsvTableLoader.GetFloat(v, 16, 0f), CsvTableLoader.GetFloat(v, 17, 0f)),
+            triggerZoneOffset = new Vector2(CsvTableLoader.GetFloat(v, 18, 0f), CsvTableLoader.GetFloat(v, 19, 0f)),
         });
 
 #if UNITY_EDITOR

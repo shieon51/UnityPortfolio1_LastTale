@@ -19,6 +19,9 @@ EXTERNAL get_personal_bond(npcName)
 EXTERNAL add_personal_bond(npcName, amount)
 EXTERNAL get_mental_ratio()
 
+EXTERNAL move_npc(npcName, x, y, duration)
+EXTERNAL move_npc_rel(npcName, offsetX, offsetY, duration)
+
 VAR player_name = "소라"
 
 

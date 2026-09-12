@@ -27,6 +27,7 @@ public class TimeManager : Singleton<TimeManager>
         OnTimeUpdated?.Invoke(timeCoins, currentDay);
 
         EventManager.Instance.UpdateEventTriggers();
+        AmbientEventManager.Instance?.TryTriggerAmbient(); // 시간이 흐를 때마다 판정
     }
 
     private void NextDay()

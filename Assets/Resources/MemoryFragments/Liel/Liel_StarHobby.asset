@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60b2a825ec508214eb00ef1cd9c7eb8f, type: 3}
   m_Name: Liel_StarHobby
   m_EditorClassIdentifier: Assembly-CSharp::MemoryFragmentData
-  day: 0
-  flagId: 
-  category: 
-  localizationKey: 
+  day: 1
+  flagId: liel_star_hobby
+  category: Liel
+  localizationKey: liel_star_hobby_text
   isEraseable: 1

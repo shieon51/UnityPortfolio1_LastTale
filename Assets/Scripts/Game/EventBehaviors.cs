@@ -19,6 +19,7 @@ public class SleepEventBehavior : IEventBehavior
 
         PlayerManager.Instance.CurrentCharacter.Heal(PlayerManager.Instance.CurrentCharacter.maxHealth); // FullHP 대체
         PlayerManager.Instance.CurrentCharacter.RecoverMana(eventData.TimeTaken);
+        AmbientEventManager.Instance?.TryTriggerAmbient(afterSleep: true); // 잠자기 후 꿈 판정
     }
 }
 

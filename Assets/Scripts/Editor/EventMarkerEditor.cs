@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEditor;
 using System.IO;
 
@@ -14,25 +14,25 @@ public class EventMarkerEditor : Editor
         GUILayout.Label("Ink Script Manager", EditorStyles.boldLabel);
 
         // -----------------------------------------------------------------------
-        // [°æ·Î ÆÄ½Ì ·ÎÁ÷]
+        // [ê²½ë¡œ íŒŒì‹± ë¡œì§]
         // -----------------------------------------------------------------------
         string rawNodeName = string.IsNullOrEmpty(marker.InkNodeName) ? "New_Story_01" : marker.InkNodeName;
         string fileName = rawNodeName;
 
-        // 1. ÆÄÀÏ ÀÌ¸§ ÃßÃâ (¸¶Áö¸· '_' µÚÀÇ ¼ıÀÚ Á¦°Å)
+        // 1. íŒŒì¼ ì´ë¦„ ì¶”ì¶œ (ë§ˆì§€ë§‰ '_' ë’¤ì˜ ìˆ«ì ì œê±°)
         int lastUnderscoreIndex = rawNodeName.LastIndexOf('_');
         if (lastUnderscoreIndex > 0)
         {
             fileName = rawNodeName.Substring(0, lastUnderscoreIndex);
         }
 
-        // 2. Æú´õ ÀÌ¸§ ÃßÃâ
+        // 2. í´ë” ì´ë¦„ ì¶”ì¶œ
         string[] parts = fileName.Split('_');
         string folderName = (parts.Length > 0) ? parts[0] : "etc";
 
         // -----------------------------------------------------------------------
 
-        // °æ·Î ¼³Á¤
+        // ê²½ë¡œ ì„¤ì •
         string baseDir = Path.Combine(Application.dataPath, "Datas");
         string targetDir = Path.Combine(baseDir, folderName);
         string fullPath = Path.Combine(targetDir, $"{fileName}.ink");
@@ -40,7 +40,7 @@ public class EventMarkerEditor : Editor
 
         GUILayout.BeginHorizontal();
 
-        // 1. Ink ÆÄÀÏ ¿­±â
+        // 1. Ink íŒŒì¼ ì—´ê¸°
         if (GUILayout.Button("Open Ink File", GUILayout.Height(30)))
         {
             if (File.Exists(fullPath))
@@ -50,36 +50,36 @@ public class EventMarkerEditor : Editor
             }
             else
             {
-                Debug.LogWarning($"ÆÄÀÏÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù: {assetPath}");
+                Debug.LogWarning($"íŒŒì¼ì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤: {assetPath}");
             }
         }
 
-        // 2. Ink ÆÄÀÏ »ı¼º ¹× main.ink µî·Ï
+        // 2. Ink íŒŒì¼ ìƒì„± ë° main.ink ë“±ë¡
         if (GUILayout.Button("Create / Reset Ink", GUILayout.Height(30)))
         {
-            // Æú´õ »ı¼º
+            // í´ë” ìƒì„±
             if (!Directory.Exists(targetDir)) Directory.CreateDirectory(targetDir);
 
-            // ÆÄÀÏ »ı¼º (µ¤¾î¾²±â Áú¹® Æ÷ÇÔ)
+            // íŒŒì¼ ìƒì„± (ë®ì–´ì“°ê¸° ì§ˆë¬¸ í¬í•¨)
             bool proceed = true;
             if (File.Exists(fullPath))
             {
-                proceed = EditorUtility.DisplayDialog("°æ°í",
-                    $"'{fileName}.ink' ÆÄÀÏÀÌ ÀÌ¹Ì Á¸ÀçÇÕ´Ï´Ù.\nµ¤¾î¾²½Ã°Ú½À´Ï±î? (³»¿ë ÃÊ±âÈ­µÊ)", "³×", "¾Æ´Ï¿À");
+                proceed = EditorUtility.DisplayDialog("ê²½ê³ ",
+                    $"'{fileName}.ink' íŒŒì¼ì´ ì´ë¯¸ ì¡´ì¬í•©ë‹ˆë‹¤.\në®ì–´ì“°ì‹œê² ìŠµë‹ˆê¹Œ? (ë‚´ìš© ì´ˆê¸°í™”ë¨)", "ë„¤", "ì•„ë‹ˆì˜¤");
             }
 
             if (proceed)
             {
-                // A. ÆÄÀÏ ³»¿ë ÀÛ¼º
+                // A. íŒŒì¼ ë‚´ìš© ì‘ì„±
                 string content = $"=== {rawNodeName} ===\n\nTODO: Write dialogue for {rawNodeName} here.\n\n-> END";
                 File.WriteAllText(fullPath, content);
 
-                // B. main.ink¿¡ INCLUDE ÀÚµ¿ Ãß°¡ (¡Ú Ãß°¡µÈ ÇÙ½É ±â´É)
+                // B. main.inkì— INCLUDE ìë™ ì¶”ê°€ (â˜… ì¶”ê°€ëœ í•µì‹¬ ê¸°ëŠ¥)
                 AddToMainInk(folderName, fileName);
 
-                // C. °»½Å ¹× ¿­±â
+                // C. ê°±ì‹  ë° ì—´ê¸°
                 AssetDatabase.Refresh();
-                Debug.Log($"Ink ÆÄÀÏ »ı¼º ¹× µî·Ï ¿Ï·á: {fileName}.ink");
+                Debug.Log($"Ink íŒŒì¼ ìƒì„± ë° ë“±ë¡ ì™„ë£Œ: {fileName}.ink");
 
                 UnityEngine.Object obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath);
                 AssetDatabase.OpenAsset(obj);
@@ -91,38 +91,107 @@ public class EventMarkerEditor : Editor
         GUIStyle style = new GUIStyle(EditorStyles.helpBox);
         style.fontSize = 10;
         GUILayout.Label($"Target: {fileName}.ink\nFolder: {folderName}", style);
+
+        // -------------- ìë™ ì´ë²¤íŠ¸ ë°œë™ ì˜ì—­ ì„¤ì •
+        GUILayout.Space(10);
+        GUILayout.Label("ë°œë™ ì˜ì—­", EditorStyles.boldLabel);
+        if (marker.triggerZoneSize == Vector2.zero)
+        {
+            if (GUILayout.Button("ì‚¬ê° ë°œë™ ì˜ì—­ ë§Œë“¤ê¸°", GUILayout.Height(25)))
+            {
+                Undo.RecordObject(marker, "Create Trigger Zone");
+                marker.triggerZoneSize = new Vector2(6f, 4f);
+                EditorUtility.SetDirty(marker);
+            }
+        }
+        else if (GUILayout.Button("ì‚¬ê° ì˜ì—­ ì œê±° (ì›í˜• ë°˜ê²½ìœ¼ë¡œ)", GUILayout.Height(25)))
+        {
+            Undo.RecordObject(marker, "Remove Trigger Zone");
+            marker.triggerZoneSize = Vector2.zero;
+            marker.triggerZoneOffset = Vector2.zero;
+            EditorUtility.SetDirty(marker);
+        }
+
+        // --------------- ì—°ì¶œ ë“±ì¥ ì§€ì 
+        GUILayout.Space(10);
+        GUILayout.Label("ì—°ì¶œ ë“±ì¥ ì§€ì ", EditorStyles.boldLabel);
+        if (GUILayout.Button("+ ë“±ì¥ ì§€ì  ì¶”ê°€", GUILayout.Height(25)))
+        {
+            var go = new GameObject("SummonPoint");
+            go.transform.SetParent(marker.transform);
+            go.transform.position = marker.transform.position + Vector3.left * 8f; // ê¸°ë³¸ê°’: í™”ë©´ ë°– ì™¼ìª½
+            go.AddComponent<SummonPointMarker>();
+            Undo.RegisterCreatedObjectUndo(go, "Add Summon Point");
+            Selection.activeGameObject = go;
+        }
+
+        var points = marker.GetComponentsInChildren<SummonPointMarker>();
+        if (points.Length > 0)
+        {
+            EditorGUILayout.HelpBox($"ë“±ì¥ ì§€ì  {points.Length}ê°œ â€” ì”¬ì—ì„œ ë“œë˜ê·¸í•´ ìœ„ì¹˜ë¥¼ ì¡°ì ˆí•˜ì„¸ìš”.\nì €ì¥ ì‹œ ìë™ìœ¼ë¡œ CSVì— ê¸°ë¡ë©ë‹ˆë‹¤.", MessageType.Info);
+            foreach (var p in points)
+                EditorGUILayout.LabelField($"Â· {p.npcName} @ {(Vector2)(p.transform.position - marker.transform.position)}");
+        }
     }
 
-    // main.ink¿¡ INCLUDE ±¸¹® Ãß°¡ÇÏ´Â ÇÔ¼ö
+    // main.inkì— INCLUDE êµ¬ë¬¸ ì¶”ê°€í•˜ëŠ” í•¨ìˆ˜
     private void AddToMainInk(string folderName, string fileName)
     {
-        // main.ink °æ·Î (Assets/Datas/main.ink)
+        // main.ink ê²½ë¡œ (Assets/Datas/main.ink)
         string mainInkPath = Path.Combine(Application.dataPath, "Datas", "main.ink");
 
         if (!File.Exists(mainInkPath))
         {
-            Debug.LogError($"main.ink ÆÄÀÏÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù! °æ·Î¸¦ È®ÀÎÇØÁÖ¼¼¿ä: {mainInkPath}");
+            Debug.LogError($"main.ink íŒŒì¼ì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤! ê²½ë¡œë¥¼ í™•ì¸í•´ì£¼ì„¸ìš”: {mainInkPath}");
             return;
         }
 
-        // Ãß°¡ÇÒ ±¸¹® ¸¸µé±â (¿¹: INCLUDE NPC1\NPC1_Day1.ink)
-        // À©µµ¿ì ½ºÅ¸ÀÏ(\)À» ¿øÇÏ¼Å¼­ ¹é½½·¡½Ã¸¦ »ç¿ëÇÕ´Ï´Ù.
+        // ì¶”ê°€í•  êµ¬ë¬¸ ë§Œë“¤ê¸° (ì˜ˆ: INCLUDE NPC1\NPC1_Day1.ink)
+        // ìœˆë„ìš° ìŠ¤íƒ€ì¼(\)ì„ ì›í•˜ì…”ì„œ ë°±ìŠ¬ë˜ì‹œë¥¼ ì‚¬ìš©í•©ë‹ˆë‹¤.
         string includeLine = $"INCLUDE {folderName}\\{fileName}.ink";
 
-        // ±âÁ¸ ³»¿ëÀ» ÀĞ¾î¼­ ÀÌ¹Ì ÀÖ´ÂÁö È®ÀÎ
+        // ê¸°ì¡´ ë‚´ìš©ì„ ì½ì–´ì„œ ì´ë¯¸ ìˆëŠ”ì§€ í™•ì¸
         string allText = File.ReadAllText(mainInkPath);
 
-        // ÀÌ¹Ì ÇØ´ç INCLUDE°¡ ÀÖ´Ù¸é Ãß°¡ÇÏÁö ¾ÊÀ½
+        // ì´ë¯¸ í•´ë‹¹ INCLUDEê°€ ìˆë‹¤ë©´ ì¶”ê°€í•˜ì§€ ì•ŠìŒ
         if (allText.Contains(includeLine))
         {
-            Debug.Log("main.ink¿¡ ÀÌ¹Ì µî·ÏµÇ¾î ÀÖ½À´Ï´Ù.");
+            Debug.Log("main.inkì— ì´ë¯¸ ë“±ë¡ë˜ì–´ ìˆìŠµë‹ˆë‹¤.");
             return;
         }
 
-        // ÆÄÀÏ ¸Ç ³¡¿¡ Ãß°¡
-        // ÆÄÀÏ ³¡ÀÌ ÁÙ¹Ù²ŞÀ¸·Î ¾È ³¡³ªÀÖÀ» ¼öµµ ÀÖÀ¸´Ï \nÀ» ¾Õ¿¡ ºÙ¿©¼­ ¾ÈÀüÇÏ°Ô Ãß°¡
+        // íŒŒì¼ ë§¨ ëì— ì¶”ê°€
+        // íŒŒì¼ ëì´ ì¤„ë°”ê¿ˆìœ¼ë¡œ ì•ˆ ëë‚˜ìˆì„ ìˆ˜ë„ ìˆìœ¼ë‹ˆ \nì„ ì•ì— ë¶™ì—¬ì„œ ì•ˆì „í•˜ê²Œ ì¶”ê°€
         File.AppendAllText(mainInkPath, "\n" + includeLine);
 
-        Debug.Log($"main.ink¿¡ '{includeLine}' ±¸¹®ÀÌ Ãß°¡µÇ¾ú½À´Ï´Ù.");
+        Debug.Log($"main.inkì— '{includeLine}' êµ¬ë¬¸ì´ ì¶”ê°€ë˜ì—ˆìŠµë‹ˆë‹¤.");
+    }
+
+    // EventMarkerEditor.cs â€” OnSceneGUI ì¶”ê°€ (ì”¬ ë·°ì—ì„œ ë“œë˜ê·¸ë¡œ í¬ê¸° ì¡°ì ˆ)
+    private void OnSceneGUI()
+    {
+        EventMarker marker = (EventMarker)target;
+        if (marker.triggerZoneSize.x <= 0f || marker.triggerZoneSize.y <= 0f) return;
+
+        Vector3 center = marker.transform.position + (Vector3)marker.triggerZoneOffset;
+        Vector2 half = marker.triggerZoneSize * 0.5f;
+
+        EditorGUI.BeginChangeCheck();
+        Vector3 right = Handles.FreeMoveHandle(center + Vector3.right * half.x, 0.25f, Vector3.zero, Handles.DotHandleCap);
+        Vector3 up = Handles.FreeMoveHandle(center + Vector3.up * half.y, 0.25f, Vector3.zero, Handles.DotHandleCap);
+        Vector3 centerHandle = Handles.FreeMoveHandle(center, 0.3f, Vector3.zero, Handles.RectangleHandleCap);
+
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(marker, "Edit Trigger Zone");
+            marker.triggerZoneOffset = (Vector2)(centerHandle - marker.transform.position);
+            Vector3 newCenter = marker.transform.position + (Vector3)marker.triggerZoneOffset;
+            marker.triggerZoneSize = new Vector2(
+                Mathf.Max(0.5f, Mathf.Abs(right.x - newCenter.x) * 2f),
+                Mathf.Max(0.5f, Mathf.Abs(up.y - newCenter.y) * 2f));
+            EditorUtility.SetDirty(marker);
+        }
+
+        Handles.Label(center + Vector3.up * (half.y + 0.5f), $"ë°œë™ ì˜ì—­ {marker.triggerZoneSize.x:F1} x {marker.triggerZoneSize.y:F1}");
     }
 }
