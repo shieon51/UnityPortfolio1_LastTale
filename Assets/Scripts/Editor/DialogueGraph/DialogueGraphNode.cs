@@ -1,8 +1,9 @@
-// DialogueGraphNode.cs
+ï»¿// DialogueGraphNode.cs
 using System.Collections.Generic;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using UnityEngine;
+using System.Linq;
 
 public class DialogueGraphNode : Node
 {
@@ -12,82 +13,230 @@ public class DialogueGraphNode : Node
 
     public List<Port> OutputPorts = new();
 
+    private Foldout _logicFold;
+    private VisualElement _logicRows;
+
+    private VisualElement _branchContainer;
+
+    private VisualElement _choiceContainer;
+
     public void BuildStart()
     {
         AddToClassList("dialogue-node");
         AddToClassList("node-start");
-        title = "½ÃÀÛ (Knot)";
-        var field = new TextField("Knot ÀÌ¸§") { value = Data.knotName };
+        title = "ì‹œì‘ (Knot)";
+        var field = new TextField("Knot ì´ë¦„") { value = Data.knotName };
         field.RegisterValueChangedCallback(e => Data.knotName = e.newValue);
         mainContainer.Add(field);
-        AddOutput("´ÙÀ½");
+        AddOutput("ë‹¤ìŒ");
     }
 
     public void BuildLine()
     {
         AddToClassList("dialogue-node");
         AddToClassList("node-line");
-        title = "´ë»ç";
+        title = "ëŒ€ì‚¬";
         AddInput();
 
-        var speakerKey = new TextField("È­ÀÚ Å°") { value = Data.speakerKey };
-        speakerKey.RegisterValueChangedCallback(e => Data.speakerKey = e.newValue);
-        mainContainer.Add(speakerKey);
-
-        var speakerName = new TextField("Ç¥½Ã ÀÌ¸§") { value = Data.speakerName };
-        speakerName.RegisterValueChangedCallback(e => Data.speakerName = e.newValue);
-        mainContainer.Add(speakerName);
-
-        var text = new TextField("´ë»ç") { value = Data.text, multiline = true };
-        text.style.minHeight = 60;
+        var text = new TextField("ëŒ€ì‚¬") { value = Data.text, multiline = true };
+        text.style.minHeight = 55;
         text.RegisterValueChangedCallback(e => Data.text = e.newValue);
         mainContainer.Add(text);
 
-        var panel = new Toggle("ÆĞ³Î·Î Ç¥½Ã(#panel)") { value = Data.forcePanel };
+        // í™”ì/í‘œì‹œ ì„¤ì • â€” ì ‘ì´ì‹
+        var speakerFold = new Foldout { text = "í™”ì / í‘œì‹œ ì„¤ì •", value = false };
+        var keyOptions = GraphKeySource.GetNPCNames();
+        keyOptions.Insert(0, "Player");
+        keyOptions.Insert(0, "(ì—†ìŒ)");
+        int ki = Mathf.Max(0, keyOptions.IndexOf(Data.speakerKey));
+        var keyDd = new PopupField<string>("í™”ì", keyOptions, ki);
+        keyDd.RegisterValueChangedCallback(e => Data.speakerKey = e.newValue == "(ì—†ìŒ)" ? "" : e.newValue);
+        speakerFold.Add(keyDd);
+
+        var nameField = new TextField("í‘œì‹œ ì´ë¦„") { value = Data.speakerName };
+        nameField.RegisterValueChangedCallback(e => Data.speakerName = e.newValue);
+        speakerFold.Add(nameField);
+
+        var panel = new Toggle("íŒ¨ë„ë¡œ í‘œì‹œ") { value = Data.forcePanel };
         panel.RegisterValueChangedCallback(e => Data.forcePanel = e.newValue);
-        mainContainer.Add(panel);
+        speakerFold.Add(panel);
 
-        var system = new Toggle("½Ã½ºÅÛ ÀüÈ¯(#system)") { value = Data.isSystem };
+        var system = new Toggle("ì‹œìŠ¤í…œ ì „í™˜") { value = Data.isSystem };
         system.RegisterValueChangedCallback(e => Data.isSystem = e.newValue);
-        mainContainer.Add(system);
+        speakerFold.Add(system);
 
-        var auto = new FloatField("ÀÚµ¿ ÁøÇà(ÃÊ, -1=¼öµ¿)") { value = Data.autoAdvance };
+        var auto = new FloatField("ìë™ ì§„í–‰(ì´ˆ, -1=ìˆ˜ë™)") { value = Data.autoAdvance };
         auto.RegisterValueChangedCallback(e => Data.autoAdvance = e.newValue);
-        mainContainer.Add(auto);
+        speakerFold.Add(auto);
 
-        var lockIn = new Toggle("ÀÔ·Â Â÷´Ü(#lockinput)") { value = Data.lockInput };
+        var lockIn = new Toggle("ì…ë ¥ ì°¨ë‹¨") { value = Data.lockInput };
         lockIn.RegisterValueChangedCallback(e => Data.lockInput = e.newValue);
-        mainContainer.Add(lockIn);
+        speakerFold.Add(lockIn);
 
-        AddOutput("´ÙÀ½");
+        var cueOptions = GraphKeySource.GetCueIds();
+        cueOptions.Insert(0, "(ì—†ìŒ)");
+        int ci = Mathf.Max(0, cueOptions.IndexOf(Data.cueId));
+        var cueDd = new PopupField<string>("ì—°ì¶œ í", cueOptions, ci);
+        cueDd.RegisterValueChangedCallback(e => Data.cueId = e.newValue == "(ì—†ìŒ)" ? "" : e.newValue);
+        speakerFold.Add(cueDd);
+
+        mainContainer.Add(speakerFold);
+
+        // â˜… ë¡œì§ì„ ëŒ€ì‚¬ ë…¸ë“œì— í†µí•© â€” ë³„ë„ ë…¸ë“œ ë¶ˆí•„ìš”
+        _logicFold = new Foldout { text = BuildLogicFoldTitle(), value = false };
+        _logicFold.Add(new Button(() => { Data.logics.Add(new GraphLogicEntry()); RebuildLogicRows(); }) { text = "+ ë™ì‘ ì¶”ê°€" });
+        _logicRows = new VisualElement();
+        _logicFold.Add(_logicRows);
+        mainContainer.Add(_logicFold);
+        RebuildLogicRows();
+
+        AddOutput("ë‹¤ìŒ");
+    }
+
+    private string BuildLogicFoldTitle()
+        => Data.logics.Count == 0 ? "ê²°ê³¼ ë™ì‘ (ì—†ìŒ)" : $"ê²°ê³¼ ë™ì‘ ({Data.logics.Count}ê°œ)";
+
+    private void RebuildLogicRows()
+    {
+        _logicRows.Clear();
+        for (int i = 0; i < Data.logics.Count; i++)
+        {
+            int idx = i;
+            var l = Data.logics[idx];
+            var row = new VisualElement();
+            row.AddToClassList("condition-row");
+
+            var varField = new EnumField(l.varType) { style = { width = 95 } };
+            varField.RegisterValueChangedCallback(e => { l.varType = (GraphVarType)e.newValue; RebuildLogicRows(); });
+            row.Add(varField);
+
+            if (ConditionUtil.UsesFreeText(l.varType))
+            {
+                var tf = new TextField { value = l.key, style = { width = 120 } };
+                tf.RegisterValueChangedCallback(e => l.key = e.newValue);
+                row.Add(tf);
+            }
+            else
+            {
+                var options = ConditionUtil.GetKeyOptions(l.varType);
+                if (options.Count == 0) options.Add("(ì—†ìŒ)");
+                int index = Mathf.Max(0, options.IndexOf(l.key));
+                l.key = options[index];
+                var dd = new PopupField<string>(options, index) { style = { width = 120 } };
+                dd.RegisterValueChangedCallback(e => l.key = e.newValue);
+                row.Add(dd);
+            }
+
+            if (l.varType == GraphVarType.Memory)
+            {
+                var erase = new Toggle("ì‚­ì œ") { value = l.isErase };
+                erase.RegisterValueChangedCallback(e => l.isErase = e.newValue);
+                row.Add(erase);
+            }
+            else if (l.varType != GraphVarType.Counter)
+            {
+                var amount = new IntegerField { value = l.amount, style = { width = 45 } };
+                amount.RegisterValueChangedCallback(e => l.amount = e.newValue);
+                row.Add(amount);
+            }
+
+            row.Add(new Button(() => { Data.logics.RemoveAt(idx); RebuildLogicRows(); }) { text = "Ã—", style = { width = 20 } });
+            _logicRows.Add(row);
+        }
+        if (_logicFold != null) _logicFold.text = BuildLogicFoldTitle();
+        RefreshExpandedState();
+    }
+
+    public void BuildBranch()
+    {
+        AddToClassList("dialogue-node");
+        AddToClassList("node-branch");
+        title = "ì¡°ê±´ ë¶„ê¸°";
+        AddInput();
+
+        var countField = new IntegerField("ë¶„ê¸° ê°œìˆ˜") { value = Mathf.Max(1, Data.branchCases.Count) };
+        countField.RegisterValueChangedCallback(e =>
+        {
+            int n = Mathf.Clamp(e.newValue, 1, 10);
+            while (Data.branchCases.Count < n) Data.branchCases.Add(new BranchCase());
+            while (Data.branchCases.Count > n) Data.branchCases.RemoveAt(Data.branchCases.Count - 1);
+            RebuildBranchPorts();
+        });
+        mainContainer.Add(countField);
+
+        _branchContainer = new VisualElement();
+        mainContainer.Add(_branchContainer);
+
+        if (Data.branchCases.Count == 0) Data.branchCases.Add(new BranchCase());
+        RebuildBranchPorts();
+    }
+
+    private void RebuildBranchPorts()
+    {
+        RemoveAllOutputPorts();
+        _branchContainer.Clear();
+
+        for (int i = 0; i < Data.branchCases.Count; i++)
+        {
+            int idx = i;
+            var bc = Data.branchCases[idx];
+            AddOutput($"ë¶„ê¸° {idx + 1}");
+
+            var fold = new Foldout { value = false };
+            fold.text = $"ë¶„ê¸° {idx + 1}: {ConditionUtil.BuildSummary(bc.condition)}";
+            fold.Add(new ConditionGroupElement(bc.condition,
+                () => fold.text = $"ë¶„ê¸° {idx + 1}: {ConditionUtil.BuildSummary(bc.condition)}")); // â˜… í•˜ë‚˜ë§Œ
+            _branchContainer.Add(fold);
+        }
+
+        AddOutput("ê·¸ ì™¸ (else)"); // ë§ˆì§€ë§‰ì€ í•­ìƒ else
+        RefreshExpandedState();
+        RefreshPorts();
     }
 
     public void BuildChoice()
     {
         AddToClassList("dialogue-node");
         AddToClassList("node-choice");
-        title = "¼±ÅÃÁö";
+        title = "ì„ íƒì§€";
         AddInput();
 
-        var addBtn = new Button(() => AddChoiceRow("»õ ¼±ÅÃÁö")) { text = "+ ¼±ÅÃÁö Ãß°¡" };
-        mainContainer.Add(addBtn);
+        mainContainer.Add(new Button(() => { Data.choiceOptions.Add(new ChoiceOption()); RebuildChoiceRows(); }) { text = "+ ì„ íƒì§€ ì¶”ê°€" });
+        _choiceContainer = new VisualElement();
+        mainContainer.Add(_choiceContainer);
 
-        if (Data.choiceTexts.Count == 0) Data.choiceTexts.Add("¼±ÅÃÁö 1");
-        foreach (var t in new List<string>(Data.choiceTexts)) AddChoiceRow(t, true);
+        if (Data.choiceOptions.Count == 0) Data.choiceOptions.Add(new ChoiceOption());
+        RebuildChoiceRows();
     }
 
-    private void AddChoiceRow(string text, bool existing = false)
+    private void RebuildChoiceRows()
     {
-        int index = OutputPorts.Count;
-        if (!existing) Data.choiceTexts.Add(text);
+        RemoveAllOutputPorts();
+        _choiceContainer.Clear();
 
-        var port = AddOutput($"¼±ÅÃ {index + 1}");
-        var field = new TextField { value = text };
-        field.RegisterValueChangedCallback(e =>
+        for (int i = 0; i < Data.choiceOptions.Count; i++)
         {
-            if (index < Data.choiceTexts.Count) Data.choiceTexts[index] = e.newValue;
-        });
-        port.contentContainer.Add(field);
+            int idx = i;
+            var opt = Data.choiceOptions[idx];
+            AddOutput($"ì„ íƒ {idx + 1}");
+
+            var box = new VisualElement();
+            box.AddToClassList("choice-box");
+
+            var head = new VisualElement { style = { flexDirection = FlexDirection.Row } };
+            var tf = new TextField { value = opt.text, style = { flexGrow = 1 } };
+            tf.RegisterValueChangedCallback(e => opt.text = e.newValue);
+            head.Add(tf);
+            head.Add(new Button(() => { Data.choiceOptions.RemoveAt(idx); RebuildChoiceRows(); }) { text = "Ã—", style = { width = 20 } }); // â˜… 3ë²ˆ â€” ì‚­ì œ ë²„íŠ¼
+            box.Add(head);
+
+            var fold = new Foldout { text = $"í‘œì‹œ ì¡°ê±´: {ConditionUtil.BuildSummary(opt.condition)}", value = false };
+            fold.Add(new ConditionGroupElement(opt.condition,
+                () => fold.text = $"í‘œì‹œ ì¡°ê±´: {ConditionUtil.BuildSummary(opt.condition)}"));
+            box.Add(fold);
+
+            _choiceContainer.Add(box);
+        }
         RefreshExpandedState();
         RefreshPorts();
     }
@@ -95,7 +244,7 @@ public class DialogueGraphNode : Node
     private void AddInput()
     {
         var p = InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Multi, typeof(bool));
-        p.portName = "ÀÔ·Â";
+        p.portName = "ì…ë ¥";
         inputContainer.Add(p);
     }
 
@@ -110,137 +259,19 @@ public class DialogueGraphNode : Node
         return p;
     }
 
-    public void BuildCondition()
+    private void RemoveAllOutputPorts()
     {
-        AddToClassList("dialogue-node");
-        AddToClassList("node-condition");
-        title = "Á¶°Ç ºĞ±â";
-        AddInput();
-
-        var addBtn = new Button(() => { Data.conditions.Add(new GraphConditionEntry()); RebuildConditionRows(); }) { text = "+ Á¶°Ç Ãß°¡" };
-        mainContainer.Add(addBtn);
-
-        _conditionContainer = new VisualElement();
-        mainContainer.Add(_conditionContainer);
-        if (Data.conditions.Count == 0) Data.conditions.Add(new GraphConditionEntry());
-        RebuildConditionRows();
-
-        AddOutput("Âü (True)");
-        AddOutput("°ÅÁş (False)");
-    }
-
-    private VisualElement _conditionContainer;
-
-    private void RebuildConditionRows()
-    {
-        _conditionContainer.Clear();
-        for (int i = 0; i < Data.conditions.Count; i++)
+        foreach (var p in OutputPorts)
         {
-            int idx = i;
-            var entry = Data.conditions[idx];
-            var row = new VisualElement();
-            row.AddToClassList("choice-row");
-
-            var typeField = new EnumField(entry.type);
-            typeField.RegisterValueChangedCallback(e =>
+            // ì—°ê²°ëœ ì—£ì§€ë¶€í„° ì •ë¦¬
+            foreach (var edge in p.connections.ToList())
             {
-                entry.type = (GraphConditionType)e.newValue;
-                RebuildConditionRows();
-            });
-            row.Add(typeField);
-
-            row.Add(BuildKeyField(entry.key, GraphKeySource.UsesFreeText(entry.type),
-                GraphKeySource.GetKeysFor(entry.type), v => entry.key = v));
-
-            if (entry.type != GraphConditionType.HasMemory)
-            {
-                var valField = new IntegerField { value = entry.value, style = { width = 50 } };
-                valField.RegisterValueChangedCallback(e => entry.value = e.newValue);
-                row.Add(valField);
+                edge.input?.Disconnect(edge);
+                edge.output?.Disconnect(edge);
+                edge.RemoveFromHierarchy();
             }
-
-            var negate = new Toggle("NOT") { value = entry.negate };
-            negate.RegisterValueChangedCallback(e => entry.negate = e.newValue);
-            row.Add(negate);
-
-            var del = new Button(() => { Data.conditions.RemoveAt(idx); RebuildConditionRows(); }) { text = "¡¿" };
-            row.Add(del);
-
-            _conditionContainer.Add(row);
+            outputContainer.Remove(p);
         }
-        RefreshExpandedState();
-    }
-
-    public void BuildLogic()
-    {
-        AddToClassList("dialogue-node");
-        AddToClassList("node-logic");
-        title = "·ÎÁ÷ (Á¤º¸/¼öÄ¡ º¯°æ)";
-        AddInput();
-
-        var addBtn = new Button(() => { Data.logics.Add(new GraphLogicEntry()); RebuildLogicRows(); }) { text = "+ µ¿ÀÛ Ãß°¡" };
-        mainContainer.Add(addBtn);
-
-        _logicContainer = new VisualElement();
-        mainContainer.Add(_logicContainer);
-        if (Data.logics.Count == 0) Data.logics.Add(new GraphLogicEntry());
-        RebuildLogicRows();
-
-        AddOutput("´ÙÀ½");
-    }
-
-    private VisualElement _logicContainer;
-
-    private void RebuildLogicRows()
-    {
-        _logicContainer.Clear();
-        for (int i = 0; i < Data.logics.Count; i++)
-        {
-            int idx = i;
-            var entry = Data.logics[idx];
-            var row = new VisualElement();
-            row.AddToClassList("choice-row");
-
-            var typeField = new EnumField(entry.type);
-            typeField.RegisterValueChangedCallback(e =>
-            {
-                entry.type = (GraphLogicType)e.newValue;
-                RebuildLogicRows();
-            });
-            row.Add(typeField);
-
-            row.Add(BuildKeyField(entry.key, GraphKeySource.UsesFreeText(entry.type),
-                GraphKeySource.GetKeysFor(entry.type), v => entry.key = v));
-
-            if (GraphKeySource.UsesAmount(entry.type))
-            {
-                var amount = new IntegerField { value = entry.amount, style = { width = 50 } };
-                amount.RegisterValueChangedCallback(e => entry.amount = e.newValue);
-                row.Add(amount);
-            }
-
-            var del = new Button(() => { Data.logics.RemoveAt(idx); RebuildLogicRows(); }) { text = "¡¿" };
-            row.Add(del);
-
-            _logicContainer.Add(row);
-        }
-        RefreshExpandedState();
-    }
-
-    /// <summary>µå·Ó´Ù¿î ¶Ç´Â ÀÚÀ¯ ÀÔ·Â ÇÊµå¸¦ »óÈ²¿¡ ¸Â°Ô »ı¼º</summary>
-    private VisualElement BuildKeyField(string current, bool freeText, List<string> options, System.Action<string> onChanged)
-    {
-        if (freeText)
-        {
-            var tf = new TextField { value = current, style = { width = 130 } };
-            tf.RegisterValueChangedCallback(e => onChanged(e.newValue));
-            return tf;
-        }
-
-        int index = Mathf.Max(0, options.IndexOf(current));
-        var dd = new PopupField<string>(options, index) { style = { width = 130 } };
-        onChanged(options[index]); // ÃÊ±â°ª µ¿±âÈ­
-        dd.RegisterValueChangedCallback(e => onChanged(e.newValue));
-        return dd;
+        OutputPorts.Clear();
     }
 }

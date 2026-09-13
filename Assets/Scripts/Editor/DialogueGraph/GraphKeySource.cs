@@ -1,8 +1,6 @@
-// GraphKeySource.cs (½Å±Ô, Editor Æú´õ)
+ï»¿// GraphKeySource.cs â€” ì „ì²´ êµì²´
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
-using UnityEngine;
 
 public static class GraphKeySource
 {
@@ -15,7 +13,7 @@ public static class GraphKeySource
             if (asset != null && !string.IsNullOrEmpty(asset.flagId)) result.Add(asset.flagId);
         }
         result.Sort();
-        return result.Count > 0 ? result : new List<string> { "(µî·ÏµÈ ±â¾ï ¾øÀ½)" };
+        return result.Count > 0 ? result : new List<string> { "(ë“±ë¡ëœ ê¸°ì–µ ì—†ìŒ)" };
     }
 
     public static List<string> GetNPCNames()
@@ -27,7 +25,7 @@ public static class GraphKeySource
             if (asset != null && !string.IsNullOrEmpty(asset.npcName)) result.Add(asset.npcName);
         }
         result.Sort();
-        return result.Count > 0 ? result : new List<string> { "(µî·ÏµÈ NPC ¾øÀ½)" };
+        return result.Count > 0 ? result : new List<string> { "(ë“±ë¡ëœ NPC ì—†ìŒ)" };
     }
 
     public static List<string> GetCueIds()
@@ -39,26 +37,6 @@ public static class GraphKeySource
             if (asset != null && !string.IsNullOrEmpty(asset.cueId)) result.Add(asset.cueId);
         }
         result.Sort();
-        return result.Count > 0 ? result : new List<string> { "(µî·ÏµÈ Å¥ ¾øÀ½)" };
+        return result.Count > 0 ? result : new List<string> { "(ë“±ë¡ëœ í ì—†ìŒ)" };
     }
-
-    /// <summary>Á¶°Ç Å¸ÀÔ¿¡ ¸Â´Â Å° ÈÄº¸ ¸ñ·Ï</summary>
-    public static List<string> GetKeysFor(GraphConditionType type) => type switch
-    {
-        GraphConditionType.HasMemory => GetMemoryFlagIds(),
-        GraphConditionType.CounterAtLeast => new List<string>(), // Ä«¿îÅÍ´Â ÀÚÀ¯ ÀÔ·Â
-        _ => GetNPCNames(),
-    };
-
-    public static List<string> GetKeysFor(GraphLogicType type) => type switch
-    {
-        GraphLogicType.AcquireMemory or GraphLogicType.EraseMemory => GetMemoryFlagIds(),
-        GraphLogicType.IncrementCounter => new List<string>(),
-        GraphLogicType.PlayCue => GetCueIds(),
-        _ => GetNPCNames(),
-    };
-
-    public static bool UsesFreeText(GraphConditionType t) => t == GraphConditionType.CounterAtLeast;
-    public static bool UsesFreeText(GraphLogicType t) => t == GraphLogicType.IncrementCounter;
-    public static bool UsesAmount(GraphLogicType t) => t is not (GraphLogicType.AcquireMemory or GraphLogicType.EraseMemory or GraphLogicType.PlayCue or GraphLogicType.IncrementCounter);
 }

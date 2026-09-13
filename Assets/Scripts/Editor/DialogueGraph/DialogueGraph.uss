@@ -44,12 +44,22 @@
     margin-top: 2px;
 }
 
-.node-condition > #node-border {
+.condition-group { padding: 3px; }
+.condition-row { flex-direction: row; align-items: center; margin-top: 2px; }
+.condition-summary {
+    -unity-font-style: italic;
+    color: rgb(190, 190, 190);
+    white-space: normal;
+    padding: 2px 4px;
+}
+.choice-box {
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    padding: 3px;
+    margin-top: 3px;
+}
+.node-branch > #node-border {
     border-color: rgb(200, 110, 200);
     background-color: rgba(65, 40, 68, 0.95);
-}
-
-.node-logic > #node-border {
-    border-color: rgb(120, 200, 195);
-    background-color: rgba(35, 65, 65, 0.95);
 }

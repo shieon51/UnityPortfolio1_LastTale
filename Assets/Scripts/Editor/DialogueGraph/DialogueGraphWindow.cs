@@ -42,6 +42,7 @@ public class DialogueGraphWindow : EditorWindow
         foreach (var node in _graph.nodes.Cast<DialogueGraphNode>())
         {
             node.Data.position = node.GetPosition().position;
+            node.Data.size = node.GetPosition().size; // ★ 추가
             _asset.nodes.Add(node.Data);
         }
 
@@ -98,7 +99,7 @@ public class DialogueGraphWindow : EditorWindow
         {
             var from = _asset.nodes.FirstOrDefault(n => n.guid == e.fromGuid);
             if (from == null) continue;
-            bool isBranch = from.nodeType is "Choice" or "Condition";
+            bool isBranch = from.nodeType is "Choice" or "Branch";
             if (!isBranch) continue;
             if (!_knotNames.ContainsKey(e.toGuid))
                 _knotNames[e.toGuid] = $"Auto_{e.toGuid.Substring(0, 6)}";
@@ -138,32 +139,29 @@ public class DialogueGraphWindow : EditorWindow
             {
                 case "Line":
                     sb.AppendLine(current.text + BuildTags(current));
-                    current = GetNext(current.guid, 0);
-                    break;
-
-                case "Logic":
                     foreach (var l in current.logics) sb.AppendLine("~ " + BuildLogicCall(l));
                     current = GetNext(current.guid, 0);
                     break;
 
-                case "Condition":
-                    string cond = string.Join(" and ", current.conditions.Select(BuildConditionExpr));
-                    var trueTarget = GetNext(current.guid, 0);
-                    var falseTarget = GetNext(current.guid, 1);
-                    sb.AppendLine($"{{{cond}:");
-                    sb.AppendLine($"    -> {ResolveTarget(trueTarget)}");
-                    sb.AppendLine("- else:");
-                    sb.AppendLine($"    -> {ResolveTarget(falseTarget)}");
+                case "Branch":
+                    sb.AppendLine("{");
+                    for (int i = 0; i < current.branchCases.Count; i++)
+                    {
+                        sb.AppendLine($"    - {ConditionUtil.ToInkExpr(current.branchCases[i].condition)}:");
+                        sb.AppendLine($"        -> {ResolveTarget(GetNext(current.guid, i))}");
+                    }
+                    sb.AppendLine("    - else:");
+                    sb.AppendLine($"        -> {ResolveTarget(GetNext(current.guid, current.branchCases.Count))}");
                     sb.AppendLine("}");
                     return;
 
                 case "Choice":
-                    for (int i = 0; i < current.choiceTexts.Count; i++)
+                    for (int i = 0; i < current.choiceOptions.Count; i++)
                     {
+                        var opt = current.choiceOptions[i];
                         string prefix = "+ ";
-                        if (i < current.choiceConditions.Count && !string.IsNullOrEmpty(current.choiceConditions[i].key))
-                            prefix += $"{{{BuildConditionExpr(current.choiceConditions[i])}}} ";
-                        sb.AppendLine(prefix + current.choiceTexts[i]);
+                        if (opt.condition.entries.Count > 0) prefix += $"{{{ConditionUtil.ToInkExpr(opt.condition)}}} ";
+                        sb.AppendLine(prefix + opt.text);
                         sb.AppendLine($"    -> {ResolveTarget(GetNext(current.guid, i))}");
                     }
                     return;
@@ -179,30 +177,15 @@ public class DialogueGraphWindow : EditorWindow
     private string ResolveTarget(GraphNodeData target)
     => target != null && _knotNames.TryGetValue(target.guid, out var name) ? name : "DONE";
 
-    private string BuildConditionExpr(GraphConditionEntry c)
+    private string BuildLogicCall(GraphLogicEntry l) => l.varType switch
     {
-        string expr = c.type switch
-        {
-            GraphConditionType.HasMemory => $"has_memory(\"{c.key}\")",
-            GraphConditionType.CounterAtLeast => $"get_counter(\"{c.key}\") >= {c.value}",
-            GraphConditionType.AffectionAtLeast => $"get_affection(\"{c.key}\") >= {c.value}",
-            GraphConditionType.SuspicionAtLeast => $"get_suspicion(\"{c.key}\") >= {c.value}",
-            GraphConditionType.UnderstandingAtLeast => $"get_understanding_percent(\"{c.key}\") >= {c.value}",
-            _ => "true",
-        };
-        return c.negate ? $"not ({expr})" : expr;
-    }
-
-    private string BuildLogicCall(GraphLogicEntry l) => l.type switch
-    {
-        GraphLogicType.AcquireMemory => $"acquire_memory(\"{l.key}\")",
-        GraphLogicType.EraseMemory => $"erase_memory(\"{l.key}\")",
-        GraphLogicType.IncrementCounter => $"increment_counter(\"{l.key}\")",
-        GraphLogicType.AddAffection => $"add_affection(\"{l.key}\", {l.amount})",
-        GraphLogicType.AddSuspicion => $"add_suspicion(\"{l.key}\", {l.amount})",
-        GraphLogicType.AddTrust => $"add_trust_earned(\"{l.key}\", {l.amount})",
-        GraphLogicType.AddLineCrossed => $"add_line_crossed(\"{l.key}\", {l.amount})",
-        GraphLogicType.AddPersonalBond => $"add_personal_bond(\"{l.key}\", {l.amount})",
+        GraphVarType.Memory => l.isErase ? $"erase_memory(\"{l.key}\")" : $"acquire_memory(\"{l.key}\")",
+        GraphVarType.Counter => $"increment_counter(\"{l.key}\")",
+        GraphVarType.Affection => $"add_affection(\"{l.key}\", {l.amount})",
+        GraphVarType.Suspicion => $"add_suspicion(\"{l.key}\", {l.amount})",
+        GraphVarType.TrustEarned => $"add_trust_earned(\"{l.key}\", {l.amount})",
+        GraphVarType.LineCrossed => $"add_line_crossed(\"{l.key}\", {l.amount})",
+        GraphVarType.PersonalBond => $"add_personal_bond(\"{l.key}\", {l.amount})",
         _ => "",
     };
 
@@ -214,6 +197,7 @@ public class DialogueGraphWindow : EditorWindow
         if (n.forcePanel) tags.Add("#panel");
         if (n.autoAdvance >= 0f) tags.Add($"#auto:{n.autoAdvance}");
         if (n.lockInput) tags.Add("#lockinput");
+        if (!string.IsNullOrEmpty(n.cueId)) tags.Add($"#cue:{n.cueId}");
         return tags.Count > 0 ? " " + string.Join(" ", tags) : "";
     }
 

@@ -38,8 +38,7 @@ public class DialogueGraphView : GraphView
         evt.menu.AppendAction("시작 노드", _ => CreateNode("Start", pos));
         evt.menu.AppendAction("대사 노드", _ => CreateNode("Line", pos));
         evt.menu.AppendAction("선택지 노드", _ => CreateNode("Choice", pos));
-        evt.menu.AppendAction("조건 분기 노드", _ => CreateNode("Condition", pos));
-        evt.menu.AppendAction("로직 노드", _ => CreateNode("Logic", pos));
+        evt.menu.AppendAction("조건 분기 노드", _ => CreateNode("Branch", pos));
         base.BuildContextualMenu(evt);
     }
 
@@ -59,11 +58,11 @@ public class DialogueGraphView : GraphView
             case "Start": node.BuildStart(); break;
             case "Line": node.BuildLine(); break;
             case "Choice": node.BuildChoice(); break;
-            case "Condition": node.BuildCondition(); break;  // ★ 2단계에서 추가
-            case "Logic": node.BuildLogic(); break;          // ★ 2단계에서 추가
+            case "Branch": node.BuildBranch(); break;
         }
 
-        node.capabilities |= Capabilities.Resizable; // ★ 여기
+        node.capabilities |= Capabilities.Resizable;
+        Vector2 size = (data != null && data.size.x > 50f) ? data.size : new Vector2(280, 220); // ★
         node.SetPosition(new Rect(pos, new Vector2(280, 220)));
         AddElement(node);
         return node;
