@@ -1,4 +1,4 @@
-// ConditionGroupElement.cs (½Å±Ô, Editor Æú´õ)
+ï»¿// ConditionGroupElement.cs (ì‹ ê·œ, Editor í´ë”)
 using System.Collections.Generic;
 using UnityEngine.UIElements;
 using UnityEngine;
@@ -24,7 +24,7 @@ public class ConditionGroupElement : VisualElement
         var joinField = new EnumField(_group.join) { style = { width = 70 } };
         joinField.RegisterValueChangedCallback(e => { _group.join = (CondJoin)e.newValue; Refresh(); });
         header.Add(joinField);
-        header.Add(new Button(() => { _group.entries.Add(new ConditionEntry()); Refresh(); }) { text = "+ Á¶°Ç" });
+        header.Add(new Button(() => { _group.entries.Add(new ConditionEntry()); Refresh(); }) { text = "+ ì¡°ê±´" });
         Add(header);
 
         _rows = new VisualElement();
@@ -39,14 +39,18 @@ public class ConditionGroupElement : VisualElement
         {
             int idx = i;
             var e = _group.entries[idx];
+            ConditionUtil.NormalizeKey(e); // â˜… ì¶”ê°€
+
             var row = new VisualElement();
             row.AddToClassList("condition-row");
+            row.style.flexWrap = Wrap.Wrap;       // â˜… ì¶”ê°€ â€” ì¢ìœ¼ë©´ ë‹¤ìŒ ì¤„ë¡œ
 
             var varField = new EnumField(e.varType) { style = { width = 95 } };
             varField.RegisterValueChangedCallback(ev =>
             {
                 e.varType = (GraphVarType)ev.newValue;
                 e.op = ConditionUtil.IsBoolType(e.varType) ? CondOp.Has : CondOp.GreaterOrEqual;
+                e.key = "";
                 Refresh();
             });
             row.Add(varField);
@@ -71,7 +75,7 @@ public class ConditionGroupElement : VisualElement
                 row.Add(val);
             }
 
-            row.Add(new Button(() => { _group.entries.RemoveAt(idx); Refresh(); }) { text = "¡¿", style = { width = 20 } });
+            row.Add(new Button(() => { _group.entries.RemoveAt(idx); Refresh(); }) { text = "Ã—", style = { width = 20 } });
             _rows.Add(row);
         }
 
@@ -89,7 +93,7 @@ public class ConditionGroupElement : VisualElement
         }
 
         var options = ConditionUtil.GetKeyOptions(e.varType);
-        if (options.Count == 0) options.Add("(¾øÀ½)");
+        if (options.Count == 0) options.Add("(ì—†ìŒ)");
         int index = Mathf.Max(0, options.IndexOf(e.key));
         e.key = options[index];
 
@@ -100,12 +104,12 @@ public class ConditionGroupElement : VisualElement
 
     private static string OpLabel(CondOp op) => op switch
     {
-        CondOp.Has => "ÀÖÀ½",
-        CondOp.NotHas => "¾øÀ½",
-        CondOp.GreaterOrEqual => "ÀÌ»ó",
-        CondOp.LessOrEqual => "ÀÌÇÏ",
-        CondOp.Equal => "°°À½",
-        CondOp.NotEqual => "´Ù¸§",
+        CondOp.Has => "ìžˆìŒ",
+        CondOp.NotHas => "ì—†ìŒ",
+        CondOp.GreaterOrEqual => "ì´ìƒ",
+        CondOp.LessOrEqual => "ì´í•˜",
+        CondOp.Equal => "ê°™ìŒ",
+        CondOp.NotEqual => "ë‹¤ë¦„",
         _ => "?",
     };
 }

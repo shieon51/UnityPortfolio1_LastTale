@@ -37,6 +37,9 @@ public class DialogueGraphNode : Node
     {
         AddToClassList("dialogue-node");
         AddToClassList("node-line");
+        style.minWidth = 520;   // ★ 추가
+        style.maxWidth = 520;   // ★ 추가
+
         title = "대사";
         AddInput();
 
@@ -59,11 +62,12 @@ public class DialogueGraphNode : Node
         {
             int idx = i;
             var line = Data.lines[idx];
+            foreach (var l in line.logics) ConditionUtil.NormalizeKey(l);
 
             var box = new VisualElement();
             box.AddToClassList("line-box");
 
-            // ── 상단: 순번 + 화자 (4번 — 폴드 밖으로 노출)
+            // ── 상단: 순번 + 화자 + 이름 + 이동/삭제
             var head = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
             head.Add(new Label($"{idx + 1}") { style = { width = 16, unityFontStyleAndWeight = FontStyle.Bold } });
 
@@ -79,26 +83,50 @@ public class DialogueGraphNode : Node
             });
             head.Add(keyDd);
 
-            var nameField = new TextField { value = line.speakerName, style = { flexGrow = 1 } };
+            var nameField = new TextField { value = line.speakerName };
+            nameField.style.width = 110;        // ★ flexGrow 대신 고정 폭
+            nameField.style.flexShrink = 0;
             nameField.tooltip = "화면에 표시될 이름 (??? 등)";
             nameField.RegisterValueChangedCallback(e => line.speakerName = e.newValue);
             head.Add(nameField);
+            head.Add(new VisualElement { style = { flexGrow = 1 } }); // ★ 남는 공간을 먹는 빈 여백 — 버튼이 오른쪽 끝으로 밀림
 
-            // 순서 이동 / 삭제
             head.Add(new Button(() => MoveLine(idx, -1)) { text = "▲", style = { width = 20 } });
             head.Add(new Button(() => MoveLine(idx, 1)) { text = "▼", style = { width = 20 } });
             head.Add(new Button(() => { Data.lines.RemoveAt(idx); RebuildLines(); }) { text = "×", style = { width = 20 } });
             box.Add(head);
 
-            // ── 대사 본문
+            // ── 본문 2단 (왼쪽: 대사 / 오른쪽: 설정)
+            var body = new VisualElement();
+            body.AddToClassList("line-body");
+            body.style.flexDirection = FlexDirection.Row;        // ★ 인라인
+            body.style.alignItems = Align.FlexStart;             // ★ 인라인
+
+            // 왼쪽 — 대사
+            var leftCol = new VisualElement();
+            leftCol.AddToClassList("line-left");
+            leftCol.style.flexGrow = 1;                          // ★ 인라인
+            leftCol.style.flexShrink = 1;
+            leftCol.style.minWidth = 200;
+            leftCol.style.paddingRight = 4;
+
             var text = new TextField { value = line.text, multiline = true };
             text.AddToClassList("line-text");
+            text.style.minHeight = 52;                           // ★ 인라인
+            text.style.whiteSpace = WhiteSpace.Normal;
             text.RegisterValueChangedCallback(e => line.text = e.newValue);
-            box.Add(text);
+            leftCol.Add(text);
+            body.Add(leftCol);
 
-            // ── 표시 설정 (접이식)
+            // 오른쪽 — 표시 설정 + 결과 동작
+            var rightCol = new VisualElement();
+            rightCol.AddToClassList("line-right");
+            rightCol.style.width = 210;                          // ★ 인라인
+            rightCol.style.flexShrink = 0;
+
             var settingsFold = new Foldout { text = BuildLineSettingSummary(line), value = false };
             settingsFold.AddToClassList("compact-fold");
+            EnableFoldTextWrap(settingsFold);     // ★ 추가
 
             var panel = new Toggle("패널로 표시") { value = line.forcePanel };
             panel.RegisterValueChangedCallback(e => { line.forcePanel = e.newValue; settingsFold.text = BuildLineSettingSummary(line); });
@@ -126,14 +154,18 @@ public class DialogueGraphNode : Node
                 settingsFold.text = BuildLineSettingSummary(line);
             });
             settingsFold.Add(cueDd);
-            box.Add(settingsFold);
+            rightCol.Add(settingsFold);
 
-            // ── 결과 동작 (5번 — 요약 표시)
             var logicFold = new Foldout { text = BuildLogicSummary(line), value = false };
             logicFold.AddToClassList("compact-fold");
+            EnableFoldTextWrap(logicFold);        // ★ 추가
+
             logicFold.Add(new Button(() => { line.logics.Add(new GraphLogicEntry()); RebuildLines(); }) { text = "+ 동작 추가" });
             foreach (var row in BuildLogicRows(line, logicFold)) logicFold.Add(row);
-            box.Add(logicFold);
+            rightCol.Add(logicFold);
+
+            body.Add(rightCol);
+            box.Add(body);          // ★ 이게 빠져있었음
 
             _lineContainer.Add(box);
         }
@@ -186,7 +218,12 @@ public class DialogueGraphNode : Node
             row.AddToClassList("condition-row");
 
             var varField = new EnumField(l.varType) { style = { width = 95 } };
-            varField.RegisterValueChangedCallback(e => { l.varType = (GraphVarType)e.newValue; RebuildLines(); });
+            varField.RegisterValueChangedCallback(e =>
+            {
+                l.varType = (GraphVarType)e.newValue;
+                l.key = ""; // ★ 추가 — 타입 바뀌면 키 초기화
+                RebuildLines();
+            });
             row.Add(varField);
 
             if (ConditionUtil.UsesFreeText(l.varType))
@@ -262,6 +299,7 @@ public class DialogueGraphNode : Node
 
             var fold = new Foldout { value = false };
             fold.text = $"분기 {idx + 1}: {ConditionUtil.BuildSummary(bc.condition)}";
+            EnableFoldTextWrap(fold);             // ★ 추가
             fold.Add(new ConditionGroupElement(bc.condition,
                 () => fold.text = $"분기 {idx + 1}: {ConditionUtil.BuildSummary(bc.condition)}")); // ★ 하나만
             _branchContainer.Add(fold);
@@ -276,6 +314,8 @@ public class DialogueGraphNode : Node
     {
         AddToClassList("dialogue-node");
         AddToClassList("node-choice");
+        style.minWidth = 440;   // ★ 추가
+        style.maxWidth = 440;   // ★ 추가
         title = "선택지";
         AddInput();
 
@@ -301,18 +341,40 @@ public class DialogueGraphNode : Node
             var box = new VisualElement();
             box.AddToClassList("choice-box");
 
-            var head = new VisualElement { style = { flexDirection = FlexDirection.Row } };
-            var tf = new TextField { value = opt.text, style = { flexGrow = 1 } };
+            var body = new VisualElement();
+            body.AddToClassList("line-body");
+            body.style.flexDirection = FlexDirection.Row;        // ★
+            body.style.alignItems = Align.FlexStart;             // ★
+
+            var left = new VisualElement();
+            left.AddToClassList("line-left");
+            left.style.flexGrow = 1;                             // ★
+            left.style.minWidth = 180;
+            left.style.paddingRight = 4;
+
+            var tf = new TextField { value = opt.text, multiline = true };
+            tf.AddToClassList("line-text");
+            tf.style.minHeight = 44;                             // ★
+            tf.style.whiteSpace = WhiteSpace.Normal;
             tf.RegisterValueChangedCallback(e => opt.text = e.newValue);
-            head.Add(tf);
-            head.Add(new Button(() => { Data.choiceOptions.RemoveAt(idx); RebuildChoiceRows(); }) { text = "×", style = { width = 20 } }); // ★ 3번 — 삭제 버튼
-            box.Add(head);
+            left.Add(tf);
+            body.Add(left);
+
+            var right = new VisualElement();
+            right.AddToClassList("line-right");
+            right.style.width = 250;                             // ★ // 조정
+            right.style.flexShrink = 0;
 
             var fold = new Foldout { text = $"표시 조건: {ConditionUtil.BuildSummary(opt.condition)}", value = false };
+            fold.AddToClassList("compact-fold");
+            EnableFoldTextWrap(fold);             // ★ 제목 줄바꿈 허용
             fold.Add(new ConditionGroupElement(opt.condition,
                 () => fold.text = $"표시 조건: {ConditionUtil.BuildSummary(opt.condition)}"));
-            box.Add(fold);
+            right.Add(fold);
+            right.Add(new Button(() => { Data.choiceOptions.RemoveAt(idx); RebuildChoiceRows(); }) { text = "× 삭제" });
+            body.Add(right);
 
+            box.Add(body);
             _choiceContainer.Add(box);
         }
         RefreshExpandedState();
@@ -351,5 +413,15 @@ public class DialogueGraphNode : Node
             outputContainer.Remove(p);
         }
         OutputPorts.Clear();
+    }
+
+    /// <summary>Foldout 제목이 길어도 잘리지 않고 줄바꿈되게 함</summary>
+    private static void EnableFoldTextWrap(Foldout fold)
+    {
+        var label = fold.Q<Toggle>()?.Q<Label>();
+        if (label == null) return;
+        label.style.whiteSpace = WhiteSpace.Normal;
+        label.style.flexGrow = 1;
+        label.style.flexShrink = 1;
     }
 }

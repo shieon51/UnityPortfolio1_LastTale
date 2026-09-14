@@ -24,12 +24,14 @@ public static class ConditionUtil
     public static List<string> GetKeyOptions(GraphVarType t) => t switch
     {
         GraphVarType.Memory => GraphKeySource.GetMemoryFlagIds(),
-        GraphVarType.Counter => new List<string>(),
+        GraphVarType.Counter => GraphKeySource.GetCounterIds(), // ★ 드롭다운으로
         GraphVarType.MentalPercent => new List<string>(),
         _ => GraphKeySource.GetNPCNames(),
     };
 
-    public static bool UsesFreeText(GraphVarType t) => t == GraphVarType.Counter;
+    // ★ 등록된 카운터가 하나도 없을 때만 자유 입력으로 폴백
+    public static bool UsesFreeText(GraphVarType t)
+        => t == GraphVarType.Counter && GraphKeySource.GetCounterIds().Count == 0;
 
     /// <summary>ink 조건식으로 변환</summary>
     public static string ToInkExpr(ConditionGroup group)
@@ -94,4 +96,16 @@ public static class ConditionUtil
 
         return string.Join(group.join == CondJoin.And ? ", 그리고 " : ", 또는 ", parts);
     }
+
+    /// <summary>변수 타입에 맞지 않는 키를 유효한 값으로 교정</summary>
+    public static void NormalizeKey(GraphVarType varType, ref string key)
+    {
+        if (UsesFreeText(varType) || !NeedsKey(varType)) return;
+        var options = GetKeyOptions(varType);
+        if (options.Count == 0) { key = ""; return; }
+        if (!options.Contains(key)) key = options[0];
+    }
+
+    public static void NormalizeKey(ConditionEntry e) => NormalizeKey(e.varType, ref e.key);
+    public static void NormalizeKey(GraphLogicEntry l) => NormalizeKey(l.varType, ref l.key);
 }

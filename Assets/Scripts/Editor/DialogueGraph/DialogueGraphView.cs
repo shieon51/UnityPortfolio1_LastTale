@@ -22,6 +22,7 @@ public class DialogueGraphView : GraphView
         // ★ 스타일시트 적용
         var uss = UnityEditor.AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/Editor/DialogueGraph/DialogueGraph.uss");
         if (uss != null) styleSheets.Add(uss);
+        else Debug.LogWarning("[DialogueGraph] USS 로드 실패 — 경로를 확인하세요"); // ★ 추가
 
         // ★ 미니맵 — 큰 그래프에서 길 잃지 않게
         var minimap = new MiniMap { anchored = true };

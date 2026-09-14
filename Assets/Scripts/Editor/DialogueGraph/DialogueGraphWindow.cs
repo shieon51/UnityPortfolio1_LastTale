@@ -104,6 +104,19 @@ public class DialogueGraphWindow : EditorWindow
                 _knotNames[e.toGuid] = $"Auto_{e.toGuid.Substring(0, 6)}";
         }
 
+        // 3) 여러 곳에서 들어오는 노드도 별도 knot으로 (중복 출력 방지)
+        var inboundCount = new Dictionary<string, int>();
+        foreach (var e in _asset.edges)
+        {
+            inboundCount.TryGetValue(e.toGuid, out int c);
+            inboundCount[e.toGuid] = c + 1;
+        }
+        foreach (var kvp in inboundCount)
+        {
+            if (kvp.Value < 2 || _knotNames.ContainsKey(kvp.Key)) continue;
+            _knotNames[kvp.Key] = $"Auto_{kvp.Key.Substring(0, 6)}";
+        }
+
         var sb = new StringBuilder();
         foreach (var kvp in _knotNames)
         {

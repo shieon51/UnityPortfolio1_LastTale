@@ -1,4 +1,4 @@
-/* ��� ���� */
+﻿/* 노드 공통 */
 .dialogue-node > #node-border {
     border-width: 2px;
     border-radius: 8px;
@@ -15,7 +15,7 @@
     padding: 6px;
 }
 
-/* Ÿ�Ժ� ���� */
+/* 타입별 색상 */
 .node-start > #node-border {
     border-color: rgb(80, 200, 120);
     background-color: rgba(40, 80, 55, 0.95);
@@ -31,13 +31,13 @@
     background-color: rgba(75, 62, 35, 0.95);
 }
 
-/* �ؽ�Ʈ �Է� �ʵ� */
+/* 텍스트 입력 필드 */
 .dialogue-node TextField > .unity-base-text-field__input {
     border-radius: 4px;
     padding: 3px;
 }
 
-/* ������ �� */
+/* 선택지 행 */
 .choice-row {
     flex-direction: row;
     align-items: center;
@@ -65,8 +65,13 @@
 }
 
 .dialogue-node {
-    min-width: 340px;
-    max-width: 340px;
+    min-width: 520px;
+    max-width: 520px;
+}
+
+.node-choice {
+    min-width: 460px;
+    max-width: 460px;
 }
 
 .line-box {
@@ -78,11 +83,6 @@
     background-color: rgba(0, 0, 0, 0.15);
 }
 
-.line-text > .unity-base-text-field__input {
-    min-height: 48px;
-    white-space: normal;
-}
-
 .compact-fold {
     margin-top: 3px;
 }
@@ -90,4 +90,38 @@
 .compact-fold > Toggle > Label {
     font-size: 11px;
     color: rgb(185, 185, 185);
+}
+
+/* 2단 레이아웃 */
+.line-body {
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+.line-left {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 240px;
+    padding-right: 4px;
+}
+
+.line-right {
+    width: 220px;
+    flex-shrink: 0;
+}
+
+/* 대사 입력란 — 길어지면 줄바꿈 */
+.line-text > .unity-base-text-field__input {
+    min-height: 52px;
+    white-space: normal;
+}
+
+/* 이름 입력란 — 최소 폭 보장 */
+.line-box TextField {
+    min-width: 60px;
+}
+
+/* 폴드 안 행이 좁아지지 않게 */
+.line-right .condition-row {
+    flex-wrap: wrap;
 }
