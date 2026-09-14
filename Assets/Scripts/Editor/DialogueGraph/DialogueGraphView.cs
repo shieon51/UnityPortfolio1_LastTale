@@ -27,6 +27,81 @@ public class DialogueGraphView : GraphView
         var minimap = new MiniMap { anchored = true };
         minimap.SetPosition(new Rect(10, 30, 200, 140));
         Add(minimap);
+
+        serializeGraphElements = OnCopy;
+        canPasteSerializedData = data => !string.IsNullOrEmpty(data);
+        unserializeAndPaste = OnPaste;
+    }
+
+    [System.Serializable]
+    private class CopyPayload
+    {
+        public List<GraphNodeData> nodes = new();
+        public List<GraphEdgeData> edges = new();
+    }
+
+    private string OnCopy(IEnumerable<GraphElement> elements)
+    {
+        var payload = new CopyPayload();
+        var picked = elements.OfType<DialogueGraphNode>().ToList();
+        var guidSet = new HashSet<string>(picked.Select(n => n.Guid));
+
+        foreach (var n in picked)
+        {
+            n.Data.position = n.GetPosition().position;
+            payload.nodes.Add(n.Data);
+        }
+
+        // 선택된 노드끼리의 연결만 복사
+        foreach (var edge in elements.OfType<Edge>())
+        {
+            if (edge.output?.node is not DialogueGraphNode from) continue;
+            if (edge.input?.node is not DialogueGraphNode to) continue;
+            if (!guidSet.Contains(from.Guid) || !guidSet.Contains(to.Guid)) continue;
+            payload.edges.Add(new GraphEdgeData
+            {
+                fromGuid = from.Guid,
+                fromPortIndex = from.OutputPorts.IndexOf(edge.output),
+                toGuid = to.Guid,
+            });
+        }
+
+        return JsonUtility.ToJson(payload);
+    }
+
+    private void OnPaste(string operationName, string data)
+    {
+        CopyPayload payload;
+        try { payload = JsonUtility.FromJson<CopyPayload>(data); }
+        catch { return; }
+        if (payload?.nodes == null) return;
+
+        ClearSelection();
+        var guidMap = new Dictionary<string, DialogueGraphNode>();
+        Vector2 offset = new Vector2(40, 40);
+
+        foreach (var src in payload.nodes)
+        {
+            // 깊은 복사 — 원본과 데이터를 공유하지 않도록
+            var clone = JsonUtility.FromJson<GraphNodeData>(JsonUtility.ToJson(src));
+            string oldGuid = clone.guid;
+            clone.guid = System.Guid.NewGuid().ToString();
+            if (clone.nodeType == "Start" && !string.IsNullOrEmpty(clone.knotName))
+                clone.knotName += "_Copy";
+
+            var node = CreateNode(clone.nodeType, clone.position + offset, clone);
+            guidMap[oldGuid] = node;
+            AddToSelection(node);
+        }
+
+        foreach (var e in payload.edges)
+        {
+            if (!guidMap.TryGetValue(e.fromGuid, out var from) || !guidMap.TryGetValue(e.toGuid, out var to)) continue;
+            if (e.fromPortIndex < 0 || e.fromPortIndex >= from.OutputPorts.Count) continue;
+            var inPort = to.inputContainer.Q<Port>();
+            if (inPort == null) continue;
+            AddElement(from.OutputPorts[e.fromPortIndex].ConnectTo(inPort));
+        }
     }
 
     public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter adapter)
@@ -61,9 +136,7 @@ public class DialogueGraphView : GraphView
             case "Branch": node.BuildBranch(); break;
         }
 
-        node.capabilities |= Capabilities.Resizable;
-        Vector2 size = (data != null && data.size.x > 50f) ? data.size : new Vector2(280, 220); // ★
-        node.SetPosition(new Rect(pos, new Vector2(280, 220)));
+        node.SetPosition(new Rect(pos, new Vector2(340, 0))); // 너비는 USS가 고정, 높이는 내용에 맞춰 자동
         AddElement(node);
         return node;
     }

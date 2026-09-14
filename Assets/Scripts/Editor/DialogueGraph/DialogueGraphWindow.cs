@@ -42,7 +42,6 @@ public class DialogueGraphWindow : EditorWindow
         foreach (var node in _graph.nodes.Cast<DialogueGraphNode>())
         {
             node.Data.position = node.GetPosition().position;
-            node.Data.size = node.GetPosition().size; // ★ 추가
             _asset.nodes.Add(node.Data);
         }
 
@@ -138,8 +137,11 @@ public class DialogueGraphWindow : EditorWindow
             switch (current.nodeType)
             {
                 case "Line":
-                    sb.AppendLine(current.text + BuildTags(current));
-                    foreach (var l in current.logics) sb.AppendLine("~ " + BuildLogicCall(l));
+                    foreach (var line in current.lines)
+                    {
+                        if (!string.IsNullOrWhiteSpace(line.text)) sb.AppendLine(line.text + BuildTags(line));
+                        foreach (var l in line.logics) sb.AppendLine("~ " + BuildLogicCall(l));
+                    }
                     current = GetNext(current.guid, 0);
                     break;
 
@@ -189,7 +191,7 @@ public class DialogueGraphWindow : EditorWindow
         _ => "",
     };
 
-    private string BuildTags(GraphNodeData n)
+    private string BuildTags(DialogueLine n)
     {
         var tags = new List<string>();
         if (n.isSystem) tags.Add("#system");

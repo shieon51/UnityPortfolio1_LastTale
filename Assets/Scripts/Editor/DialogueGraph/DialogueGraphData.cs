@@ -49,6 +49,20 @@ public class GraphLogicEntry
 }
 
 [Serializable]
+public class DialogueLine
+{
+    public string text = "";
+    public string speakerKey = "";
+    public string speakerName = "";
+    public bool forcePanel;
+    public bool isSystem;
+    public float autoAdvance = -1f;
+    public bool lockInput;
+    public string cueId = "";
+    public List<GraphLogicEntry> logics = new();
+}
+
+[Serializable]
 public class GraphNodeData
 {
     public string guid;
@@ -56,15 +70,6 @@ public class GraphNodeData
     public Vector2 position;
 
     public string knotName;      // Start 전용
-    public string text;          // Line 전용 — 대사 본문
-    public string speakerKey;    // Line 전용 — #speak 대상
-    public string speakerName;   // Line 전용 — 표시명
-    public bool forcePanel;
-    public bool isSystem;
-    public float autoAdvance = -1f;
-    public bool lockInput;
-
-    public Vector2 size = new Vector2(280, 220);
 
     // GraphNodeData에 지금 추가해둘 것 (UI는 나중에)
     [Header("분류/필터용 메타데이터")]
@@ -75,10 +80,9 @@ public class GraphNodeData
     public string colorTag = "";     // 사용자 정의 색상 그룹
     public string note = "";         // 작업 메모
 
-    public List<GraphLogicEntry> logics = new();     // Line 노드에 통합
     public List<BranchCase> branchCases = new();     // Branch 노드
     public List<ChoiceOption> choiceOptions = new(); // Choice 노드 (choiceTexts 대체)
-    public string cueId = "";                        // Line 노드의 #cue 태그
+    public List<DialogueLine> lines = new();   // ★ Line 노드: 여러 줄을 한 노드에
 }
 
 [Serializable]

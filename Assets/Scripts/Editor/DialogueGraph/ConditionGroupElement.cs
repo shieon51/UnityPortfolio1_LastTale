@@ -1,7 +1,6 @@
 // ConditionGroupElement.cs (신규, Editor 폴더)
 using System.Collections.Generic;
 using UnityEngine.UIElements;
-using UnityEditor.UIElements;
 using UnityEngine;
 
 public class ConditionGroupElement : VisualElement
