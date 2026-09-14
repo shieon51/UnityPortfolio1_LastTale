@@ -157,22 +157,60 @@ public class DialogueGraphView : GraphView
     }
 
     /// <summary>필터에 맞는 노드만 격자로 자동 정렬</summary>
-    public void AutoLayout(GraphFilter filter, float spacingX = 600f, float spacingY = 420f, int perRow = 4)
+    /// <summary>Day는 행, NPC는 열, 시각은 열 내부 순서로 배치</summary>
+    public void AutoLayout(GraphFilter filter, bool createGroups = true)
     {
+        const float columnWidth = 620f;   // NPC 열 간격
+        const float nodeGap = 380f;       // 같은 열 안 노드 세로 간격
+        const float dayGap = 220f;        // Day 블록 사이 여백
+
         var targets = nodes.Cast<DialogueGraphNode>()
             .Where(n => filter == null || filter.Matches(n.Data))
-            .OrderBy(n => n.Data.day)
-            .ThenBy(n => n.Data.startHour)
-            .ThenBy(n => n.NodeType == "Start" ? 0 : 1)
             .ToList();
+        if (targets.Count == 0) return;
 
-        for (int i = 0; i < targets.Count; i++)
+        if (createGroups) foreach (var g in graphElements.OfType<Group>().ToList()) RemoveElement(g);
+
+        var days = targets.Select(n => n.Data.day).Distinct().OrderBy(d => d).ToList();
+        var npcs = targets.Select(n => string.IsNullOrEmpty(n.Data.npcTag) ? "(미분류)" : n.Data.npcTag)
+                          .Distinct().OrderBy(s => s).ToList();
+
+        float yCursor = 0f;
+
+        foreach (int day in days)
         {
-            float x = (i % perRow) * spacingX;
-            float y = (i / perRow) * spacingY;
-            var rect = targets[i].GetPosition();
-            targets[i].SetPosition(new Rect(new Vector2(x, y), rect.size));
-            targets[i].Data.position = new Vector2(x, y);
+            var dayNodes = targets.Where(n => n.Data.day == day).ToList();
+            int maxRows = 1;
+
+            for (int col = 0; col < npcs.Count; col++)
+            {
+                string npc = npcs[col];
+                var colNodes = dayNodes
+                    .Where(n => (string.IsNullOrEmpty(n.Data.npcTag) ? "(미분류)" : n.Data.npcTag) == npc)
+                    .OrderBy(n => n.Data.startHour < 0 ? int.MaxValue : n.Data.startHour)  // 시각 순
+                    .ThenBy(n => n.NodeType == "Start" ? 0 : 1)                             // 시작 노드 먼저
+                    .ToList();
+                if (colNodes.Count == 0) continue;
+
+                maxRows = Mathf.Max(maxRows, colNodes.Count);
+
+                for (int row = 0; row < colNodes.Count; row++)
+                {
+                    var pos = new Vector2(col * columnWidth, yCursor + row * nodeGap);
+                    var rect = colNodes[row].GetPosition();
+                    colNodes[row].SetPosition(new Rect(pos, rect.size));
+                    colNodes[row].Data.position = pos;
+                }
+            }
+
+            if (createGroups)
+            {
+                var group = new Group { title = day > 0 ? $"Day {day}" : "날짜 무관" };
+                AddElement(group);
+                foreach (var n in dayNodes) group.AddElement(n);
+            }
+
+            yCursor += maxRows * nodeGap + dayGap;
         }
     }
 }

@@ -98,4 +98,23 @@ public class DialogueGraphData : ScriptableObject
 {
     public List<GraphNodeData> nodes = new();
     public List<GraphEdgeData> edges = new();
+
+    // DialogueGraphData.cs — 노드 생성 헬퍼 (런타임 아닌 에디터에서 호출)
+    public GraphNodeData CreateStartNodeFrom(EventMarker marker)
+    {
+        var node = new GraphNodeData
+        {
+            guid = System.Guid.NewGuid().ToString(),
+            nodeType = "Start",
+            knotName = marker.InkNodeName,
+            day = marker.Day,
+            npcTag = marker.EventName,
+            startHour = marker.StartTime,
+            endHour = marker.EndTime,
+            note = $"이벤트 ID {marker.EventID} / {(marker.AutoTrigger ? "자동 발동" : "수동")}",
+            position = new Vector2(0, nodes.Count * 200),
+        };
+        nodes.Add(node);
+        return node;
+    }
 }

@@ -1,0 +1,655 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed910cb9940878044a8777cb2183ef8b, type: 3}
+  m_Name: Liel_Day5_Graph
+  m_EditorClassIdentifier: Assembly-CSharp-Editor::DialogueGraphData
+  nodes:
+  - guid: 07a8a17a-f198-4235-9d94-5e9b7893aa9b
+    nodeType: Choice
+    position: {x: 1348, y: 6349}
+    knotName: 
+    day: 1
+    npcTag: Liel
+    startHour: 8
+    endHour: 11
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases: []
+    choiceOptions:
+    - text: "\uBB54\uB370\uC694?"
+      condition:
+        entries:
+        - varType: 0
+          key: liel_likes_apple
+          op: 1
+          value: 0
+        join: 0
+        summaryOverride: 
+    - text: "\uC0AC\uACFC"
+      condition:
+        entries:
+        - varType: 0
+          key: liel_likes_apple
+          op: 0
+          value: 0
+        join: 0
+        summaryOverride: 
+    - text: "\uC624\uB80C\uC9C0"
+      condition:
+        entries:
+        - varType: 0
+          key: liel_likes_apple
+          op: 0
+          value: 0
+        join: 0
+        summaryOverride: 
+    - text: "\uB538\uAE30"
+      condition:
+        entries:
+        - varType: 0
+          key: liel_likes_apple
+          op: 0
+          value: 0
+        join: 0
+        summaryOverride: 
+    lines: []
+  - guid: e28215ad-6e8a-4883-806f-e1a86ba1aae0
+    nodeType: Line
+    position: {x: 2500, y: 6196}
+    knotName: 
+    day: 1
+    npcTag: Liel
+    startHour: 8
+    endHour: 11
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases: []
+    choiceOptions: []
+    lines:
+    - text: "\uC81C\uAC00 \uC88B\uC544\uD558\uB294 \uACFC\uC77C\uC740 \uC0AC\uACFC\uC785\uB2C8\uB2E4."
+      speakerKey: Liel
+      speakerName: "\uB9AC\uC5D8"
+      forcePanel: 0
+      isSystem: 0
+      autoAdvance: -1
+      lockInput: 0
+      cueId: 
+      logics:
+      - varType: 0
+        key: liel_likes_apple
+        amount: 1
+        isErase: 0
+      - varType: 1
+        key: Liel_Day1_001_meet
+        amount: 1
+        isErase: 0
+  - guid: 5f3e6125-015a-43d0-bb74-852cd5386b3e
+    nodeType: Line
+    position: {x: 1918, y: 6396}
+    knotName: 
+    day: 1
+    npcTag: Liel
+    startHour: 8
+    endHour: 11
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases: []
+    choiceOptions: []
+    lines:
+    - text: "\uC544\uC27D\uAC8C\uB3C4 \uD2C0\uB838\uAD70\uC694."
+      speakerKey: Liel
+      speakerName: "\uB9AC\uC5D8"
+      forcePanel: 0
+      isSystem: 0
+      autoAdvance: -1
+      lockInput: 0
+      cueId: 
+      logics: []
+  - guid: 07d42e4b-ac9e-447b-b878-2a6cc409ba33
+    nodeType: Line
+    position: {x: 1918, y: 6611}
+    knotName: 
+    day: 1
+    npcTag: Liel
+    startHour: 8
+    endHour: 11
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases: []
+    choiceOptions: []
+    lines:
+    - text: "\uB9DE\uC2B5\uB2C8\uB2E4. \uC5B4\uB5BB\uAC8C \uC544\uC168\uC2B5\uB2C8\uAE4C?"
+      speakerKey: Liel
+      speakerName: "\uB9AC\uC5D8"
+      forcePanel: 0
+      isSystem: 0
+      autoAdvance: -1
+      lockInput: 0
+      cueId: 
+      logics:
+      - varType: 1
+        key: Liel_Day1_001_meet
+        amount: 1
+        isErase: 0
+  - guid: f41b0e22-f0bc-400c-9582-1ed393c9c195
+    nodeType: Line
+    position: {x: 795, y: 6349}
+    knotName: 
+    day: 1
+    npcTag: Liel
+    startHour: 8
+    endHour: 11
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases: []
+    choiceOptions: []
+    lines:
+    - text: "\uC804 \uB9AC\uC5D8\uC774\uB77C\uACE0 \uD569\uB2C8\uB2E4."
+      speakerKey: Liel
+      speakerName: "\uB9AC\uC5D8"
+      forcePanel: 0
+      isSystem: 0
+      autoAdvance: -1
+      lockInput: 0
+      cueId: 
+      logics: []
+    - text: "\uC81C\uAC00 \uC88B\uC544\uD558\uB294 \uACFC\uC77C\uC774 \uBB34\uC5C7\uC778\uC9C0
+        \uC544\uC2ED\uB2C8\uAE4C?"
+      speakerKey: Liel
+      speakerName: "\uB9AC\uC5D8"
+      forcePanel: 0
+      isSystem: 0
+      autoAdvance: -1
+      lockInput: 0
+      cueId: 
+      logics: []
+  - guid: 01c0f8a6-4a01-4d31-b0b0-4c61827dd36e
+    nodeType: Line
+    position: {x: 795, y: 6661}
+    knotName: 
+    day: 1
+    npcTag: Liel
+    startHour: 8
+    endHour: 11
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases: []
+    choiceOptions: []
+    lines:
+    - text: "\uC774\uC57C\uAE30\uD558\uB2E4\uBCF4\uB2C8 \uBC8C\uC368 \uC2DC\uAC04\uC774
+        \uB9CE\uC774 \uC9C0\uB0AC\uB124\uC694."
+      speakerKey: Liel
+      speakerName: "\uB9AC\uC5D8"
+      forcePanel: 0
+      isSystem: 0
+      autoAdvance: 1.5
+      lockInput: 1
+      cueId: 
+      logics: []
+    - text: "\uC804 \uC810\uC2EC\uC744 \uBA39\uC73C\uB7EC \uAC00\uBCF4\uACA0\uC2B5\uB2C8\uB2E4."
+      speakerKey: Liel
+      speakerName: "\uB9AC\uC5D8"
+      forcePanel: 0
+      isSystem: 0
+      autoAdvance: 1.5
+      lockInput: 1
+      cueId: 
+      logics: []
+    - text: "\uB124, \uB2E4\uB140\uC624\uC138\uC694."
+      speakerKey: Player
+      speakerName: "\uC18C\uB77C"
+      forcePanel: 0
+      isSystem: 0
+      autoAdvance: -1
+      lockInput: 0
+      cueId: 
+      logics:
+      - varType: 1
+        key: Liel_Day1_001_meet
+        amount: 1
+        isErase: 0
+      - varType: 2
+        key: Liel
+        amount: 1
+        isErase: 0
+  - guid: 63aaa440-c965-4d81-bfb6-5017ead5d6f7
+    nodeType: Start
+    position: {x: -62, y: 6349}
+    knotName: Liel_Day1_001
+    day: 1
+    npcTag: Liel
+    startHour: 8
+    endHour: 11
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases: []
+    choiceOptions: []
+    lines: []
+  - guid: a81cb33c-907e-4b94-ab24-b25a7b2e3886
+    nodeType: Branch
+    position: {x: 303, y: 6349}
+    knotName: 
+    day: 1
+    npcTag: Liel
+    startHour: 8
+    endHour: 11
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases:
+    - label: 
+      condition:
+        entries:
+        - varType: 1
+          key: Liel_Day1_001_meet
+          op: 4
+          value: 0
+        join: 0
+        summaryOverride: 
+    - label: 
+      condition:
+        entries:
+        - varType: 1
+          key: Liel_Day1_001_meet
+          op: 4
+          value: 1
+        join: 0
+        summaryOverride: 
+    - label: 
+      condition:
+        entries:
+        - varType: 1
+          key: Liel_Day1_001_meet
+          op: 2
+          value: 2
+        join: 0
+        summaryOverride: 
+    choiceOptions: []
+    lines: []
+  - guid: f5a8e2cf-d90d-4bc7-923d-f3fb37f3370f
+    nodeType: Line
+    position: {x: 795, y: 6126}
+    knotName: 
+    day: 1
+    npcTag: Liel
+    startHour: 8
+    endHour: 11
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases: []
+    choiceOptions: []
+    lines:
+    - text: "\uC88B\uC740 \uC544\uCE68\uC785\uB2C8\uB2E4. \uCD08\uBA74\uC774\uAD70\uC694."
+      speakerKey: Liel
+      speakerName: ???
+      forcePanel: 0
+      isSystem: 0
+      autoAdvance: -1
+      lockInput: 0
+      cueId: 
+      logics:
+      - varType: 1
+        key: Liel_Day1_001_meet
+        amount: 1
+        isErase: 0
+  - guid: 75cda545-e115-4e46-9878-ea1ca39006f3
+    nodeType: Start
+    position: {x: -62, y: 7230}
+    knotName: Liel_Day1_002
+    day: 1
+    npcTag: Liel
+    startHour: 14
+    endHour: 17
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases: []
+    choiceOptions: []
+    lines: []
+  - guid: 1a696e5b-405f-44c4-98e0-e64e355d5f7b
+    nodeType: Branch
+    position: {x: 303, y: 7230}
+    knotName: 
+    day: 1
+    npcTag: Liel
+    startHour: 14
+    endHour: 17
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases:
+    - label: 
+      condition:
+        entries:
+        - varType: 1
+          key: Liel_Day1_001_meet
+          op: 4
+          value: 0
+        join: 0
+        summaryOverride: 
+    - label: 
+      condition:
+        entries:
+        - varType: 1
+          key: Liel_Day1_001_meet
+          op: 2
+          value: 1
+        join: 0
+        summaryOverride: 
+    choiceOptions: []
+    lines: []
+  - guid: 39a6cfc1-60c7-499b-8911-1fe19946e540
+    nodeType: Branch
+    position: {x: 795, y: 7843}
+    knotName: 
+    day: 1
+    npcTag: Liel
+    startHour: 14
+    endHour: 17
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases:
+    - label: 
+      condition:
+        entries:
+        - varType: 1
+          key: Liel_Day1_002_meet
+          op: 4
+          value: 0
+        join: 0
+        summaryOverride: 
+    - label: 
+      condition:
+        entries:
+        - varType: 1
+          key: Liel_Day1_002_meet
+          op: 4
+          value: 1
+        join: 0
+        summaryOverride: 
+    - label: 
+      condition:
+        entries:
+        - varType: 1
+          key: Liel_Day1_002_meet
+          op: 4
+          value: 2
+        join: 0
+        summaryOverride: 
+    choiceOptions: []
+    lines: []
+  - guid: f6da4952-d02c-408a-b02d-168b08355b19
+    nodeType: Line
+    position: {x: 1369, y: 7065}
+    knotName: 
+    day: 1
+    npcTag: Liel
+    startHour: 14
+    endHour: 17
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases: []
+    choiceOptions: []
+    lines:
+    - text: "\uC88B\uC740 \uC624\uD6C4\uC785\uB2C8\uB2E4. \uCD08\uBA74\uC774\uAD70\uC694."
+      speakerKey: Liel
+      speakerName: "\uB9AC\uC5D8"
+      forcePanel: 0
+      isSystem: 0
+      autoAdvance: -1
+      lockInput: 0
+      cueId: 
+      logics:
+      - varType: 1
+        key: Liel_Day1_002_meet
+        amount: 1
+        isErase: 0
+  - guid: 0c0589c0-9cc3-4b80-9b48-81b67dd20371
+    nodeType: Line
+    position: {x: 1369, y: 7284}
+    knotName: 
+    day: 1
+    npcTag: Liel
+    startHour: 14
+    endHour: 17
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases: []
+    choiceOptions: []
+    lines:
+    - text: "...\uD558\uC2E4 \uB9D0\uC500\uC774\uB77C\uB3C4 \uC788\uC73C\uC2E0\uAC00\uC694?"
+      speakerKey: Liel
+      speakerName: "\uB9AC\uC5D8"
+      forcePanel: 0
+      isSystem: 0
+      autoAdvance: -1
+      lockInput: 0
+      cueId: 
+      logics:
+      - varType: 1
+        key: Liel_Day1_002_meet
+        amount: 1
+        isErase: 0
+  - guid: 16d37e32-28d6-4c01-8dc1-ed76566ac1b3
+    nodeType: Line
+    position: {x: 1369, y: 7502}
+    knotName: 
+    day: 1
+    npcTag: Liel
+    startHour: 14
+    endHour: 17
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases: []
+    choiceOptions: []
+    lines:
+    - text: "\uB0A0\uC774 \uC88B\uC544 \uC0B0\uCC45\uC774\uB77C\uB3C4 \uAC00\uBD10\uC57C
+        \uD560 \uAC83 \uAC19\uB124\uC694."
+      speakerKey: Liel
+      speakerName: "\uB9AC\uC5D8"
+      forcePanel: 0
+      isSystem: 0
+      autoAdvance: -1
+      lockInput: 0
+      cueId: 
+      logics: []
+    - text: "\uADF8\uB7FC {player_name} \uC528\uB3C4 \uC88B\uC740 \uD558\uB8E8 \uB418\uC2DC\uAE38
+        \uBC14\uB78D\uB2C8\uB2E4."
+      speakerKey: Liel
+      speakerName: "\uB9AC\uC5D8"
+      forcePanel: 0
+      isSystem: 0
+      autoAdvance: -1
+      lockInput: 0
+      cueId: 
+      logics:
+      - varType: 1
+        key: Liel_Day1_002_meet
+        amount: 1
+        isErase: 0
+  - guid: 6bdc1498-66e4-4d0a-9c30-e5c7b81e70f5
+    nodeType: Line
+    position: {x: 1369, y: 7855}
+    knotName: 
+    day: 1
+    npcTag: Liel
+    startHour: 14
+    endHour: 17
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases: []
+    choiceOptions: []
+    lines:
+    - text: "\uC774\uB984\uC774 {player_name} \uC528\uB77C\uACE0 \uD558\uC168\uC8E0?
+        \uB610 \uBD59\uB124\uC694."
+      speakerKey: Liel
+      speakerName: "\uB9AC\uC5D8"
+      forcePanel: 0
+      isSystem: 0
+      autoAdvance: -1
+      lockInput: 0
+      cueId: 
+      logics:
+      - varType: 1
+        key: Liel_Day1_002_meet
+        amount: 1
+        isErase: 0
+  - guid: 8852b604-b19e-4cad-91fb-152af4d33844
+    nodeType: Line
+    position: {x: 1369, y: 8074}
+    knotName: 
+    day: 1
+    npcTag: Liel
+    startHour: 14
+    endHour: 17
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases: []
+    choiceOptions: []
+    lines:
+    - text: "\uC624\uB298 \uB0A0\uC774 \uCC38 \uC88B\uC2B5\uB2C8\uB2E4. \uADF8\uB807\uC9C0
+        \uC54A\uB098\uC694?"
+      speakerKey: Liel
+      speakerName: "\uB9AC\uC5D8"
+      forcePanel: 0
+      isSystem: 0
+      autoAdvance: -1
+      lockInput: 0
+      cueId: 
+      logics:
+      - varType: 1
+        key: Liel_Day1_002_meet
+        amount: 1
+        isErase: 0
+  - guid: ae851921-21f7-4f60-bdae-84c9ea6ddd39
+    nodeType: Line
+    position: {x: 1369, y: 8292}
+    knotName: 
+    day: 1
+    npcTag: Liel
+    startHour: 14
+    endHour: 17
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases: []
+    choiceOptions: []
+    lines:
+    - text: "\uC774\uB807\uAC8C \uB300\uD654\uB97C \uB9CE\uC774 \uD558\uB294 \uAC83\uB3C4
+        \uC624\uB79C\uB9CC\uC774\uAD70\uC694. \uC990\uAC70\uC6E0\uC2B5\uB2C8\uB2E4.
+        \uC774\uB9CC \uAC00\uBD10\uC57C \uD560 \uC2DC\uAC04\uC774\uAD70\uC694."
+      speakerKey: Liel
+      speakerName: "\uB9AC\uC5D8"
+      forcePanel: 0
+      isSystem: 0
+      autoAdvance: -1
+      lockInput: 0
+      cueId: 
+      logics:
+      - varType: 1
+        key: Liel_Day1_002_meet
+        amount: 1
+        isErase: 0
+  - guid: 88690b6f-d207-4fde-b202-aa005b0d0f34
+    nodeType: Branch
+    position: {x: 795, y: 7222}
+    knotName: 
+    day: 1
+    npcTag: Liel
+    startHour: 14
+    endHour: 17
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases:
+    - label: 
+      condition:
+        entries:
+        - varType: 1
+          key: Liel_Day1_002_meet
+          op: 4
+          value: 0
+        join: 0
+        summaryOverride: 
+    - label: 
+      condition:
+        entries:
+        - varType: 1
+          key: Liel_Day1_002_meet
+          op: 4
+          value: 1
+        join: 0
+        summaryOverride: 
+    - label: 
+      condition:
+        entries:
+        - varType: 1
+          key: Liel_Day1_002_meet
+          op: 4
+          value: 2
+        join: 0
+        summaryOverride: 
+    choiceOptions: []
+    lines: []
+  edges:
+  - fromGuid: 63aaa440-c965-4d81-bfb6-5017ead5d6f7
+    fromPortIndex: 0
+    toGuid: a81cb33c-907e-4b94-ab24-b25a7b2e3886
+  - fromGuid: f41b0e22-f0bc-400c-9582-1ed393c9c195
+    fromPortIndex: 0
+    toGuid: 07a8a17a-f198-4235-9d94-5e9b7893aa9b
+  - fromGuid: 07a8a17a-f198-4235-9d94-5e9b7893aa9b
+    fromPortIndex: 1
+    toGuid: 07d42e4b-ac9e-447b-b878-2a6cc409ba33
+  - fromGuid: 07a8a17a-f198-4235-9d94-5e9b7893aa9b
+    fromPortIndex: 0
+    toGuid: e28215ad-6e8a-4883-806f-e1a86ba1aae0
+  - fromGuid: a81cb33c-907e-4b94-ab24-b25a7b2e3886
+    fromPortIndex: 0
+    toGuid: f5a8e2cf-d90d-4bc7-923d-f3fb37f3370f
+  - fromGuid: a81cb33c-907e-4b94-ab24-b25a7b2e3886
+    fromPortIndex: 1
+    toGuid: f41b0e22-f0bc-400c-9582-1ed393c9c195
+  - fromGuid: 5f3e6125-015a-43d0-bb74-852cd5386b3e
+    fromPortIndex: 0
+    toGuid: e28215ad-6e8a-4883-806f-e1a86ba1aae0
+  - fromGuid: 07a8a17a-f198-4235-9d94-5e9b7893aa9b
+    fromPortIndex: 2
+    toGuid: 5f3e6125-015a-43d0-bb74-852cd5386b3e
+  - fromGuid: 07a8a17a-f198-4235-9d94-5e9b7893aa9b
+    fromPortIndex: 3
+    toGuid: 5f3e6125-015a-43d0-bb74-852cd5386b3e
+  - fromGuid: a81cb33c-907e-4b94-ab24-b25a7b2e3886
+    fromPortIndex: 2
+    toGuid: 01c0f8a6-4a01-4d31-b0b0-4c61827dd36e
+  - fromGuid: 75cda545-e115-4e46-9878-ea1ca39006f3
+    fromPortIndex: 0
+    toGuid: 1a696e5b-405f-44c4-98e0-e64e355d5f7b
+  - fromGuid: 1a696e5b-405f-44c4-98e0-e64e355d5f7b
+    fromPortIndex: 0
+    toGuid: 88690b6f-d207-4fde-b202-aa005b0d0f34
+  - fromGuid: 1a696e5b-405f-44c4-98e0-e64e355d5f7b
+    fromPortIndex: 1
+    toGuid: 39a6cfc1-60c7-499b-8911-1fe19946e540
+  - fromGuid: 88690b6f-d207-4fde-b202-aa005b0d0f34
+    fromPortIndex: 0
+    toGuid: f6da4952-d02c-408a-b02d-168b08355b19
+  - fromGuid: 88690b6f-d207-4fde-b202-aa005b0d0f34
+    fromPortIndex: 1
+    toGuid: 0c0589c0-9cc3-4b80-9b48-81b67dd20371
+  - fromGuid: 88690b6f-d207-4fde-b202-aa005b0d0f34
+    fromPortIndex: 2
+    toGuid: 16d37e32-28d6-4c01-8dc1-ed76566ac1b3
+  - fromGuid: 39a6cfc1-60c7-499b-8911-1fe19946e540
+    fromPortIndex: 0
+    toGuid: 6bdc1498-66e4-4d0a-9c30-e5c7b81e70f5
+  - fromGuid: 39a6cfc1-60c7-499b-8911-1fe19946e540
+    fromPortIndex: 1
+    toGuid: 8852b604-b19e-4cad-91fb-152af4d33844
+  - fromGuid: 39a6cfc1-60c7-499b-8911-1fe19946e540
+    fromPortIndex: 2
+    toGuid: ae851921-21f7-4f60-bdae-84c9ea6ddd39

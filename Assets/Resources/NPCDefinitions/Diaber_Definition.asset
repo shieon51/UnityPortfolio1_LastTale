@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 63dff5c0b80f7a9459b27da86acc8cfb, type: 3}
   m_Name: Diaber_Definition
   m_EditorClassIdentifier: Assembly-CSharp::NPCDefinition
-  npcName: 
+  npcName: Diaber
   initialAffection: 0
   rememberAcrossLoops: 0
   maxObtainableUnderstanding: 100

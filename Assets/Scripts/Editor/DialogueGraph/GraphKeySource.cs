@@ -4,14 +4,14 @@ using UnityEditor;
 
 public static class GraphKeySource
 {
-    private static List<string> _memoryCache, _npcCache, _cueCache, _counterCache;
+    private static List<string> _memoryCache, _npcCache, _cueCache, _counterCache, _knotCache;
     private static double _lastRefresh;
     private const double CacheSeconds = 3.0;
 
     /// <summary>애셋을 새로 만든 뒤 목록이 갱신 안 되면 이걸 호출</summary>
     public static void InvalidateCache()
     {
-        _memoryCache = _npcCache = _cueCache = _counterCache = null;
+        _memoryCache = _npcCache = _cueCache = _counterCache = _knotCache = null; // ★ _knotCache 추가
     }
 
     private static void CheckExpiry()
@@ -60,5 +60,28 @@ public static class GraphKeySource
         CheckExpiry();
         _counterCache ??= Scan<CounterDefinition>(a => a.counterId);
         return new List<string>(_counterCache); // 빈 리스트 그대로 반환 (자유 입력 폴백 판정용)
+    }
+
+    /// <summary>모든 대화 그래프의 시작(Start) 노드 knot 이름 목록</summary>
+    public static List<string> GetKnotNames()   // ★ 신규
+    {
+        CheckExpiry();
+        _knotCache ??= ScanKnots();
+        return _knotCache.Count > 0 ? new List<string>(_knotCache) : new List<string> { "(그래프에 knot 없음)" };
+    }
+
+    private static List<string> ScanKnots()
+    {
+        var result = new List<string>();
+        foreach (var guid in AssetDatabase.FindAssets("t:DialogueGraphData"))
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<DialogueGraphData>(AssetDatabase.GUIDToAssetPath(guid));
+            if (asset == null) continue;
+            foreach (var n in asset.nodes)
+                if (n.nodeType == "Start" && !string.IsNullOrWhiteSpace(n.knotName))
+                    result.Add(n.knotName);
+        }
+        result.Sort();
+        return result;
     }
 }

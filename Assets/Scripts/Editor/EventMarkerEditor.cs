@@ -5,6 +5,8 @@ using System.IO;
 [CustomEditor(typeof(EventMarker))]
 public class EventMarkerEditor : Editor
 {
+    private DialogueGraphData _targetGraph;
+
     public override void OnInspectorGUI()
     {
         EventMarker marker = (EventMarker)target;
@@ -131,6 +133,45 @@ public class EventMarkerEditor : Editor
             EditorGUILayout.HelpBox($"등장 지점 {points.Length}개 — 씬에서 드래그해 위치를 조절하세요.\n저장 시 자동으로 CSV에 기록됩니다.", MessageType.Info);
             foreach (var p in points)
                 EditorGUILayout.LabelField($"· {p.npcName} @ {(Vector2)(p.transform.position - marker.transform.position)}");
+        }
+
+
+        // 그래프 대화 에디터 연동
+        GUILayout.Space(10);
+        GUILayout.Label("대화 그래프 연동", EditorStyles.boldLabel);
+
+        _targetGraph = (DialogueGraphData)EditorGUILayout.ObjectField("대상 그래프", _targetGraph, typeof(DialogueGraphData), false);
+
+        var knots = GraphKeySource.GetKnotNames();
+        bool exists = knots.Contains(marker.InkNodeName);
+
+        if (exists)
+        {
+            EditorGUILayout.HelpBox($"그래프에 '{marker.InkNodeName}' 노드가 있습니다.", MessageType.Info);
+        }
+        else if (_targetGraph != null && !string.IsNullOrWhiteSpace(marker.InkNodeName))
+        {
+            EditorGUILayout.HelpBox($"그래프에 '{marker.InkNodeName}' 노드가 없습니다.", MessageType.Warning);
+            if (GUILayout.Button("그래프에 시작 노드 생성", GUILayout.Height(28)))
+            {
+                Undo.RecordObject(_targetGraph, "Create Start Node");
+                _targetGraph.CreateStartNodeFrom(marker);
+                EditorUtility.SetDirty(_targetGraph);
+                AssetDatabase.SaveAssets();
+                GraphKeySource.InvalidateCache();
+                Debug.Log($"[EventMarker] 그래프에 시작 노드 생성: {marker.InkNodeName} (그래프 창에서 '불러오기'를 눌러 확인)");
+            }
+        }
+
+        // 기존 knot에서 고르기 (그래프 먼저 만든 경우)
+        GUILayout.Space(5);
+        int current = knots.IndexOf(marker.InkNodeName);
+        int picked = EditorGUILayout.Popup("기존 knot에서 선택", Mathf.Max(0, current), knots.ToArray());
+        if (picked >= 0 && picked < knots.Count && knots[picked] != marker.InkNodeName && !knots[picked].StartsWith("("))
+        {
+            Undo.RecordObject(marker, "Set Ink Node");
+            marker.InkNodeName = knots[picked];
+            EditorUtility.SetDirty(marker);
         }
     }
 

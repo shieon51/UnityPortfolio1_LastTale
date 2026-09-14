@@ -10,6 +10,9 @@ using UnityEngine.UIElements;
 
 public class DialogueGraphWindow : EditorWindow
 {
+    // DialogueGraphWindow.cs — 분할 내보내기 추가
+    private enum SplitMode { Single, ByDay, ByNPC }
+
     private DialogueGraphView _graph;
     private DialogueGraphData _asset;
 
@@ -33,7 +36,10 @@ public class DialogueGraphWindow : EditorWindow
         toolbar.Add(assetField);
         toolbar.Add(new Button(Save) { text = "저장" });
         toolbar.Add(new Button(Load) { text = "불러오기" });
+        toolbar.Add(new Button(ImportInk) { text = "ink 가져오기" });
         toolbar.Add(new Button(ExportInk) { text = "ink 내보내기" });
+        toolbar.Add(new Button(() => ExportInkSplit(SplitMode.ByDay)) { text = "Day별 내보내기" });
+        toolbar.Add(new Button(() => ExportInkSplit(SplitMode.ByNPC)) { text = "NPC별 내보내기" });
         toolbar.Add(new Button(Validate) { text = "검증" });
         rootVisualElement.Add(toolbar);
 
@@ -45,6 +51,8 @@ public class DialogueGraphWindow : EditorWindow
         filterBar.style.right = 0;
 
         var dayFilter = new IntegerField("Day") { value = 0, style = { width = 80 } };
+        dayFilter.labelElement.style.minWidth = 30;   // ★ 라벨 폭 고정
+        dayFilter.labelElement.style.width = 30;
         dayFilter.RegisterValueChangedCallback(e => { _filter.day = e.newValue; _graph.ApplyFilter(_filter); });
         filterBar.Add(dayFilter);
 
@@ -68,6 +76,8 @@ public class DialogueGraphWindow : EditorWindow
         filterBar.Add(colorFilter);
 
         var hourFilter = new IntegerField("시각") { value = -1, style = { width = 80 } };
+        hourFilter.labelElement.style.minWidth = 36;  // ★
+        hourFilter.labelElement.style.width = 36;
         hourFilter.RegisterValueChangedCallback(e => { _filter.hour = e.newValue; _graph.ApplyFilter(_filter); });
         filterBar.Add(hourFilter);
 
@@ -87,7 +97,22 @@ public class DialogueGraphWindow : EditorWindow
         })
         { text = "필터 해제" });
 
-        filterBar.Add(new Button(() => { _graph.AutoLayout(_filter); }) { text = "자동 정렬" });
+        filterBar.Add(new Button(() => _graph.AutoLayout(_filter)) { text = "자동 정렬" });
+
+        filterBar.Add(new Button(() =>
+        {
+            foreach (var g in _graph.graphElements.OfType<Group>().ToList()) _graph.RemoveElement(g);
+        })
+        { text = "그룹 해제" });
+
+        filterBar.Add(new Button(() =>
+        {
+            GraphKeySource.InvalidateCache();
+            var fresh = GraphKeySource.GetNPCNames();
+            fresh.Insert(0, "(전체)");
+            npcFilter.choices = fresh;   // ★ PopupField의 목록 교체
+        })
+        { text = "목록 갱신" });
 
         rootVisualElement.Add(filterBar);
 
@@ -170,35 +195,7 @@ public class DialogueGraphWindow : EditorWindow
             if (!proceed) return;
         }
 
-        _knotNames = new Dictionary<string, string>();
-
-        // 1) Start 노드는 지정된 이름 사용
-        foreach (var n in _asset.nodes.Where(n => n.nodeType == "Start"))
-            _knotNames[n.guid] = string.IsNullOrEmpty(n.knotName) ? $"Knot_{n.guid.Substring(0, 6)}" : n.knotName;
-
-        // 2) 분기 대상이 되는 노드는 자동 knot 부여
-        foreach (var e in _asset.edges)
-        {
-            var from = _asset.nodes.FirstOrDefault(n => n.guid == e.fromGuid);
-            if (from == null) continue;
-            bool isBranch = from.nodeType is "Choice" or "Branch";
-            if (!isBranch) continue;
-            if (!_knotNames.ContainsKey(e.toGuid))
-                _knotNames[e.toGuid] = $"Auto_{e.toGuid.Substring(0, 6)}";
-        }
-
-        // 3) 여러 곳에서 들어오는 노드도 별도 knot으로 (중복 출력 방지)
-        var inboundCount = new Dictionary<string, int>();
-        foreach (var e in _asset.edges)
-        {
-            inboundCount.TryGetValue(e.toGuid, out int c);
-            inboundCount[e.toGuid] = c + 1;
-        }
-        foreach (var kvp in inboundCount)
-        {
-            if (kvp.Value < 2 || _knotNames.ContainsKey(kvp.Key)) continue;
-            _knotNames[kvp.Key] = $"Auto_{kvp.Key.Substring(0, 6)}";
-        }
+        BuildKnotNames();   // ★ 기존의 1) 2) 3) 블록 전체를 이 한 줄로 교체
 
         var sb = new StringBuilder();
         foreach (var kvp in _knotNames)
@@ -217,6 +214,51 @@ public class DialogueGraphWindow : EditorWindow
         RegisterToMainInk(path);   // ★ 추가
         AssetDatabase.Refresh();
         Debug.Log($"[DialogueGraph] ink 내보내기 완료 — knot {_knotNames.Count}개: {path}");
+    }
+
+    private void ExportInkSplit(SplitMode mode)
+    {
+        if (_asset == null) return;
+        Save();
+
+        string folder = EditorUtility.SaveFolderPanel("내보낼 폴더 선택", Application.dataPath + "/Datas", "");
+        if (string.IsNullOrEmpty(folder)) return;
+
+        BuildKnotNames();
+
+        // 그룹 키별로 Start 노드를 나눔
+        var groups = new Dictionary<string, List<GraphNodeData>>();
+        foreach (var kvp in _knotNames)
+        {
+            var node = _asset.nodes.FirstOrDefault(n => n.guid == kvp.Key);
+            if (node == null) continue;
+            string key = mode switch
+            {
+                SplitMode.ByDay => node.day > 0 ? $"Day{node.day}" : "Common",
+                SplitMode.ByNPC => string.IsNullOrEmpty(node.npcTag) ? "Common" : node.npcTag,
+                _ => _asset.name,
+            };
+            if (!groups.TryGetValue(key, out var list)) groups[key] = list = new List<GraphNodeData>();
+            list.Add(node);
+        }
+
+        foreach (var g in groups)
+        {
+            var sb = new StringBuilder();
+            foreach (var node in g.Value)
+            {
+                sb.AppendLine($"=== {_knotNames[node.guid]} ===");
+                var first = node.nodeType == "Start" ? GetNext(node.guid, 0) : node;
+                WriteFlow(sb, first, node.guid);
+                sb.AppendLine();
+            }
+            string path = Path.Combine(folder, $"{g.Key}.ink");
+            File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));
+            RegisterToMainInk(path);
+        }
+
+        AssetDatabase.Refresh();
+        Debug.Log($"[DialogueGraph] 분할 내보내기 완료 — 파일 {groups.Count}개");
     }
 
     private void WriteFlow(StringBuilder sb, GraphNodeData current, string ownerGuid)
@@ -369,5 +411,61 @@ public class DialogueGraphWindow : EditorWindow
         _graph.ClearSelection();
         _graph.AddToSelection(node);
         _graph.FrameSelection();
+    }
+
+    private void BuildKnotNames()
+    {
+        _knotNames = new Dictionary<string, string>();
+
+        // 1) Start 노드는 지정된 이름 사용
+        foreach (var n in _asset.nodes.Where(n => n.nodeType == "Start"))
+            _knotNames[n.guid] = string.IsNullOrEmpty(n.knotName) ? $"Knot_{n.guid.Substring(0, 6)}" : n.knotName;
+
+        // 2) 분기 대상이 되는 노드는 자동 knot 부여
+        foreach (var e in _asset.edges)
+        {
+            var from = _asset.nodes.FirstOrDefault(n => n.guid == e.fromGuid);
+            if (from == null) continue;
+            if (from.nodeType is not ("Choice" or "Branch")) continue;
+            if (!_knotNames.ContainsKey(e.toGuid))
+                _knotNames[e.toGuid] = $"Auto_{e.toGuid.Substring(0, 6)}";
+        }
+
+        // 3) 여러 곳에서 진입하는 노드도 별도 knot으로 (중복 출력 방지)
+        var inboundCount = new Dictionary<string, int>();
+        foreach (var e in _asset.edges)
+        {
+            inboundCount.TryGetValue(e.toGuid, out int c);
+            inboundCount[e.toGuid] = c + 1;
+        }
+        foreach (var kvp in inboundCount)
+        {
+            if (kvp.Value < 2 || _knotNames.ContainsKey(kvp.Key)) continue;
+            _knotNames[kvp.Key] = $"Auto_{kvp.Key.Substring(0, 6)}";
+        }
+    }
+
+    private void ImportInk()
+    {
+        if (_asset == null) { EditorUtility.DisplayDialog("오류", "그래프 애셋을 먼저 지정하세요.", "확인"); return; }
+
+        string path = EditorUtility.OpenFilePanel("가져올 ink 파일", Application.dataPath + "/Datas", "ink");
+        if (string.IsNullOrEmpty(path)) return;
+
+        var warnings = new List<string>();
+        Undo.RecordObject(_asset, "Import Ink");
+        InkGraphImporter.Import(_asset, path, warnings);
+        EditorUtility.SetDirty(_asset);
+        AssetDatabase.SaveAssets();
+        GraphKeySource.InvalidateCache();
+
+        Load();
+
+        foreach (var w in warnings) Debug.LogWarning($"[ink 가져오기] {w}");
+        EditorUtility.DisplayDialog("가져오기 완료",
+            warnings.Count == 0
+                ? "문제 없이 가져왔습니다."
+                : $"가져왔으나 {warnings.Count}건은 수동 정리가 필요합니다.\n콘솔 로그를 확인하세요.\n\n주로 조건 블록({{...}})이 해당됩니다.",
+            "확인");
     }
 }
