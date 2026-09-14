@@ -266,6 +266,8 @@ public class DialogueGraphNode : Node
     {
         AddToClassList("dialogue-node");
         AddToClassList("node-branch");
+        style.minWidth = 400;   // ★ 추가
+        style.maxWidth = 400;   // ★ 추가
         title = "조건 분기";
         AddInput();
 
@@ -298,10 +300,11 @@ public class DialogueGraphNode : Node
             AddOutput($"분기 {idx + 1}");
 
             var fold = new Foldout { value = false };
+            fold.AddToClassList("compact-fold");
             fold.text = $"분기 {idx + 1}: {ConditionUtil.BuildSummary(bc.condition)}";
-            EnableFoldTextWrap(fold);             // ★ 추가
+            EnableFoldTextWrap(fold);           // ★ 개행 + 여백 (1번에서 고친 버전)
             fold.Add(new ConditionGroupElement(bc.condition,
-                () => fold.text = $"분기 {idx + 1}: {ConditionUtil.BuildSummary(bc.condition)}")); // ★ 하나만
+                () => fold.text = $"분기 {idx + 1}: {ConditionUtil.BuildSummary(bc.condition)}"));
             _branchContainer.Add(fold);
         }
 
@@ -423,5 +426,7 @@ public class DialogueGraphNode : Node
         label.style.whiteSpace = WhiteSpace.Normal;
         label.style.flexGrow = 1;
         label.style.flexShrink = 1;
+        label.style.paddingRight = 10;      // ★ 오른쪽 여백 — 마지막 글자 잘림 방지
+        label.style.overflow = Overflow.Visible;  // ★ 넘쳐도 숨기지 않음
     }
 }

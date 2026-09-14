@@ -18,6 +18,8 @@ public class ConditionGroupElement : VisualElement
 
         _summary = new Label(ConditionUtil.BuildSummary(_group));
         _summary.AddToClassList("condition-summary");
+        _summary.style.whiteSpace = WhiteSpace.Normal;   // ★
+        _summary.style.paddingRight = 8;                 // ★
         Add(_summary);
 
         var header = new VisualElement { style = { flexDirection = FlexDirection.Row } };
