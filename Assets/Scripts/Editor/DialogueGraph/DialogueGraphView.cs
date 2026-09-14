@@ -141,4 +141,38 @@ public class DialogueGraphView : GraphView
         AddElement(node);
         return node;
     }
+
+    public void ApplyFilter(GraphFilter filter)
+    {
+        foreach (var node in nodes.Cast<DialogueGraphNode>())
+            node.SetFocused(filter == null || filter.Matches(node.Data));
+
+        // 양쪽 노드가 모두 흐리면 연결선도 흐리게
+        foreach (var edge in edges.ToList())
+        {
+            bool a = edge.output?.node is DialogueGraphNode f && (filter == null || filter.Matches(f.Data));
+            bool b = edge.input?.node is DialogueGraphNode t && (filter == null || filter.Matches(t.Data));
+            edge.style.opacity = (a || b) ? 1f : 0.15f;
+        }
+    }
+
+    /// <summary>필터에 맞는 노드만 격자로 자동 정렬</summary>
+    public void AutoLayout(GraphFilter filter, float spacingX = 600f, float spacingY = 420f, int perRow = 4)
+    {
+        var targets = nodes.Cast<DialogueGraphNode>()
+            .Where(n => filter == null || filter.Matches(n.Data))
+            .OrderBy(n => n.Data.day)
+            .ThenBy(n => n.Data.startHour)
+            .ThenBy(n => n.NodeType == "Start" ? 0 : 1)
+            .ToList();
+
+        for (int i = 0; i < targets.Count; i++)
+        {
+            float x = (i % perRow) * spacingX;
+            float y = (i / perRow) * spacingY;
+            var rect = targets[i].GetPosition();
+            targets[i].SetPosition(new Rect(new Vector2(x, y), rect.size));
+            targets[i].Data.position = new Vector2(x, y);
+        }
+    }
 }

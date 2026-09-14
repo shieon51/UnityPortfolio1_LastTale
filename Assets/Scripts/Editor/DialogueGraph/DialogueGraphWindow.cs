@@ -17,6 +17,8 @@ public class DialogueGraphWindow : EditorWindow
 
     private ScrollView _issuePanel;
 
+    private GraphFilter _filter = new();
+
     [MenuItem("LastMarchan/Dialogue Graph Editor")]
     public static void Open() => GetWindow<DialogueGraphWindow>("대화 그래프");
 
@@ -35,11 +37,66 @@ public class DialogueGraphWindow : EditorWindow
         toolbar.Add(new Button(Validate) { text = "검증" });
         rootVisualElement.Add(toolbar);
 
+        // 필터 관련
+        var filterBar = new UnityEditor.UIElements.Toolbar();
+        filterBar.style.position = Position.Absolute;
+        filterBar.style.top = 20;   // 기존 toolbar 아래
+        filterBar.style.left = 0;
+        filterBar.style.right = 0;
+
+        var dayFilter = new IntegerField("Day") { value = 0, style = { width = 80 } };
+        dayFilter.RegisterValueChangedCallback(e => { _filter.day = e.newValue; _graph.ApplyFilter(_filter); });
+        filterBar.Add(dayFilter);
+
+        var npcOptions = GraphKeySource.GetNPCNames();
+        npcOptions.Insert(0, "(전체)");
+        var npcFilter = new PopupField<string>(npcOptions, 0) { style = { width = 110 } };
+        npcFilter.RegisterValueChangedCallback(e =>
+        {
+            _filter.npcTag = e.newValue == "(전체)" ? "" : e.newValue;
+            _graph.ApplyFilter(_filter);
+        });
+        filterBar.Add(npcFilter);
+
+        var colorOptions = new List<string> { "(전체)", "빨강", "주황", "노랑", "초록", "파랑", "보라" };
+        var colorFilter = new PopupField<string>(colorOptions, 0) { style = { width = 80 } };
+        colorFilter.RegisterValueChangedCallback(e =>
+        {
+            _filter.colorTag = e.newValue == "(전체)" ? "" : e.newValue;
+            _graph.ApplyFilter(_filter);
+        });
+        filterBar.Add(colorFilter);
+
+        var hourFilter = new IntegerField("시각") { value = -1, style = { width = 80 } };
+        hourFilter.RegisterValueChangedCallback(e => { _filter.hour = e.newValue; _graph.ApplyFilter(_filter); });
+        filterBar.Add(hourFilter);
+
+        var search = new UnityEditor.UIElements.ToolbarSearchField();
+        search.RegisterValueChangedCallback(e => { _filter.searchText = e.newValue; _graph.ApplyFilter(_filter); });
+        filterBar.Add(search);
+
+        filterBar.Add(new Button(() =>
+        {
+            _filter = new GraphFilter();
+            dayFilter.SetValueWithoutNotify(0);
+            npcFilter.SetValueWithoutNotify("(전체)");
+            colorFilter.SetValueWithoutNotify("(전체)");
+            hourFilter.SetValueWithoutNotify(-1);
+            search.SetValueWithoutNotify("");
+            _graph.ApplyFilter(_filter);
+        })
+        { text = "필터 해제" });
+
+        filterBar.Add(new Button(() => { _graph.AutoLayout(_filter); }) { text = "자동 정렬" });
+
+        rootVisualElement.Add(filterBar);
+
+
         //결과 패널
         _issuePanel = new ScrollView();
         _issuePanel.style.position = Position.Absolute;
         _issuePanel.style.right = 0;
-        _issuePanel.style.top = 20;
+        _issuePanel.style.top = 40;
         _issuePanel.style.width = 340;
         _issuePanel.style.maxHeight = 400;
         _issuePanel.style.backgroundColor = new Color(0.16f, 0.16f, 0.16f, 0.96f);
@@ -94,6 +151,8 @@ public class DialogueGraphWindow : EditorWindow
             var edge = from.OutputPorts[e.fromPortIndex].ConnectTo(inPort);
             _graph.AddElement(edge);
         }
+
+        _graph.ApplyFilter(_filter);
     }
 
     private void ExportInk()

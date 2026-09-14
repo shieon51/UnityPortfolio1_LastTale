@@ -26,7 +26,10 @@ public class DialogueGraphNode : Node
     {
         AddToClassList("dialogue-node");
         AddToClassList("node-start");
+        style.minWidth = 300;   // ★ 추가 — Knot 이름만 있으니 작게
+        style.maxWidth = 300;   // ★ 추가
         title = "시작 (Knot)";
+        AddMetaFold();
         var field = new TextField("Knot 이름") { value = Data.knotName };
         field.RegisterValueChangedCallback(e => Data.knotName = e.newValue);
         mainContainer.Add(field);
@@ -42,6 +45,7 @@ public class DialogueGraphNode : Node
 
         title = "대사";
         AddInput();
+        AddMetaFold();
 
         mainContainer.Add(new Button(() => { Data.lines.Add(new DialogueLine()); RebuildLines(); }) { text = "+ 대사 추가" });
 
@@ -270,6 +274,7 @@ public class DialogueGraphNode : Node
         style.maxWidth = 400;   // ★ 추가
         title = "조건 분기";
         AddInput();
+        AddMetaFold();
 
         var countField = new IntegerField("분기 개수") { value = Mathf.Max(1, Data.branchCases.Count) };
         countField.RegisterValueChangedCallback(e =>
@@ -321,6 +326,7 @@ public class DialogueGraphNode : Node
         style.maxWidth = 440;   // ★ 추가
         title = "선택지";
         AddInput();
+        AddMetaFold();
 
         mainContainer.Add(new Button(() => { Data.choiceOptions.Add(new ChoiceOption()); RebuildChoiceRows(); }) { text = "+ 선택지 추가" });
         _choiceContainer = new VisualElement();
@@ -428,5 +434,96 @@ public class DialogueGraphNode : Node
         label.style.flexShrink = 1;
         label.style.paddingRight = 10;      // ★ 오른쪽 여백 — 마지막 글자 잘림 방지
         label.style.overflow = Overflow.Visible;  // ★ 넘쳐도 숨기지 않음
+    }
+
+    /// <summary>모든 노드 공통 분류 정보 (필터링용)</summary>
+    private void AddMetaFold()
+    {
+        var fold = new Foldout { text = BuildMetaSummary(), value = false };
+        fold.AddToClassList("compact-fold");
+        EnableFoldTextWrap(fold);
+
+        var dayField = new IntegerField("Day (0=무관)") { value = Data.day };
+        dayField.RegisterValueChangedCallback(e => { Data.day = e.newValue; fold.text = BuildMetaSummary(); });
+        fold.Add(dayField);
+
+        var npcOptions = GraphKeySource.GetNPCNames();
+        npcOptions.Insert(0, "(무관)");
+        int ni = Mathf.Max(0, npcOptions.IndexOf(string.IsNullOrEmpty(Data.npcTag) ? "(무관)" : Data.npcTag));
+        var npcDd = new PopupField<string>("관련 NPC", npcOptions, ni);
+        npcDd.RegisterValueChangedCallback(e =>
+        {
+            Data.npcTag = e.newValue == "(무관)" ? "" : e.newValue;
+            fold.text = BuildMetaSummary();
+        });
+        fold.Add(npcDd);
+
+        var startField = new IntegerField("시작 시각 (-1=무관)") { value = Data.startHour };
+        startField.RegisterValueChangedCallback(e => { Data.startHour = e.newValue; fold.text = BuildMetaSummary(); });
+        fold.Add(startField);
+
+        var endField = new IntegerField("종료 시각 (-1=무관)") { value = Data.endHour };
+        endField.RegisterValueChangedCallback(e => { Data.endHour = e.newValue; fold.text = BuildMetaSummary(); });
+        fold.Add(endField);
+
+        var colorOptions = new List<string> { "(없음)", "빨강", "주황", "노랑", "초록", "파랑", "보라" };
+        int ci = Mathf.Max(0, colorOptions.IndexOf(string.IsNullOrEmpty(Data.colorTag) ? "(없음)" : Data.colorTag));
+        var colorDd = new PopupField<string>("색상 태그", colorOptions, ci);
+        colorDd.RegisterValueChangedCallback(e =>
+        {
+            Data.colorTag = e.newValue == "(없음)" ? "" : e.newValue;
+            ApplyColorTag();
+            fold.text = BuildMetaSummary();
+        });
+        fold.Add(colorDd);
+
+        var noteField = new TextField("메모") { value = Data.note, multiline = true };
+        noteField.style.whiteSpace = WhiteSpace.Normal;
+        noteField.RegisterValueChangedCallback(e => Data.note = e.newValue);
+        fold.Add(noteField);
+
+        mainContainer.Add(fold);
+        ApplyColorTag();
+    }
+
+    private string BuildMetaSummary()
+    {
+        var parts = new List<string>();
+        if (Data.day > 0) parts.Add($"Day {Data.day}");
+        if (!string.IsNullOrEmpty(Data.npcTag)) parts.Add(Data.npcTag);
+        if (Data.startHour >= 0 || Data.endHour >= 0) parts.Add($"{Data.startHour}~{Data.endHour}시");
+        if (!string.IsNullOrEmpty(Data.colorTag)) parts.Add($"[{Data.colorTag}]");
+        return parts.Count == 0 ? "분류 (미설정)" : "분류 — " + string.Join(", ", parts);
+    }
+
+    /// <summary>색상 태그를 노드 테두리에 반영</summary>
+    private void ApplyColorTag()
+    {
+        var titleBar = this.Q("title");      // 제목 영역은 이름이 안정적으로 "title"
+        if (titleBar == null) return;
+
+        if (string.IsNullOrEmpty(Data.colorTag))
+        {
+            titleBar.style.backgroundColor = StyleKeyword.Null;
+            return;
+        }
+
+        Color c = Data.colorTag switch
+        {
+            "빨강" => new Color(0.55f, 0.18f, 0.18f),
+            "주황" => new Color(0.58f, 0.35f, 0.12f),
+            "노랑" => new Color(0.55f, 0.5f, 0.15f),
+            "초록" => new Color(0.2f, 0.48f, 0.25f),
+            "파랑" => new Color(0.18f, 0.35f, 0.55f),
+            "보라" => new Color(0.42f, 0.25f, 0.55f),
+            _ => Color.gray,
+        };
+        titleBar.style.backgroundColor = c;
+    }
+
+    public void SetFocused(bool focused)
+    {
+        style.opacity = focused ? 1f : 0.22f;
+        pickingMode = focused ? PickingMode.Position : PickingMode.Ignore; // 흐린 노드는 클릭 안 되게
     }
 }
