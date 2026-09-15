@@ -96,6 +96,7 @@ public class ConditionGroupElement : VisualElement
 
         var options = ConditionUtil.GetKeyOptions(e.varType);
         if (options.Count == 0) options.Add("(없음)");
+        if (!string.IsNullOrEmpty(e.key) && !options.Contains(e.key)) options.Insert(0, e.key); // ★ 미등록 키 보존
         int index = Mathf.Max(0, options.IndexOf(e.key));
         e.key = options[index];
 

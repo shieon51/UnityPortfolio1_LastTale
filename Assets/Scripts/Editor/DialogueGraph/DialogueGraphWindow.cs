@@ -20,6 +20,8 @@ public class DialogueGraphWindow : EditorWindow
 
     private ScrollView _issuePanel;
 
+    private GraphBlackboard _blackboard;
+
     private GraphFilter _filter = new();
 
     [MenuItem("LastMarchan/Dialogue Graph Editor")]
@@ -32,7 +34,11 @@ public class DialogueGraphWindow : EditorWindow
 
         var toolbar = new UnityEditor.UIElements.Toolbar();
         var assetField = new UnityEditor.UIElements.ObjectField("그래프 애셋") { objectType = typeof(DialogueGraphData) };
-        assetField.RegisterValueChangedCallback(e => _asset = e.newValue as DialogueGraphData);
+        assetField.RegisterValueChangedCallback(e =>
+        {
+            _asset = e.newValue as DialogueGraphData;
+            if (_blackboard != null && _blackboard.IsOpen) _blackboard.Refresh(_asset);
+        });
         toolbar.Add(assetField);
         toolbar.Add(new Button(Save) { text = "저장" });
         toolbar.Add(new Button(Load) { text = "불러오기" });
@@ -41,6 +47,8 @@ public class DialogueGraphWindow : EditorWindow
         toolbar.Add(new Button(() => ExportInkSplit(SplitMode.ByDay)) { text = "Day별 내보내기" });
         toolbar.Add(new Button(() => ExportInkSplit(SplitMode.ByNPC)) { text = "NPC별 내보내기" });
         toolbar.Add(new Button(Validate) { text = "검증" });
+        toolbar.Add(new Button(() => _blackboard.Toggle(_asset)) { text = "변수 목록" });
+
         rootVisualElement.Add(toolbar);
 
         // 필터 관련
@@ -117,7 +125,7 @@ public class DialogueGraphWindow : EditorWindow
         rootVisualElement.Add(filterBar);
 
 
-        //결과 패널
+        // 결과 패널
         _issuePanel = new ScrollView();
         _issuePanel.style.position = Position.Absolute;
         _issuePanel.style.right = 0;
@@ -127,6 +135,14 @@ public class DialogueGraphWindow : EditorWindow
         _issuePanel.style.backgroundColor = new Color(0.16f, 0.16f, 0.16f, 0.96f);
         _issuePanel.style.display = DisplayStyle.None;
         rootVisualElement.Add(_issuePanel);
+
+        // 블랙보드
+        _blackboard = new GraphBlackboard(this);
+        _blackboard.OnLayoutChanged = UpdateIssuePanelPosition;   // ★ 검증창 연동
+        rootVisualElement.Add(_blackboard);
+
+        // QA 관련
+        _graph.OnAnalyzeRequested = AnalyzePath;
     }
 
     private void Save()
@@ -381,6 +397,7 @@ public class DialogueGraphWindow : EditorWindow
         var issues = GraphValidator.Validate(_asset);
         _issuePanel.Clear();
         _issuePanel.style.display = DisplayStyle.Flex;
+        UpdateIssuePanelPosition();
 
         var header = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
         int errors = issues.Count(i => i.severity == ValidationIssue.Severity.Error);
@@ -467,5 +484,58 @@ public class DialogueGraphWindow : EditorWindow
                 ? "문제 없이 가져왔습니다."
                 : $"가져왔으나 {warnings.Count}건은 수동 정리가 필요합니다.\n콘솔 로그를 확인하세요.\n\n주로 조건 블록({{...}})이 해당됩니다.",
             "확인");
+    }
+
+    /// <summary>특정 키를 사용하는 노드만 선명하게 표시하고 화면에 맞춤</summary>
+    public void HighlightNodesUsing(string key)
+    {
+        if (_asset == null) return;
+        var usage = GraphBlackboard.CountUsage(_asset);
+        if (!usage.TryGetValue(key, out var users) || users.Count == 0)
+        {
+            Debug.Log($"[DialogueGraph] '{key}'를 사용하는 노드가 없습니다.");
+            return;
+        }
+
+        var guids = new HashSet<string>(users.Select(u => u.guid));
+        foreach (var node in _graph.nodes.Cast<DialogueGraphNode>())
+            node.SetFocused(guids.Contains(node.Guid));
+
+        _graph.ClearSelection();
+        foreach (var node in _graph.nodes.Cast<DialogueGraphNode>().Where(n => guids.Contains(n.Guid)))
+            _graph.AddToSelection(node);
+        _graph.FrameSelection();
+    }
+
+    private void AnalyzePath(string startGuid)
+    {
+        Save();
+        var paths = GraphPathAnalyzer.Trace(_asset, startGuid);
+        string report = GraphPathAnalyzer.Format(paths);
+
+        _issuePanel.Clear();
+        _issuePanel.style.display = DisplayStyle.Flex;
+        UpdateIssuePanelPosition();
+
+        var header = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+        header.Add(new Label("경로 분석") { style = { flexGrow = 1, unityFontStyleAndWeight = FontStyle.Bold, paddingLeft = 6 } });
+        header.Add(new Button(() => EditorGUIUtility.systemCopyBuffer = report) { text = "복사" });
+        header.Add(new Button(() => _issuePanel.style.display = DisplayStyle.None) { text = "×" });
+        _issuePanel.Add(header);
+
+        var label = new Label(report);
+        label.style.whiteSpace = WhiteSpace.Normal;
+        label.style.paddingLeft = 6;
+        label.style.paddingRight = 10;
+        _issuePanel.Add(label);
+
+        Debug.Log($"[DialogueGraph] 경로 분석 완료 — {paths.Count}개\n{report}");
+    }
+
+    private void UpdateIssuePanelPosition()
+    {
+        if (_issuePanel == null) return;
+        // 변수 목록이 열려 있으면 그 왼쪽에, 닫혀 있으면 화면 오른쪽 끝에
+        _issuePanel.style.right = (_blackboard != null && _blackboard.IsOpen) ? _blackboard.CurrentWidth : 0f;
     }
 }

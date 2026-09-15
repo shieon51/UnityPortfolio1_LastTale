@@ -7,6 +7,8 @@ using UnityEngine;
 
 public class DialogueGraphView : GraphView
 {
+    public System.Action<string> OnAnalyzeRequested;
+
     public DialogueGraphView()
     {
         style.flexGrow = 1;
@@ -110,6 +112,11 @@ public class DialogueGraphView : GraphView
 
     public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
     {
+        if (evt.target is DialogueGraphNode node && node.NodeType == "Start")
+        {
+            evt.menu.AppendAction("이 지점부터 경로 분석", _ => OnAnalyzeRequested?.Invoke(node.Guid));
+            evt.menu.AppendSeparator();
+        }
         Vector2 pos = contentViewContainer.WorldToLocal(evt.localMousePosition);
         evt.menu.AppendAction("시작 노드", _ => CreateNode("Start", pos));
         evt.menu.AppendAction("대사 노드", _ => CreateNode("Line", pos));
@@ -158,59 +165,115 @@ public class DialogueGraphView : GraphView
 
     /// <summary>필터에 맞는 노드만 격자로 자동 정렬</summary>
     /// <summary>Day는 행, NPC는 열, 시각은 열 내부 순서로 배치</summary>
+    /// <summary>시작 노드에서 뻗어나가는 흐름을 가로로, 분기는 세로로 정렬</summary>
     public void AutoLayout(GraphFilter filter, bool createGroups = true)
     {
-        const float columnWidth = 620f;   // NPC 열 간격
-        const float nodeGap = 380f;       // 같은 열 안 노드 세로 간격
-        const float dayGap = 220f;        // Day 블록 사이 여백
+        const float colGap = 620f;    // 깊이(가로) 간격
+        const float rowGap = 340f;    // 형제(세로) 간격
+        const float treeGap = 200f;   // 트리 사이 여백
 
-        var targets = nodes.Cast<DialogueGraphNode>()
-            .Where(n => filter == null || filter.Matches(n.Data))
-            .ToList();
-        if (targets.Count == 0) return;
+        var all = nodes.Cast<DialogueGraphNode>()
+        .Where(n => filter == null || filter.Matches(n.Data))
+        .ToList();
+        if (all.Count == 0) return;
 
         if (createGroups) foreach (var g in graphElements.OfType<Group>().ToList()) RemoveElement(g);
 
-        var days = targets.Select(n => n.Data.day).Distinct().OrderBy(d => d).ToList();
-        var npcs = targets.Select(n => string.IsNullOrEmpty(n.Data.npcTag) ? "(미분류)" : n.Data.npcTag)
-                          .Distinct().OrderBy(s => s).ToList();
-
+        var byGuid = all.ToDictionary(n => n.Guid, n => n);
+        var placed = new HashSet<string>();
         float yCursor = 0f;
 
-        foreach (int day in days)
+        // 연결 정보 (포트 순서 유지)
+        List<DialogueGraphNode> ChildrenOf(DialogueGraphNode node)
         {
-            var dayNodes = targets.Where(n => n.Data.day == day).ToList();
-            int maxRows = 1;
+            var result = new List<DialogueGraphNode>();
+            foreach (var port in node.OutputPorts)
+                foreach (var edge in port.connections)
+                    if (edge.input?.node is DialogueGraphNode child && byGuid.ContainsKey(child.Guid))
+                        result.Add(child);
+            return result;
+        }
 
-            for (int col = 0; col < npcs.Count; col++)
+        // 트리 하나를 배치하고, 사용한 세로 높이를 반환
+        // ★ 배치한 노드 목록과 사용한 높이를 함께 반환
+        (List<DialogueGraphNode> members, float height) PlaceTree(DialogueGraphNode root, float baseY)
+        {
+            var depth = new Dictionary<string, int>();
+            var order = new List<DialogueGraphNode>();
+            var queue = new Queue<(DialogueGraphNode node, int d)>();
+            queue.Enqueue((root, 0));
+
+            // BFS로 깊이 계산 (이미 배치된 노드는 건너뜀 = 합류 지점 중복 방지)
+            while (queue.Count > 0)
             {
-                string npc = npcs[col];
-                var colNodes = dayNodes
-                    .Where(n => (string.IsNullOrEmpty(n.Data.npcTag) ? "(미분류)" : n.Data.npcTag) == npc)
-                    .OrderBy(n => n.Data.startHour < 0 ? int.MaxValue : n.Data.startHour)  // 시각 순
-                    .ThenBy(n => n.NodeType == "Start" ? 0 : 1)                             // 시작 노드 먼저
-                    .ToList();
-                if (colNodes.Count == 0) continue;
-
-                maxRows = Mathf.Max(maxRows, colNodes.Count);
-
-                for (int row = 0; row < colNodes.Count; row++)
+                var (node, d) = queue.Dequeue();
+                if (!placed.Add(node.Guid))
                 {
-                    var pos = new Vector2(col * columnWidth, yCursor + row * nodeGap);
-                    var rect = colNodes[row].GetPosition();
-                    colNodes[row].SetPosition(new Rect(pos, rect.size));
-                    colNodes[row].Data.position = pos;
+                    // 이미 다른 경로에서 배치됨 — 더 깊은 쪽으로 밀어줌
+                    if (depth.TryGetValue(node.Guid, out int prev) && d > prev) depth[node.Guid] = d;
+                    continue;
+                }
+                depth[node.Guid] = d;
+                order.Add(node);
+                foreach (var child in ChildrenOf(node)) queue.Enqueue((child, d + 1));
+            }
+
+            // 깊이별로 묶어서 세로로 쌓기
+            var byDepth = order.GroupBy(n => depth[n.Guid]).OrderBy(g => g.Key).ToList();
+            int maxRows = byDepth.Count > 0 ? byDepth.Max(g => g.Count()) : 1;
+
+            foreach (var group in byDepth)
+            {
+                var list = group.ToList();
+                // 이 열의 노드들을 세로 중앙 정렬
+                float columnHeight = (list.Count - 1) * rowGap;
+                float startY = baseY + ((maxRows - 1) * rowGap - columnHeight) * 0.5f;
+
+                for (int i = 0; i < list.Count; i++)
+                {
+                    var pos = new Vector2(group.Key * colGap, startY + i * rowGap);
+                    var rect = list[i].GetPosition();
+                    list[i].SetPosition(new Rect(pos, rect.size));
+                    list[i].Data.position = pos;
                 }
             }
 
-            if (createGroups)
+            return (order, maxRows * rowGap);
+        }
+
+        // 시작 노드부터 트리 단위로 배치 (Day/시각 순)
+        var roots = all
+            .Where(n => n.NodeType == "Start")
+            .OrderBy(n => n.Data.day)
+            .ThenBy(n => n.Data.startHour < 0 ? int.MaxValue : n.Data.startHour)
+            .ThenBy(n => n.Data.npcTag)
+            .ToList();
+
+        foreach (var root in roots)
+        {
+            if (placed.Contains(root.Guid)) continue;
+            var (members, used) = PlaceTree(root, yCursor);   // ★
+
+            if (createGroups && members.Count > 0)
             {
-                var group = new Group { title = day > 0 ? $"Day {day}" : "날짜 무관" };
+                string title = root.Data.day > 0
+                    ? $"Day {root.Data.day} · {(string.IsNullOrEmpty(root.Data.npcTag) ? "?" : root.Data.npcTag)} · {root.Data.knotName}"
+                    : root.Data.knotName;
+                var group = new Group { title = title };
                 AddElement(group);
-                foreach (var n in dayNodes) group.AddElement(n);
+                foreach (var m in members) group.AddElement(m);   // ★ 이 트리의 노드만 정확히
             }
 
-            yCursor += maxRows * nodeGap + dayGap;
+            yCursor += used + treeGap;
+        }
+
+        // 어느 트리에도 안 붙은 고아 노드들을 맨 아래에
+        var orphans = all.Where(n => !placed.Contains(n.Guid)).ToList();
+        for (int i = 0; i < orphans.Count; i++)
+        {
+            var pos = new Vector2(i * colGap, yCursor);
+            orphans[i].SetPosition(new Rect(pos, orphans[i].GetPosition().size));
+            orphans[i].Data.position = pos;
         }
     }
 }

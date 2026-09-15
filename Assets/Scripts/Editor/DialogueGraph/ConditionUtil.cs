@@ -101,6 +101,10 @@ public static class ConditionUtil
     public static void NormalizeKey(GraphVarType varType, ref string key)
     {
         if (UsesFreeText(varType) || !NeedsKey(varType)) return;
+
+        // ★ 카운터는 미등록 키를 지우지 않고 그대로 둔다 (검증에서 경고로 알림)
+        if (varType == GraphVarType.Counter) return;
+
         var options = GetKeyOptions(varType);
         if (options.Count == 0) { key = ""; return; }
         if (!options.Contains(key)) key = options[0];

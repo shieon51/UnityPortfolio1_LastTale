@@ -1,0 +1,164 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed910cb9940878044a8777cb2183ef8b, type: 3}
+  m_Name: Dialogue Graph Data
+  m_EditorClassIdentifier: Assembly-CSharp-Editor::DialogueGraphData
+  nodes:
+  - guid: fd2cc382-4c47-435b-bfe7-9a4509d076ce
+    nodeType: Line
+    position: {x: 620, y: 0}
+    knotName: 
+    day: 5
+    npcTag: Liel
+    startHour: 9
+    endHour: 12
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases: []
+    choiceOptions: []
+    lines:
+    - text: "\uC624\uB298\uC740 \uB0A0\uC774 \uC88B\uAD70\uC694."
+      speakerKey: Liel
+      speakerName: "\uB9AC\uC5D8"
+      forcePanel: 0
+      isSystem: 0
+      autoAdvance: -1
+      lockInput: 0
+      cueId: 
+      logics: []
+    - text: "\uB610 \uBD59\uB124\uC694."
+      speakerKey: Liel
+      speakerName: "\uB9AC\uC5D8"
+      forcePanel: 0
+      isSystem: 0
+      autoAdvance: -1
+      lockInput: 0
+      cueId: 
+      logics:
+      - varType: 2
+        key: Liel
+        amount: 1
+        isErase: 0
+  - guid: 5c30973f-f075-4f61-aaff-4d74efa3a926
+    nodeType: Start
+    position: {x: 0, y: 0}
+    knotName: Liel_Day5_001
+    day: 5
+    npcTag: Liel
+    startHour: 9
+    endHour: 12
+    colorTag: "\uB178\uB791"
+    note: "Liel_Day5.ink\uC5D0\uC11C \uAC00\uC838\uC634"
+    branchCases: []
+    choiceOptions: []
+    lines: []
+  - guid: 596254dc-0222-4aa6-bd6d-8025b9746ee5
+    nodeType: Line
+    position: {x: 1860, y: 0}
+    knotName: 
+    day: 5
+    npcTag: Liel
+    startHour: 9
+    endHour: 12
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases: []
+    choiceOptions: []
+    lines:
+    - text: "\uAC10\uC0AC\uD569\uB2C8\uB2E4."
+      speakerKey: Liel
+      speakerName: "\uB9AC\uC5D8"
+      forcePanel: 0
+      isSystem: 0
+      autoAdvance: -1
+      lockInput: 0
+      cueId: 
+      logics:
+      - varType: 1
+        key: Liel_Day1_001_meet
+        amount: 1
+        isErase: 0
+  - guid: b82ae829-c2e8-4981-b190-b6f8dbb465e8
+    nodeType: Choice
+    position: {x: 1240, y: 0}
+    knotName: 
+    day: 5
+    npcTag: Liel
+    startHour: 9
+    endHour: 12
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases: []
+    choiceOptions:
+    - text: "\uC0AC\uACFC \uB4DC\uC2E4\uB798\uC694?"
+      condition:
+        entries:
+        - varType: 0
+          key: liel_likes_apple
+          op: 0
+          value: 0
+        join: 0
+        summaryOverride: 
+    - text: "\uB124, \uB0A0\uC774 \uC88B\uB124\uC694"
+      condition:
+        entries: []
+        join: 0
+        summaryOverride: 
+    lines: []
+  - guid: a1a23f5c-0f72-4040-95fc-71f9f7f102e0
+    nodeType: Start
+    position: {x: 0, y: 540}
+    knotName: Liel_Day5_Exhausted
+    day: 5
+    npcTag: Liel
+    startHour: 9
+    endHour: 12
+    colorTag: "\uB178\uB791"
+    note: "Liel_Day5.ink\uC5D0\uC11C \uAC00\uC838\uC634"
+    branchCases: []
+    choiceOptions: []
+    lines: []
+  - guid: 4c98069f-2db0-4ffd-b216-a252d112a3f9
+    nodeType: Line
+    position: {x: 620, y: 540}
+    knotName: 
+    day: 5
+    npcTag: Liel
+    startHour: 9
+    endHour: 12
+    colorTag: "\uB178\uB791"
+    note: 
+    branchCases: []
+    choiceOptions: []
+    lines:
+    - text: "\uC624\uB298\uC740 \uC774\uC57C\uAE30\uB97C \uB9CE\uC774 \uB098\uB234\uAD70\uC694."
+      speakerKey: Liel
+      speakerName: "\uB9AC\uC5D8"
+      forcePanel: 0
+      isSystem: 0
+      autoAdvance: -1
+      lockInput: 0
+      cueId: 
+      logics: []
+  edges:
+  - fromGuid: 5c30973f-f075-4f61-aaff-4d74efa3a926
+    fromPortIndex: 0
+    toGuid: fd2cc382-4c47-435b-bfe7-9a4509d076ce
+  - fromGuid: a1a23f5c-0f72-4040-95fc-71f9f7f102e0
+    fromPortIndex: 0
+    toGuid: 4c98069f-2db0-4ffd-b216-a252d112a3f9
+  - fromGuid: fd2cc382-4c47-435b-bfe7-9a4509d076ce
+    fromPortIndex: 0
+    toGuid: b82ae829-c2e8-4981-b190-b6f8dbb465e8
+  - fromGuid: b82ae829-c2e8-4981-b190-b6f8dbb465e8
+    fromPortIndex: 0
+    toGuid: 596254dc-0222-4aa6-bd6d-8025b9746ee5

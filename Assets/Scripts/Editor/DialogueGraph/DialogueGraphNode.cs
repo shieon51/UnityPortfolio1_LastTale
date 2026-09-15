@@ -240,6 +240,7 @@ public class DialogueGraphNode : Node
             {
                 var options = ConditionUtil.GetKeyOptions(l.varType);
                 if (options.Count == 0) options.Add("(없음)");
+                if (!string.IsNullOrEmpty(l.key) && !options.Contains(l.key)) options.Insert(0, l.key); // ★ 미등록 키 보존
                 int index = Mathf.Max(0, options.IndexOf(l.key));
                 l.key = options[index];
                 var dd = new PopupField<string>(options, index) { style = { width = 110 } };
