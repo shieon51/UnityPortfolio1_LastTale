@@ -171,6 +171,7 @@ public class DialogueGraphWindow : EditorWindow
 
         EditorUtility.SetDirty(_asset);
         AssetDatabase.SaveAssets();
+        RefreshDirtyMarks(); //?
         Debug.Log($"[DialogueGraph] 저장 완료 — 노드 {_asset.nodes.Count}개, 연결 {_asset.edges.Count}개");
     }
 
@@ -194,6 +195,7 @@ public class DialogueGraphWindow : EditorWindow
         }
 
         _graph.ApplyFilter(_filter);
+        RefreshDirtyMarks();
     }
 
     private void ExportInk()
@@ -234,15 +236,24 @@ public class DialogueGraphWindow : EditorWindow
 
     private void ExportInkSplit(SplitMode mode)
     {
-        if (_asset == null) return;
+        if (_asset == null) { EditorUtility.DisplayDialog("오류", "그래프 애셋을 먼저 지정하세요.", "확인"); return; }
         Save();
+
+        var issues = GraphValidator.Validate(_asset);
+        int errorCount = issues.Count(i => i.severity == ValidationIssue.Severity.Error);
+        if (errorCount > 0)
+        {
+            bool proceed = EditorUtility.DisplayDialog("검증 오류",
+                $"오류 {errorCount}개가 발견되었습니다.\n그래도 내보낼까요?", "그래도 내보내기", "취소");
+            if (!proceed) return;
+        }
 
         string folder = EditorUtility.SaveFolderPanel("내보낼 폴더 선택", Application.dataPath + "/Datas", "");
         if (string.IsNullOrEmpty(folder)) return;
 
         BuildKnotNames();
 
-        // 그룹 키별로 Start 노드를 나눔
+        // 그룹 키별로 knot 노드를 분류
         var groups = new Dictionary<string, List<GraphNodeData>>();
         foreach (var kvp in _knotNames)
         {
@@ -258,8 +269,15 @@ public class DialogueGraphWindow : EditorWindow
             list.Add(node);
         }
 
+        int exported = 0, skipped = 0;
+
         foreach (var g in groups)
         {
+            // ★ 이 그룹에 속한 knot들과, 거기서 도달 가능한 모든 노드를 검사 대상으로
+            var affected = CollectReachable(g.Value);
+            bool anyDirty = affected.Any(IsNodeDirty);
+            if (!anyDirty) { skipped++; continue; }
+
             var sb = new StringBuilder();
             foreach (var node in g.Value)
             {
@@ -268,13 +286,82 @@ public class DialogueGraphWindow : EditorWindow
                 WriteFlow(sb, first, node.guid);
                 sb.AppendLine();
             }
-            string path = Path.Combine(folder, $"{g.Key}.ink");
+
+            // NPC별 모드면 하위 폴더 생성
+            string dir = folder;
+            if (mode == SplitMode.ByNPC && g.Key != "Common")
+            {
+                dir = Path.Combine(folder, g.Key);
+                Directory.CreateDirectory(dir);
+            }
+
+            string path = Path.Combine(dir, $"{g.Key}.ink");
             File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));
             RegisterToMainInk(path);
+
+            // ★ 내보낸 노드들의 해시 갱신
+            foreach (var n in affected) n.lastExportHash = ComputeHash(n);
+            exported++;
         }
 
+        EditorUtility.SetDirty(_asset);
+        AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        Debug.Log($"[DialogueGraph] 분할 내보내기 완료 — 파일 {groups.Count}개");
+        RefreshDirtyMarks();
+
+        Debug.Log($"[DialogueGraph] 분할 내보내기 — 생성 {exported}개, 변경 없어 건너뜀 {skipped}개");
+    }
+
+    /// <summary>주어진 knot 노드들에서 도달 가능한 모든 노드 수집</summary>
+    private List<GraphNodeData> CollectReachable(List<GraphNodeData> roots)
+    {
+        var visited = new HashSet<string>();
+        var stack = new Stack<string>(roots.Select(r => r.guid));
+
+        while (stack.Count > 0)
+        {
+            string guid = stack.Pop();
+            if (!visited.Add(guid)) continue;
+            foreach (var e in _asset.edges.Where(e => e.fromGuid == guid))
+                stack.Push(e.toGuid);
+        }
+        return _asset.nodes.Where(n => visited.Contains(n.guid)).ToList();
+    }
+
+    /// <summary>노드 내용이 마지막 내보내기 이후 변경되었는지</summary>
+    private bool IsNodeDirty(GraphNodeData n) => n.lastExportHash != ComputeHash(n);
+
+    private string ComputeHash(GraphNodeData node)
+    {
+        var sb = new StringBuilder();
+        sb.Append(node.knotName).Append('|').Append(node.day).Append('|').Append(node.npcTag).Append('|');
+
+        foreach (var l in node.lines)
+        {
+            sb.Append(l.text).Append(l.speakerKey).Append(l.speakerName)
+              .Append(l.forcePanel).Append(l.isSystem).Append(l.autoAdvance).Append(l.lockInput).Append(l.cueId);
+            foreach (var lg in l.logics) sb.Append(lg.varType).Append(lg.key).Append(lg.amount).Append(lg.isErase);
+        }
+        foreach (var o in node.choiceOptions)
+        {
+            sb.Append(o.text);
+            foreach (var c in o.condition.entries) sb.Append(c.varType).Append(c.key).Append(c.op).Append(c.value);
+        }
+        foreach (var b in node.branchCases)
+            foreach (var c in b.condition.entries) sb.Append(c.varType).Append(c.key).Append(c.op).Append(c.value);
+
+        foreach (var e in _asset.edges.Where(e => e.fromGuid == node.guid).OrderBy(e => e.fromPortIndex))
+            sb.Append(e.fromPortIndex).Append(e.toGuid);
+
+        return sb.ToString().GetHashCode().ToString();
+    }
+
+    /// <summary>변경된 노드 제목에 * 표시</summary>
+    private void RefreshDirtyMarks()
+    {
+        if (_asset == null) return;
+        foreach (var node in _graph.nodes.Cast<DialogueGraphNode>())
+            node.SetDirtyMark(IsNodeDirty(node.Data));
     }
 
     private void WriteFlow(StringBuilder sb, GraphNodeData current, string ownerGuid)
@@ -524,6 +611,7 @@ public class DialogueGraphWindow : EditorWindow
         _issuePanel.Add(header);
 
         var label = new Label(report);
+        label.enableRichText = true;   // ★ 추가
         label.style.whiteSpace = WhiteSpace.Normal;
         label.style.paddingLeft = 6;
         label.style.paddingRight = 10;

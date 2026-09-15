@@ -48,19 +48,7 @@ MonoBehaviour:
         key: Liel
         amount: 1
         isErase: 0
-  - guid: 5c30973f-f075-4f61-aaff-4d74efa3a926
-    nodeType: Start
-    position: {x: 0, y: 0}
-    knotName: Liel_Day5_001
-    day: 5
-    npcTag: Liel
-    startHour: 9
-    endHour: 12
-    colorTag: "\uB178\uB791"
-    note: "Liel_Day5.ink\uC5D0\uC11C \uAC00\uC838\uC634"
-    branchCases: []
-    choiceOptions: []
-    lines: []
+    lastExportHash: 
   - guid: 596254dc-0222-4aa6-bd6d-8025b9746ee5
     nodeType: Line
     position: {x: 1860, y: 0}
@@ -87,6 +75,7 @@ MonoBehaviour:
         key: Liel_Day1_001_meet
         amount: 1
         isErase: 0
+    lastExportHash: 
   - guid: b82ae829-c2e8-4981-b190-b6f8dbb465e8
     nodeType: Choice
     position: {x: 1240, y: 0}
@@ -114,6 +103,7 @@ MonoBehaviour:
         join: 0
         summaryOverride: 
     lines: []
+    lastExportHash: 
   - guid: a1a23f5c-0f72-4040-95fc-71f9f7f102e0
     nodeType: Start
     position: {x: 0, y: 540}
@@ -127,6 +117,7 @@ MonoBehaviour:
     branchCases: []
     choiceOptions: []
     lines: []
+    lastExportHash: 
   - guid: 4c98069f-2db0-4ffd-b216-a252d112a3f9
     nodeType: Line
     position: {x: 620, y: 540}
@@ -149,6 +140,21 @@ MonoBehaviour:
       lockInput: 0
       cueId: 
       logics: []
+    lastExportHash: 
+  - guid: 5c30973f-f075-4f61-aaff-4d74efa3a926
+    nodeType: Start
+    position: {x: 0, y: 0}
+    knotName: Liel_Day5_001
+    day: 5
+    npcTag: Liel
+    startHour: 9
+    endHour: 12
+    colorTag: "\uB178\uB791"
+    note: "Liel_Day5.ink\uC5D0\uC11C \uAC00\uC838\uC634"
+    branchCases: []
+    choiceOptions: []
+    lines: []
+    lastExportHash: 
   edges:
   - fromGuid: 5c30973f-f075-4f61-aaff-4d74efa3a926
     fromPortIndex: 0

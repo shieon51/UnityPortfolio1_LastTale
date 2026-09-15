@@ -83,6 +83,8 @@ public class GraphNodeData
     public List<BranchCase> branchCases = new();     // Branch 노드
     public List<ChoiceOption> choiceOptions = new(); // Choice 노드 (choiceTexts 대체)
     public List<DialogueLine> lines = new();   // ★ Line 노드: 여러 줄을 한 노드에
+
+    public string lastExportHash = "";
 }
 
 [Serializable]

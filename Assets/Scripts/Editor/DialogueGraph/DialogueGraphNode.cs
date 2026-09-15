@@ -527,4 +527,10 @@ public class DialogueGraphNode : Node
         style.opacity = focused ? 1f : 0.22f;
         pickingMode = focused ? PickingMode.Position : PickingMode.Ignore; // 흐린 노드는 클릭 안 되게
     }
+
+    public void SetDirtyMark(bool dirty)
+    {
+        if (dirty && !title.EndsWith(" *")) title += " *";
+        else if (!dirty && title.EndsWith(" *")) title = title.Substring(0, title.Length - 2);
+    }
 }

@@ -16,6 +16,21 @@ public static class GraphPathAnalyzer
     private const int MaxPaths = 40;
     private const int MaxDepth = 60;
 
+    private static readonly string[] SpeakerColors = { "#7FD4FF", "#FFD27F", "#B0FF9E", "#FF9ECB", "#D4A5FF" };
+    private static readonly Dictionary<string, string> _speakerColorMap = new();
+
+    public static string ColorOf(string speakerKey)
+    {
+        if (string.IsNullOrEmpty(speakerKey)) return "#BBBBBB";        // 내레이션
+        if (speakerKey == "Player") return "#FF9ECB";                  // 소라 = 핑크
+        if (!_speakerColorMap.TryGetValue(speakerKey, out var c))
+        {
+            c = SpeakerColors[_speakerColorMap.Count % SpeakerColors.Length];
+            _speakerColorMap[speakerKey] = c;
+        }
+        return c;
+    }
+
     public static List<PathResult> Trace(DialogueGraphData asset, string startGuid)
     {
         var results = new List<PathResult>();
@@ -44,7 +59,11 @@ public static class GraphPathAnalyzer
                 foreach (var line in node.lines)
                 {
                     if (!string.IsNullOrWhiteSpace(line.text))
-                        current.steps.Add($"  \"{Trunc(line.text)}\"");
+                    {
+                        string color = ColorOf(line.speakerKey);
+                        string who = string.IsNullOrEmpty(line.speakerName) ? "내레이션" : line.speakerName;
+                        current.steps.Add($"  <color={color}>[{who}]</color> \"{Trunc(line.text)}\"");
+                    }
                     foreach (var l in line.logics) ApplyLogic(current, l);
                 }
                 Walk(asset, Next(asset, node.guid, 0), current, visited, results, depth + 1);
@@ -57,6 +76,7 @@ public static class GraphPathAnalyzer
                         ? $"[조건: {ConditionUtil.BuildSummary(node.branchCases[i].condition)}]"
                         : "[그 외]";
                     Fork(asset, node, i, label, current, visited, results, depth);
+                    current.steps.Add($"<color=#C86EC8>{label}</color>");
                 }
                 return;
 
@@ -67,6 +87,7 @@ public static class GraphPathAnalyzer
                     string cond = opt.condition.entries.Count > 0
                         ? $" (조건: {ConditionUtil.BuildSummary(opt.condition)})" : "";
                     Fork(asset, node, i, $"→ 선택 \"{Trunc(opt.text)}\"{cond}", current, visited, results, depth);
+                    current.steps.Add($"<color=#FF9ECB>→ 선택 \"{Trunc(opt.text)}\"</color>{cond}");
                 }
                 return;
         }
@@ -120,11 +141,15 @@ public static class GraphPathAnalyzer
 
             if (paths[i].deltas.Count > 0)
             {
-                var parts = paths[i].deltas.Select(d => $"{d.Key} {(d.Value >= 0 ? "+" : "")}{d.Value}");
-                sb.AppendLine($"  ▷ 수치 변화: {string.Join(", ", parts)}");
+                var parts = paths[i].deltas.Select(d =>
+                {
+                    string col = d.Value >= 0 ? "#8FE38F" : "#FF8080";
+                    return $"<color={col}>{d.Key} {(d.Value >= 0 ? "+" : "")}{d.Value}</color>";
+                });
+                sb.AppendLine($"  ▷ 수치: {string.Join(", ", parts)}");
             }
             if (paths[i].acquiredMemories.Count > 0)
-                sb.AppendLine($"  ▷ 정보: {string.Join(", ", paths[i].acquiredMemories)}");
+                sb.AppendLine($"  ▷ <color=#7FD4FF>정보: {string.Join(", ", paths[i].acquiredMemories)}</color>");
             sb.AppendLine();
         }
         return sb.ToString();
