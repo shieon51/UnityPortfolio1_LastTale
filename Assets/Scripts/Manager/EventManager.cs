@@ -120,7 +120,7 @@ public class EventManager : Singleton<EventManager>
              !GlobalActionLock.IsLocked &&
              canInteract &&
              closest != null &&
-             Input.GetKeyDown(KeyCode.Z))
+             InputBindings.GetKeyDown(InputAction.Interact))
         {
             Debug.Log($"상호작용 시작: {closest.eventData.EventName}");
 

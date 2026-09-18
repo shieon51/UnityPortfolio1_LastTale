@@ -117,7 +117,7 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     protected override void HandleSpecialMechanics()
     {
         // Tab 키를 누르면 1단계 <-> 2단계 변신 (3단계는 강제 발동이므로 2단계까지만 토글)
-        if (Input.GetKeyDown(KeyCode.Tab) && !_isTransforming && !isKnockedBack
+        if (InputBindings.GetKeyDown(InputAction.Transform) && !_isTransforming && !isKnockedBack
              && Time.time >= _lastTransformEndTime + formToggleCooldown
              && (_motor == null || !_motor.IsActionLocked))
         {

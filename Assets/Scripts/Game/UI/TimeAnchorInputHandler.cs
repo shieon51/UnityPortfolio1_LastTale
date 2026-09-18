@@ -6,7 +6,7 @@ public class TimeAnchorInputHandler : MonoBehaviour
     public TimeAnchorConfirmPopup popup;
     private void Update()
     {
-        if (Input.GetKeyDown(InputBindings.TimeAnchor) && !DialogueManager.Instance.IsTalking)
+        if (InputBindings.GetKeyDown(InputAction.TimeAnchor) && !DialogueManager.Instance.IsTalking)
             popup.Show();
     }
 }

@@ -1169,7 +1169,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d88bc80138045e4881545566791c06d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LocalizationManager
+  tableFileName: LocalizationTable.csv
   currentLanguage: KO
+  languageColumns: []
+  fallbackLanguage: KO
 --- !u!1 &351659693
 GameObject:
   m_ObjectHideFlags: 0
@@ -2033,6 +2036,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf5b88cd12c50cf4a8991cce49268245, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  preferFacingDirection: 1
+  facingDeadzone: 0.3
 --- !u!1 &555899560
 GameObject:
   m_ObjectHideFlags: 0
@@ -2536,6 +2541,9 @@ MonoBehaviour:
   groundSnapLayer:
     serializedVersion: 2
     m_Bits: 1032
+  snapRayDistance: 3
+  summonSnapRayDistance: 20
+  snapStartOffset: 1
 --- !u!1 &656654783
 GameObject:
   m_ObjectHideFlags: 0
