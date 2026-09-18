@@ -29,6 +29,9 @@ public class SpeechBubbleAutoSize : MonoBehaviour
     [Tooltip("0이면 즉시 반영. 값이 클수록 빠르게 따라간다")]
     public float growSpeed = 25f;
 
+    [Tooltip("체크하면 가로 폭을 대사 시작 시점에 확정한다. 세로만 글자를 따라 자란다")]
+    public bool fixWidthAtStart = false;
+
     private Vector2 _currentSize;
 
     // 새 대사를 시작할 때 호출한다 (다시 처음부터 자라도록)
@@ -42,7 +45,17 @@ public class SpeechBubbleAutoSize : MonoBehaviour
         var text = typewriter.Target;
         if (text == null) return;
 
+        // ★ fixWidthAtStart면 폭은 전체 문장 기준, 높이만 보이는 글자 기준
         Vector2 visible = MeasureVisible(text);
+        if (fixWidthAtStart)
+        {
+            int saved = text.maxVisibleCharacters;
+            text.maxVisibleCharacters = int.MaxValue;
+            text.ForceMeshUpdate();
+            visible.x = MeasureVisible(text).x;
+            text.maxVisibleCharacters = saved;
+            text.ForceMeshUpdate();
+        }
 
         // 본문은 BubblePanel의 왼쪽 위 기준으로 배치되어 있다 (x > 0, y < 0)
         Vector2 offset = bodyRect.anchoredPosition;
@@ -55,9 +68,17 @@ public class SpeechBubbleAutoSize : MonoBehaviour
         target.y = Mathf.Max(minHeight, target.y);
 
         if (growSpeed <= 0f || _currentSize == Vector2.zero)
+        {
             _currentSize = target;
+        }
         else
-            _currentSize = Vector2.Lerp(_currentSize, target, 1f - Mathf.Exp(-growSpeed * Time.unscaledDeltaTime));
+        {
+            // ★ 커질 때는 즉시 따라간다 (글자가 넘치면 안 되므로)
+            //   줄어들 때만 부드럽게 수축
+            float k = 1f - Mathf.Exp(-growSpeed * Time.unscaledDeltaTime);
+            _currentSize.x = target.x > _currentSize.x ? target.x : Mathf.Lerp(_currentSize.x, target.x, k);
+            _currentSize.y = target.y > _currentSize.y ? target.y : Mathf.Lerp(_currentSize.y, target.y, k);
+        }
 
         bubbleRect.sizeDelta = _currentSize;
     }

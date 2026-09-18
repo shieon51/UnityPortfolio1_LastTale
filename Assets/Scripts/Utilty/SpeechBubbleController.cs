@@ -42,13 +42,20 @@ public class SpeechBubbleController : MonoBehaviour
         bodyTypewriter.OnFullyDisplayed += () => OnTextFullyDisplayed?.Invoke(); // ★ 추가 — TypewriterText 완료 신호를 그대로 전달
         if (bubbleRect == null && bubbleRoot != null) bubbleRect = bubbleRoot.GetComponent<RectTransform>();
         if (autoSize == null) autoSize = GetComponent<SpeechBubbleAutoSize>();   // ★ 추가
+
+        // ★ 루트는 항상 켜둔다. 실제로 보이고 안 보이고는 bubbleRoot가 담당한다
+        //   (루트가 꺼져 있으면 LateUpdate가 돌지 않아 위치 추적과 크기 계산이 멈춘다)
+        if (bubbleRoot != null) bubbleRoot.SetActive(false);
     }
 
     public void Show(Transform target, string speakerName, string text)
     {
         _followTarget = target;
         nameText.text = speakerName;
+
+        if (!gameObject.activeSelf) gameObject.SetActive(true);   // ★ 혹시 꺼져 있으면 켠다
         bubbleRoot.SetActive(true);
+
         autoSize?.ResetSize();          // ★ 추가 — 새 대사는 다시 작은 크기부터 자란다
         bodyTypewriter.Play(text);
     }

@@ -105,6 +105,7 @@ MonoBehaviour:
   minWidth: 200
   minHeight: 120
   growSpeed: 25
+  fixWidthAtStart: 1
 --- !u!1 &3039445715083555877
 GameObject:
   m_ObjectHideFlags: 0
@@ -123,7 +124,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &5900054723429970758
 RectTransform:
   m_ObjectHideFlags: 0
@@ -349,7 +350,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TypewriterText
   target: {fileID: 8488576507980759929}
-  charsPerSecond: 40
+  charsPerSecond: 25
   useUnscaledTime: 1
   maxStepSeconds: 0.05
 --- !u!1 &7539684164770559591
