@@ -103,9 +103,10 @@ MonoBehaviour:
   paddingRight: 20
   paddingBottom: 56
   minWidth: 200
-  minHeight: 120
-  growSpeed: 25
+  minLines: 1
   fixWidthAtStart: 1
+  leadCharacters: 25
+  growSpeed: 25
 --- !u!1 &3039445715083555877
 GameObject:
   m_ObjectHideFlags: 0

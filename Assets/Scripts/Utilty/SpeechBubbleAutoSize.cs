@@ -1,40 +1,41 @@
-using TMPro;
+ï»¿using TMPro;
 using UnityEngine;
 
-// ¸»Ç³¼± ¹è°æÀ» "Áö±İ±îÁö ³ª¿Â ±ÛÀÚ"¿¡ ¸ÂÃç Å°¿î´Ù.
-// º»¹® ÅØ½ºÆ®ÀÇ ÆøÀº °íÁ¤ÀÌ¹Ç·Î ÁÙ¹Ù²Ş À§Ä¡´Â º¯ÇÏÁö ¾Ê°í, ¹è°æ¸¸
-// °¡·Î ¡æ (ÃÖ´ë Æø µµ´Ş) ¡æ ¼¼·Î ¼ø¼­·Î ÀÚ¶õ´Ù.
-// BubblePanel¿¡ Layout Group / Content Size Fitter°¡ ºÙ¾î ÀÖÀ¸¸é Ãæµ¹ÇÏ¹Ç·Î Á¦°ÅÇÒ °Í.
+// ë§í’ì„  ë°°ê²½ì„ ê¸€ì ì§„í–‰ì— ë§ì¶° í‚¤ìš´ë‹¤.
+// ì „ì²´ ë¬¸ì¥ì˜ ë°°ì¹˜ëŠ” ì´ë¯¸ ê³„ì‚°ë˜ì–´ ìˆìœ¼ë¯€ë¡œ "ëª‡ ê¸€ì ë’¤ì˜ í¬ê¸°"ë¥¼ ë¯¸ë¦¬ ì•Œ ìˆ˜ ìˆë‹¤.
+// ê·¸ í¬ê¸°ë¥¼ ëª©í‘œë¡œ ë¶€ë“œëŸ½ê²Œ ë‹¤ê°€ê°€ë©´, ê¸€ìê°€ ë„ì°©í•  ë•ŒëŠ” ì´ë¯¸ ê³µê°„ì´ ì¤€ë¹„ë˜ì–´ ìˆë‹¤.
+// BubblePanelì— Layout Group / Content Size Fitterê°€ ë¶™ì–´ ìˆìœ¼ë©´ ì¶©ëŒí•˜ë¯€ë¡œ ì œê±°í•  ê²ƒ.
 [DisallowMultipleComponent]
 public class SpeechBubbleAutoSize : MonoBehaviour
 {
-    [Header("ÂüÁ¶")]
+    [Header("ì°¸ì¡°")]
     public TypewriterText typewriter;
-    [Tooltip("Å©±â¸¦ Á¶ÀıÇÒ ¸»Ç³¼± ¹è°æ (BubblePanel)")]
+    [Tooltip("í¬ê¸°ë¥¼ ì¡°ì ˆí•  ë§í’ì„  ë°°ê²½ (BubblePanel)")]
     public RectTransform bubbleRect;
-    [Tooltip("º»¹® ÅØ½ºÆ®ÀÇ RectTransform (BubblePanel ±âÁØ ¿ŞÂÊ À§¿¡ ¹èÄ¡µÇ¾î ÀÖ¾î¾ß ÇÑ´Ù)")]
+    [Tooltip("ë³¸ë¬¸ í…ìŠ¤íŠ¸ì˜ RectTransform (BubblePanel ê¸°ì¤€ ì™¼ìª½ ìœ„ì— ë°°ì¹˜ë˜ì–´ ìˆì–´ì•¼ í•œë‹¤)")]
     public RectTransform bodyRect;
 
-    [Header("¿©¹é")]
-    [Tooltip("º»¹® ¿À¸¥ÂÊ¿¡ µÑ ¿©¹é")]
+    [Header("ì—¬ë°±")]
     public float paddingRight = 20f;
-    [Tooltip("º»¹® ¾Æ·¡¿¡ µÑ ¿©¹é (¿£ÅÍ ¾ÆÀÌÄÜ ÀÚ¸®¸¦ Æ÷ÇÔ)")]
-    public float paddingBottom = 32f;
+    [Tooltip("ë³¸ë¬¸ ì•„ë˜ ì—¬ë°± (ì—”í„° ì•„ì´ì½˜ ìë¦¬ë¥¼ í¬í•¨)")]
+    public float paddingBottom = 56f;
 
-    [Header("Å©±â Á¦ÇÑ")]
+    [Header("í¬ê¸° ì œí•œ")]
     public float minWidth = 200f;
-    public float minHeight = 90f;
+    [Tooltip("ëŒ€ì‚¬ê°€ ì•„ì§ ì•ˆ ë‚˜ì™”ì„ ë•Œë„ í™•ë³´í•´ë‘˜ ìµœì†Œ ì¤„ ìˆ˜")]
+    public int minLines = 1;
 
-    [Header("ÀÚ¶ó´Â ¼Óµµ")]
-    [Tooltip("0ÀÌ¸é Áï½Ã ¹İ¿µ. °ªÀÌ Å¬¼ö·Ï ºü¸£°Ô µû¶ó°£´Ù")]
-    public float growSpeed = 25f;
-
-    [Tooltip("Ã¼Å©ÇÏ¸é °¡·Î ÆøÀ» ´ë»ç ½ÃÀÛ ½ÃÁ¡¿¡ È®Á¤ÇÑ´Ù. ¼¼·Î¸¸ ±ÛÀÚ¸¦ µû¶ó ÀÚ¶õ´Ù")]
+    [Header("ìë¼ëŠ” ë°©ì‹")]
+    [Tooltip("ì²´í¬í•˜ë©´ ê°€ë¡œ í­ì„ ëŒ€ì‚¬ ì‹œì‘ ì‹œì ì— í™•ì •í•œë‹¤. ì„¸ë¡œë§Œ ê¸€ìë¥¼ ë”°ë¼ ìë€ë‹¤")]
     public bool fixWidthAtStart = false;
+    [Tooltip("ëª‡ ê¸€ì ì•ì„ ë¯¸ë¦¬ ë‚´ë‹¤ë³´ê³  ìë„ì§€. í´ìˆ˜ë¡ ì—¬ìœ ë¡­ê²Œ ì•ì„œ ìë€ë‹¤")]
+    public int leadCharacters = 10;
+    [Tooltip("ëª©í‘œ í¬ê¸°ë¥¼ ë”°ë¼ê°€ëŠ” ì†ë„. í´ìˆ˜ë¡ ë¹ ë¦¿í•˜ë‹¤")]
+    public float growSpeed = 12f;
 
     private Vector2 _currentSize;
 
-    // »õ ´ë»ç¸¦ ½ÃÀÛÇÒ ¶§ È£ÃâÇÑ´Ù (´Ù½Ã Ã³À½ºÎÅÍ ÀÚ¶óµµ·Ï)
+    // ìƒˆ ëŒ€ì‚¬ë¥¼ ì‹œì‘í•  ë•Œ í˜¸ì¶œí•œë‹¤
     public void ResetSize() => _currentSize = Vector2.zero;
 
     private void LateUpdate()
@@ -45,68 +46,75 @@ public class SpeechBubbleAutoSize : MonoBehaviour
         var text = typewriter.Target;
         if (text == null) return;
 
-        // ¡Ú fixWidthAtStart¸é ÆøÀº ÀüÃ¼ ¹®Àå ±âÁØ, ³ôÀÌ¸¸ º¸ÀÌ´Â ±ÛÀÚ ±âÁØ
-        Vector2 visible = MeasureVisible(text);
+        var info = text.textInfo;
+        int visible = Mathf.Clamp(typewriter.VisibleCharacterCount, 0, info.characterCount);
+
+        // ì§€ê¸ˆ ë‹¹ì¥ í•„ìš”í•œ í¬ê¸° (ì´ë³´ë‹¤ ì‘ì•„ì§€ë©´ ê¸€ìê°€ ë„˜ì¹œë‹¤)
+        Vector2 required = ToBubbleSize(Measure(text, visible));
+
+        // ëª‡ ê¸€ì ì•ì„ ë‚´ë‹¤ë³¸ í¬ê¸° â€” ì´ìª½ì„ ëª©í‘œë¡œ ë¶€ë“œëŸ½ê²Œ ë”°ë¼ê°„ë‹¤
+        int lead = Mathf.Clamp(visible + Mathf.Max(0, leadCharacters), 0, info.characterCount);
+        Vector2 target = ToBubbleSize(Measure(text, lead));
+
+        // í­ì„ ë¯¸ë¦¬ í™•ì •í•˜ëŠ” ì˜µì…˜
         if (fixWidthAtStart)
         {
-            int saved = text.maxVisibleCharacters;
-            text.maxVisibleCharacters = int.MaxValue;
-            text.ForceMeshUpdate();
-            visible.x = MeasureVisible(text).x;
-            text.maxVisibleCharacters = saved;
-            text.ForceMeshUpdate();
+            float fullWidth = ToBubbleSize(Measure(text, info.characterCount)).x;
+            required.x = fullWidth;
+            target.x = fullWidth;
         }
 
-        // º»¹®Àº BubblePanelÀÇ ¿ŞÂÊ À§ ±âÁØÀ¸·Î ¹èÄ¡µÇ¾î ÀÖ´Ù (x > 0, y < 0)
-        Vector2 offset = bodyRect.anchoredPosition;
-
-        Vector2 target = new Vector2(
-            offset.x + visible.x + paddingRight,
-            -offset.y + visible.y + paddingBottom);
-
-        target.x = Mathf.Max(minWidth, target.x);
-        target.y = Mathf.Max(minHeight, target.y);
-
-        if (growSpeed <= 0f || _currentSize == Vector2.zero)
+        if (_currentSize == Vector2.zero)
         {
-            _currentSize = target;
+            _currentSize = target;                      // ì²« í”„ë ˆì„ì€ ì¦‰ì‹œ ë°˜ì˜
         }
         else
         {
-            // ¡Ú Ä¿Áú ¶§´Â Áï½Ã µû¶ó°£´Ù (±ÛÀÚ°¡ ³ÑÄ¡¸é ¾È µÇ¹Ç·Î)
-            //   ÁÙ¾îµé ¶§¸¸ ºÎµå·´°Ô ¼öÃà
             float k = 1f - Mathf.Exp(-growSpeed * Time.unscaledDeltaTime);
-            _currentSize.x = target.x > _currentSize.x ? target.x : Mathf.Lerp(_currentSize.x, target.x, k);
-            _currentSize.y = target.y > _currentSize.y ? target.y : Mathf.Lerp(_currentSize.y, target.y, k);
+            _currentSize = Vector2.Lerp(_currentSize, target, k);
+
+            // â˜… ì•ˆì „ì¥ì¹˜: ë¶€ë“œëŸ½ê²Œ ë”°ë¼ê°€ë‹¤ ë’¤ì²˜ì ¸ë„ ê¸€ìê°€ ë„˜ì¹˜ì§€ëŠ” ì•Šê²Œ
+            _currentSize.x = Mathf.Max(_currentSize.x, required.x);
+            _currentSize.y = Mathf.Max(_currentSize.y, required.y);
         }
 
         bubbleRect.sizeDelta = _currentSize;
     }
 
-    // Áö±İ º¸ÀÌ´Â ±ÛÀÚµéÀÌ Â÷ÁöÇÏ´Â ½ÇÁ¦ Å©±â
-    private Vector2 MeasureVisible(TMP_Text text)
+    // ê¸€ì ì˜ì—­ í¬ê¸° â†’ ë§í’ì„  ì „ì²´ í¬ê¸° (ë³¸ë¬¸ ìœ„ì¹˜ì™€ ì—¬ë°±ì„ ë”í•œë‹¤)
+    private Vector2 ToBubbleSize(Vector2 textSize)
+    {
+        Vector2 offset = bodyRect.anchoredPosition;     // ë³¸ë¬¸ì€ ì™¼ìª½ ìœ„ ê¸°ì¤€ (x > 0, y < 0)
+        return new Vector2(
+            Mathf.Max(minWidth, offset.x + textSize.x + paddingRight),
+            -offset.y + textSize.y + paddingBottom);
+    }
+
+    // countê°œì˜ ê¸€ìê°€ ì°¨ì§€í•˜ëŠ” í¬ê¸°. minLinesë§Œí¼ì€ í•­ìƒ í™•ë³´í•œë‹¤
+    private Vector2 Measure(TMP_Text text, int count)
     {
         var info = text.textInfo;
-        int visible = Mathf.Min(typewriter.VisibleCharacterCount, info.characterCount);
-        if (visible <= 0 || info.lineCount == 0) return Vector2.zero;
+        if (info.lineCount == 0) return Vector2.zero;
 
         float minX = float.MaxValue, maxX = float.MinValue;
         int lastLine = 0;
 
-        for (int i = 0; i < visible; i++)
+        for (int i = 0; i < count && i < info.characterCount; i++)
         {
             var ch = info.characterInfo[i];
-            lastLine = ch.lineNumber;          // °ø¹éµµ ÁÙ ¹øÈ£´Â À¯È¿ÇÏ´Ù
-            if (!ch.isVisible) continue;       // Æø °è»ê¿¡¼­´Â °ø¹é Á¦¿Ü
+            lastLine = ch.lineNumber;                   // ê³µë°±ë„ ì¤„ ë²ˆí˜¸ëŠ” ìœ íš¨í•˜ë‹¤
+            if (!ch.isVisible) continue;                // í­ ê³„ì‚°ì—ì„œëŠ” ê³µë°± ì œì™¸
             minX = Mathf.Min(minX, ch.bottomLeft.x);
             maxX = Mathf.Max(maxX, ch.topRight.x);
         }
 
         float width = (maxX > minX) ? maxX - minX : 0f;
 
-        lastLine = Mathf.Clamp(lastLine, 0, info.lineCount - 1);
-        float height = info.lineInfo[0].ascender - info.lineInfo[lastLine].descender;
+        // â˜… ìµœì†Œ ì¤„ ìˆ˜ í™•ë³´ â€” ëŒ€ì‚¬ê°€ ì•„ì§ ì•ˆ ë‚˜ì™”ì„ ë•Œë„ í•œ ì¤„ ê³µê°„ì„ ë¹„ì›Œë‘”ë‹¤
+        int floorLine = Mathf.Clamp(minLines - 1, 0, info.lineCount - 1);
+        lastLine = Mathf.Clamp(Mathf.Max(lastLine, floorLine), 0, info.lineCount - 1);
 
+        float height = info.lineInfo[0].ascender - info.lineInfo[lastLine].descender;
         return new Vector2(width, height);
     }
 }

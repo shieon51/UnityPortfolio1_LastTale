@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
-using static UnityEngine.Rendering.DebugUI;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerController : MonoBehaviour, IPlayerMotor
@@ -28,6 +27,14 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
     [Header("Form Change Movement")]
     [Tooltip("변신 중 수평 속도가 감속되는 정도 (초당 감소 속도, 클수록 빨리 멈춤)")]
     public float formTransformDeceleration = 20f; // ex. 달리기 속도 6 기준 0.3초 안에 정지함
+
+    [Header("Teleport (요정화 3단계)")]
+    [Tooltip("순간이동 거리")]
+    public float teleportDistance = 5f;
+    [Tooltip("순간이동 재사용 대기 시간")]
+    public float teleportCooldown = 1f;
+    [Tooltip("벽에 막혔을 때 벽에서 떨어뜨릴 거리")]
+    public float teleportWallMargin = 0.5f;
 
     private IFormStageProvider _formProvider;
     private bool _isFormTransforming = false;
@@ -240,9 +247,9 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
         int currentPhase = (sora != null) ? sora.fairyStage : 0;
 
         // 대시
-        if (Input.GetKey(KeyCode.LeftShift))
+        if (InputBindings.GetKey(InputAction.Dash))
         {
-            if (currentPhase == 2 && Input.GetKeyDown(KeyCode.LeftShift) && Time.time >= _lastTeleportTime + 1f)
+            if (currentPhase == 2 && InputBindings.GetKeyDown(InputAction.Dash) && Time.time >= _lastTeleportTime + 1f)
             {
                 Teleport(); // 3페이즈 순간이동
                 _lastTeleportTime = Time.time;
@@ -263,13 +270,13 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
         }
 
         // Space 누르면 점프 이벤트(OnJumped) 발송
-        if (Input.GetKeyDown(KeyCode.Space) && IsGrounded)
+        if (InputBindings.GetKeyDown(InputAction.Jump) && IsGrounded)
         {
             Jump();
         }
 
         // 아래+스페이스바 조합으로 통과하거나, 원본대로 DownArrow로 통과 (이벤트 발송)
-        if (Input.GetKeyDown(KeyCode.DownArrow) && IsGrounded)
+        if (InputBindings.GetKeyDown(InputAction.Drop) && IsGrounded)
         {
             GoUnderGround();
         }
@@ -637,13 +644,12 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
 
     private void Teleport()
     {
-        float teleportDist = 5f;
         float dir = _horizontalInput != 0 ? Mathf.Sign(_horizontalInput) : 1f; // 바라보는 방향
-        Vector3 targetPos = transform.position + new Vector3(dir * teleportDist, 0, 0);
+        Vector3 targetPos = transform.position + new Vector3(dir * teleportDistance, 0, 0);
 
         // 벽 통과 방지
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.right * dir, teleportDist, groundLayer);
-        if (hit.collider != null) targetPos = hit.point - new Vector2(dir * 0.5f, 0);
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.right * dir, teleportDistance, groundLayer);
+        if (hit.collider != null) targetPos = hit.point - new Vector2(dir * teleportWallMargin, 0);
 
         transform.position = targetPos;
         Debug.Log("[PlayerController] 3페이즈 순간이동 발동!");

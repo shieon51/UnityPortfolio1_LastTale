@@ -6,7 +6,7 @@ using UnityEngine;
 public enum InputAction
 {
     // 전투
-    Attack1, Attack2, Attack3, Ultimate, Guard, Dodge, Dash, Jump, Transform,
+    Attack1, Attack2, Attack3, Ultimate, Guard, Dodge, Dash, Jump, Transform, Drop,
     // 능력
     TimeAnchor,
     // 상호작용
@@ -33,6 +33,7 @@ public static class InputBindings
         { InputAction.Dodge,       KeyCode.D },          // 소라의 '틈입'
         { InputAction.Dash,        KeyCode.LeftShift },
         { InputAction.Jump,        KeyCode.Space },
+        { InputAction.Drop,        KeyCode.DownArrow },  // 아래 지형 통과
         { InputAction.Transform,   KeyCode.Tab },        // 요정화
         { InputAction.TimeAnchor,  KeyCode.T },          // 시간의 닻
         { InputAction.Interact,    KeyCode.Z },

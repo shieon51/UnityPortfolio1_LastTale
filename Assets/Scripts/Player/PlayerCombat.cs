@@ -95,14 +95,16 @@ public class PlayerCombat : MonoBehaviour
 
     private void Update()
     {
-        if (_stats.isKnockedBack || DialogueManager.Instance.IsTalking || GlobalActionLock.IsLocked) return;
-        if (_motor != null && _motor.IsExternallyLocked) return; // * IsExternallyLocked
+        if (_stats.isKnockedBack || GlobalActionLock.IsLocked) return;
+        if (DialogueManager.Instance != null && DialogueManager.Instance.IsTalking) return;
+
+        if (_motor != null && _motor.IsExternallyLocked) return;
 
         // 키 입력 
-        if (Input.GetKeyDown(KeyCode.Q)) HandleInput(sequenceQ);
-        else if (Input.GetKeyDown(KeyCode.W)) HandleInput(sequenceW);
-        else if (Input.GetKeyDown(KeyCode.E)) HandleInput(sequenceE);
-        else if (Input.GetKeyDown(KeyCode.R)) HandleInput(sequenceR);
+        if (InputBindings.GetKeyDown(InputAction.Attack1)) HandleInput(sequenceQ);
+        else if (InputBindings.GetKeyDown(InputAction.Attack2)) HandleInput(sequenceW);
+        else if (InputBindings.GetKeyDown(InputAction.Attack3)) HandleInput(sequenceE);
+        else if (InputBindings.GetKeyDown(InputAction.Ultimate)) HandleInput(sequenceR);
 
         // 콤보 윈도우가 열려 있거나, 아예 공격 중이 아닐 때 버퍼를 실행
         if ((!IsAttacking || _isComboWindowOpen) && _inputBuffer.Count > 0)
@@ -169,7 +171,7 @@ public class PlayerCombat : MonoBehaviour
         if (!hasEnoughMana && skillToPlay.manaCostPolicy == ManaCostPolicy.BlockIfInsufficient)
         {
             OnSkillBlockedByMana?.Invoke(skillToPlay);
-            NotificationManager.Instance?.Show("마나가 부족합니다", NotificationType.Warning);
+            NotificationManager.Instance?.ShowKey("notify_mana_short", NotificationType.Warning);
             return;
         }
 

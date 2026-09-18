@@ -123,7 +123,7 @@ public class UIWindowManager : Singleton<UIWindowManager>
 
         if (!CanOpen(element)) return false;
 
-        // 열람형 창은 서로 배타적이다 — 이미 열린 창은 닫는다
+        // 열람형 창은 서로 배타적이다 — 이미 열린 창은 닫는다 // 여기 지우면 쌓이는 식으로 가능 **
         if (element.Layer == UILayer.Window)
         {
             for (int i = _stack.Count - 1; i >= 0; i--)
