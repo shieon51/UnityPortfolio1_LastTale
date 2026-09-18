@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+ï»¿#if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System.Linq;
 using TMPro;
 using UnityEngine;
@@ -31,18 +31,18 @@ public class DebugGameStateOverlay : Singleton<DebugGameStateOverlay>
         var player = PlayerManager.Instance?.CurrentCharacter;
         if (player != null)
         {
-            sb.AppendLine($"[ÇÃ·¹ÀÌ¾î] ¸ö ·¹º§ {player.level} (¿µÈ¥ ·¹º§ {player.highestLevelReached}) HP {player.currentHealth}/{player.maxHealth} MP {player.currentMana}/{player.maxMana}");
+            sb.AppendLine($"[í”Œë ˆì´ì–´] ëª¸ ë ˆë²¨ {player.level} (ì˜í˜¼ ë ˆë²¨ {player.highestLevelReached}) HP {player.currentHealth}/{player.maxHealth} MP {player.currentMana}/{player.maxMana}");
             if (player is SoraStats sora)
             {
-                sb.AppendLine($"  È¸Â÷: {sora.loopCount}  |  ÇÇ·Îµµ {sora.currentFatigue}/{sora.maxFatigue} Á¤½Å·Â {sora.currentMental}/{sora.maxMental} ¿äÁ¤È­ {sora.fairyStage}´Ü°è");
-                sb.AppendLine($"  ½Ã°£°áÁ¤Ã¼ {sora.timeCrystals}°³  |  Day {TimeManager.Instance.currentDay} ³²Àº ÄÚÀÎ {TimeManager.Instance.timeCoins}");
+                sb.AppendLine($"  íšŒì°¨: {sora.loopCount}  |  í”¼ë¡œë„ {sora.currentFatigue}/{sora.maxFatigue} ì •ì‹ ë ¥ {sora.currentMental}/{sora.maxMental} ìš”ì •í™” {sora.fairyStage}ë‹¨ê³„");
+                sb.AppendLine($"  ì‹œê°„ê²°ì •ì²´ {sora.timeCrystals}ê°œ  |  Day {TimeManager.Instance.currentDay} ë‚¨ì€ ì½”ì¸ {TimeManager.Instance.timeCoins}");
             }
         }
         if (NPCManager.Instance != null)
         {
             foreach (var kvp in NPCManager.Instance.AllNPCData)
             {
-                //sb.AppendLine($"[{kvp.Key}] ÀÌÇØµµ {kvp.Value.GetUnderstanding()} È£°¨µµ {kvp.Value.hiddenAffection} ¸ğµå {kvp.Value.currentMode}");
+                //sb.AppendLine($"[{kvp.Key}] ì´í•´ë„ {kvp.Value.GetUnderstanding()} í˜¸ê°ë„ {kvp.Value.hiddenAffection} ëª¨ë“œ {kvp.Value.currentMode}");
                 var live = FindObjectsOfType<NPC>().FirstOrDefault(n => n.npcName == kvp.Key);
                 if (live != null) sb.AppendLine($"  HP {live.currentHealth}/{live.maxHealth} MP {live.currentMana}/{live.maxMana}");
             }

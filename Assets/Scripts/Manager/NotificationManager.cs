@@ -1,11 +1,11 @@
-using System.Collections;
+﻿using System.Collections;
 using TMPro;
 using UnityEngine;
 
 public enum NotificationType { Info, Warning, Failure }
 
-// ȭ�鿡 ª�� �ȳ� ������ ���� ���� �ý���.
-// "Ÿ���� �����ϴ�", "������ �����մϴ�" �� �ƴ϶� ���߿� ���� ���� ���, ��ų �ر� �ȳ� � �̰ɷ� �����ؼ� ���.
+// 화면에 짧은 안내 문구를 띄우는 범용 시스템.
+// "타겟이 없습니다", "마나가 부족합니다" 뿐 아니라 나중에 보스 공격 경고, 스킬 해금 안내 등도 이걸로 통일해서 사용.
 public class NotificationManager : Singleton<NotificationManager>
 {
     [Header("UI References")]

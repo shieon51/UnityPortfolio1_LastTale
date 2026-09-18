@@ -1,5 +1,4 @@
 // EnterIconIndicator.cs (Àç¼³°è)
-using UnityEditor.ShaderGraph.Serialization;
 using UnityEngine;
 
 public class EnterIconIndicator : MonoBehaviour

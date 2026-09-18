@@ -1,4 +1,4 @@
-// LocalizationManager.cs (½Å±Ô)
+ï»¿// LocalizationManager.cs (ì‹ ê·œ)
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -18,5 +18,5 @@ public class LocalizationManager : Singleton<LocalizationManager>
 
     public void SetLanguage(string lang) { currentLanguage = lang; LoadTable(); }
 
-    public string Get(string key) => _table.TryGetValue(key, out var text) ? text : $"[{key}]"; // ¸ø Ã£À¸¸é Å° ÀÚÃ¼°¡ º¸¿©¼­ ´©¶ô ¹Ù·Î ¹ß°ßµÊ
+    public string Get(string key) => _table.TryGetValue(key, out var text) ? text : $"[{key}]"; // ëª» ì°¾ìœ¼ë©´ í‚¤ ìì²´ê°€ ë³´ì—¬ì„œ ëˆ„ë½ ë°”ë¡œ ë°œê²¬ë¨
 }

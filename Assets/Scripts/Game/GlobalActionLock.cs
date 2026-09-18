@@ -1,4 +1,4 @@
-// GlobalActionLock.cs (�ű�)
+﻿// GlobalActionLock.cs (신규)
 using System.Collections.Generic;
 
 public static class GlobalActionLock

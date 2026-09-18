@@ -1,19 +1,19 @@
-using System;
+ï»¿using System;
 using UnityEngine;
 
-// ÇÃ·¹ÀÌ¾î °ü¸®ÀÚ (½Ì±ÛÅæ) - ÇöÀç ÇÃ·¹ÀÌ¾î°¡ Á¶Á¤ÇÏ´Â Ä³¸¯ÅÍ¸¦ ÁöÁ¤
+// í”Œë ˆì´ì–´ ê´€ë¦¬ì (ì‹±ê¸€í†¤) - í˜„ì¬ í”Œë ˆì´ì–´ê°€ ì¡°ì •í•˜ëŠ” ìºë¦­í„°ë¥¼ ì§€ì •
 public class PlayerManager : Singleton<PlayerManager>
 {
-    // ÇöÀç ÇÃ·¹ÀÌ¾î°¡ Á¶Á¾ ÁßÀÎ Ä³¸¯ÅÍÀÇ ½ºÅÈ (¼Ò¶óÀÏ ¼öµµ, ¸®¿¤ÀÏ ¼öµµ ÀÖÀ½)
+    // í˜„ì¬ í”Œë ˆì´ì–´ê°€ ì¡°ì¢… ì¤‘ì¸ ìºë¦­í„°ì˜ ìŠ¤íƒ¯ (ì†Œë¼ì¼ ìˆ˜ë„, ë¦¬ì—˜ì¼ ìˆ˜ë„ ìˆìŒ)
     public PlayableCharacter CurrentCharacter { get; private set; }
 
-    // UI³ª Ä«¸Ş¶ó°¡ ±¸µ¶ÇÒ ÀÌº¥Æ®
+    // UIë‚˜ ì¹´ë©”ë¼ê°€ êµ¬ë…í•  ì´ë²¤íŠ¸
     public event Action<PlayableCharacter> OnCharacterPossessed;
 
-    // °ÔÀÓ ½ÃÀÛ ½Ã, ¾À¿¡ ÀÖ´Â ÇÃ·¹ÀÌ¾î¸¦ ÀÚµ¿ Ã£¾Æ¼­ ºùÀÇ
+    // ê²Œì„ ì‹œì‘ ì‹œ, ì”¬ì— ìˆëŠ” í”Œë ˆì´ì–´ë¥¼ ìë™ ì°¾ì•„ì„œ ë¹™ì˜
     private void Start()
     {
-        // ÅÂ±×°¡ PlayerÀÎ ³à¼®À» Ã£¾Æ ºùÀÇ (ÃÊ±â ¼ÂÆÃ¿ë)
+        // íƒœê·¸ê°€ Playerì¸ ë…€ì„ì„ ì°¾ì•„ ë¹™ì˜ (ì´ˆê¸° ì…‹íŒ…ìš©)
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
         {
@@ -22,46 +22,46 @@ public class PlayerManager : Singleton<PlayerManager>
         }
     }
 
-    // ºùÀÇ(½ÃÁ¡ º¯°æ) ÇÔ¼ö
+    // ë¹™ì˜(ì‹œì  ë³€ê²½) í•¨ìˆ˜
     public void PossessCharacter(PlayableCharacter newCharacter)
     {
-        // 1. ±âÁ¸ Ä³¸¯ÅÍ¿¡¼­ ºùÀÇ ÇØÁ¦ (Á¶ÀÛ ²ô±â, AI ÄÑ±â µî)
+        // 1. ê¸°ì¡´ ìºë¦­í„°ì—ì„œ ë¹™ì˜ í•´ì œ (ì¡°ì‘ ë„ê¸°, AI ì¼œê¸° ë“±)
         if (CurrentCharacter != null)
         {
             CurrentCharacter.OnUnpossessed();
-            SetCharacterControl(CurrentCharacter, false); // Á¶ÀÛ ºñÈ°¼ºÈ­
+            SetCharacterControl(CurrentCharacter, false); // ì¡°ì‘ ë¹„í™œì„±í™”
         }
 
         CurrentCharacter = newCharacter;
 
-        // 2. »õ Ä³¸¯ÅÍ¿¡ ºùÀÇ (Á¶ÀÛ ÄÑ±â, AI ²ô±â)
+        // 2. ìƒˆ ìºë¦­í„°ì— ë¹™ì˜ (ì¡°ì‘ ì¼œê¸°, AI ë„ê¸°)
         if (CurrentCharacter != null)
         {
             CurrentCharacter.OnPossessed();
-            SetCharacterControl(CurrentCharacter, true); // Á¶ÀÛ È°¼ºÈ­
+            SetCharacterControl(CurrentCharacter, true); // ì¡°ì‘ í™œì„±í™”
 
-            // UI ¸Å´ÏÀú µî¿¡°Ô Ä³¸¯ÅÍ°¡ ¹Ù²î¾ú´Ù°í ¾Ë¸²
+            // UI ë§¤ë‹ˆì € ë“±ì—ê²Œ ìºë¦­í„°ê°€ ë°”ë€Œì—ˆë‹¤ê³  ì•Œë¦¼
             OnCharacterPossessed?.Invoke(CurrentCharacter);
-            Debug.Log($"ÇöÀç ÇÃ·¹ÀÌ Ä³¸¯ÅÍ°¡ {CurrentCharacter.gameObject.name}(À¸)·Î º¯°æµÇ¾ú½À´Ï´Ù.");
+            Debug.Log($"í˜„ì¬ í”Œë ˆì´ ìºë¦­í„°ê°€ {CurrentCharacter.gameObject.name}(ìœ¼)ë¡œ ë³€ê²½ë˜ì—ˆìŠµë‹ˆë‹¤.");
         }
     }
 
-    // ÄÄÆ÷³ÍÆ®¸¦ ÄÑ°í ²ô´Â ¸¶¹ıÀÇ ÇïÆÛ ÇÔ¼ö
+    // ì»´í¬ë„ŒíŠ¸ë¥¼ ì¼œê³  ë„ëŠ” ë§ˆë²•ì˜ í—¬í¼ í•¨ìˆ˜
     private void SetCharacterControl(PlayableCharacter character, bool isPlayer)
     {
-        // Á¶ÀÛ ½ºÅ©¸³Æ® ÄÑ°í ²ô±â
+        // ì¡°ì‘ ìŠ¤í¬ë¦½íŠ¸ ì¼œê³  ë„ê¸°
         var controller = character.GetComponent<PlayerController>();
         if (controller != null) controller.enabled = isPlayer;
 
         var attack = character.GetComponentInChildren<PlayerCombat>();
         if (attack != null) attack.enabled = isPlayer;
 
-        // ³ªÁß¿¡ Ãß°¡ÇÒ NPC Àü¿ë AI ½ºÅ©¸³Æ®(¿¹: BossFSM)´Â ÇÃ·¹ÀÌ¾îÀÏ ¶© ²¨¾ß ÇÔ
+        // ë‚˜ì¤‘ì— ì¶”ê°€í•  NPC ì „ìš© AI ìŠ¤í¬ë¦½íŠ¸(ì˜ˆ: BossFSM)ëŠ” í”Œë ˆì´ì–´ì¼ ë• êº¼ì•¼ í•¨
         // var ai = character.GetComponent<BossAI>();
-        // if (ai != null) ai.enabled = !isPlayer; // Á¶Á¾ ÁßÀÏ ¶© AI ²ô±â, Á¶Á¾ ¾ÈÇÒ ¶© AI ÄÑ±â
+        // if (ai != null) ai.enabled = !isPlayer; // ì¡°ì¢… ì¤‘ì¼ ë• AI ë„ê¸°, ì¡°ì¢… ì•ˆí•  ë• AI ì¼œê¸°
     }
 
-    // ¿ÜºÎ¿¡¼­ µ¥¹ÌÁö¸¦ ÁÖ°Å³ª ÈúÀ» ÇÒ ¶§ »ç¿ëÇÏ´Â ÇïÆÛ ÇÔ¼ö
+    // ì™¸ë¶€ì—ì„œ ë°ë¯¸ì§€ë¥¼ ì£¼ê±°ë‚˜ íì„ í•  ë•Œ ì‚¬ìš©í•˜ëŠ” í—¬í¼ í•¨ìˆ˜
     public void TakeDamageToCurrentCharacter(int damage, ElementType element = ElementType.Normal)
     {
         if (CurrentCharacter != null)

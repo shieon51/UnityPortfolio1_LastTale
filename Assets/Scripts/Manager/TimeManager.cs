@@ -1,15 +1,15 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System;
 
 public class TimeManager : Singleton<TimeManager>
 {
-    public int timeCoins = 24; // ÇÏ·ç¿¡ ÁÖ¾îÁö´Â ½Ã°£ ÄÚÀÎ
+    public int timeCoins = 24; // í•˜ë£¨ì— ì£¼ì–´ì§€ëŠ” ì‹œê°„ ì½”ì¸
     public int currentHour = 0;
     public int currentDay = 1;
 
     // public event Action OnTimeChanged;
     // public event Action OnDayChanged;
-    public event Action<int, int> OnTimeUpdated; // ³²Àº ½Ã°£ ÄÚÀÎ, ÇöÀç ³¯Â¥ -> UIManager¿¡¼­ ½Ã°£ UI ¾÷µ¥ÀÌÆ®
+    public event Action<int, int> OnTimeUpdated; // ë‚¨ì€ ì‹œê°„ ì½”ì¸, í˜„ì¬ ë‚ ì§œ -> UIManagerì—ì„œ ì‹œê°„ UI ì—…ë°ì´íŠ¸
 
     public void UseTimeCoins(int amount)
     {
@@ -21,13 +21,13 @@ public class TimeManager : Singleton<TimeManager>
             NextDay();
         }
 
-        //OnTimeChanged?.Invoke(); //**¾ÆÁ÷ ¾È ¾²ÀÓ
+        //OnTimeChanged?.Invoke(); //**ì•„ì§ ì•ˆ ì“°ì„
 
-        // UI °»½Å ÀÌº¥Æ® È£Ãâ
+        // UI ê°±ì‹  ì´ë²¤íŠ¸ í˜¸ì¶œ
         OnTimeUpdated?.Invoke(timeCoins, currentDay);
 
         EventManager.Instance.UpdateEventTriggers();
-        AmbientEventManager.Instance?.TryTriggerAmbient(); // ½Ã°£ÀÌ Èå¸¦ ¶§¸¶´Ù ÆÇÁ¤
+        AmbientEventManager.Instance?.TryTriggerAmbient(); // ì‹œê°„ì´ íë¥¼ ë•Œë§ˆë‹¤ íŒì •
     }
 
     private void NextDay()
@@ -36,7 +36,7 @@ public class TimeManager : Singleton<TimeManager>
         currentHour -= 24;
         currentDay++;
 
-        //OnDayChanged?.Invoke(); //** ¾ÆÁ÷ ¾È ¾²ÀÓ
+        //OnDayChanged?.Invoke(); //** ì•„ì§ ì•ˆ ì“°ì„
     }
 
     public void ResetToDay1()
@@ -48,7 +48,7 @@ public class TimeManager : Singleton<TimeManager>
         EventManager.Instance?.UpdateEventTriggers();
     }
 
-    // ¾ŞÄ¿ º¹±Í ½Ã ÀÓÀÇ ½Ã°¢À¸·Î ¼¼ÆÃÇÏ±â À§ÇÔ
+    // ì•µì»¤ ë³µê·€ ì‹œ ì„ì˜ ì‹œê°ìœ¼ë¡œ ì„¸íŒ…í•˜ê¸° ìœ„í•¨
     public void SetTime(int day, int hour)
     {
         currentDay = day;

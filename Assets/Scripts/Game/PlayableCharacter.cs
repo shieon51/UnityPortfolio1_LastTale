@@ -52,7 +52,7 @@ public abstract class PlayableCharacter : CharacterStats
     }
 
     // 경험치 및 레벨업 (공통 로직)
-    public void GainExperience(int amount) 
+    public void GainExperience(int amount)
     {
         experience += amount;
         while (experience >= experienceToNextLevel)
@@ -100,15 +100,15 @@ public abstract class PlayableCharacter : CharacterStats
 
     // PlayableCharacter.cs 안에 추가 (기존 TakeDamage가 있다면 덮어씌우기)
     public override bool TakeDamage(
-        int incomingDamage, 
-        ElementType attackElement = ElementType.Normal, 
-        CharacterStats attacker = null, 
-        Vector2? knockbackDirection = null, 
-        float knockbackPower = 0f, 
+        int incomingDamage,
+        ElementType attackElement = ElementType.Normal,
+        CharacterStats attacker = null,
+        Vector2? knockbackDirection = null,
+        float knockbackPower = 0f,
         Vector2? attackOriginOverride = null,
         bool piercesDodge = false)
     {
-        bool applied = base.TakeDamage(incomingDamage, attackElement, attacker, knockbackDirection, knockbackPower); // ★ attacker/넉백 반드시 그대로 전달
+        bool applied = base.TakeDamage(incomingDamage, attackElement, attacker, knockbackDirection, knockbackPower, attackOriginOverride, piercesDodge); // ★ B-23: 공격 시작 위치/회피 관통 여부까지 전부 그대로 전달
 
         if (applied && isKnockedBack)
         {

@@ -52,6 +52,14 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
 
     private bool _isTransforming = false; // 변신 딜레이 중인지 체크
 
+    [Header("역상성 피격 (요정화 상태)")]
+    [Tooltip("요정화 상태에서 이 속성의 공격을 받으면 역상성 피해로 처리 (상성 기획 확정 전 임시 기준)")]
+    public ElementType reverseElement = ElementType.Normal; // ★ 하드코딩 제거
+    [Tooltip("역상성 피격 시 피해 배율")]
+    public float reverseElementDamageMultiplier = 1.5f;     // ★ 하드코딩 제거
+    [Tooltip("역상성 피해가 실제로 적용됐을 때 깎이는 정신력")]
+    public int reverseElementMentalLoss = 5;                 // ★ 하드코딩 제거
+
     // 소라 회피 '틈입'
     private PlayerDodge _dodge;
     protected override bool IsDodgeInvincible => _dodge != null && _dodge.IsDodging;
@@ -167,23 +175,30 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
 
     // [기획 반영] 시간 속성의 소라는 역상성(예: Normal)에 맞으면 추가 피해 및 정신력 감소
     public override bool TakeDamage(
-        int incomingDamage, 
-        ElementType attackElement = ElementType.Normal, 
-        CharacterStats attacker = null, 
-        Vector2? knockbackDirection = null, 
-        float knockbackPower = 0f, 
-        Vector2? attackOriginOverride = null, 
+        int incomingDamage,
+        ElementType attackElement = ElementType.Normal,
+        CharacterStats attacker = null,
+        Vector2? knockbackDirection = null,
+        float knockbackPower = 0f,
+        Vector2? attackOriginOverride = null,
         bool piercesDodge = false)
     {
-        int finalDamage = incomingDamage;
-        if (fairyStage > 0 && attackElement == ElementType.Normal) // 기획에 따라 상성 정의 필요    //************* 추후 수정
+        // ★ B-23: 역상성 여부는 먼저 판정하되, 정신력 감소는 피해가 "실제로 적용된 뒤"에만 처리
+        //   (기존엔 무적/회피/패링/완벽 방어로 막아도 정신력이 먼저 깎였음)
+        bool isReverseElementHit = fairyStage > 0 && attackElement == reverseElement; // 기획에 따라 상성 정의 필요    //************* 추후 수정
+        int finalDamage = isReverseElementHit
+            ? Mathf.FloorToInt(incomingDamage * reverseElementDamageMultiplier)
+            : incomingDamage;
+
+        // ★ B-23: attackOriginOverride / piercesDodge 가 부모로 전달되지 않던 문제 수정
+        bool applied = base.TakeDamage(finalDamage, attackElement, attacker, knockbackDirection, knockbackPower, attackOriginOverride, piercesDodge);
+
+        if (applied && isReverseElementHit)
         {
-            finalDamage = Mathf.FloorToInt(incomingDamage * 1.5f); // 1.5배 피해
-            LoseMental(5); // 상성에 맞으면 정신력도 깎임
+            LoseMental(reverseElementMentalLoss);
             Debug.Log("[상성 피해] 요정화 상태에서 역상성 공격을 받아 피해가 증가합니다!");
         }
-
-        return base.TakeDamage(finalDamage, attackElement, attacker, knockbackDirection, knockbackPower);
+        return applied;
     }
 
     public override float GetSpeedMultiplier()

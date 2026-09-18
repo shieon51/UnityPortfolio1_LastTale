@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
 {
@@ -13,9 +13,9 @@ public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
 
             if (_instance == null)
             {
-                 // ¡Ú ÇÙ½É ¼öÁ¤: ºñÈ°¼º ¿ÀºêÁ§Æ®µµ °Ë»ö ´ë»ó¿¡ Æ÷ÇÔ (Include).
-                //   ±âÁ¸¿£ ±âº»°ª(Exclude)ÀÌ¶ó Àá±ñÀÌ¶óµµ ²¨Á®ÀÖ´ø ½Ì±ÛÅæÀ» ¸ø Ã£°í,
-                //   ¼³Á¤ÀÌ ÅÖ ºó »õ ¿ÀºêÁ§Æ®¸¦ ¸ô·¡ ¸¸µé¾î¹ö¸®´Â »ç°í°¡ ¹İº¹µÆÀ½.
+                 // â˜… í•µì‹¬ ìˆ˜ì •: ë¹„í™œì„± ì˜¤ë¸Œì íŠ¸ë„ ê²€ìƒ‰ ëŒ€ìƒì— í¬í•¨ (Include).
+                //   ê¸°ì¡´ì—” ê¸°ë³¸ê°’(Exclude)ì´ë¼ ì ê¹ì´ë¼ë„ êº¼ì ¸ìˆë˜ ì‹±ê¸€í†¤ì„ ëª» ì°¾ê³ ,
+                //   ì„¤ì •ì´ í…… ë¹ˆ ìƒˆ ì˜¤ë¸Œì íŠ¸ë¥¼ ëª°ë˜ ë§Œë“¤ì–´ë²„ë¦¬ëŠ” ì‚¬ê³ ê°€ ë°˜ë³µëìŒ.
                 T[] _finds = FindObjectsByType<T>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 
                 if (_finds.Length > 0)
