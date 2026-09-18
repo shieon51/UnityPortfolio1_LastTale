@@ -25,6 +25,7 @@ public class SpeechBubbleController : MonoBehaviour
     public GameObject bubbleRoot;
     public TextMeshProUGUI nameText;
     public TypewriterText bodyTypewriter; // 6번에서 만든 거 재사용
+    public SpeechBubbleAutoSize autoSize;
     public Vector3 offsetAboveTarget = new Vector3(0, 1.5f, 0);
     private Transform _followTarget;
 
@@ -40,6 +41,7 @@ public class SpeechBubbleController : MonoBehaviour
     {
         bodyTypewriter.OnFullyDisplayed += () => OnTextFullyDisplayed?.Invoke(); // ★ 추가 — TypewriterText 완료 신호를 그대로 전달
         if (bubbleRect == null && bubbleRoot != null) bubbleRect = bubbleRoot.GetComponent<RectTransform>();
+        if (autoSize == null) autoSize = GetComponent<SpeechBubbleAutoSize>();   // ★ 추가
     }
 
     public void Show(Transform target, string speakerName, string text)
@@ -47,6 +49,7 @@ public class SpeechBubbleController : MonoBehaviour
         _followTarget = target;
         nameText.text = speakerName;
         bubbleRoot.SetActive(true);
+        autoSize?.ResetSize();          // ★ 추가 — 새 대사는 다시 작은 크기부터 자란다
         bodyTypewriter.Play(text);
     }
     public void Hide() => bubbleRoot.SetActive(false);

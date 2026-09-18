@@ -3,20 +3,24 @@ using System;
 
 public class TimeManager : Singleton<TimeManager>
 {
-    public int timeCoins = 24; // 하루에 주어지는 시간 코인
+    [Header("하루 설정")]
+    [Tooltip("하루에 주어지는 시간 수 (UI의 코인 개수와 같은 값)")]
+    public int coinsPerDay = 24;          // ★ 하드코딩 제거
+
+    public int timeCoins = 24;            // 남은 시간
     public int currentHour = 0;
     public int currentDay = 1;
 
-    // public event Action OnTimeChanged;
-    // public event Action OnDayChanged;
     public event Action<int, int> OnTimeUpdated; // 남은 시간 코인, 현재 날짜 -> UIManager에서 시간 UI 업데이트
+
+    private void Awake() => timeCoins = coinsPerDay;  
 
     public void UseTimeCoins(int amount)
     {
         timeCoins -= amount;
         currentHour += amount;
 
-        if (currentHour >= 24)
+        if (currentHour >= coinsPerDay)
         {
             NextDay();
         }
@@ -32,8 +36,8 @@ public class TimeManager : Singleton<TimeManager>
 
     private void NextDay()
     {
-        timeCoins += 24;
-        currentHour -= 24;
+        timeCoins += coinsPerDay;          // 변경 전: timeCoins += 24
+        currentHour -= coinsPerDay;        // 변경 전: currentHour -= 24
         currentDay++;
 
         //OnDayChanged?.Invoke(); //** 아직 안 쓰임
@@ -41,7 +45,7 @@ public class TimeManager : Singleton<TimeManager>
 
     public void ResetToDay1()
     {
-        timeCoins = 24;
+        timeCoins = coinsPerDay;
         currentHour = 0;
         currentDay = 1;
         OnTimeUpdated?.Invoke(timeCoins, currentDay);
@@ -53,7 +57,7 @@ public class TimeManager : Singleton<TimeManager>
     {
         currentDay = day;
         currentHour = hour;
-        timeCoins = 24 - hour;
+        timeCoins = coinsPerDay - hour;
         OnTimeUpdated?.Invoke(timeCoins, currentDay);
         EventManager.Instance?.UpdateEventTriggers();
     }

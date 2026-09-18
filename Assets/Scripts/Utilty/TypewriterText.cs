@@ -18,6 +18,11 @@ public class TypewriterText : MonoBehaviour
     public event Action OnFullyDisplayed;
     public bool IsTyping { get; private set; }
 
+    public TMP_Text Target => target;                                   // ★ 추가
+    public int TotalVisibleCharacters => _totalVisible;                 // ★ 추가
+    public int VisibleCharacterCount                                    // ★ 추가
+        => target == null ? 0 : Mathf.Min(target.maxVisibleCharacters, _totalVisible);
+
     private string _fullText;
     private int _totalVisible;
     private Coroutine _routine;

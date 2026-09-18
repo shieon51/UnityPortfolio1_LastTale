@@ -4279,6 +4279,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f1c5841fab4f91041992d0b7f1b9c453, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  coinsPerDay: 24
   timeCoins: 24
   currentHour: 0
   currentDay: 1
@@ -4428,6 +4429,8 @@ MonoBehaviour:
   dialogueText: {fileID: 526570852}
   dialoguePanel: {fileID: 769942996}
   choiceContainer: {fileID: 1090285959}
+  choiceButtonPrefab: {fileID: 6995194419371210102, guid: 4c6c2d502484a824d8587e251a835e53, type: 3}
+  choiceButtonResourcePath: Prefabs/ChoiceButton
 --- !u!114 &1045018752
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6397,8 +6400,22 @@ MonoBehaviour:
   coinPrefab: {fileID: 8013385173654343023, guid: b13d57e1637427c449cccaae203c59b0, type: 3}
   timeText: {fileID: 1333499453}
   dayText: {fileID: 1896530860}
+  radius: 80
+  startAngleDegrees: 90
+  clockwise: 0
   usedCoinColor: {r: 0.5, g: 0, b: 0, a: 1}
   unusedCoinColor: {r: 0, g: 1, b: 0.8, a: 1}
+  use12HourClock: 1
+  dayFormatKey: hud_day_format
+  timeFormatKey: hud_time_format
+  amKey: hud_time_am
+  pmKey: hud_time_pm
+  time24FormatKey: hud_time_format_24
+  dayFormatFallback: Day {0}
+  timeFormatFallback: '{0} {1}:00'
+  amFallback: AM
+  pmFallback: PM
+  time24FormatFallback: '{0}:00'
 --- !u!1 &1422428540
 GameObject:
   m_ObjectHideFlags: 0
@@ -8646,6 +8663,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2058790620317101766, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6994465021518602846, guid: 1d2324999db2fcf40a1ab36417aa8506, type: 3}
       propertyPath: m_Name
       value: Player

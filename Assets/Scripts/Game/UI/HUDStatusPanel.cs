@@ -11,6 +11,8 @@ public class HUDStatusPanel : MonoBehaviour
     [Header("Texts (Find() 대신 직접 연결)")]
     public TextMeshProUGUI healthText, manaText, expText, specialStatText;
 
+    private PlayableCharacter _subscribed;   // ★ 추가: 지금 구독 중인 캐릭터
+
     private void Start()
     {
         //healthText = healthBar.transform.Find("HealthText").GetComponent<TextMeshProUGUI>();
@@ -25,13 +27,21 @@ public class HUDStatusPanel : MonoBehaviour
     private void OnDestroy()
     {
         if (PlayerManager.Instance != null)
-        {
             PlayerManager.Instance.OnCharacterPossessed -= HandleCharacterChanged;
-            UnsubscribeFromCharacter(PlayerManager.Instance.CurrentCharacter);
-        }
+
+        UnsubscribeFromCharacter(_subscribed);   // ★ 현재 캐릭터가 아니라 실제 구독한 대상을 해제
+        _subscribed = null;
     }
 
-    private void HandleCharacterChanged(PlayableCharacter c) { SubscribeToCharacter(c); UpdateSliderUI(); }
+    private void HandleCharacterChanged(PlayableCharacter c)
+    {
+        // ★ 이전 캐릭터 구독을 먼저 끊는다.
+        //   (소라 ↔ 리엘 빙의를 반복하면 옛 캐릭터 이벤트가 계속 쌓이던 문제)
+        UnsubscribeFromCharacter(_subscribed);
+        _subscribed = c;
+        SubscribeToCharacter(c);
+        UpdateSliderUI();
+    }
 
     private void SubscribeToCharacter(PlayableCharacter c)
     {
@@ -53,6 +63,7 @@ public class HUDStatusPanel : MonoBehaviour
 
     private void UpdateSliderUI()
     {
+        Debug.Log("[HUDStatusPanel] UpdateSliderUI 호출");   // ★ 임시 확인용, 나중에 삭제
         var c = PlayerManager.Instance.CurrentCharacter;
         if (c == null) return;
 
