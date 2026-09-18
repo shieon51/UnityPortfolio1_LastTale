@@ -28,9 +28,20 @@ public class NotificationTester : MonoBehaviour
     [ContextMenu("4) 일시정지 중 알림 (timeScale 0)")]
     private void TestWhilePaused()
     {
+        StopAllCoroutines();
+        StartCoroutine(PauseRoutine());
+    }
+
+    private System.Collections.IEnumerator PauseRoutine()
+    {
         Time.timeScale = 0f;
         NotificationManager.Instance.Show("일시정지 중에도 보이고 사라져야 함", NotificationType.Info);
-        Invoke(nameof(ResumeTime), 3f);   // Invoke는 스케일 시간을 쓰므로 아래에서 직접 복구
+
+        // ★ Invoke나 WaitForSeconds는 timeScale 0에서 진행되지 않으므로 Realtime 사용
+        yield return new WaitForSecondsRealtime(3f);
+
+        Time.timeScale = 1f;
+        Debug.Log("[NotificationTester] 시간 복구 완료");
     }
 
     private void ResumeTime() => Time.timeScale = 1f;

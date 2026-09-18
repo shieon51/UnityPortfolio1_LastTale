@@ -3,22 +3,31 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // BossHUDPanel.cs — Canvas > HUD_Battle 밑에 붙임
+// ★ 표시 여부는 UIModeManager가 HUD_Battle의 CanvasGroup으로 관리한다.
+//   이 패널은 알파를 건드리지 않고 "내용"만 채운다.
+//   (CanvasGroup은 부모와 자식 알파가 곱해지므로, 여기서 0으로 두면 모드를 켜도 안 보인다)
 public class BossHUDPanel : Singleton<BossHUDPanel>
 {
-    public CanvasGroup canvasGroup; // 이 오브젝트에 CanvasGroup 컴포넌트 추가
+    [Header("UI 참조")]
     public Slider bossHealthBar, bossManaBar;
     public TextMeshProUGUI bossNameText;
     public RectTransform phaseMarkersContainer;
     public GameObject phaseMarkerPrefab; // 얇은 세로선 이미지 하나
+
+    [Header("페이즈 구분선")]
+    [Tooltip("구분선 두께")]
+    public float phaseMarkerWidth = 2f;
+
     private NPC _currentBoss;
 
     private void Awake()
     {
-        Hide();
-    }
+        // ★ 이 오브젝트에 CanvasGroup이 남아 있다면 항상 1로 둔다 (부모 알파와 곱해지므로)
+        var cg = GetComponent<CanvasGroup>();
+        if (cg != null) { cg.alpha = 1f; cg.blocksRaycasts = true; }
 
-    public void Show() { if (canvasGroup != null) { canvasGroup.alpha = 1f; canvasGroup.blocksRaycasts = true; } }
-    public void Hide() { if (canvasGroup != null) { canvasGroup.alpha = 0f; canvasGroup.blocksRaycasts = false; } }
+        ClearContent();
+    }
 
     public void BindBoss(NPC boss)
     {
@@ -26,14 +35,7 @@ public class BossHUDPanel : Singleton<BossHUDPanel>
         _currentBoss = boss;
         if (_currentBoss == null) return;
 
-        //if (bossNameText == null || bossHealthBar == null || bossManaBar == null)
-        //{
-        //    Debug.LogError("[BossHUDPanel] UI 참조가 비어있습니다. 인스펙터에서 필드가 실제로 연결됐는지 확인하세요.");
-        //    return;
-        //}
-
-        Show(); // ★ 바인딩하는 순간 즉시 표시
-        bossNameText.text = _currentBoss.npcName;
+        if (bossNameText != null) bossNameText.text = _currentBoss.npcName;
         _currentBoss.OnHealthChanged += UpdateHealthBar;
         _currentBoss.OnManaChanged += UpdateManaBar;
         UpdateHealthBar();
@@ -46,11 +48,28 @@ public class BossHUDPanel : Singleton<BossHUDPanel>
         _currentBoss.OnHealthChanged -= UpdateHealthBar;
         _currentBoss.OnManaChanged -= UpdateManaBar;
         _currentBoss = null;
-        Hide();
+        ClearContent();
     }
 
-    private void UpdateHealthBar() { if (_currentBoss != null) bossHealthBar.value = (float)_currentBoss.currentHealth / _currentBoss.maxHealth; }
-    private void UpdateManaBar() { if (_currentBoss != null) bossManaBar.value = (float)_currentBoss.currentMana / _currentBoss.maxMana; }
+    // ★ 숨기는 대신 내용을 비운다. 실제 숨김은 모드 전환이 처리한다
+    private void ClearContent()
+    {
+        if (bossNameText != null) bossNameText.text = string.Empty;
+        if (bossHealthBar != null) bossHealthBar.value = 0f;
+        if (bossManaBar != null) bossManaBar.value = 0f;
+    }
+
+    private void UpdateHealthBar()
+    {
+        if (_currentBoss == null || bossHealthBar == null) return;
+        bossHealthBar.value = _currentBoss.maxHealth > 0 ? (float)_currentBoss.currentHealth / _currentBoss.maxHealth : 0f;
+    }
+
+    private void UpdateManaBar()
+    {
+        if (_currentBoss == null || bossManaBar == null) return;
+        bossManaBar.value = _currentBoss.maxMana > 0 ? (float)_currentBoss.currentMana / _currentBoss.maxMana : 0f;
+    }
 
     // 페이즈 개수에 맞춰 구분선을 동적 배치 (훈련=0개, 하드=2개)
     public void SetPhaseCount(int totalPhases)
@@ -64,7 +83,6 @@ public class BossHUDPanel : Singleton<BossHUDPanel>
         foreach (Transform child in phaseMarkersContainer) Destroy(child.gameObject);
         if (totalPhases <= 1) return;
 
-        // SOLID: 프리팹에 RectTransform 없으면 에러 대신 로그
         if (phaseMarkerPrefab.GetComponent<RectTransform>() == null)
         {
             Debug.LogError("[BossHUDPanel] phaseMarkerPrefab에 RectTransform이 없습니다. UI > Image로 만들어주세요.");
@@ -79,7 +97,7 @@ public class BossHUDPanel : Singleton<BossHUDPanel>
             rt.anchorMin = new Vector2(t, 0f);
             rt.anchorMax = new Vector2(t, 1f);
             rt.anchoredPosition = Vector2.zero;
-            rt.sizeDelta = new Vector2(2f, 0f); // 얇은 선
+            rt.sizeDelta = new Vector2(phaseMarkerWidth, 0f);
         }
     }
 }

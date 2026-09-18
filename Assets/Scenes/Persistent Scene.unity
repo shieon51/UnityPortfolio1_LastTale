@@ -551,7 +551,9 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 863508486}
+  - {fileID: 1237113600}
   m_Father: {fileID: 186597601}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -567,7 +569,7 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 111152383}
   m_Enabled: 1
-  m_Alpha: 1
+  m_Alpha: 0
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
@@ -646,50 +648,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!1 &136011848
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 136011850}
-  - component: {fileID: 136011849}
-  m_Layer: 0
-  m_Name: __NotificationTester
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &136011849
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 136011848}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7d00d9e922c20f8468ef1d4168cf5d05, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NotificationTester
---- !u!4 &136011850
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 136011848}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 9.89064, y: 2.67697, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &151473269
 GameObject:
   m_ObjectHideFlags: 0
@@ -2036,6 +1994,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TypewriterText
   target: {fileID: 526570852}
   charsPerSecond: 40
+  useUnscaledTime: 1
+  maxStepSeconds: 0.05
 --- !u!1 &553292446
 GameObject:
   m_ObjectHideFlags: 0
@@ -2257,6 +2217,8 @@ MonoBehaviour:
   - mode: 1
     panelRoot: {fileID: 111152383}
   transitionDuration: 0.25
+  useUnscaledTime: 1
+  startMode: 0
 --- !u!1 &558982571
 GameObject:
   m_ObjectHideFlags: 0
@@ -3817,7 +3779,7 @@ RectTransform:
   - {fileID: 724542007}
   - {fileID: 1880774318}
   - {fileID: 2093095093}
-  m_Father: {fileID: 885425079}
+  m_Father: {fileID: 111152384}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -3836,12 +3798,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 17cbca51864a62944a6836c2b08293ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossHUDPanel
-  canvasGroup: {fileID: 863508488}
   bossHealthBar: {fileID: 1844455045}
   bossManaBar: {fileID: 724542008}
   bossNameText: {fileID: 1880774319}
   phaseMarkersContainer: {fileID: 2093095093}
   phaseMarkerPrefab: {fileID: 5758058774620135310, guid: bdc1bafe9c52262408597a5be8ff5631, type: 3}
+  phaseMarkerWidth: 2
 --- !u!225 &863508488
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -3850,7 +3812,7 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 863508485}
   m_Enabled: 1
-  m_Alpha: 0
+  m_Alpha: 1
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
@@ -3927,8 +3889,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 670043445}
-  - {fileID: 863508486}
-  - {fileID: 1237113600}
   - {fileID: 173332651}
   - {fileID: 1529356475}
   m_Father: {fileID: 186597601}
@@ -5129,7 +5089,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1257224079}
-  m_Father: {fileID: 885425079}
+  m_Father: {fileID: 111152384}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -5148,8 +5108,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 902a9d0ba94ee674cae1cfe8438dc714, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BattleTimerDisplay
-  canvasGroup: {fileID: 1237113602}
   timerText: {fileID: 1257224080}
+  idleText: 00:00
 --- !u!225 &1237113602
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -5158,7 +5118,7 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1237113599}
   m_Enabled: 1
-  m_Alpha: 0
+  m_Alpha: 1
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
@@ -8747,4 +8707,3 @@ SceneRoots:
   - {fileID: 2119420525}
   - {fileID: 79130433}
   - {fileID: 1327124283}
-  - {fileID: 136011850}
