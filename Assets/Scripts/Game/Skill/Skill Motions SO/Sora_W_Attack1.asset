@@ -49,5 +49,9 @@ MonoBehaviour:
   groundSnapLayer:
     serializedVersion: 2
     m_Bits: 1032
+  arrivalPushRadius: 0.5
+  arrivalPushLayers:
+    serializedVersion: 2
+    m_Bits: 192
   knockbackPower: 5
   hitStopDuration: 0.08

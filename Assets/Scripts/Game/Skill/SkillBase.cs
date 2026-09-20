@@ -107,10 +107,10 @@ public abstract class SkillBase : ScriptableObject
     }
 
     // 스킬이 실제로 발동 가능한 상태인지 사전 검증 (예: 유효한 타겟이 필요한 스킬 등).
-    // 실패 시 failReason에 사용자에게 보여줄 안내 문구를 채우면 PlayerCombat이 자동으로 알림을 띄운다.
-    public virtual bool CanExecute(PlayerCombat combat, out string failReason)
+    // 실패 시 failReasonKey에 로컬라이제이션 키를 채우면 PlayerCombat이 알림을 띄운다.
+    public virtual bool CanExecute(PlayerCombat combat, out string failReasonKey)
     {
-        failReason = null;
+        failReasonKey = null;
         return true;
     }
 

@@ -10,7 +10,8 @@ public class DialogueUIPanel : MonoBehaviour
     [Header("본문")]
     public TypewriterText typewriter;      // 인스펙터에서 dialogueText 오브젝트에 이 컴포넌트 추가해서 연결
     public TextMeshProUGUI dialogueText;
-    public GameObject dialoguePanel;
+    [Tooltip("대화 중에만 켜지는 루트. 패널 배경·본문·선택지를 모두 자식으로 둔다")]
+    public GameObject dialogueRoot;        // ★ 이름 변경 (기존 dialoguePanel)
 
     [Header("선택지")]
     public GameObject choiceContainer;
@@ -39,13 +40,15 @@ public class DialogueUIPanel : MonoBehaviour
 
     private void Start() => Hide();
 
-    public void Show() => dialoguePanel.SetActive(true);
+    public void Show() => dialogueRoot.SetActive(true);
 
     public void Hide()
     {
-        dialoguePanel.SetActive(false);
+        // ★ 끄기 전에 먼저 정리한다.
+        //   반대 순서면 꺼진 DialogueText에서 코루틴을 시작하려다 에러가 난다
         UpdateText("");
         ClearChoices();
+        dialogueRoot.SetActive(false);
     }
 
     public void UpdateText(string text) => typewriter.Play(text);

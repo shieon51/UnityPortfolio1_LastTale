@@ -11,6 +11,9 @@ public class Sora_Q_MeleeDashSkill : SkillBase
     public float hitStopDuration = 0.08f;
     //public float damageMultiplier = 1f;
 
+    [Tooltip("적중 시 밀어내는 힘")]
+    public float knockbackPower = 5f;     // ★ 하드코딩 제거
+
     // 앞으로 치고 나가는 동작
     public override IEnumerator ExecuteSkillBehavior(PlayerCombat combat, Rigidbody2D rb, Animator anim, CharacterStats stats)
     {
@@ -78,7 +81,7 @@ public class Sora_Q_MeleeDashSkill : SkillBase
                 int finalDamage = (int)(stats.attack.GetValue() * GetDamageMultiplier(1));
                 Vector2 knockbackDir = (hit.transform.position - parentTransform.position).normalized;
 
-                enemyStats.TakeDamage(finalDamage, stats.currentElement, stats, knockbackDir, 5f, attackOriginPos); // ★ 추가
+                enemyStats.TakeDamage(finalDamage, stats.currentElement, stats, knockbackDir, knockbackPower, attackOriginPos);
                 hitSomething = true;
             }
 

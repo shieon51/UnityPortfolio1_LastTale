@@ -156,10 +156,10 @@ public class PlayerCombat : MonoBehaviour
         SkillBase skillToPlay = seq.comboSteps[step];
 
         // 2. 발동 조건 실패(예: W인데 타겟 없음) → 마나/콤보/애니메이션 전혀 건드리지 않고 알리미만 띄움
-        if (!skillToPlay.CanExecute(this, out string failReason))
+        if (!skillToPlay.CanExecute(this, out string failReasonKey))
         {
-            if (!string.IsNullOrEmpty(failReason))
-                NotificationManager.Instance?.Show(failReason, NotificationType.Warning);
+            if (!string.IsNullOrEmpty(failReasonKey))
+                NotificationManager.Instance?.ShowKey(failReasonKey, NotificationType.Warning);
             return;
         }
 

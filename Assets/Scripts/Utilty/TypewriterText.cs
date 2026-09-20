@@ -44,6 +44,14 @@ public class TypewriterText : MonoBehaviour
 
         if (_totalVisible == 0) { target.maxVisibleCharacters = int.MaxValue; return; }
 
+        // ★ 꺼져 있으면 코루틴을 돌릴 수 없으므로 전문을 즉시 표시하고 끝낸다
+        if (!isActiveAndEnabled)
+        {
+            target.maxVisibleCharacters = int.MaxValue;
+            IsTyping = false;
+            return;
+        }
+
         _routine = StartCoroutine(TypeRoutine());
     }
 

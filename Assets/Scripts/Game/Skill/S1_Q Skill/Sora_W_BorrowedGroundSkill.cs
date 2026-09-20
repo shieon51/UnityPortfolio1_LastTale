@@ -27,6 +27,11 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
     [Tooltip("도착 지점을 이 레이어들 기준으로 지형 위에 안전하게 스냅시킴 (Ground + OneWayPlatform)")]
     public LayerMask groundSnapLayer;
 
+    [Tooltip("도착 지점에서 겹친 대상을 찾을 반경")]
+    public float arrivalPushRadius = 0.5f;                 // ★ 하드코딩 제거
+    [Tooltip("밀어낼 대상 레이어 (문자열 대신 인스펙터에서 지정)")]
+    public LayerMask arrivalPushLayers;                    // ★ 레이어 이름 문자열 제거
+
     [Header("Hit (Q와 동일한 방식 — 도착 후 등 뒤 근접 히트박스)")]
     public float knockbackPower = 5f;
     public float hitStopDuration = 0.08f;
@@ -45,16 +50,14 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
     public override float? GetPreferredFacingDirection() => _preferredFacingWorldDir;
 
     // 사거리 내 유효 타겟이 없으면 아예 발동하지 않음 (마나도 소모되지 않음)
-    public override bool CanExecute(PlayerCombat combat, out string failReason)
+    public override bool CanExecute(PlayerCombat combat, out string failReasonKey)
     {
-        //_cachedTarget = FindTarget(combat);
-
         if (FindTarget(combat) == null)
         {
-            failReason = "타겟이 없거나 너무 멀리 있습니다";
+            failReasonKey = "notify_skill_no_target";   // ★ 문구 → 키
             return false;
         }
-        failReason = null;
+        failReasonKey = null;
         return true;
     }
 
@@ -152,7 +155,7 @@ public class Sora_W_BorrowedGroundSkill : SkillBase
 
     private void PushOverlappingColliders(Vector2 center, Rigidbody2D selfRb)
     {
-        Collider2D[] overlaps = Physics2D.OverlapCircleAll(center, 0.5f, LayerMask.GetMask("Enemy", "Player"));
+        Collider2D[] overlaps = Physics2D.OverlapCircleAll(center, arrivalPushRadius, arrivalPushLayers);
         foreach (var col in overlaps)
         {
             if (col.attachedRigidbody == null || col.attachedRigidbody == selfRb) continue;
