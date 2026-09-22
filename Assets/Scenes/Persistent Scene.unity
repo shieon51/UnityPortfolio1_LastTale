@@ -405,6 +405,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 258450569}
   - {fileID: 1523453218}
   - {fileID: 1937523115}
   - {fileID: 771390402}
@@ -1453,6 +1454,51 @@ MonoBehaviour:
   globalVolume: {fileID: 1327124282}
   defaultMaxIntensity: 0.4
   defaultColor: {r: 1, g: 0, b: 0, a: 1}
+--- !u!1 &258450568
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 258450569}
+  - component: {fileID: 258450570}
+  m_Layer: 0
+  m_Name: TimeAnchorInputHandler
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &258450569
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 258450568}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 1278.8, y: 387.38873, z: -0.0455945}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 79130433}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &258450570
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 258450568}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0911517a364f3414da05e1d5abd51d99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TimeAnchorInputHandler
+  popup: {fileID: 1734033605}
 --- !u!1 &288866223
 GameObject:
   m_ObjectHideFlags: 0
@@ -6753,6 +6799,15 @@ MonoBehaviour:
   returnManaCost: 30
   removeAnchorManaRefund: 10
   anchorMarkerPrefab: {fileID: 8763291670681878086, guid: 0b3ac8fd9b680294aad0d2044f12b41d, type: 3}
+  levelsPerExtraAnchor: 10
+  minAnchorCount: 1
+  maxAnchorCountCap: 10
+  minHoursBetweenAnchors: 24
+  keyAnchorAir: notify_anchor_air
+  keyAnchorMax: notify_anchor_max
+  keyAnchorMana: notify_anchor_mana
+  keyAnchorBattle: notify_anchor_battle
+  keyAnchorTooSoon: notify_anchor_too_soon
 --- !u!1 &1312311864
 GameObject:
   m_ObjectHideFlags: 0
@@ -8417,8 +8472,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6299ca4cd84bf2a41afd154571a121a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TimeAnchorConfirmPopup
-  popupRoot: {fileID: 1734033604}
+  closeOnEscape: 1
+  pausesWorld: 1
+  allowDuringDialogue: 0
   messageText: {fileID: 2055809291}
+  costText: {fileID: 0}
+  confirmKey: popup_anchor_confirm
+  costKey: popup_anchor_cost
 --- !u!224 &1734033606
 RectTransform:
   m_ObjectHideFlags: 0

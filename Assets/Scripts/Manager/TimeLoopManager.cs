@@ -13,11 +13,34 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     public int removeAnchorManaRefund = 10;
     public GameObject anchorMarkerPrefab;
 
+    [Header("닻 최대 개수 (영혼 레벨 기준)")]
+    [Tooltip("영혼 레벨이 이만큼 오를 때마다 최대 개수가 1개씩 늘어난다")]
+    public int levelsPerExtraAnchor = 10;
+    public int minAnchorCount = 1;
+    public int maxAnchorCountCap = 10;
+
+    [Header("닻 간격")]
+    [Tooltip("현재 시점 이전의 마지막 닻과 최소 이 시간(인게임) 이상 떨어져야 새 닻을 내릴 수 있다")]
+    public int minHoursBetweenAnchors = 24;
+
+    [Header("알림 문구 키")]
+    public string keyAnchorAir = "notify_anchor_air";
+    public string keyAnchorMax = "notify_anchor_max";
+    public string keyAnchorMana = "notify_anchor_mana";
+    public string keyAnchorBattle = "notify_anchor_battle";
+    public string keyAnchorTooSoon = "notify_anchor_too_soon";
+
     // TimeLoopManager.cs — 마커 관리 방식을 딕셔너리로 교체 (인덱스 매칭 방식은 씬이 바뀌면 깨지기 쉬워서)
     private Dictionary<TimeAnchorSnapshot, GameObject> _activeMarkers = new(); // 지금 로드된 씬에 실제로 떠있는 마커만
 
     public IReadOnlyList<TimeAnchorSnapshot> Anchors => _anchors;
-    public int MaxAnchorCount(int level) => Mathf.Clamp((level - 1) / 10 + 1, 1, 10); // 1~9→1, ..., 90~99→10
+
+    // ★ 영혼 레벨 기준 (몸 레벨은 회귀 경로에 따라 되돌아가므로)
+    public int MaxAnchorCount(int soulLevel)
+        => Mathf.Clamp((soulLevel - 1) / Mathf.Max(1, levelsPerExtraAnchor) + 1, minAnchorCount, maxAnchorCountCap);
+
+    public int MaxAnchorCountFor(SoraStats sora)
+       => sora == null ? minAnchorCount : MaxAnchorCount(sora.highestLevelReached);
 
     private void Awake()
     {
@@ -40,29 +63,79 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         }
     }
 
-    public bool TrySetAnchor()
+    // ★ 팝업을 띄우기 전에 먼저 검사한다 (기존에는 확인 버튼을 누른 뒤에야 실패를 알았다)
+    public bool CanSetAnchor(out string reasonKey, out object[] reasonArgs)
     {
-        var sora = PlayerManager.Instance.CurrentCharacter as SoraStats;
-        if (sora == null) return false;
+        reasonKey = null;
+        reasonArgs = null;
+
+        var sora = PlayerManager.Instance?.CurrentCharacter as SoraStats;
+        if (sora == null) return false;                           // 소라가 아니면 조용히 불가 (리엘 빙의 NRE 방지)
+
+        if (UIModeManager.Instance != null && UIModeManager.Instance.CurrentMode == UIMode.Battle)
+        { reasonKey = keyAnchorBattle; return false; }
 
         var motor = sora.GetComponent<IPlayerMotor>();
         if (sora.IsFlightForm || (motor != null && !motor.IsGrounded))
+        { reasonKey = keyAnchorAir; return false; }
+
+        int maxCount = MaxAnchorCountFor(sora);
+        if (_anchors.Count >= maxCount)
+        { reasonKey = keyAnchorMax; reasonArgs = new object[] { maxCount }; return false; }
+
+        int remain = HoursUntilNextAnchor();
+        if (remain > 0)
+        { reasonKey = keyAnchorTooSoon; reasonArgs = new object[] { remain }; return false; }
+
+        if (sora.currentMana < setAnchorManaCost)
+        { reasonKey = keyAnchorMana; return false; }
+
+        return true;
+    }
+
+    public void NotifyReason(string reasonKey, object[] reasonArgs)
+    {
+        if (string.IsNullOrEmpty(reasonKey) || NotificationManager.Instance == null) return;
+        if (reasonArgs != null && reasonArgs.Length > 0)
+            NotificationManager.Instance.ShowKeyFormat(reasonKey, NotificationType.Warning, reasonArgs);
+        else
+            NotificationManager.Instance.ShowKey(reasonKey, NotificationType.Warning);
+    }
+
+    // 현재 시점 이전의 마지막 닻 이후로 몇 시간 더 지나야 하는지 (0이면 지금 가능)
+    public int HoursUntilNextAnchor()
+    {
+        var time = TimeManager.Instance;
+        if (_anchors.Count == 0 || minHoursBetweenAnchors <= 0 || time == null) return 0;
+
+        int now = ToAbsoluteHour(time.currentDay, time.currentHour);
+        int latest = int.MinValue;
+        foreach (var anchor in _anchors)
         {
-            NotificationManager.Instance?.Show("공중에서는 시간을 고정할 수 없습니다", NotificationType.Warning);
+            int at = ToAbsoluteHour(anchor.day, anchor.hour);
+            if (at <= now) latest = Mathf.Max(latest, at);        // 미래의 닻은 기준에서 제외
+        }
+        if (latest == int.MinValue) return 0;
+
+        return Mathf.Max(0, minHoursBetweenAnchors - (now - latest));
+    }
+
+    private int ToAbsoluteHour(int day, int hour)
+    {
+        int perDay = TimeManager.Instance != null ? TimeManager.Instance.coinsPerDay : 24;
+        return (day - 1) * perDay + hour;
+    }
+
+    public bool TrySetAnchor()
+    {
+        // ★ 확인 버튼을 누르는 사이 상태가 바뀌었을 수 있으니 한 번 더 검사한다
+        if (!CanSetAnchor(out string reasonKey, out object[] reasonArgs))
+        {
+            NotifyReason(reasonKey, reasonArgs);
             return false;
         }
 
-        int maxCount = MaxAnchorCount(sora.level);
-        if (_anchors.Count >= maxCount)
-        {
-            NotificationManager.Instance?.Show($"시간 고정 최대 개수({maxCount}개)에 도달했습니다", NotificationType.Warning);
-            return false;
-        }
-        if (sora.currentMana < setAnchorManaCost)
-        {
-            NotificationManager.Instance?.Show("마나가 부족하여 시간을 고정할 수 없습니다", NotificationType.Warning);
-            return false;
-        }
+        var sora = (SoraStats)PlayerManager.Instance.CurrentCharacter;
 
         sora.UseMana(setAnchorManaCost);
         var snapshot = new TimeAnchorSnapshot
