@@ -325,7 +325,11 @@ public class EventManager : Singleton<EventManager>
     //Dialogue가 끝났을 때 Invoke되는 함수
     public void EventResult(EventData eventData)
     {
-        MemoryManager.Instance.IncrementCounter(GetTriggerCountKey(eventData)); // ★ 추가 — 실행 횟수 누적
+        MemoryManager.Instance.IncrementCounter(GetTriggerCountKey(eventData)); // 실행 횟수 누적
+
+        // ★ 기록장 "이번 흐름" 탭용 — 카운터 키만으로는 표시할 문장을 만들 수 없다
+        PlayerActionLog.Instance?.Record(RecordType.EventCompleted, eventData.EventName, 0, 0,
+            IsNPCEvent(eventData.EventID) ? eventData.EventName : null);
 
         if (eventData.despawnAfterEvent && !string.IsNullOrEmpty(eventData.summonNPCs)) // ★ 추가
             NPCManager.Instance.DespawnEventNPCs();

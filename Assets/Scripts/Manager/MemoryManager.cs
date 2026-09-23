@@ -86,21 +86,32 @@ public class MemoryManager : Singleton<MemoryManager>
 
     public bool HasMemory(string flagId) => _acquiredFlags.Contains(flagId);
 
-    public void AcquireMemory(string flagId)
+    // sourceNpc: 이 정보를 알려준 대상 (대화 중이면 상대 NPC)
+    public void AcquireMemory(string flagId, string sourceNpc = null)
     {
         if (!_registry.ContainsKey(flagId))
         {
             Debug.LogWarning($"[MemoryManager] 등록 안 된 flagId 획득 시도: '{flagId}' — 애셋을 먼저 만들었는지 확인");
             return;
         }
+
+        // ★ 이미 아는 정보라도 "이번 흐름에서 들었다"는 사실은 남긴다.
+        //   (이 기록이 없으면 기록장 '이번 흐름' 탭에서 재청취를 알 수 없다)
+        PlayerActionLog.Instance?.Record(RecordType.MemoryHeard, flagId, 0, 0, sourceNpc);
+
         if (_acquiredFlags.Add(flagId))
         {
             _acquiredOrder.Add(flagId);
             OnMemoryAcquired?.Invoke(flagId);
-            PlayerActionLog.Instance?.Record(RecordType.MemoryAcquired, flagId); 
+            PlayerActionLog.Instance?.Record(RecordType.MemoryAcquired, flagId, 0, 0, sourceNpc);
         }
     }
 
+    // 이번 흐름에서 이 정보를 들은 적이 있는지 (선택지 툴팁의 출처 줄 등에 사용)
+    public bool HeardInCurrentFlow(string flagId)
+        => PlayerActionLog.Instance != null
+        && PlayerActionLog.Instance.HasDoneInCurrentFlow(RecordType.MemoryHeard, flagId);
+    
     public void EraseMemory(string flagId)
     {
         var data = GetData(flagId);

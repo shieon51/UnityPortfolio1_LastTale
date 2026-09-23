@@ -47,6 +47,17 @@ public class DialogueManager : Singleton<DialogueManager>
     public bool IsChoices        
     { get { return isChoices; } }
 
+    // 이 정보를 알려준 대상. 방금 말한 화자를 우선하고, 없으면 대화 상대 NPC
+    public string CurrentSpeakerOrEventNpc
+    {
+        get
+        {
+            if (!string.IsNullOrEmpty(_pendingSpeakerKey)) return _pendingSpeakerKey;
+            if (curEventData != null && EventManager.IsNPCEvent(curEventData.EventID)) return curEventData.EventName;
+            return null;
+        }
+    }
+
     private bool isProcessingLine = false;
 
     private void Start()
@@ -57,26 +68,26 @@ public class DialogueManager : Singleton<DialogueManager>
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.F9))
+#if UNITY_EDITOR
+        if (Input.GetKeyDown(KeyCode.F9))   // ★ 진단용 — 에디터에서만
         {
             Debug.Log($"[진단] IsTalking={isTalking} IsChoices={isChoices} choicesReady={_choicesReadyToReveal} " +
                       $"autoAdvancing={_isAutoAdvancing} lockInput={_lockInput} GlobalLock={GlobalActionLock.IsLocked}");
         }
-        //*
-
+#endif
         if (!IsTalking) return;
 
-        if (IsChoices) // 선택지 엔터 선택
+        if (IsChoices)
         {
-            if (Input.GetKeyDown(KeyCode.UpArrow)) UIManager.Instance.dialogue.NavigateChoice(-1);
-            else if (Input.GetKeyDown(KeyCode.DownArrow)) UIManager.Instance.dialogue.NavigateChoice(1);
-            else if (Input.GetKeyDown(KeyCode.Return)) UIManager.Instance.dialogue.ConfirmSelectedChoice();
+            if (InputBindings.GetKeyDown(InputAction.NavigateUp)) UIManager.Instance.dialogue.NavigateChoice(-1);
+            else if (InputBindings.GetKeyDown(InputAction.NavigateDown)) UIManager.Instance.dialogue.NavigateChoice(1);
+            else if (InputBindings.GetKeyDown(InputAction.Confirm)) UIManager.Instance.dialogue.ConfirmSelectedChoice();
             return;
         }
 
         if (_isAutoAdvancing)
         {
-            if (Input.GetKeyDown(KeyCode.Return)) // ★ 자동 진행 중에도 엔터로 즉시 스킵 가능
+            if (InputBindings.GetKeyDown(InputAction.Confirm))
             {
                 if (_autoAdvanceCoroutine != null) StopCoroutine(_autoAdvanceCoroutine);
                 _isAutoAdvancing = false;
@@ -85,8 +96,7 @@ public class DialogueManager : Singleton<DialogueManager>
             return;
         }
 
-
-        if (_lockInput || !Input.GetKeyDown(KeyCode.Return)) return;
+        if (_lockInput || !InputBindings.GetKeyDown(InputAction.Confirm)) return;
 
         bool isTyping = _currentActiveBubble != null ? _currentActiveBubble.IsTyping : UIManager.Instance.dialogue.IsTyping;
         if (isTyping) { SkipCurrentTyping(); return; }
@@ -94,6 +104,26 @@ public class DialogueManager : Singleton<DialogueManager>
         if (_choicesReadyToReveal) { RevealPendingChoices(); return; } // ★ 5번 — 엔터로 선택지 공개
 
         DisplayNextLine();
+    }
+
+    // ★ 타이핑 완료 핸들러를 모두 떼어낸다.
+    //   이벤트가 발생해야만 해제되던 구조라, 대화가 중간에 끊기면 구독이 남아
+    //   다음 대화에서 엉뚱하게 깨어나는 문제가 있었다
+    private void UnsubscribeTypingHandlers()
+    {
+        var panel = UIManager.Instance?.dialogue;
+        if (panel != null)
+        {
+            panel.OnTextFullyDisplayed -= HandleChoicesTextFullyDisplayed;
+            panel.OnTextFullyDisplayed -= HandleWaitTextFullyDisplayed;
+            panel.OnTextFullyDisplayed -= HandleAutoAdvanceTextFullyDisplayed;
+        }
+        if (_currentActiveBubble != null)
+        {
+            _currentActiveBubble.OnTextFullyDisplayed -= HandleChoicesTextFullyDisplayed;
+            _currentActiveBubble.OnTextFullyDisplayed -= HandleWaitTextFullyDisplayed;
+            _currentActiveBubble.OnTextFullyDisplayed -= HandleAutoAdvanceTextFullyDisplayed;
+        }
     }
 
     private void SkipCurrentTyping()
@@ -114,7 +144,13 @@ public class DialogueManager : Singleton<DialogueManager>
     private void BindMemoryFunctions()
     {
         story.BindExternalFunction("has_memory", (string flagId) => MemoryManager.Instance.HasMemory(flagId));
-        story.BindExternalFunction("acquire_memory", (string flagId) => { MemoryManager.Instance.AcquireMemory(flagId); return 0; }, lookaheadSafe: false);
+        // ★ lookaheadSafe: false 필수 — 기본값(true)이면 ink가 앞을 미리 계산할 때
+        //   함수가 먼저(또는 두 번) 실행되어 정보 획득과 들음 기록이 중복된다
+        story.BindExternalFunction("acquire_memory", (string flagId) =>
+        {
+            MemoryManager.Instance.AcquireMemory(flagId, CurrentSpeakerOrEventNpc);
+            return 0;
+        }, lookaheadSafe: false);
         story.BindExternalFunction("erase_memory", (string flagId) => { MemoryManager.Instance.EraseMemory(flagId); return 0; }, lookaheadSafe: false);
         story.BindExternalFunction("get_counter", (string key) => MemoryManager.Instance.GetCounter(key));
         story.BindExternalFunction("increment_counter", (string key) => { MemoryManager.Instance.IncrementCounter(key); return 0; }, lookaheadSafe: false);
@@ -158,11 +194,32 @@ public class DialogueManager : Singleton<DialogueManager>
 
     public void StartStory(EventData eventData)
     {
+        // ★ 이전 대화가 중간에 끊겼을 수 있으므로 상태를 전부 초기화한다
+        UnsubscribeTypingHandlers();
+        if (_autoAdvanceCoroutine != null) { StopCoroutine(_autoAdvanceCoroutine); _autoAdvanceCoroutine = null; }
+        _isAutoAdvancing = false;
+        _choicesReadyToReveal = false;
+        _pendingChoices = null;
+        isChoices = false;
+        isProcessingLine = false;
+        _currentActiveBubble = null;
+        UIManager.Instance.ClearChoices();
+
         curEventData = eventData;
         _pendingSpeakerKey = null; _pendingSpeakerDisplayName = null;
         _queuedText = null;
+
         UIManager.Instance.ShowDialogUI();
-        story.ChoosePathString(curEventData.InkNodeName);
+
+        // ★ 노드 이름이 틀리면 여기서 예외가 나며 대화가 멈춘다 — 원인을 바로 알 수 있게
+        try { story.ChoosePathString(curEventData.InkNodeName); }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[DialogueManager] ink 노드를 찾을 수 없음: '{curEventData.InkNodeName}' (이벤트 {curEventData.EventName}) — {e.Message}");
+            UIManager.Instance.HideDialogUI();
+            return;
+        }
+
         isTalking = true;
         DisplayNextLine();
     }
@@ -254,6 +311,7 @@ public class DialogueManager : Singleton<DialogueManager>
             }
         }
 
+        UnsubscribeTypingHandlers();   // ★ 이전 줄의 구독을 먼저 정리
         SetWaitingForInput(false); // ★ 추가 — 새 줄 표시(타이핑 시작)하는 순간 무조건 끔
         if (bubble != null)
         {
@@ -365,6 +423,7 @@ public class DialogueManager : Singleton<DialogueManager>
 
     private void EndDialogue()
     {
+        UnsubscribeTypingHandlers();   // ★ 추가
         isTalking = false;
         UIManager.Instance.HideDialogUI();
         SpeechBubbleManager.Instance?.HideAll();
@@ -375,12 +434,15 @@ public class DialogueManager : Singleton<DialogueManager>
 
         OnDialogueEnd?.Invoke(curEventData);
 
-        if (!string.IsNullOrEmpty(pendingBattleNPC))
-        {
-            NPCManager.Instance.TriggerBossBattle(pendingBattleNPC, pendingBattleDifficulty, pendingBattleWinNode, pendingBattleLoseNode);
-            pendingBattleNPC = ""; pendingBattleWinNode = ""; pendingBattleLoseNode = "";
-            pendingBattleDifficulty = BossDifficultyTier.Training;
-        }
+        // ★ 예약은 무조건 비운다. 남겨두면 다음 대화가 끝날 때 엉뚱하게 발동한다
+        string battleNpc = pendingBattleNPC;
+        string winNode = pendingBattleWinNode, loseNode = pendingBattleLoseNode;
+        var difficulty = pendingBattleDifficulty;
+        pendingBattleNPC = ""; pendingBattleWinNode = ""; pendingBattleLoseNode = "";
+        pendingBattleDifficulty = BossDifficultyTier.Training;
+
+        if (!string.IsNullOrEmpty(battleNpc))
+            NPCManager.Instance.TriggerBossBattle(battleNpc, difficulty, winNode, loseNode);
     }
 
     // 코루틴 추가 (짧은 딜레이 후 다시 입력 가능)
