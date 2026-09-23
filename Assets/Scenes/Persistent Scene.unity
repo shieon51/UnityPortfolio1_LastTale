@@ -5561,6 +5561,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MemoryManager
   resourcesFolder: MemoryFragments
+  topicResourcesFolder: MemoryTopics
 --- !u!114 &1062797719
 MonoBehaviour:
   m_ObjectHideFlags: 0

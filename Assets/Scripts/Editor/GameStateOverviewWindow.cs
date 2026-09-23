@@ -100,10 +100,12 @@ public class GameStateOverviewWindow : EditorWindow
         string foldKey = $"npc_memory_{npcName}";
         if (!_categoryFoldouts.ContainsKey(foldKey)) _categoryFoldouts[foldKey] = false;
 
-        var npcFragments = MemoryManager.Instance.GetAllRegistered().Where(d => d.category == npcName).ToList();
-        var npcTopics = Resources.LoadAll<MemoryTopicData>("MemoryTopics").Where(t => t.category == npcName).ToList();
-        var flagsInTopics = new HashSet<string>(npcTopics.SelectMany(t => t.stages.Select(s => s.requiredFlagId)));
-        var standalone = npcFragments.Where(f => !flagsInTopics.Contains(f.flagId)).ToList();
+        // 변경 후 — 매니저의 조회를 그대로 쓴다 (relatedNpcs 기준, 주제 단계 조각 제외까지 처리됨)
+        var npcTopics = MemoryManager.Instance.GetAllTopics()
+            .Where(t => (t.relatedNpcs != null && t.relatedNpcs.Contains(npcName)) || t.category == npcName).ToList();
+        var standalone = MemoryManager.Instance.GetAllRegistered()
+            .Where(f => !MemoryManager.Instance.IsUsedInTopic(f.flagId)
+                     && ((f.relatedNpcs != null && f.relatedNpcs.Contains(npcName)) || f.category == npcName)).ToList();
         var acquiredOrder = MemoryManager.Instance.GetAllAcquired().ToList();
 
         int totalHave = standalone.Count(f => MemoryManager.Instance.HasMemory(f.flagId)) + npcTopics.Count(t => MemoryManager.Instance.GetCurrentStage(t) != null);
@@ -122,8 +124,14 @@ public class GameStateOverviewWindow : EditorWindow
                 var stage = MemoryManager.Instance.GetCurrentStage(topic);
                 string label = stage != null ? LocalizationManager.Instance.Get(stage.localizationKey) : "(아직 모름)";
                 bool isFinal = stage != null && stage.isFinal;
-                GUI.color = isFinal ? Color.white : (stage != null ? Color.gray : new Color(0.5f, 0.5f, 0.5f, 0.6f));
-                EditorGUILayout.LabelField($"[{topic.topicId}] {label}");
+
+                // ★ 색은 isFinal이 아니라 확실도 기준 (기록장과 같은 규칙)
+                GUI.color = stage == null ? new Color(0.5f, 0.5f, 0.5f, 0.6f)
+                          : stage.certainty == MemoryCertainty.Confirmed ? Color.white : Color.gray;
+
+                string extra = stage == null ? "" :
+                    $"  [{topic.cardCategory}]{(stage.sourceType != MemorySourceType.None ? $" 출처 {stage.sourceType} {stage.sourceKey}" : "")}{(isFinal ? " (최종)" : "")}";
+                EditorGUILayout.LabelField($"[{topic.topicId}] {label}{extra}");
                 GUI.color = Color.white;
             }
         }
@@ -135,9 +143,15 @@ public class GameStateOverviewWindow : EditorWindow
             foreach (var frag in ordered)
             {
                 bool has = MemoryManager.Instance.HasMemory(frag.flagId);
+                bool refuted = has && MemoryManager.Instance.IsRefuted(frag.flagId);     // ★ 추가
                 string label = has ? LocalizationManager.Instance.Get(frag.localizationKey) : "(아직 모름)";
-                GUI.color = has ? Color.green : Color.gray;
-                EditorGUILayout.LabelField($"{(has ? "✔" : "✘")} {label} ({frag.flagId})");
+
+                GUI.color = !has ? Color.gray
+                          : refuted ? new Color(1f, 0.6f, 0.6f)
+                          : frag.certainty == MemoryCertainty.Confirmed ? Color.green : new Color(0.7f, 0.9f, 0.7f);
+
+                string extra = has ? $"  [{frag.cardCategory}]{(refuted ? " (반증됨)" : "")}" : "";
+                EditorGUILayout.LabelField($"{(has ? "✔" : "✘")} {label} ({frag.flagId}){extra}");
                 GUI.color = Color.white;
             }
         }
@@ -193,9 +207,11 @@ public class GameStateOverviewWindow : EditorWindow
         if (MemoryManager.Instance == null || LocalizationManager.Instance == null) return;
 
         var npcNames = new HashSet<string>(NPCManager.Instance?.AllNPCData.Keys ?? Enumerable.Empty<string>());
-        foreach (var topic in Resources.LoadAll<MemoryTopicData>("MemoryTopics"))
+        foreach (var topic in MemoryManager.Instance.GetAllTopics())
         {
-            if (npcNames.Contains(topic.category)) continue; // NPC 쪽에서 이미 보여줌
+            bool belongsToNpc = topic.category != null && npcNames.Contains(topic.category)
+                || (topic.relatedNpcs != null && topic.relatedNpcs.Any(n => npcNames.Contains(n)));
+            if (belongsToNpc) continue; // NPC 쪽에서 이미 보여줌
             var stage = MemoryManager.Instance.GetCurrentStage(topic);
             string label = stage != null ? LocalizationManager.Instance.Get(stage.localizationKey) : "(아직 모름)";
             bool isFinal = stage != null && stage.isFinal;

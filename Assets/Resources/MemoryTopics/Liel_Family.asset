@@ -14,14 +14,30 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MemoryTopicData
   topicId: liel_family
   category: Liel
+  cardCategory: 4
+  relatedNpcs:
+  - Liel
+  titleKey: liel_family_title
   day: 3
   stages:
   - requiredFlagId: liel_sister_exists
     localizationKey: liel_family_stage1
+    certainty: 0
+    sourceType: 1
+    sourceKey: Liel
+    footnoteKey: 
     isFinal: 0
   - requiredFlagId: liel_sister_missing
     localizationKey: liel_family_stage2
+    certainty: 0
+    sourceType: 1
+    sourceKey: Liel
+    footnoteKey: 
     isFinal: 0
   - requiredFlagId: liel_sister_full_story
     localizationKey: liel_family_stage3
+    certainty: 0
+    sourceType: 1
+    sourceKey: Liel
+    footnoteKey: 
     isFinal: 1
