@@ -43,8 +43,10 @@ public class PlayerActionLog : Singleton<PlayerActionLog>
             day = TimeManager.Instance != null ? TimeManager.Instance.currentDay : 0,
             hour = TimeManager.Instance != null ? TimeManager.Instance.currentHour : 0,
             sceneId = sceneId,
-            sceneName = (DataManager.Instance != null && sceneId >= 0
-                && DataManager.Instance.SceneDict.TryGetValue(sceneId, out var n)) ? n : "?",
+            // ★ 내부 이름 대신 표시 이름을 저장한다 (기록장에 그대로 보여줄 수 있게)
+            sceneName = SceneNameUtil.GetDisplayName(sceneId,
+                (DataManager.Instance != null && sceneId >= 0
+                 && DataManager.Instance.SceneDict.TryGetValue(sceneId, out var n)) ? n : null),
             type = type,
             key = key,
             source = source,          // ★ 추가
