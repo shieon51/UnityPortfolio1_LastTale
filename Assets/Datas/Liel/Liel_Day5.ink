@@ -1,4 +1,4 @@
-﻿=== Liel_Day5_001 ===
+=== Liel_Day5_001 ===
 오늘은 날이 좋군요. #speak:Liel:리엘
 또 뵙네요. #speak:Liel:리엘
 ~ add_affection("Liel", 1)

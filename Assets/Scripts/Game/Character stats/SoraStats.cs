@@ -7,14 +7,17 @@ using UnityEngine;
 public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSource
 {
     // ===============================================================
-    // 요정화 변신 관련 변수 정리
+    // 요정화 단계 (fairyStage) — 화면 표시와 내부 값이 같다
+    //   0 = 변신 안 함 (HUD 점 모두 꺼짐)
+    //   1 = 비행형     (HUD "1단계")
+    //   2 = 강제 발동  (HUD "2단계")
+    // TargetFormStage : 변신 연출 중 참고용 목표 단계. 연출이 끝나야 fairyStage가 바뀐다
+    // _isTransforming : 연출 재생 중. true인 동안 IActionLockSource로 조작 잠김
     // ===============================================================
-    // fairyStage      : "지금 확정된" 단계 (0=1단계, 1=2단계/비행형). 변신 연출이 끝나야 바뀜.
-    // TargetFormStage : "지금 전환하려는 목표" 단계. 변신 시작 순간 바로 세팅되고,
-    //                    연출 재생 중(=아직 fairyStage는 안 바뀐 상태)에 참고용으로 쓰임
-    //                    (예: 나중에 요정화 2→3단계 변신 클립이 여러 개면, 이 값 보고 어느 클립을 고를지 결정)
-    // _isTransforming : 지금 변신 연출 재생 중인지. true인 동안 IActionLockSource로 조작 잠김.
-    // ===============================================================
+
+    public const int FairyStageNone = 0;
+    public const int FairyStageFlight = 1;
+    public const int FairyStageAwakened = 2;
 
     private IPlayerMotor _motor;
 
@@ -23,13 +26,17 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     public float formTransformDuration = 0.5f;
 
     public int FormStage => fairyStage;
-    public int TargetFormStage { get; private set; } = 0; //?
-    public bool IsFlightForm => fairyStage == 1; // 2단계 = 비행모드
+    public int TargetFormStage { get; private set; } = FairyStageNone;
+    public bool IsFlightForm => fairyStage == FairyStageFlight;
     public bool IsTransforming => _isTransforming;
     public bool IsLocked => _isTransforming;      // IActionLockSource
 
     public event Action OnFormTransformStarted;
     public event Action<int> OnFormStageChanged;
+
+    // 정신력 변화 (이전 값, 현재 값) — UI가 감소 애니메이션에 사용
+    public event Action<int, int> OnMentalChanged;
+    public bool IsMentalDanger => currentMental < mentalDangerThreshold;
 
     // 완전 리셋용 기본값 캐싱 
     private int _baseLevel, _baseMaxHealth, _baseMaxMana;
@@ -42,6 +49,29 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     public int currentFatigue = 0;
     public int maxMental = 100;
     public int currentMental = 100;
+
+    [Header("피로도 페널티")]
+    [Tooltip("이 값 이상이면 이동속도가 느려진다. HUD의 경고 구간도 같은 값을 쓴다")]
+    public int fatigueSlowThreshold = 30;
+    [Range(0.1f, 1f)]
+    [Tooltip("느려졌을 때의 이동속도 배율")]
+    public float fatigueSlowMultiplier = 0.5f;
+
+    [Header("정신력")]
+    [Tooltip("이 값 미만이면 위험 구간 (환영·결정체 코어 흔들림 연출)")]
+    public int mentalDangerThreshold = 30;
+
+    [Header("요정화 유지 비용")]
+    [Tooltip("정신력이 깎이는 주기(초)")]
+    public float fairyMentalDrainInterval = 5f;
+    [Tooltip("주기마다 깎이는 정신력 = 이 값 × 현재 단계")]
+    public int fairyMentalDrainPerStage = 1;
+    [Tooltip("단계별 마나 소모 배율. 0번=변신 안 함, 1번=비행형, 2번=강제 발동")]
+    public float[] fairyManaCostMultipliers = { 1f, 0.8f, 0.5f };
+
+    [Header("시간결정체")]
+    [Tooltip("결정체 하나를 얻을 때 주는 경험치")]
+    public int timeCrystalExpReward = 500;
 
     [Header("Sora Exclusives - Time Loop")] // 시간결정체
     public int timeCrystals = 0;
@@ -133,13 +163,13 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         }
 
         // 2. 요정화 지속 시 정신력 하락 패널티 로직
-        if (fairyStage > 0)
+        if (fairyStage > FairyStageNone)
         {
             fairyTimer += Time.deltaTime;
-            if (fairyTimer >= 5f)
+            if (fairyTimer >= fairyMentalDrainInterval)
             {
                 fairyTimer = 0f;
-                LoseMental(fairyStage);
+                LoseMental(fairyMentalDrainPerStage * fairyStage);
             }
         }
     }
@@ -169,9 +199,9 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     // [기획 반영] 폼체인지 시 마나 사용 효율 증가
     public override int CalculateManaCost(int originalCost)
     {
-        if (fairyStage == 1) return Mathf.FloorToInt(originalCost * 0.8f); // 2단계: 마나 20% 감소
-        if (fairyStage == 2) return Mathf.FloorToInt(originalCost * 0.5f); // 3단계: 마나 50% 감소
-        return originalCost;
+        if (fairyManaCostMultipliers == null || fairyManaCostMultipliers.Length == 0) return originalCost;
+        int index = Mathf.Clamp(fairyStage, 0, fairyManaCostMultipliers.Length - 1);
+        return Mathf.FloorToInt(originalCost * fairyManaCostMultipliers[index]);
     }
 
     // [기획 반영] 시간 속성의 소라는 역상성(예: Normal)에 맞으면 추가 피해 및 정신력 감소
@@ -203,20 +233,18 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     }
 
     public override float GetSpeedMultiplier()
-    {
-        return (currentFatigue >= 30) ? 0.5f : 1.0f; // 피로도 30 이상이면 이속 0.5배
-    }
+        => (currentFatigue >= fatigueSlowThreshold) ? fatigueSlowMultiplier : 1f;
 
     protected override void PrepareRigidbodyForKnockback(Rigidbody2D rb)
     {
-        if (fairyStage == 1 || LastAttacker is NPC) rb.linearVelocity = Vector2.zero; // 비행 중엔 기존 비행 속도까지 완전히 리셋
+        if (fairyStage == FairyStageFlight || LastAttacker is NPC) rb.linearVelocity = Vector2.zero; // 비행 중엔 기존 비행 속도까지 완전히 리셋
         else base.PrepareRigidbodyForKnockback(rb);
     }
 
     protected override Vector2 ComputeKnockbackForce(Vector2 direction, float power)
     {
         //Debug.Log($"[넉백 진단] LastAttacker = {(LastAttacker != null ? LastAttacker.GetType().Name : "null")}");
-        if (fairyStage == 1 || LastAttacker is NPC) return direction.normalized * power; // 순수하게 맞은 반대 방향으로만, 상승 편향 없음
+        if (fairyStage == FairyStageFlight || LastAttacker is NPC) return direction.normalized * power; // 순수하게 맞은 반대 방향으로만, 상승 편향 없음
         return base.ComputeKnockbackForce(direction, power);
     }
 
@@ -226,15 +254,26 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         timeCrystals++;
         Debug.Log($"[시간 결정체] 획득! 소라의 기억이 돌아옵니다. (현재: {timeCrystals}개)");
         FloatingTextManager.Instance?.ShowTimeCrystal(transform.position + Vector3.up * notificationHeightOffset);
-        GainExperience(500);
+        GainExperience(timeCrystalExpReward);
         CallSpecialStatChanged();
     }
 
-    public void LoseMental(int amount)
+    public void LoseMental(int amount) => ChangeMental(-Mathf.Abs(amount));
+
+    // ★ 신규 — NPC의 위로·안정 행동으로 회복 (기획서 7-1)
+    public void RecoverMental(int amount) => ChangeMental(Mathf.Abs(amount));
+
+    private void ChangeMental(int delta)
     {
-        currentMental = Mathf.Max(0, currentMental - amount);
+        int before = currentMental;
+        currentMental = Mathf.Clamp(currentMental + delta, 0, maxMental);
+        if (currentMental == before) return;
+
         CallSpecialStatChanged();
-        if (currentMental < 30) Debug.Log("[소라] 정신력 붕괴! 환영이 보입니다.");
+        OnMentalChanged?.Invoke(before, currentMental);
+
+        if (before >= mentalDangerThreshold && IsMentalDanger)
+            Debug.Log("[소라] 정신력 위험 구간 진입 — 환영이 보이기 시작한다");
     }
 
     // 2번: 피로도 관련 함수
@@ -262,7 +301,7 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         level = _baseLevel;
         highestLevelReached = _baseLevel;
         experience = 0;
-        experienceToNextLevel = 100;
+        experienceToNextLevel = baseExpToNextLevel;
         maxHealth = _baseMaxHealth;
         maxMana = _baseMaxMana;
         currentHealth = maxHealth;

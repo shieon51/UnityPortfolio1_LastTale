@@ -9,8 +9,16 @@ public abstract class PlayableCharacter : CharacterStats
     public int experienceToNextLevel = 100; // 레벨업에 필요한 경험치
 
     [Header("Playable Common - Fairy Mode")]
-    public int fairyStage = 0;        // 요정화 단계 (0 = 해제, 1~3단계)
-    protected float fairyTimer = 0f;    // 요정화 유지 시간 체크용
+    public int fairyStage = 0;        // 0 = 변신 안 함, 1 = 비행형, 2 = 강제 발동
+    protected float fairyTimer = 0f;  // 요정화 유지 체크용
+
+    [Header("Level Up")]
+    [Tooltip("레벨 1에서 다음 레벨까지 필요한 경험치 (리셋 시에도 사용)")]
+    public int baseExpToNextLevel = 100;
+    [Tooltip("CSV에 없는 레벨일 때의 폴백 증가량")]
+    public int fallbackMaxHealthGain = 10;
+    public int fallbackMaxManaGain = 5;
+    public int fallbackExpGrowth = 50;
 
     // UI 업데이트용 공통 이벤트
     public event Action OnProgressionChanged;
@@ -55,10 +63,15 @@ public abstract class PlayableCharacter : CharacterStats
     public void GainExperience(int amount)
     {
         experience += amount;
-        while (experience >= experienceToNextLevel)
+
+        // ★ experienceToNextLevel이 0 이하로 잘못 설정되면 while이 영원히 돌 수 있다
+        int guard = 0;
+        while (experienceToNextLevel > 0 && experience >= experienceToNextLevel && guard++ < 100)
         {
             LevelUp();
         }
+        if (guard >= 100) Debug.LogError($"[{name}] 레벨업 루프 안전장치 작동 — experienceToNextLevel 값을 확인하세요");
+
         CallProgressionChanged();
     }
 
@@ -77,9 +90,9 @@ public abstract class PlayableCharacter : CharacterStats
         }
         else // CSV에 아직 없는 레벨(최대치 초과 등) — 기존 방식으로 폴백
         {
-            maxHealth += 10;
-            maxMana += 5;
-            experienceToNextLevel += 50;
+            maxHealth += fallbackMaxHealthGain;
+            maxMana += fallbackMaxManaGain;
+            experienceToNextLevel += fallbackExpGrowth;
         }
 
         Heal(maxHealth); // 레벨업 시 풀피 회복
@@ -115,7 +128,6 @@ public abstract class PlayableCharacter : CharacterStats
             GetComponentInChildren<PlayerCombat>()?.CancelAttack();
         }
 
-        if (applied) CallProgressionChanged();
         return applied;
     }
 
@@ -124,7 +136,7 @@ public abstract class PlayableCharacter : CharacterStats
     {
         level = baseLevel;
         experience = 0;
-        experienceToNextLevel = 100;
+        experienceToNextLevel = baseExpToNextLevel;
         maxHealth = baseMaxHealth;
         maxMana = baseMaxMana;
         currentHealth = maxHealth;
