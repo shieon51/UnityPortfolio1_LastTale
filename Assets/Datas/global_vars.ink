@@ -20,6 +20,7 @@ EXTERNAL add_personal_bond(npcName, amount)
 EXTERNAL get_mental_ratio()
 EXTERNAL recover_mental(amount)
 EXTERNAL lose_mental(amount)
+EXTERNAL add_personal_bond_once(npc, amount, key)
 
 EXTERNAL move_npc(npcName, x, y, duration)
 EXTERNAL move_npc_rel(npcName, offsetX, offsetY, duration)

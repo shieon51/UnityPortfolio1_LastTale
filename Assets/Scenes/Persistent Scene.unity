@@ -4368,8 +4368,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -235}
-  m_SizeDelta: {x: -20, y: -870}
+  m_AnchoredPosition: {x: 538.65, y: 93.24247}
+  m_SizeDelta: {x: -1077.3, y: -214.88493}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &806294776
 MonoBehaviour:
@@ -4418,8 +4418,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 24
+  m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -6800,6 +6800,12 @@ MonoBehaviour:
   returnManaCost: 30
   removeAnchorManaRefund: 10
   anchorMarkerPrefab: {fileID: 8763291670681878086, guid: 0b3ac8fd9b680294aad0d2044f12b41d, type: 3}
+  consumeAnchorOnUse: 1
+  discardLaterAnchorsOnTravel: 1
+  forcedReturnMentalPenalty: 10
+  forcedReturnHealthRatio: 0.5
+  minHealthAfterReturn: 10
+  resetBodyLevel: 1
   levelsPerExtraAnchor: 10
   minAnchorCount: 1
   maxAnchorCountCap: 10
@@ -8219,6 +8225,8 @@ MonoBehaviour:
   canvasGroup: {fileID: 1529356477}
   overlayText: {fileID: 806294776}
   toggleKey: 282
+  refreshInterval: 0.25
+  npcScanInterval: 2
 --- !u!225 &1529356477
 CanvasGroup:
   m_ObjectHideFlags: 0

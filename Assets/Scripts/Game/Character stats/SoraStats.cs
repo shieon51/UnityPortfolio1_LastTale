@@ -109,11 +109,29 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
 
     // 소라 본인이 느끼는 친밀도, 플레이어에겐 비공개
     private Dictionary<string, int> _soraPersonalBond = new();
+
+    // ★ 이미 사용한 증가 키. 같은 이벤트를 다시 겪어도 친밀도가 또 오르지 않게 한다
+    private HashSet<string> _usedBondKeys = new();
+
     public int GetPersonalBond(string npc) => _soraPersonalBond.TryGetValue(npc, out var v) ? v : 0;
-    public void AddPersonalBond(string npc, int amount) => _soraPersonalBond[npc] = GetPersonalBond(npc) + amount;
+
+    public void AddPersonalBond(string npc, int amount)
+        => _soraPersonalBond[npc] = GetPersonalBond(npc) + amount;
+
+    // ★ key는 이벤트마다 고유해야 한다 (예: "liel_first_rain")
+    public bool AddPersonalBondOnce(string npc, int amount, string key)
+    {
+        if (string.IsNullOrEmpty(key)) { AddPersonalBond(npc, amount); return true; }
+        if (!_usedBondKeys.Add(key)) return false;      // 이미 오른 적 있음
+        AddPersonalBond(npc, amount);
+        return true;
+    }
+
+    public bool HasUsedBondKey(string key) => _usedBondKeys.Contains(key);
+
     public float MentalRatio => (float)currentMental / maxMental;
 
-    // 개인 친밀도 스냅샷/복원 관련
+    // 개인 친밀도 스냅샷/복원 관련 (디버그 용)
     public Dictionary<string, int> SnapshotPersonalBond() => new Dictionary<string, int>(_soraPersonalBond);
     public void RestorePersonalBond(Dictionary<string, int> s) { _soraPersonalBond.Clear(); if (s != null) foreach (var k in s) _soraPersonalBond[k.Key] = k.Value; }
 

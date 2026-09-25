@@ -13,6 +13,20 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     public int removeAnchorManaRefund = 10;
     public GameObject anchorMarkerPrefab;
 
+    [Header("회귀 규칙")]
+    [Tooltip("닻은 한 번 사용하면 사라진다 (기획서 7-5)")]
+    public bool consumeAnchorOnUse = true;
+    [Tooltip("과거의 닻으로 돌아가면 그보다 뒤에 내린 닻도 함께 사라진다")]
+    public bool discardLaterAnchorsOnTravel = true;
+    [Tooltip("마나 부족 강제 복귀(경로 2) 시 깎이는 정신력")]
+    public int forcedReturnMentalPenalty = 10;
+    [Tooltip("강제 복귀 후 회복되는 체력 비율")]
+    [Range(0.1f, 1f)] public float forcedReturnHealthRatio = 0.5f;
+    [Tooltip("정상 복귀 시 최소로 보장되는 체력")]
+    public int minHealthAfterReturn = 10;
+    [Tooltip("닻 없이 사망했을 때(경로 3) 되돌아가는 몸 레벨")]
+    public int resetBodyLevel = 1;
+
     [Header("닻 최대 개수 (영혼 레벨 기준)")]
     [Tooltip("영혼 레벨이 이만큼 오를 때마다 최대 개수가 1개씩 늘어난다")]
     public int levelsPerExtraAnchor = 10;
@@ -148,12 +162,12 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             maxHealth = sora.maxHealth,
             maxMana = sora.maxMana,
             experience = sora.experience,
-            acquiredMemoryFlags = new HashSet<string>(MemoryManager.Instance.GetAllAcquired()),
+            // 변경 후 — 순서를 보존하고, 혼 층위인 개인친밀도는 담지 않는다
+            acquiredMemoryFlags = new List<string>(MemoryManager.Instance.GetAllAcquired()),
             npcAffections = NPCManager.Instance.SnapshotAffections(),    
             npcSuspicions = SuspicionManager.Instance.Snapshot(),
             npcTrustEarned = SuspicionManager.Instance.SnapshotTrust(),
             npcLineCrossed = SuspicionManager.Instance.SnapshotLineCrossed(),
-            soraPersonalBond = sora.SnapshotPersonalBond(),
             counters = MemoryManager.Instance.SnapshotCounters(),          
             loopCountAtSave = sora.loopCount,                              
             actionLog = PlayerActionLog.Instance.Snapshot(),
@@ -166,6 +180,9 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             markerObj.GetComponent<TimeAnchorMarker>().snapshotData = snapshot;
             _activeMarkers[snapshot] = markerObj; // ★ 리스트 대신 딕셔너리
         }
+
+        PlayerActionLog.Instance?.Record(RecordType.Counter, "anchor_set");
+
         return true;
     }
 
@@ -180,78 +197,124 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         (PlayerManager.Instance.CurrentCharacter as SoraStats)?.RecoverMana(removeAnchorManaRefund);
     }
 
-    public void TravelToAnchor(TimeAnchorSnapshot anchor)
+    // ★ 세 경로에 흩어져 있던 복원 코드를 하나로 모음.
+    //   되돌리는 것은 "세계 쪽 상태"뿐이다. 기억·개인친밀도는 소라의 혼에 속해 유지된다
+    private void RestoreWorldState(TimeAnchorSnapshot snapshot)
     {
-        if (anchor == null) return;
-        var sora = PlayerManager.Instance.CurrentCharacter as SoraStats;
-        if (sora != null) sora.loopCount++;              // ★ 추가 — 시간 역행이므로 회차 증가
+        if (snapshot == null) return;
 
-        // ★ 리셋이 아니라 "그 시점 상태로 복원" — 이게 핵심
-        NPCManager.Instance.RestoreAffections(anchor.npcAffections);
-        SuspicionManager.Instance.Restore(anchor.npcSuspicions);
-        SuspicionManager.Instance.RestoreTrust(anchor.npcTrustEarned);
-        SuspicionManager.Instance.RestoreLineCrossed(anchor.npcLineCrossed);
-        sora.RestorePersonalBond(anchor.soraPersonalBond);
-        MemoryManager.Instance.RestoreCounters(anchor.counters);
-        PlayerActionLog.Instance.Restore(anchor.actionLog); // ★ 추가
-
-        TimeManager.Instance.SetTime(anchor.day, anchor.hour);
-        SceneLoader.Instance.LoadScene(anchor.sceneID, anchor.position);
+        NPCManager.Instance.RestoreAffections(snapshot.npcAffections);
+        SuspicionManager.Instance.Restore(snapshot.npcSuspicions);
+        SuspicionManager.Instance.RestoreTrust(snapshot.npcTrustEarned);
+        SuspicionManager.Instance.RestoreLineCrossed(snapshot.npcLineCrossed);
+        MemoryManager.Instance.RestoreCounters(snapshot.counters);
+        PlayerActionLog.Instance.Restore(snapshot.actionLog);
     }
 
-    public void HandleDeath(bool keepBodyLevel = true)
+    // 몸 상태를 그 시점으로 되돌린다 (강제 복귀 전용)
+    private void RestoreBody(SoraStats sora, TimeAnchorSnapshot snapshot)
     {
-        var sora = PlayerManager.Instance.CurrentCharacter as SoraStats;
+        sora.level = snapshot.level;
+        sora.maxHealth = snapshot.maxHealth;
+        sora.maxMana = snapshot.maxMana;
+        sora.experience = snapshot.experience;
+    }
+
+    // ★ 사용한 닻을 소모하고, 과거로 갔다면 그보다 뒤의 닻도 정리한다 (기획서 7-5)
+    private void ConsumeAnchor(TimeAnchorSnapshot used)
+    {
+        if (used == null) return;
+
+        if (discardLaterAnchorsOnTravel)
+        {
+            int usedAt = ToAbsoluteHour(used.day, used.hour);
+            for (int i = _anchors.Count - 1; i >= 0; i--)
+            {
+                if (_anchors[i] == used) continue;
+                if (ToAbsoluteHour(_anchors[i].day, _anchors[i].hour) > usedAt) DiscardAnchor(_anchors[i]);
+            }
+        }
+
+        if (consumeAnchorOnUse) DiscardAnchor(used);
+    }
+
+    // 마나 환급 없이 조용히 제거 (사용·소멸용). RemoveAnchor는 플레이어가 직접 거둘 때 쓴다
+    private void DiscardAnchor(TimeAnchorSnapshot snapshot)
+    {
+        _anchors.Remove(snapshot);
+        if (_activeMarkers.TryGetValue(snapshot, out var marker))
+        {
+            if (marker != null) Destroy(marker);
+            _activeMarkers.Remove(snapshot);
+        }
+    }
+
+    public bool TravelToAnchor(TimeAnchorSnapshot anchor)
+    {
+        if (anchor == null || !_anchors.Contains(anchor)) return false;
+
+        var sora = PlayerManager.Instance?.CurrentCharacter as SoraStats;
+        if (sora == null) return false;                       // ★ null 체크 누락 수정
+
+        if (sora.currentMana < returnManaCost)                // ★ 마나 비용이 적용되지 않던 문제 수정
+        {
+            NotifyReason(keyAnchorMana, null);
+            return false;
+        }
+
+        sora.UseMana(returnManaCost);
+        sora.loopCount++;                                     // 시간 역행이므로 회차 증가
+
+        RestoreWorldState(anchor);
+        ConsumeAnchor(anchor);                                // ★ 1회용 + 이후 닻 소멸
+
+        LoadScene(anchor.sceneID, anchor.position, anchor.day, anchor.hour);
+        return true;
+    }
+
+    // 기획서 7-2: 기억은 어떤 경로에서도 유지된다
+    //   경로 1 (마나 충분)   — 마나 소모, 몸 유지
+    //   경로 2 (마나 부족)   — 몸이 닻 시점으로, 정신력 하락
+    //   경로 3 (닻 없음)     — Day 1부터, 몸 레벨 1
+    public void HandleDeath()
+    {
+        var sora = PlayerManager.Instance?.CurrentCharacter as SoraStats;
         if (sora == null) return;
         sora.loopCount++;
 
-        bool hasAnchor = _anchors.Count > 0;
-        var latest = hasAnchor ? _anchors[_anchors.Count - 1] : null;
-        bool canReturn = hasAnchor && sora.currentMana >= returnManaCost;
+        var latest = _anchors.Count > 0 ? _anchors[_anchors.Count - 1] : null;
 
-        if (canReturn) // [경로 1] 앵커로 정상 복귀 — 그 시점 NPC 상태를 그대로 복원
+        if (latest != null && sora.currentMana >= returnManaCost)   // [경로 1] 정상 복귀
         {
             sora.UseMana(returnManaCost);
+            RestoreWorldState(latest);
+            sora.currentHealth = Mathf.Max(minHealthAfterReturn, sora.currentHealth);
 
-            NPCManager.Instance.RestoreAffections(latest.npcAffections);  
-            SuspicionManager.Instance.Restore(latest.npcSuspicions);
-            SuspicionManager.Instance.RestoreTrust(latest.npcTrustEarned);
-            SuspicionManager.Instance.RestoreLineCrossed(latest.npcLineCrossed);
-            sora.RestorePersonalBond(latest.soraPersonalBond);
-            MemoryManager.Instance.RestoreCounters(latest.counters);      
-            PlayerActionLog.Instance.Restore(latest.actionLog); // ★ 추가
-
-            if (!keepBodyLevel)
-            {
-                sora.level = latest.level; sora.maxHealth = latest.maxHealth;
-                sora.maxMana = latest.maxMana; sora.experience = latest.experience;
-            }
-            sora.currentHealth = Mathf.Max(10, sora.currentHealth);
+            ConsumeAnchor(latest);
             LoadScene(latest.sceneID, latest.position, latest.day, latest.hour);
         }
-        else if (hasAnchor) // [경로 2] 마나 부족 강제 복귀 — 기억까지 앵커 시점으로 되돌아감
+        else if (latest != null)                                    // [경로 2] 마나 부족 강제 복귀
         {
-            MemoryManager.Instance.RestoreAcquired(latest.acquiredMemoryFlags);
+            // ★ 기억은 되돌리지 않는다 (기존에는 RestoreAcquired로 기억까지 되돌렸다)
+            RestoreWorldState(latest);
+            RestoreBody(sora, latest);
+            sora.LoseMental(forcedReturnMentalPenalty);
+            sora.currentHealth = Mathf.Max(minHealthAfterReturn, Mathf.RoundToInt(sora.maxHealth * forcedReturnHealthRatio));
 
-            NPCManager.Instance.RestoreAffections(latest.npcAffections);    
-            SuspicionManager.Instance.Restore(latest.npcSuspicions);
-            SuspicionManager.Instance.RestoreTrust(latest.npcTrustEarned);           // ★ 추가
-            SuspicionManager.Instance.RestoreLineCrossed(latest.npcLineCrossed);     // ★ 추가
-            sora.RestorePersonalBond(latest.soraPersonalBond);                       // ★ 추가
-            MemoryManager.Instance.RestoreCounters(latest.counters);
-            PlayerActionLog.Instance.Restore(latest.actionLog); // ★ 추가
-
-            sora.level = latest.level; sora.maxHealth = latest.maxHealth;
-            sora.maxMana = latest.maxMana; sora.experience = latest.experience;
-            sora.currentHealth = Mathf.Max(10, sora.maxHealth / 2);
+            ConsumeAnchor(latest);
             LoadScene(latest.sceneID, latest.position, latest.day, latest.hour);
         }
-        else // [경로 3] 앵커 없음 — Day1부터 완전히 새로 (복원이 아니라 리셋)
+        else                                                        // [경로 3] 닻 없음 — Day 1부터
         {
-            MemoryManager.Instance.ClearAllAcquired();
-            MemoryManager.Instance.ClearAllCounters();          // ★ 추가 — 만남/선택 기록도 초기화
-            NPCManager.Instance.ResetAffectionForNewLoop();     // ★ 추가 (SuspicionManager 리셋도 이 안에 포함됨)
-            PlayerActionLog.Instance.ClearAll(); // ★ 추가
+            // ★ 기억은 유지한다. 되돌아가는 것은 세계와 몸이다
+            MemoryManager.Instance.ClearAllCounters();
+            NPCManager.Instance.ResetAffectionForNewLoop();          // SuspicionManager 리셋 포함
+            PlayerActionLog.Instance.ClearAll();
+
+            sora.ResetProgression();                                 // 몸 레벨을 기본값으로
+            sora.level = resetBodyLevel;
+            sora.currentHealth = sora.maxHealth;                     // ★ 체력을 회복하지 않아 0으로 시작하던 문제 수정
+            sora.currentMana = sora.maxMana;
 
             var cfg = SceneLoader.Instance.startConfig;
             TimeManager.Instance.ResetToDay1();

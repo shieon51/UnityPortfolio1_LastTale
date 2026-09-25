@@ -183,6 +183,9 @@ public class DialogueManager : Singleton<DialogueManager>
         { (PlayerManager.Instance.CurrentCharacter as SoraStats)?.RecoverMental(amount); return 0; }, lookaheadSafe: false);
         story.BindExternalFunction("lose_mental", (int amount) =>
         { (PlayerManager.Instance.CurrentCharacter as SoraStats)?.LoseMental(amount); return 0; }, lookaheadSafe: false);
+        story.BindExternalFunction("add_personal_bond_once", (string npc, int amt, string key) =>
+        { (PlayerManager.Instance.CurrentCharacter as SoraStats)?.AddPersonalBondOnce(npc, amt, key); return 0; }, lookaheadSafe: false);
+
         story.BindExternalFunction("move_npc", (string npcName, float x, float y, float duration) => // ink에서 걸어오게 하기 // *
         {
             NPCManager.Instance.MoveNPCTo(npcName, new Vector2(x, y), duration);

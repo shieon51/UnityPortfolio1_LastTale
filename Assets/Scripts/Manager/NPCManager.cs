@@ -355,8 +355,17 @@ public class NPCManager : Singleton<NPCManager>
 
     public void RestoreAffections(Dictionary<string, int> snapshot)
     {
+        if (snapshot == null) return;
         foreach (var kvp in snapshot)
-            if (npcDataDict.TryGetValue(kvp.Key, out var data)) data.hiddenAffection = kvp.Value;
+        {
+            if (!npcDataDict.TryGetValue(kvp.Key, out var data)) continue;
+
+            // ★ 회귀를 넘어 기억하는 메타 NPC는 되돌리지 않는다.
+            //   기존에는 새 회차 초기화에서만 이 값을 존중하고 닻 복원에서는 무시했다
+            if (data.rememberAcrossLoops) continue;
+
+            data.hiddenAffection = kvp.Value;
+        }
     }
 
     public void ResetAllNPCData() // 디버그 완전 리셋 전용
