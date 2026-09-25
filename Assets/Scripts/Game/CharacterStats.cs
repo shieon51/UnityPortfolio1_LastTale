@@ -37,6 +37,8 @@ public class CharacterStats : MonoBehaviour
     public event System.Action OnGroggyStarted;
     public event System.Action OnGroggyEnded;
     private Coroutine _groggyRoutine;
+    [Tooltip("CombatFormulaService가 없을 때 사용할 그로기 시간")]
+    public float fallbackGroggyDuration = 1f;
 
     [Header("I-Frames")]
     public float invincibilityDuration = 0.2f; // 맞은 후 0.2초간 무적
@@ -53,6 +55,9 @@ public class CharacterStats : MonoBehaviour
     [Tooltip("이 값 이상의 넉백파워는 슈퍼아머를 무시하고 관통함")]
     public float superArmorBreakThreshold = 8f;
 
+    // Die 처리 관련
+    public bool IsDead { get; protected set; }
+
     [Header("타격감(히트스톱)")]
     public float hitStopDuration = 0.25f;      // ★ 0.05→0.1로 기본값 조금 늘림
     public float parryHitStopDuration = 0.45f; // ★ 0.15~0.25 → 0.35로 확실히 늘림
@@ -66,6 +71,28 @@ public class CharacterStats : MonoBehaviour
     public float hitLensDistortionIntensity = 0.3f;
     [Tooltip("패링 성공 시 렌즈 왜곡 강도 — 일반 피격보다 크게 잡는 걸 추천")]
     public float parryLensDistortionIntensity = 0.6f;
+
+    [Header("카메라 흔들림")]
+    [Tooltip("일반 피격 (지속, 강도)")]
+    public Vector2 hitShake = new Vector2(0.1f, 0.1f);
+    [Tooltip("패링 성공 (지속, 강도)")]
+    public Vector2 parryShake = new Vector2(0.15f, 0.2f);
+    [Tooltip("완벽 방어 — 관통 때보다 약하게 (지속, 강도)")]
+    public Vector2 perfectGuardShake = new Vector2(0.05f, 0.05f);
+
+    [Header("패링 연출")]
+    public Color parryFlashColor = new Color(1f, 0.9f, 0.3f);
+    public float parryFlashDuration = 0.15f;
+
+    [Header("플로팅 텍스트")]
+    [Tooltip("데미지·방어·패링 문구가 뜰 높이")]
+    public float floatingTextHeight = 1f;
+
+    [Header("사운드 키")]
+    public string sfxParrySuccess = "parry_success";
+    public string sfxGuardPerfect = "guard_perfect";
+    public string sfxGuardBreak = "guard_break";
+    public string sfxHit = "hit_generic";
 
     // 최근에 나를 공격한 대상 (W 스킬의 "최근 피격 대상 우선" 타겟팅에 사용)
     public CharacterStats LastAttacker { get; protected set; }
@@ -141,10 +168,11 @@ public class CharacterStats : MonoBehaviour
          Vector2? attackOriginOverride = null, // - 대시형 공격이 "시작 시점" 위치를 넘길 때 사용
          bool piercesDodge = false) 
     {
+        if (IsDead) return false;                                    // ★ 이미 죽은 뒤에는 아무 처리도 하지 않는다
         if (Time.time < lastHitTime + invincibilityDuration) return false; // 일반 무적은 무조건 존중 // 무적 중 — 넉백 포함 아무 효과 없음
         if (IsDodgeInvincible && !piercesDodge) // ★ 회피 무적은 침범 표시된 공격만 뚫음
         {
-            FloatingTextManager.Instance?.ShowDodge(transform.position + Vector3.up * 1f); // ★ 추가
+            FloatingTextManager.Instance?.ShowDodge(transform.position + Vector3.up * floatingTextHeight);
             return false;
         }
 
@@ -157,13 +185,16 @@ public class CharacterStats : MonoBehaviour
         {
             lastHitTime = Time.time;
             OnParrySuccess?.Invoke(attacker);
-            FloatingTextManager.Instance?.ShowParry(transform.position + Vector3.up * 1f);
-            SoundManager.Instance?.PlaySFX("parry_success");
-            ScreenFlashOverlay.Instance?.Flash(new Color(1f, 0.9f, 0.3f), 0.15f);
-            float groggyDuration = CombatFormulaService.Instance.CalculateGroggyDuration(attacker, this);
+            FloatingTextManager.Instance?.ShowParry(transform.position + Vector3.up * floatingTextHeight);
+            SoundManager.Instance?.PlaySFX(sfxParrySuccess);
+            ScreenFlashOverlay.Instance?.Flash(parryFlashColor, parryFlashDuration);
+            // 변경 후 — 씬에 서비스가 없어도 게임이 죽지 않게 (ComputeFinalDamage와 같은 방식)
+            float groggyDuration = CombatFormulaService.Instance != null
+                ? CombatFormulaService.Instance.CalculateGroggyDuration(attacker, this)
+                : fallbackGroggyDuration;
             attacker.ApplyGroggy(groggyDuration);
-            HitStopManager.Instance?.TriggerSingle(attacker, parryHitStopDuration, parryChromaticIntensity, parryLensDistortionIntensity); // ★ Trigger(a,b,...) → TriggerSingle(공격자만)
-            CameraDirector.Instance?.Shake(0.15f, 0.2f); // ★ 색수차랑 같이 흔들려서 더 역동적으로
+            HitStopManager.Instance?.TriggerSingle(attacker, parryHitStopDuration, parryChromaticIntensity, parryLensDistortionIntensity);
+            CameraDirector.Instance?.Shake(parryShake.x, parryShake.y); // ★ 색수차랑 같이 흔들려서 더 역동적으로
             return false;  // 패링 성공 — 넉백 포함 완전 무효화
         }
 
@@ -174,9 +205,9 @@ public class CharacterStats : MonoBehaviour
 
         if (guardActive && finalDamage <= 0) // ★
         {
-            FloatingTextManager.Instance?.ShowGuard(transform.position + Vector3.up * 1f);
-            SoundManager.Instance?.PlaySFX("guard_perfect");
-            CameraDirector.Instance?.Shake(0.05f, 0.05f); // ★ 17번 — 관통 때보다 약하게 // ? 하드코딩 빼기
+            FloatingTextManager.Instance?.ShowGuard(transform.position + Vector3.up * floatingTextHeight);
+            SoundManager.Instance?.PlaySFX(sfxGuardPerfect);
+            CameraDirector.Instance?.Shake(perfectGuardShake.x, perfectGuardShake.y); // ★ 관통 때보다 약하게
             if (attacker != null && knockbackDirection.HasValue)
             {
                 attacker.LastAttacker = this; // ★ 추가 — "지금 나를 밀친 게 나(NPC/플레이어)"라는 걸 명확히 기록
@@ -187,16 +218,16 @@ public class CharacterStats : MonoBehaviour
 
         if (guardActive) // ★ 방향 안 맞으면 여기 안 들어오고 바로 else(무방비)로 감
         {
-            FloatingTextManager.Instance?.ShowGuardedDamage(finalDamage, transform.position + Vector3.up * 1f);
-            SoundManager.Instance?.PlaySFX("guard_break");
+            FloatingTextManager.Instance?.ShowGuardedDamage(finalDamage, transform.position + Vector3.up * floatingTextHeight);
+            SoundManager.Instance?.PlaySFX(sfxGuardBreak);
         }
         else
         {
-            FloatingTextManager.Instance?.ShowDamage(finalDamage, transform.position + Vector3.up * 1f);
-            SoundManager.Instance?.PlaySFX("hit_generic");
+            FloatingTextManager.Instance?.ShowDamage(finalDamage, transform.position + Vector3.up * floatingTextHeight);
+            SoundManager.Instance?.PlaySFX(sfxHit);
         }
 
-        if (attacker is NPC || this is NPC) CameraDirector.Instance?.Shake(0.1f, 0.1f);
+        if (attacker is NPC || this is NPC) CameraDirector.Instance?.Shake(hitShake.x, hitShake.y);
         if (knockbackDirection.HasValue && spriteRenderer != null && !isSuperArmor)
         {
             float hitFromDir = -Mathf.Sign(knockbackDirection.Value.x);
@@ -216,7 +247,11 @@ public class CharacterStats : MonoBehaviour
         if (knockbackDirection.HasValue && knockbackPower > 0f)
             ApplyKnockback(knockbackDirection.Value, knockbackPower);
 
-        if (currentHealth <= 0) Die();
+        if (currentHealth <= 0)
+        {
+            IsDead = true;                                           // ★ 중복 사망 방지
+            Die();
+        }
 
         return true;
     }
@@ -276,6 +311,7 @@ public class CharacterStats : MonoBehaviour
     {
         maxHealth = newMax;
         currentHealth = Mathf.Clamp(newCurrent, 0, maxHealth);
+        if (currentHealth > 0) IsDead = false;                       // ★
         OnHealthChanged?.Invoke(); // ★ CharacterStats 안에서 발행하는 거라 문제없음
     }
 
@@ -283,6 +319,7 @@ public class CharacterStats : MonoBehaviour
     public virtual void Heal(int amount)
     {
         currentHealth = Mathf.Min(maxHealth, currentHealth + amount);
+        if (currentHealth > 0) IsDead = false;                       // ★ 회복하면 다시 살아난 것으로 본다
         OnHealthChanged?.Invoke();
     }
 
