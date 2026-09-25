@@ -5,6 +5,8 @@ using UnityEngine;
 public class NPCData
 {
     public string npcName; // 예: "Liel", "Diavalu"
+    [Tooltip("정의 애셋 없이 임시로 만들어진 데이터. 기록장 등 UI는 이 항목을 건너뛴다")]
+    public bool isTemporary = false;                        // ★ 추가
 
     public int hiddenAffection = 0; // 숨겨진 호감도 (애정)
 
@@ -52,22 +54,23 @@ public class NPCData
         => Mathf.Clamp01((float)CurrentUnderstandingCount / Mathf.Max(1, maxObtainableUnderstanding)) * 100f;
 
     // 호감도 범위 (-50 ~ 100) // *
+    // 호감도 범위와 관계 등급 기준은 NPCManager의 인스펙터 값을 따른다
     public void AddAffection(int amount)
     {
         int before = hiddenAffection;
-        hiddenAffection = Mathf.Clamp(hiddenAffection + amount, -50, 100);
+        var manager = NPCManager.Instance;
+        hiddenAffection = manager != null
+            ? manager.ClampAffection(hiddenAffection + amount)
+            : Mathf.Clamp(hiddenAffection + amount, -50, 100);   // 매니저가 없을 때의 안전값
+
         PlayerActionLog.Instance?.Record(RecordType.AffectionChange, npcName, before, hiddenAffection);
     }
 
     // 관계 등급 계산 (기존 NPC.cs에 있던 걸 순수 데이터 쪽으로 옮김 - 정보 전문가 패턴)
     public NPC.RelationshipTier GetRelationshipTier()
     {
-        int totalScore = Mathf.RoundToInt(UnderstandingPercent) + (hiddenAffection * 2); // ★ 필드 대신 계산값
-        if (totalScore < 10) return NPC.RelationshipTier.Hostile;
-        if (totalScore < 30) return NPC.RelationshipTier.Wary;
-        if (totalScore < 60) return NPC.RelationshipTier.Acquaintance;
-        if (totalScore < 100) return NPC.RelationshipTier.Friend;
-        if (totalScore < 150) return NPC.RelationshipTier.Trusted;
-        return NPC.RelationshipTier.Romance;
+        int totalScore = Mathf.RoundToInt(UnderstandingPercent) + (hiddenAffection * 2);
+        var manager = NPCManager.Instance;
+        return manager != null ? manager.ResolveTier(totalScore) : NPC.RelationshipTier.Hostile;
     }
 }

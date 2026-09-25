@@ -50,6 +50,12 @@ public class EventManager : Singleton<EventManager>
     private Transform player;
     private GameObject eventTriggerPrefab;
 
+    [Header("트리거 풀")]
+    [Tooltip("동시에 유지할 정적 트리거 최대 개수. 넘치는 이벤트는 표시되지 않는다")]
+    public int maxStaticTriggers = 10;
+    [Tooltip("EventTrigger 프리팹의 Resources 경로")]
+    public string eventTriggerPrefabPath = "Prefabs/EventTrigger";
+
     [Header("이벤트 선택 우선순위")]
     [Tooltip("바라보는 방향에 있는 이벤트를 우선할지")]
     public bool preferFacingDirection = true;
@@ -83,9 +89,12 @@ public class EventManager : Singleton<EventManager>
 
     private void Awake()
     {
-        eventTriggerPrefab = Resources.Load<GameObject>("Prefabs/EventTrigger");
-        InitializeEventTriggers(10);
-        InitializeBehaviors(); // 행동 전략 초기화
+        eventTriggerPrefab = Resources.Load<GameObject>(eventTriggerPrefabPath);
+        if (eventTriggerPrefab == null)
+            Debug.LogError($"[EventManager] 트리거 프리팹을 찾을 수 없습니다: '{eventTriggerPrefabPath}'");
+
+        InitializeEventTriggers(maxStaticTriggers);
+        InitializeBehaviors();
     }
 
     // 나중에 새로운 이벤트가 생기면 이 곳에 한 줄만 추가하면 됨 ***
@@ -102,9 +111,32 @@ public class EventManager : Singleton<EventManager>
 
     private void Start()
     {
-        player = GameObject.FindGameObjectWithTag("Player").transform;
+        var playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null) player = playerObj.transform;
+
+        // ★ 빙의 대상이 바뀌면 기준 Transform도 따라가야 한다
+        if (PlayerManager.Instance != null)
+        {
+            PlayerManager.Instance.OnCharacterPossessed += HandleCharacterPossessed;
+            if (PlayerManager.Instance.CurrentCharacter != null)
+                player = PlayerManager.Instance.CurrentCharacter.transform;
+        }
+
         UpdateEventTriggers();
         DialogueManager.Instance.OnDialogueEnd += EventResult;
+    }
+
+    private void HandleCharacterPossessed(PlayableCharacter character)
+    {
+        if (character != null) player = character.transform;
+    }
+
+    private void OnDestroy()
+    {
+        if (PlayerManager.Instance != null)
+            PlayerManager.Instance.OnCharacterPossessed -= HandleCharacterPossessed;
+        if (DialogueManager.Instance != null)
+            DialogueManager.Instance.OnDialogueEnd -= EventResult;
     }
 
     private void Update()
@@ -213,7 +245,11 @@ public class EventManager : Singleton<EventManager>
 
         // 3. 정적(일반) 트리거 재활용 및 활성화
         // 필요한 EventTrigger 개수 결정 (최대 10개까지만 유지)
-        int requiredTriggers = Mathf.Min(validEvents.Count, 10);
+        // - 조용히 누락되던 것을 알린다
+        int requiredTriggers = Mathf.Min(validEvents.Count, maxStaticTriggers);
+        if (validEvents.Count > maxStaticTriggers)
+            Debug.LogWarning($"[EventManager] 유효한 정적 이벤트가 {validEvents.Count}개인데 트리거는 " +
+                             $"{maxStaticTriggers}개뿐입니다 — {validEvents.Count - maxStaticTriggers}개가 표시되지 않습니다");
 
         // 기존 트리거 재활용
         for (int i = 0; i < requiredTriggers; i++)
@@ -243,6 +279,8 @@ public class EventManager : Singleton<EventManager>
 
     private void UpdateNearestEvent() //가장 가까운 트리거 찾기
     {
+        if (player == null) return;          // ★ 빙의 전이거나 캐릭터가 없을 때
+
         _allTriggersCache.Clear();
         _allTriggersCache.AddRange(activeTriggers);
         _allTriggersCache.AddRange(dynamicTriggers);

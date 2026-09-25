@@ -10,6 +10,41 @@ public class NPCManager : Singleton<NPCManager>
     [Tooltip("Resources 하위 폴더 — 이 안의 모든 NPCDefinition을 자동으로 읽어옴")]
     public string npcDefinitionFolder = "NPCDefinitions";
 
+    [Tooltip("NPC 프리팹이 들어있는 Resources 하위 폴더")]
+    public string npcPrefabFolder = "Prefabs/NPC";          // ★ 경로 문자열 하드코딩 제거
+
+    [Header("관계 수치")]
+    public int affectionMin = -50;
+    public int affectionMax = 100;
+    [Tooltip("관계 등급 기준. 점수(이해도% + 호감도×2)가 minScore 이상이면 그 등급이다. 오름차순으로 둘 것")]
+    public RelationshipTierThreshold[] tierThresholds =
+    {
+        new() { tier = NPC.RelationshipTier.Hostile,      minScore = int.MinValue },
+        new() { tier = NPC.RelationshipTier.Wary,         minScore = 10 },
+        new() { tier = NPC.RelationshipTier.Acquaintance, minScore = 30 },
+        new() { tier = NPC.RelationshipTier.Friend,       minScore = 60 },
+        new() { tier = NPC.RelationshipTier.Trusted,      minScore = 100 },
+        new() { tier = NPC.RelationshipTier.Romance,      minScore = 150 },
+    };
+
+    [System.Serializable]
+    public class RelationshipTierThreshold
+    {
+        public NPC.RelationshipTier tier;
+        public int minScore;
+    }
+
+    public int ClampAffection(int value) => Mathf.Clamp(value, affectionMin, affectionMax);
+
+    public NPC.RelationshipTier ResolveTier(int score)
+    {
+        var result = NPC.RelationshipTier.Hostile;
+        if (tierThresholds == null) return result;
+        foreach (var t in tierThresholds)
+            if (score >= t.minScore) result = t.tier;
+        return result;
+    }
+
     // NPCManager.cs 에 추가 (private dict를 안전하게 읽기 전용으로 노출)
     public IReadOnlyDictionary<string, NPCData> AllNPCData => npcDataDict;
 
@@ -78,20 +113,22 @@ public class NPCManager : Singleton<NPCManager>
         return data;
     }
 
+    public bool IsRegistered(string npcName) => npcDataDict.ContainsKey(npcName);
+    public bool TryGetNPCData(string npcName, out NPCData data) => npcDataDict.TryGetValue(npcName, out data);
+
     // NPC가 스폰될 때 자신의 데이터를 요구하는 함수
     public NPCData GetNPCData(string npcName)
     {
-        if (npcDataDict.TryGetValue(npcName, out NPCData data))
-        {
-            return data;
-        }
-        else
-        {
-            Debug.LogWarning($"[NPCManager] {npcName}의 데이터가 없습니다! 새로 생성합니다.");
-            NPCData newData = new NPCData(npcName);
-            npcDataDict.Add(npcName, newData);
-            return newData;
-        }
+        if (npcDataDict.TryGetValue(npcName, out NPCData data)) return data;
+
+        // ★ 이름 오타로 임시 데이터가 조용히 만들어져 기록장에 유령 인물이 생기던 문제.
+        //   경고가 아니라 에러로 알리고, 임시로 만든 것임을 표시해 UI가 걸러낼 수 있게 한다
+        Debug.LogError($"[NPCManager] '{npcName}' NPCDefinition이 없습니다 — 이름 오타이거나 애셋이 " +
+                       $"'{npcDefinitionFolder}' 폴더에 없습니다. 임시 데이터로 진행합니다.");
+
+        var newData = new NPCData(npcName) { isTemporary = true };
+        npcDataDict.Add(npcName, newData);
+        return newData;
     }
 
     // NPC 호감도나 상태가 변했을 때 저장하는 함수 (나중에 호감도 이벤트 시 호출)
@@ -140,7 +177,12 @@ public class NPCManager : Singleton<NPCManager>
 
         if (npcObj == null)
         {
-            GameObject prefab = Resources.Load<GameObject>($"Prefabs/NPC/{data.EventName}");
+            GameObject prefab = Resources.Load<GameObject>($"{npcPrefabFolder}/{data.EventName}");   // ★ npcName → data.EventName
+            if (prefab == null)
+            {
+                Debug.LogError($"[NPCManager] NPC 프리팹을 찾을 수 없습니다: '{npcPrefabFolder}/{data.EventName}'");
+                return;
+            }
             if (prefab == null) return;
             npcObj = Instantiate(prefab);
             npcPool[data.EventName] = npcObj;
@@ -379,7 +421,7 @@ public class NPCManager : Singleton<NPCManager>
     {
         if (!npcPool.TryGetValue(npcName, out GameObject npcObj) || npcObj == null)
         {
-            GameObject prefab = Resources.Load<GameObject>($"Prefabs/NPC/{npcName}");
+            GameObject prefab = Resources.Load<GameObject>($"{npcPrefabFolder}/{npcName}");
             if (prefab == null) { Debug.LogWarning($"[NPCManager] 소환 실패 — 프리팹 없음: {npcName}"); return; }
             npcObj = Instantiate(prefab);
             npcPool[npcName] = npcObj;
