@@ -335,7 +335,11 @@ public class EventManager : Singleton<EventManager>
             NPCManager.Instance.DespawnEventNPCs();
 
         // 시간 코인 소모 로직을 GameMode에게 위임! (1부면 코인 소모, 2부면 행동력 소모)
-        GameManager.Instance.CurrentGameMode.ConsumeResourceForEvent(eventData.TimeTaken);
+        // 변경 후 — 대화 중 #time 태그로 덮어쓴 값이 있으면 그것을 쓴다
+        int timeTaken = DialogueManager.Instance != null
+            ? DialogueManager.Instance.ResolveTimeTaken(eventData)
+            : eventData.TimeTaken;
+        GameManager.Instance.CurrentGameMode.ConsumeResourceForEvent(timeTaken);
 
         // 대화가 끝난 게 NPC라면 대화 종료 알림
         if (IsNPCEvent(eventData.EventID))

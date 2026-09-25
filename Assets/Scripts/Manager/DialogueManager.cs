@@ -32,6 +32,12 @@ public class DialogueManager : Singleton<DialogueManager>
     private bool _choicesReadyToReveal; // ★ "텍스트는 다 나왔고 엔터만 누르면 선택지 뜸" 상태
     private Coroutine _autoAdvanceCoroutine;
 
+    // ★ 이 대화에서 실제로 소모할 시간. -1이면 이벤트 기본값(EventData.TimeTaken)을 쓴다.
+    //   #time 태그는 줄마다 리셋되지 않고 대화가 끝날 때까지 유지된다
+    private int _timeTakenOverride = -1;
+    public int ResolveTimeTaken(EventData data)
+        => _timeTakenOverride >= 0 ? _timeTakenOverride : (data?.TimeTaken ?? 0);
+
     private float _queuedAutoDelay;
     private bool _queuedForcePanel, _queuedLockInput;
     private string _queuedSpeakerKey, _queuedSpeakerName;
@@ -215,6 +221,7 @@ public class DialogueManager : Singleton<DialogueManager>
         curEventData = eventData;
         _pendingSpeakerKey = null; _pendingSpeakerDisplayName = null;
         _queuedText = null;
+        _timeTakenOverride = -1;        // ★ 추가
 
         UIManager.Instance.ShowDialogUI();
 
@@ -425,6 +432,8 @@ public class DialogueManager : Singleton<DialogueManager>
             else if (args[0] == "cue" && args.Length > 1) NarrativeCuePlayer.Instance?.Play(args[1]);
             else if (args[0] == "auto" && args.Length > 1) float.TryParse(args[1], out _autoAdvanceDelay);
             else if (args[0] == "lockinput") _lockInput = true;
+            else if (args[0] == "time" && args.Length > 1 && int.TryParse(args[1], out int t))
+                _timeTakenOverride = Mathf.Max(0, t);      // ★ 이 대화의 소모 시간을 덮어씀
         }
     }
 
