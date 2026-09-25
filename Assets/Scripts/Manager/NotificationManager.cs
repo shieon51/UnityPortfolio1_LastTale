@@ -32,6 +32,8 @@ public class NotificationManager : Singleton<NotificationManager>
     public int maxQueueSize = 5;
     [Tooltip("같은 문구가 연속으로 들어오면 무시할지")]
     public bool ignoreConsecutiveDuplicates = true;
+    [Tooltip("같은 문구가 이 시간(초) 안에 다시 들어오면 무시한다")]
+    public float duplicateSuppressSeconds = 0.5f;      // ★ 추가
 
     [Header("Colors")]
     public Color infoColor = Color.white;
@@ -40,7 +42,8 @@ public class NotificationManager : Singleton<NotificationManager>
 
     private readonly Queue<NotificationRequest> _queue = new();
     private Coroutine _playRoutine;
-    private string _lastQueuedMessage;
+    private string _lastShownMessage;
+    private float _lastShownTime = -99f;
 
     private void Start()
     {
@@ -66,11 +69,15 @@ public class NotificationManager : Singleton<NotificationManager>
     {
         if (string.IsNullOrEmpty(message) || notificationText == null || notificationGroup == null) return;
 
-        if (ignoreConsecutiveDuplicates && message == _lastQueuedMessage && _queue.Count > 0) return;
+        // ★ 큐가 비어 있어도(이미 화면에 떠 있어도) 같은 문구는 잠시 무시한다.
+        //   기존 조건(_queue.Count > 0)은 첫 알림이 바로 꺼내진 뒤의 중복을 막지 못했다
+        if (ignoreConsecutiveDuplicates && message == _lastShownMessage
+            && Time.unscaledTime - _lastShownTime < duplicateSuppressSeconds) return;
 
-        if (_queue.Count >= maxQueueSize) _queue.Dequeue();   // 넘치면 오래된 것부터 버림
+        if (_queue.Count >= maxQueueSize) _queue.Dequeue();
         _queue.Enqueue(new NotificationRequest { message = message, type = type });
-        _lastQueuedMessage = message;
+        _lastShownMessage = message;
+        _lastShownTime = Time.unscaledTime;
 
         if (_playRoutine == null) _playRoutine = StartCoroutine(PlayQueueRoutine());
     }
@@ -79,7 +86,6 @@ public class NotificationManager : Singleton<NotificationManager>
     public void ClearAll()
     {
         _queue.Clear();
-        _lastQueuedMessage = null;
         if (_playRoutine != null) { StopCoroutine(_playRoutine); _playRoutine = null; }
         if (notificationGroup != null) notificationGroup.alpha = 0f;
     }
@@ -109,8 +115,6 @@ public class NotificationManager : Singleton<NotificationManager>
             if (_queue.Count > 0 && gapBetweenMessages > 0f)
                 yield return new WaitForSecondsRealtime(gapBetweenMessages);
         }
-
-        _lastQueuedMessage = null;
         _playRoutine = null;
     }
 

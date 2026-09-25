@@ -24,8 +24,8 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     [Range(0.1f, 1f)] public float forcedReturnHealthRatio = 0.5f;
     [Tooltip("정상 복귀 시 최소로 보장되는 체력")]
     public int minHealthAfterReturn = 10;
-    [Tooltip("닻 없이 사망했을 때(경로 3) 되돌아가는 몸 레벨")]
-    public int resetBodyLevel = 1;
+    //[Tooltip("닻 없이 사망했을 때(경로 3) 되돌아가는 몸 레벨")]
+    //public int resetBodyLevel = 1;
 
     [Header("닻 최대 개수 (영혼 레벨 기준)")]
     [Tooltip("영혼 레벨이 이만큼 오를 때마다 최대 개수가 1개씩 늘어난다")]
@@ -43,6 +43,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     public string keyAnchorMana = "notify_anchor_mana";
     public string keyAnchorBattle = "notify_anchor_battle";
     public string keyAnchorTooSoon = "notify_anchor_too_soon";
+    public string keyTravelMana = "notify_travel_mana";      // ★ 추가
 
     // TimeLoopManager.cs — 마커 관리 방식을 딕셔너리로 교체 (인덱스 매칭 방식은 씬이 바뀌면 깨지기 쉬워서)
     private Dictionary<TimeAnchorSnapshot, GameObject> _activeMarkers = new(); // 지금 로드된 씬에 실제로 떠있는 마커만
@@ -162,6 +163,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             maxHealth = sora.maxHealth,
             maxMana = sora.maxMana,
             experience = sora.experience,
+            expToNextLevel = sora.experienceToNextLevel,      // ★ 추가
             // 변경 후 — 순서를 보존하고, 혼 층위인 개인친밀도는 담지 않는다
             acquiredMemoryFlags = new List<string>(MemoryManager.Instance.GetAllAcquired()),
             npcAffections = NPCManager.Instance.SnapshotAffections(),    
@@ -218,6 +220,17 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         sora.maxHealth = snapshot.maxHealth;
         sora.maxMana = snapshot.maxMana;
         sora.experience = snapshot.experience;
+        sora.experienceToNextLevel = Mathf.Max(1, snapshot.expToNextLevel);   // ★ 레벨과 요구 경험치가 어긋나지 않게
+    }
+
+    // ★ currentHealth에 직접 대입하면 변경 이벤트가 발생하지 않아 HUD가 갱신되지 않는다.
+    //   Heal/RecoverMana를 거쳐야 슬라이더가 즉시 따라온다
+    private void SetVitals(SoraStats sora, int health, int mana)
+    {
+        sora.currentHealth = 0;
+        sora.currentMana = 0;
+        sora.Heal(Mathf.Clamp(health, 1, sora.maxHealth));
+        sora.RecoverMana(Mathf.Clamp(mana, 0, sora.maxMana));
     }
 
     // ★ 사용한 닻을 소모하고, 과거로 갔다면 그보다 뒤의 닻도 정리한다 (기획서 7-5)
@@ -258,7 +271,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
 
         if (sora.currentMana < returnManaCost)                // ★ 마나 비용이 적용되지 않던 문제 수정
         {
-            NotifyReason(keyAnchorMana, null);
+            NotifyReason(keyTravelMana, null);               // ★ 설치용 문구 → 이동용 문구
             return false;
         }
 
@@ -288,7 +301,8 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         {
             sora.UseMana(returnManaCost);
             RestoreWorldState(latest);
-            sora.currentHealth = Mathf.Max(minHealthAfterReturn, sora.currentHealth);
+            SetVitals(sora, Mathf.Max(minHealthAfterReturn, sora.currentHealth), sora.currentMana);   // ★
+            //sora.currentHealth = Mathf.Max(minHealthAfterReturn, sora.currentHealth);
 
             ConsumeAnchor(latest);
             LoadScene(latest.sceneID, latest.position, latest.day, latest.hour);
@@ -299,22 +313,21 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             RestoreWorldState(latest);
             RestoreBody(sora, latest);
             sora.LoseMental(forcedReturnMentalPenalty);
-            sora.currentHealth = Mathf.Max(minHealthAfterReturn, Mathf.RoundToInt(sora.maxHealth * forcedReturnHealthRatio));
+            SetVitals(sora,
+                Mathf.Max(minHealthAfterReturn, Mathf.RoundToInt(sora.maxHealth * forcedReturnHealthRatio)),
+                Mathf.RoundToInt(sora.maxMana * forcedReturnHealthRatio));
+            //sora.currentHealth = Mathf.Max(minHealthAfterReturn, Mathf.RoundToInt(sora.maxHealth * forcedReturnHealthRatio));
 
             ConsumeAnchor(latest);
             LoadScene(latest.sceneID, latest.position, latest.day, latest.hour);
         }
         else                                                        // [경로 3] 닻 없음 — Day 1부터
         {
-            // ★ 기억은 유지한다. 되돌아가는 것은 세계와 몸이다
             MemoryManager.Instance.ClearAllCounters();
-            NPCManager.Instance.ResetAffectionForNewLoop();          // SuspicionManager 리셋 포함
+            NPCManager.Instance.ResetAffectionForNewLoop();
             PlayerActionLog.Instance.ClearAll();
 
-            sora.ResetProgression();                                 // 몸 레벨을 기본값으로
-            sora.level = resetBodyLevel;
-            sora.currentHealth = sora.maxHealth;                     // ★ 체력을 회복하지 않아 0으로 시작하던 문제 수정
-            sora.currentMana = sora.maxMana;
+            sora.ResetBodyForNewLoop();                             // ★ 영혼 레벨은 유지
 
             var cfg = SceneLoader.Instance.startConfig;
             TimeManager.Instance.ResetToDay1();

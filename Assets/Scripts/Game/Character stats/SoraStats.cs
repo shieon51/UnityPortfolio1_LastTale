@@ -314,6 +314,23 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         TimeLoopManager.Instance?.HandleDeath(); // ★ 추가 — 이게 빠져있었음
     }
 
+    // ★ 닻 없이 사망했을 때(경로 3) — 몸만 시작 상태로 되돌린다.
+    //   영혼 레벨(highestLevelReached)은 소라의 혼에 속하므로 유지한다
+    public void ResetBodyForNewLoop()
+    {
+        level = _baseLevel;
+        experience = 0;
+        experienceToNextLevel = baseExpToNextLevel;
+        maxHealth = _baseMaxHealth;
+        maxMana = _baseMaxMana;
+
+        currentHealth = 0;
+        currentMana = 0;
+        FullHP();                 // Heal/RecoverMana를 거쳐야 HUD가 갱신된다
+        FullMP();
+        CallProgressionChanged();
+    }
+
     public void ResetProgression() // 디버그 하드리셋 전용
     {
         level = _baseLevel;

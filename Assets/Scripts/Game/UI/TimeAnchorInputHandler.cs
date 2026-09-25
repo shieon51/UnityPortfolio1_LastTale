@@ -5,6 +5,13 @@ public class TimeAnchorInputHandler : MonoBehaviour
 {
     public TimeAnchorConfirmPopup popup;
 
+    private void Awake()
+    {
+        var handlers = FindObjectsByType<TimeAnchorInputHandler>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        if (handlers.Length > 1)
+            Debug.LogWarning($"[TimeAnchorInputHandler] 씬에 {handlers.Length}개가 있습니다 — 입력이 중복 처리됩니다", this);
+    }
+
     private void Update()
     {
         if (!InputBindings.GetKeyDown(InputAction.TimeAnchor)) return;

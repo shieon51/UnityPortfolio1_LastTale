@@ -6704,6 +6704,7 @@ MonoBehaviour:
   gapBetweenMessages: 0.1
   maxQueueSize: 5
   ignoreConsecutiveDuplicates: 1
+  duplicateSuppressSeconds: 0.5
   infoColor: {r: 1, g: 1, b: 1, a: 1}
   warningColor: {r: 1, g: 0.8, b: 0.2, a: 1}
   failureColor: {r: 1, g: 0.35, b: 0.35, a: 1}
@@ -6805,7 +6806,6 @@ MonoBehaviour:
   forcedReturnMentalPenalty: 10
   forcedReturnHealthRatio: 0.5
   minHealthAfterReturn: 10
-  resetBodyLevel: 1
   levelsPerExtraAnchor: 10
   minAnchorCount: 1
   maxAnchorCountCap: 10
@@ -6815,6 +6815,7 @@ MonoBehaviour:
   keyAnchorMana: notify_anchor_mana
   keyAnchorBattle: notify_anchor_battle
   keyAnchorTooSoon: notify_anchor_too_soon
+  keyTravelMana: notify_travel_mana
 --- !u!1 &1312311864
 GameObject:
   m_ObjectHideFlags: 0
