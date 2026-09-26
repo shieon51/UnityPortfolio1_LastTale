@@ -23,6 +23,7 @@ public class DialogueManager : Singleton<DialogueManager>
     private string pendingBattleWinNode = "";
     private string pendingBattleLoseNode = "";
     private BossDifficultyTier pendingBattleDifficulty = BossDifficultyTier.Training; // ★ 추가
+    private string pendingBattleStateKey = "";
 
     private string _pendingSpeakerKey, _pendingSpeakerDisplayName; // ★ #speak/#system으로만 바뀜 — 매번 리셋 안 됨
     private bool _forcePanel;      // ★ 매 줄마다 리셋됨 — "이 줄만" 적용
@@ -425,6 +426,7 @@ public class DialogueManager : Singleton<DialogueManager>
                 pendingBattleWinNode = args.Length > 2 ? args[2] : $"{pendingBattleNPC}_Battle_Win";
                 pendingBattleLoseNode = args.Length > 3 ? args[3] : $"{pendingBattleNPC}_Battle_Lose";
                 pendingBattleDifficulty = (args.Length > 4 && Enum.TryParse(args[4], out BossDifficultyTier parsedTier)) ? parsedTier : BossDifficultyTier.Training;
+                pendingBattleStateKey = args.Length > 5 ? args[5] : "";        // ★ 추가
             }
             else if (args[0] == "speak" && args.Length > 2) { _pendingSpeakerKey = args[1]; _pendingSpeakerDisplayName = args[2]; }
             else if (args[0] == "panel") _forcePanel = true;
@@ -434,6 +436,8 @@ public class DialogueManager : Singleton<DialogueManager>
             else if (args[0] == "lockinput") _lockInput = true;
             else if (args[0] == "time" && args.Length > 1 && int.TryParse(args[1], out int t))
                 _timeTakenOverride = Mathf.Max(0, t);      // ★ 이 대화의 소모 시간을 덮어씀
+            else if (args[0] == "node" && args.Length > 1)
+                VisitedNodeLog.Instance?.MarkVisited(args[1]);                  // ★ 추가
         }
     }
 
@@ -454,11 +458,13 @@ public class DialogueManager : Singleton<DialogueManager>
         string battleNpc = pendingBattleNPC;
         string winNode = pendingBattleWinNode, loseNode = pendingBattleLoseNode;
         var difficulty = pendingBattleDifficulty;
+        string stateKey = pendingBattleStateKey;                    // ★ 추가
         pendingBattleNPC = ""; pendingBattleWinNode = ""; pendingBattleLoseNode = "";
         pendingBattleDifficulty = BossDifficultyTier.Training;
+        pendingBattleStateKey = "";                                 // ★ 추가
 
         if (!string.IsNullOrEmpty(battleNpc))
-            NPCManager.Instance.TriggerBossBattle(battleNpc, difficulty, winNode, loseNode);
+            NPCManager.Instance.TriggerBossBattle(battleNpc, difficulty, winNode, loseNode, stateKey);
     }
 
     // 코루틴 추가 (짧은 딜레이 후 다시 입력 가능)

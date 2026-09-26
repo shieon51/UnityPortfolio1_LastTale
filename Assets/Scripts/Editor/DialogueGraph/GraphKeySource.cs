@@ -5,6 +5,8 @@ using UnityEditor;
 public static class GraphKeySource
 {
     private static List<string> _memoryCache, _npcCache, _cueCache, _counterCache, _knotCache;
+    private static List<KeyValuePair<string, List<string>>> _topicCache;
+
     private static double _lastRefresh;
     private const double CacheSeconds = 3.0;
 
@@ -12,6 +14,7 @@ public static class GraphKeySource
     public static void InvalidateCache()
     {
         _memoryCache = _npcCache = _cueCache = _counterCache = _knotCache = null; // ★ _knotCache 추가
+        _topicCache = null;
     }
 
     private static void CheckExpiry()
@@ -83,5 +86,26 @@ public static class GraphKeySource
         }
         result.Sort();
         return result;
+    }
+
+    /// <summary>주제별 단계 flagId 목록 (순서대로)</summary>
+    public static List<KeyValuePair<string, List<string>>> GetTopicStages()
+    {
+        CheckExpiry();
+        if (_topicCache != null) return _topicCache;
+
+        _topicCache = new List<KeyValuePair<string, List<string>>>();
+        foreach (var guid in AssetDatabase.FindAssets("t:MemoryTopicData"))
+        {
+            var topic = AssetDatabase.LoadAssetAtPath<MemoryTopicData>(AssetDatabase.GUIDToAssetPath(guid));
+            if (topic == null || topic.stages == null) continue;
+
+            var flags = new List<string>();
+            foreach (var s in topic.stages)
+                if (!string.IsNullOrWhiteSpace(s.requiredFlagId)) flags.Add(s.requiredFlagId);
+
+            if (flags.Count > 1) _topicCache.Add(new(topic.topicId, flags));
+        }
+        return _topicCache;
     }
 }

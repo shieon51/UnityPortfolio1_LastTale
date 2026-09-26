@@ -51,6 +51,8 @@ public class NPCManager : Singleton<NPCManager>
     // -------------------------------------------------------------------------------------------
     private NPC _activeBossBattle;
 
+    public string CurrentBattleStateKey { get; private set; }       // ★ 전투 HUD가 보스 상태 문구로 사용
+
     private string _pendingWinNode, _pendingLoseNode;
 
     [Header("Battle End")]
@@ -259,8 +261,11 @@ public class NPCManager : Singleton<NPCManager>
     }
 
     // 나중에 보스전 진입 시 처리 (다이얼로그 매니저에서 호출)
-    public void TriggerBossBattle(string targetNpcName, BossDifficultyTier difficulty = BossDifficultyTier.Training, string winNode = null, string loseNode = null)
+    public void TriggerBossBattle(string targetNpcName, BossDifficultyTier difficulty = BossDifficultyTier.Training,
+        string winNode = null, string loseNode = null, string stateKey = null)
     {
+        CurrentBattleStateKey = stateKey;                           // ★ 추가
+
         if (_activeBossBattle != null) // ★ 중복 트리거 방지 (원래 없던 안전장치)
         {
             Debug.LogWarning($"[NPCManager] 이미 {_activeBossBattle.npcName}과 전투 중이라 {targetNpcName} 전투 시작을 무시합니다.");
@@ -328,6 +333,8 @@ public class NPCManager : Singleton<NPCManager>
     private void EndBossBattle(bool win)
     {
         if (_activeBossBattle == null) return;
+
+        CurrentBattleStateKey = null; //? *
 
         _activeBossBattle.OnHealthChanged -= HandleBossHealthChanged;
         PlayerManager.Instance.CurrentCharacter.OnHealthChanged -= HandlePlayerHealthChangedDuringBattle;

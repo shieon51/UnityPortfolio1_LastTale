@@ -379,13 +379,32 @@ public class DialogueGraphWindow : EditorWindow
             switch (current.nodeType)
             {
                 case "Line":
-                    foreach (var line in current.lines)
                     {
-                        if (!string.IsNullOrWhiteSpace(line.text)) sb.AppendLine(line.text + BuildTags(line));
-                        foreach (var l in line.logics) sb.AppendLine("~ " + BuildLogicCall(l));
+                        // ★ 노드 ID를 심어둔다. 런타임이 방문 노드를 기록하는 근거가 되며,
+                        //   읽은 대사 넘기기·진행률·이야기 문양이 모두 이 기록을 쓴다.
+                        //   guid는 애셋에 저장되어 다시 내보내도 바뀌지 않는다
+                        string nodeTag = $" #node:{current.guid}";
+                        string battleTag = BuildBattleTag(current);
+                        bool firstLine = true;
+
+                        foreach (var line in current.lines)
+                        {
+                            if (!string.IsNullOrWhiteSpace(line.text))
+                            {
+                                // 노드 ID와 전투 태그는 노드의 첫 대사 줄에만 붙인다
+                                sb.AppendLine(line.text + BuildTags(line) + (firstLine ? nodeTag + battleTag : ""));
+                                firstLine = false;
+                            }
+                            foreach (var l in line.logics) sb.AppendLine("~ " + BuildLogicCall(l));
+                        }
+
+                        // 대사가 하나도 없는 노드인데 전투 태그만 있는 경우를 위한 안전장치
+                        if (firstLine && !string.IsNullOrEmpty(battleTag))
+                            sb.AppendLine("<>" + nodeTag + battleTag);
+
+                        current = GetNext(current.guid, 0);
+                        break;
                     }
-                    current = GetNext(current.guid, 0);
-                    break;
 
                 case "Branch":
                     sb.AppendLine("{");
@@ -405,7 +424,10 @@ public class DialogueGraphWindow : EditorWindow
                         var opt = current.choiceOptions[i];
                         string prefix = "+ ";
                         if (opt.condition.entries.Count > 0) prefix += $"{{{ConditionUtil.ToInkExpr(opt.condition)}}} ";
-                        sb.AppendLine(prefix + opt.text);
+
+                        // ★ 기억 조건이 걸린 선택지에 정보 태그를 자동으로 붙인다.
+                        //   선택지 UI가 "리엘 정보" 같은 칩과 툴팁을 띄우는 근거가 된다
+                        sb.AppendLine(prefix + opt.text + BuildMemoryTags(opt));
                         sb.AppendLine($"    -> {ResolveTarget(GetNext(current.guid, i))}");
                     }
                     return;
@@ -442,7 +464,36 @@ public class DialogueGraphWindow : EditorWindow
         if (n.autoAdvance >= 0f) tags.Add($"#auto:{n.autoAdvance}");
         if (n.lockInput) tags.Add("#lockinput");
         if (!string.IsNullOrEmpty(n.cueId)) tags.Add($"#cue:{n.cueId}");
+        if (n.timeTakenOverride >= 0) tags.Add($"#time:{n.timeTakenOverride}");   // ★ 추가
         return tags.Count > 0 ? " " + string.Join(" ", tags) : "";
+    }
+
+    // 선택지 조건에 걸린 기억을 #mem 태그로 내보낸다 (있음 조건만)
+    private string BuildMemoryTags(ChoiceOption opt)
+    {
+        if (opt?.condition?.entries == null) return "";
+
+        var tags = new List<string>();
+        foreach (var e in opt.condition.entries)
+        {
+            if (e.varType != GraphVarType.Memory || e.op != CondOp.Has) continue;
+            if (string.IsNullOrWhiteSpace(e.key) || e.key.StartsWith("(")) continue;
+            if (!tags.Contains($"#mem:{e.key}")) tags.Add($"#mem:{e.key}");
+        }
+        return tags.Count > 0 ? " " + string.Join(" ", tags) : "";
+    }
+
+    // 전투 시작 태그 — #battle:NPC:승리노드:패배노드:난이도:상태키
+    private string BuildBattleTag(GraphNodeData node)
+    {
+        if (node == null || string.IsNullOrWhiteSpace(node.battleNpc)) return "";
+
+        string win = string.IsNullOrWhiteSpace(node.battleWinKnot) ? $"{node.battleNpc}_Battle_Win" : node.battleWinKnot;
+        string lose = string.IsNullOrWhiteSpace(node.battleLoseKnot) ? $"{node.battleNpc}_Battle_Lose" : node.battleLoseKnot;
+        string tier = string.IsNullOrWhiteSpace(node.battleDifficulty) ? "Training" : node.battleDifficulty;
+        string state = string.IsNullOrWhiteSpace(node.battleStateKey) ? "" : $":{node.battleStateKey}";
+
+        return $" #battle:{node.battleNpc}:{win}:{lose}:{tier}{state}";
     }
 
     private GraphNodeData GetNext(string fromGuid, int portIndex)

@@ -12,6 +12,10 @@ public class ValidationIssue
 
 public static class GraphValidator
 {
+    // 판넬 4줄 / 말풍선 3줄 기준의 근사치. 정확한 측정은 TMP 폰트로 대체 예정
+    private const int PanelCharLimit = 175;
+    private const int BubbleCharLimit = 80;
+
     public static List<ValidationIssue> Validate(DialogueGraphData asset)
     {
         var issues = new List<ValidationIssue>();
@@ -109,6 +113,40 @@ public static class GraphValidator
             for (int i = 0; i < n.branchCases.Count; i++)
                 if (n.branchCases[i].condition.entries.Count == 0)
                     issues.Add(Warn(n.guid, $"{Desc(n)} — 분기 {i + 1}에 조건이 없습니다. (항상 참으로 처리됨)"));
+
+        // 7) 대사 길이 — 화자가 있고 패널 강제가 아니면 말풍선, 아니면 판넬
+        foreach (var n in asset.nodes)
+        {
+            foreach (var line in n.lines)
+            {
+                if (string.IsNullOrWhiteSpace(line.text)) continue;
+                bool isBubble = !line.isSystem && !line.forcePanel && !string.IsNullOrEmpty(line.speakerKey);
+                int limit = isBubble ? BubbleCharLimit : PanelCharLimit;
+                if (line.text.Length > limit)
+                    issues.Add(Warn(n.guid, $"{Desc(n)} — {(isBubble ? "말풍선" : "판넬")} 한도({limit}자)를 넘습니다: {line.text.Length}자"));
+            }
+        }
+
+        // 8) 주제 단계 순서 — 앞 단계 조건 없이 뒷 단계를 획득시키면 경고
+        foreach (var topic in GraphKeySource.GetTopicStages())
+        {
+            for (int stage = 1; stage < topic.Value.Count; stage++)
+            {
+                string flag = topic.Value[stage];
+                foreach (var n in asset.nodes)
+                {
+                    bool grants = n.lines.Any(l => l.logics.Any(g => g.varType == GraphVarType.Memory && !g.isErase && g.key == flag));
+                    if (!grants) continue;
+
+                    string prev = topic.Value[stage - 1];
+                    bool guarded = n.lines.Any(l => l.logics.Any(g => g.key == prev))
+                        || asset.nodes.Any(x => x.branchCases.Any(b => b.condition.entries.Any(c => c.key == prev))
+                                             || x.choiceOptions.Any(o => o.condition.entries.Any(c => c.key == prev)));
+                    if (!guarded)
+                        issues.Add(Warn(n.guid, $"{Desc(n)} — '{topic.Key}' 주제의 {stage + 1}단계('{flag}')를 주는데 앞 단계('{prev}') 조건이 어디에도 없습니다. 순서를 건너뛸 수 있습니다."));
+                }
+            }
+        }
 
         return issues;
     }

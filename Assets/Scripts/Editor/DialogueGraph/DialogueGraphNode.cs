@@ -55,7 +55,60 @@ public class DialogueGraphNode : Node
         if (Data.lines.Count == 0) Data.lines.Add(new DialogueLine());
         RebuildLines();
 
+        AddBattleFold();          // ★ 추가
         AddOutput("다음");
+    }
+
+    /// <summary>이 노드에서 전투를 시작할지 (비워두면 전투 없음)</summary>
+    private void AddBattleFold()
+    {
+        var fold = new Foldout { text = BuildBattleSummary(), value = false };
+        fold.AddToClassList("compact-fold");
+        EnableFoldTextWrap(fold);
+
+        var npcOptions = GraphKeySource.GetNPCNames();
+        npcOptions.Insert(0, "(전투 없음)");
+        int ni = Mathf.Max(0, npcOptions.IndexOf(string.IsNullOrEmpty(Data.battleNpc) ? "(전투 없음)" : Data.battleNpc));
+        var npcDd = new PopupField<string>("상대", npcOptions, ni);
+        npcDd.RegisterValueChangedCallback(e =>
+        {
+            Data.battleNpc = e.newValue == "(전투 없음)" ? "" : e.newValue;
+            fold.text = BuildBattleSummary();
+        });
+        fold.Add(npcDd);
+
+        var tiers = new List<string> { "Training", "Normal", "Hard" };
+        int ti = Mathf.Max(0, tiers.IndexOf(string.IsNullOrEmpty(Data.battleDifficulty) ? "Training" : Data.battleDifficulty));
+        var tierDd = new PopupField<string>("난이도", tiers, ti);
+        tierDd.RegisterValueChangedCallback(e => { Data.battleDifficulty = e.newValue; fold.text = BuildBattleSummary(); });
+        fold.Add(tierDd);
+
+        var knots = GraphKeySource.GetKnotNames();
+        knots.Insert(0, "(기본값)");
+
+        int wi = Mathf.Max(0, knots.IndexOf(string.IsNullOrEmpty(Data.battleWinKnot) ? "(기본값)" : Data.battleWinKnot));
+        var winDd = new PopupField<string>("승리 후", knots, wi);
+        winDd.RegisterValueChangedCallback(e => Data.battleWinKnot = e.newValue == "(기본값)" ? "" : e.newValue);
+        fold.Add(winDd);
+
+        int li = Mathf.Max(0, knots.IndexOf(string.IsNullOrEmpty(Data.battleLoseKnot) ? "(기본값)" : Data.battleLoseKnot));
+        var loseDd = new PopupField<string>("패배 후", knots, li);
+        loseDd.RegisterValueChangedCallback(e => Data.battleLoseKnot = e.newValue == "(기본값)" ? "" : e.newValue);
+        fold.Add(loseDd);
+
+        // 전투 중 보스 상태로 표시할 문구 키 (봐주는 중 / 전력 / 폭주 등)
+        var stateField = new TextField("보스 상태 키") { value = Data.battleStateKey };
+        stateField.RegisterValueChangedCallback(e => { Data.battleStateKey = e.newValue; fold.text = BuildBattleSummary(); });
+        fold.Add(stateField);
+
+        mainContainer.Add(fold);
+    }
+
+    private string BuildBattleSummary()
+    {
+        if (string.IsNullOrEmpty(Data.battleNpc)) return "전투 (없음)";
+        string state = string.IsNullOrEmpty(Data.battleStateKey) ? "" : $", {Data.battleStateKey}";
+        return $"전투 — {Data.battleNpc} ({Data.battleDifficulty}{state})";
     }
 
     private void RebuildLines()
@@ -158,6 +211,16 @@ public class DialogueGraphNode : Node
                 settingsFold.text = BuildLineSettingSummary(line);
             });
             settingsFold.Add(cueDd);
+
+            // ★ 이 대화에서 소모할 시간 (거절 분기는 0, -1이면 이벤트 기본값)
+            var timeField = new IntegerField("소모 시간(-1=기본)") { value = line.timeTakenOverride };
+            timeField.RegisterValueChangedCallback(e =>
+            {
+                line.timeTakenOverride = Mathf.Max(-1, e.newValue);
+                settingsFold.text = BuildLineSettingSummary(line);
+            });
+            settingsFold.Add(timeField);
+
             rightCol.Add(settingsFold);
 
             var logicFold = new Foldout { text = BuildLogicSummary(line), value = false };
@@ -194,6 +257,7 @@ public class DialogueGraphNode : Node
         if (l.autoAdvance >= 0f) parts.Add($"자동 {l.autoAdvance}초");
         if (l.lockInput) parts.Add("입력차단");
         if (!string.IsNullOrEmpty(l.cueId)) parts.Add($"큐:{l.cueId}");
+        if (l.timeTakenOverride >= 0) parts.Add($"시간 {l.timeTakenOverride}");   // ★ 추가
         return parts.Count == 0 ? "표시 설정 (기본)" : "표시 설정 — " + string.Join(", ", parts);
     }
 

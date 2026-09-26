@@ -59,6 +59,10 @@ public class DialogueLine
     public float autoAdvance = -1f;
     public bool lockInput;
     public string cueId = "";
+
+    [Tooltip("이 대화에서 소모할 시간을 덮어쓴다. -1이면 이벤트 기본값을 쓴다 (거절 분기는 0)")]
+    public int timeTakenOverride = -1;                       // ★ 추가
+
     public List<GraphLogicEntry> logics = new();
 }
 
@@ -85,6 +89,14 @@ public class GraphNodeData
     public List<DialogueLine> lines = new();   // ★ Line 노드: 여러 줄을 한 노드에
 
     public string lastExportHash = "";
+
+    [Header("전투 시작 (Line 노드 전용, 비워두면 전투 없음)")]
+    public string battleNpc = "";                            // ★ 추가
+    public string battleWinKnot = "";
+    public string battleLoseKnot = "";
+    public string battleDifficulty = "Training";             // BossDifficultyTier 이름
+    [Tooltip("전투 중 보스 상태로 표시할 문구 키 (봐주는 중 / 전력 / 폭주 등)")]
+    public string battleStateKey = "";
 }
 
 [Serializable]
