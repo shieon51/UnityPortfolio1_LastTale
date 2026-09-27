@@ -2,7 +2,6 @@
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
-using static UnityEngine.Rendering.DebugUI.MessageBox;
 
 // Assets/Scripts/Editor/BossAIProfileWindow.cs 
 public class BossAIProfileWindow : EditorWindow

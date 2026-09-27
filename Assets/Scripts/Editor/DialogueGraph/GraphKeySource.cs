@@ -6,6 +6,7 @@ public static class GraphKeySource
 {
     private static List<string> _memoryCache, _npcCache, _cueCache, _counterCache, _knotCache;
     private static List<KeyValuePair<string, List<string>>> _topicCache;
+    private static Dictionary<string, List<string>> _bossTierCache;
 
     private static double _lastRefresh;
     private const double CacheSeconds = 3.0;
@@ -15,6 +16,7 @@ public static class GraphKeySource
     {
         _memoryCache = _npcCache = _cueCache = _counterCache = _knotCache = null; // ★ _knotCache 추가
         _topicCache = null;
+        _bossTierCache = null;
     }
 
     private static void CheckExpiry()
@@ -107,5 +109,26 @@ public static class GraphKeySource
             if (flags.Count > 1) _topicCache.Add(new(topic.topicId, flags));
         }
         return _topicCache;
+    }
+
+    /// <summary>NPC별로 실제 존재하는 보스 프로필 난이도 목록</summary>
+    public static List<string> GetBossTiers(string npcName)
+    {
+        CheckExpiry();
+        if (_bossTierCache == null)
+        {
+            _bossTierCache = new Dictionary<string, List<string>>();
+            foreach (var guid in AssetDatabase.FindAssets("t:NPCBossProfile"))
+            {
+                var p = AssetDatabase.LoadAssetAtPath<NPCBossProfile>(AssetDatabase.GUIDToAssetPath(guid));
+                if (p == null || string.IsNullOrEmpty(p.npcName)) continue;
+                if (!_bossTierCache.TryGetValue(p.npcName, out var list))
+                    _bossTierCache[p.npcName] = list = new List<string>();
+                string tier = p.difficultyTier.ToString();
+                if (!list.Contains(tier)) list.Add(tier);
+            }
+        }
+        return _bossTierCache.TryGetValue(npcName ?? "", out var tiers)
+            ? new List<string>(tiers) : new List<string>();
     }
 }

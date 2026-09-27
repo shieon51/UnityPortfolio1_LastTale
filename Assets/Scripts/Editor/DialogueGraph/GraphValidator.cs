@@ -148,6 +148,18 @@ public static class GraphValidator
             }
         }
 
+        // 9) 전투 태그 — 해당 NPC·난이도의 보스 프로필이 실제로 있는지
+        foreach (var n in asset.nodes)
+        {
+            if (string.IsNullOrWhiteSpace(n.battleNpc)) continue;
+
+            var tiers = GraphKeySource.GetBossTiers(n.battleNpc);
+            if (tiers.Count == 0)
+                issues.Add(Err(n.guid, $"{Desc(n)} — '{n.battleNpc}'의 보스 프로필이 하나도 없습니다."));
+            else if (!tiers.Contains(string.IsNullOrEmpty(n.battleDifficulty) ? "Training" : n.battleDifficulty))
+                issues.Add(Err(n.guid, $"{Desc(n)} — '{n.battleNpc}'에 '{n.battleDifficulty}' 난이도 프로필이 없습니다. (있는 것: {string.Join(", ", tiers)})"));
+        }
+
         return issues;
     }
 

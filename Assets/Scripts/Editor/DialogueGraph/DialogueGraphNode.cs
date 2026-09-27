@@ -77,10 +77,16 @@ public class DialogueGraphNode : Node
         });
         fold.Add(npcDd);
 
-        var tiers = new List<string> { "Training", "Normal", "Hard" };
-        int ti = Mathf.Max(0, tiers.IndexOf(string.IsNullOrEmpty(Data.battleDifficulty) ? "Training" : Data.battleDifficulty));
+        // ★ 문자열 목록 대신 이 NPC에게 실제로 존재하는 프로필 난이도만 보여준다
+        var tiers = GraphKeySource.GetBossTiers(Data.battleNpc);
+        if (tiers.Count == 0) tiers.Add("(프로필 없음)");
+        int ti = Mathf.Max(0, tiers.IndexOf(string.IsNullOrEmpty(Data.battleDifficulty) ? tiers[0] : Data.battleDifficulty));
         var tierDd = new PopupField<string>("난이도", tiers, ti);
-        tierDd.RegisterValueChangedCallback(e => { Data.battleDifficulty = e.newValue; fold.text = BuildBattleSummary(); });
+        tierDd.RegisterValueChangedCallback(e =>
+        {
+            Data.battleDifficulty = e.newValue == "(프로필 없음)" ? "" : e.newValue;
+            fold.text = BuildBattleSummary();
+        });
         fold.Add(tierDd);
 
         var knots = GraphKeySource.GetKnotNames();
