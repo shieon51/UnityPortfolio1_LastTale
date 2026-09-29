@@ -281,6 +281,11 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         RestoreWorldState(anchor);
         ConsumeAnchor(anchor);                                // ★ 1회용 + 이후 닻 소멸
 
+        // ★ 복원 뒤에 기록해야 한다. RestoreWorldState가 행적 로그를 그 시점으로 되돌리므로,
+        //   먼저 기록하면 복원 과정에서 지워진다
+        PlayerActionLog.Instance?.Record(RecordType.Loop, "return_to_anchor", 0, 0,
+            $"{anchor.loopCountAtSave}회차 Day {anchor.day} {anchor.hour}:00");
+
         LoadScene(anchor.sceneID, anchor.position, anchor.day, anchor.hour);
         return true;
     }
@@ -305,6 +310,8 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             //sora.currentHealth = Mathf.Max(minHealthAfterReturn, sora.currentHealth);
 
             ConsumeAnchor(latest);
+            PlayerActionLog.Instance?.Record(RecordType.Loop, "death_return", 0, 0,
+                $"{latest.loopCountAtSave}회차 Day {latest.day} {latest.hour}:00");
             LoadScene(latest.sceneID, latest.position, latest.day, latest.hour);
         }
         else if (latest != null)                                    // [경로 2] 마나 부족 강제 복귀
@@ -319,6 +326,8 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             //sora.currentHealth = Mathf.Max(minHealthAfterReturn, Mathf.RoundToInt(sora.maxHealth * forcedReturnHealthRatio));
 
             ConsumeAnchor(latest);
+            PlayerActionLog.Instance?.Record(RecordType.Loop, "death_return", 0, 0,
+                $"{latest.loopCountAtSave}회차 Day {latest.day} {latest.hour}:00");
             LoadScene(latest.sceneID, latest.position, latest.day, latest.hour);
         }
         else                                                        // [경로 3] 닻 없음 — Day 1부터
@@ -326,6 +335,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             MemoryManager.Instance.ClearAllCounters();
             NPCManager.Instance.ResetAffectionForNewLoop();
             PlayerActionLog.Instance.ClearAll();
+            PlayerActionLog.Instance.Record(RecordType.Loop, "full_reset");
 
             sora.ResetBodyForNewLoop();                             // ★ 영혼 레벨은 유지
 
