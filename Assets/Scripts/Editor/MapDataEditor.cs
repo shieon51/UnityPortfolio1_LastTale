@@ -410,7 +410,7 @@ public class MapDataEditor : EditorWindow
     {
         string pX = m.transform.position.x.ToString("F2");
         string pY = m.transform.position.y.ToString("F2");
-        return $"{m.EventID},{m.EventName},{m.IsAnytime},{m.Day},{m.StartTime},{m.EndTime},{m.InkNodeName},{m.SceneID},{pX},{pY},{m.TimeTaken},{m.AutoTrigger},{m.maxTriggerCount},{m.exhaustedInkNode},{m.summonNPCs},{m.despawnAfterEvent},{m.triggerZoneSize.x:F2},{m.triggerZoneSize.y:F2},{m.triggerZoneOffset.x:F2},{m.triggerZoneOffset.y:F2}";
+        return $"{m.EventID},{m.EventName},{m.IsAnytime},{m.Day},{m.StartTime},{m.EndTime},{m.InkNodeName},{m.SceneID},{pX},{pY},{m.TimeTaken},{m.AutoTrigger},{m.maxTriggerCount},{m.exhaustedInkNode},{m.summonNPCs},{m.despawnAfterEvent},{m.triggerZoneSize.x:F2},{m.triggerZoneSize.y:F2},{m.triggerZoneOffset.x:F2},{m.triggerZoneOffset.y:F2},{m.DisplayKey}";
     }
 
     // 3. CSV 읽은 줄 -> 비교용 표준 포맷 변환
@@ -430,7 +430,8 @@ public class MapDataEditor : EditorWindow
         string zoneH = CsvTableLoader.GetFloat(cols, 17, 0f).ToString("F2");
         string zoneOX = CsvTableLoader.GetFloat(cols, 18, 0f).ToString("F2");
         string zoneOY = CsvTableLoader.GetFloat(cols, 19, 0f).ToString("F2");
-        return $"{cols[0]},{cols[1]},{cols[2]},{cols[3]},{cols[4]},{cols[5]},{cols[6]},{cols[7]},{pX},{pY},{cols[10]},{autoTrigger},{maxCount},{exhausted},{summon},{despawn},{zoneW},{zoneH},{zoneOX},{zoneOY}";
+        string displayKey = CsvTableLoader.Get(cols, 20, "");                  // ★ 추가
+        return $"{cols[0]},{cols[1]},{cols[2]},{cols[3]},{cols[4]},{cols[5]},{cols[6]},{cols[7]},{pX},{pY},{cols[10]},{autoTrigger},{maxCount},{exhausted},{summon},{despawn},{zoneW},{zoneH},{zoneOX},{zoneOY},{displayKey}";
     }
 
     private void SaveMarkers(int saveAsID)
@@ -482,7 +483,7 @@ public class MapDataEditor : EditorWindow
         AutoAssignIDs();
 
         List<string> allRows = new List<string>();
-        string header = "EventID,EventName,IsAnytime,EventDay,StartTime,EndTime,NodeName,SceneID,PositionX,PositionY,TimeTaken,AutoTrigger,MaxTriggerCount,ExhaustedInkNode,SummonNPCs,DespawnAfterEvent,ZoneW,ZoneH,ZoneOffsetX,ZoneOffsetY";
+        string header = "EventID,EventName,IsAnytime,EventDay,StartTime,EndTime,NodeName,SceneID,PositionX,PositionY,TimeTaken,AutoTrigger,MaxTriggerCount,ExhaustedInkNode,SummonNPCs,DespawnAfterEvent,ZoneW,ZoneH,ZoneOffsetX,ZoneOffsetY,DisplayKey";
 
         if (File.Exists(eventCsvPath))
         {
@@ -501,7 +502,7 @@ public class MapDataEditor : EditorWindow
             m.SceneID = saveAsID;
             string pX = m.transform.position.x.ToString("F2");
             string pY = m.transform.position.y.ToString("F2");
-            allRows.Add($"{m.EventID},{m.EventName},{m.IsAnytime},{m.Day},{m.StartTime},{m.EndTime},{m.InkNodeName},{m.SceneID},{pX},{pY},{m.TimeTaken},{m.AutoTrigger},{m.maxTriggerCount},{m.exhaustedInkNode},{m.summonNPCs},{m.despawnAfterEvent},{m.triggerZoneSize.x:F2},{m.triggerZoneSize.y:F2},{m.triggerZoneOffset.x:F2},{m.triggerZoneOffset.y:F2}");
+            allRows.Add($"{m.EventID},{m.EventName},{m.IsAnytime},{m.Day},{m.StartTime},{m.EndTime},{m.InkNodeName},{m.SceneID},{pX},{pY},{m.TimeTaken},{m.AutoTrigger},{m.maxTriggerCount},{m.exhaustedInkNode},{m.summonNPCs},{m.despawnAfterEvent},{m.triggerZoneSize.x:F2},{m.triggerZoneSize.y:F2},{m.triggerZoneOffset.x:F2},{m.triggerZoneOffset.y:F2},{m.DisplayKey}");
         }
 
         allRows.Sort((a, b) => int.Parse(a.Split(',')[0]).CompareTo(int.Parse(b.Split(',')[0])));
@@ -568,6 +569,7 @@ public class MapDataEditor : EditorWindow
             m.despawnAfterEvent = CsvTableLoader.GetBool(cols, 15, true); // ★ 추가
             m.triggerZoneSize = new Vector2(CsvTableLoader.GetFloat(cols, 16, 0f), CsvTableLoader.GetFloat(cols, 17, 0f));
             m.triggerZoneOffset = new Vector2(CsvTableLoader.GetFloat(cols, 18, 0f), CsvTableLoader.GetFloat(cols, 19, 0f));
+            m.DisplayKey = CsvTableLoader.Get(cols, 20, "");                   // ★ 추가
             m.markerType = GetTypeFromId(m.EventID);
             go.name = $"Marker_{m.EventID}_{m.EventName}";
         }
