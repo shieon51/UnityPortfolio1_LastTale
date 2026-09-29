@@ -22,6 +22,8 @@ public class DialogueGraphNode : Node
 
     private VisualElement _lineContainer;
 
+    private Foldout _battleFold;        // ★ 추가 — 내용을 다시 그리기 위해 보관
+
     public void BuildStart()
     {
         AddToClassList("dialogue-node");
@@ -62,9 +64,19 @@ public class DialogueGraphNode : Node
     /// <summary>이 노드에서 전투를 시작할지 (비워두면 전투 없음)</summary>
     private void AddBattleFold()
     {
-        var fold = new Foldout { text = BuildBattleSummary(), value = false };
-        fold.AddToClassList("compact-fold");
-        EnableFoldTextWrap(fold);
+        _battleFold = new Foldout { text = BuildBattleSummary(), value = false };
+        _battleFold.AddToClassList("compact-fold");
+        EnableFoldTextWrap(_battleFold);
+        mainContainer.Add(_battleFold);
+        RebuildBattleFold();
+    }
+
+    // ★ 상대를 바꾸면 난이도 목록도 달라지므로 내용을 통째로 다시 그린다
+    private void RebuildBattleFold()
+    {
+        if (_battleFold == null) return;
+        _battleFold.Clear();
+        _battleFold.text = BuildBattleSummary();
 
         var npcOptions = GraphKeySource.GetNPCNames();
         npcOptions.Insert(0, "(전투 없음)");
@@ -73,21 +85,34 @@ public class DialogueGraphNode : Node
         npcDd.RegisterValueChangedCallback(e =>
         {
             Data.battleNpc = e.newValue == "(전투 없음)" ? "" : e.newValue;
-            fold.text = BuildBattleSummary();
-        });
-        fold.Add(npcDd);
+            Data.battleDifficulty = "";                 // 상대가 바뀌면 난이도는 다시 고른다
 
-        // ★ 문자열 목록 대신 이 NPC에게 실제로 존재하는 프로필 난이도만 보여준다
+            // ★ 콜백 도중에 자기 자신을 지우면 위험하므로 다음 프레임에 다시 그린다
+            _battleFold.schedule.Execute(RebuildBattleFold);
+        });
+        _battleFold.Add(npcDd);
+
+        if (string.IsNullOrEmpty(Data.battleNpc)) return;   // 전투 없음이면 나머지는 그리지 않는다
+
+        // 이 NPC에게 실제로 존재하는 프로필 난이도만 보여준다
         var tiers = GraphKeySource.GetBossTiers(Data.battleNpc);
-        if (tiers.Count == 0) tiers.Add("(프로필 없음)");
-        int ti = Mathf.Max(0, tiers.IndexOf(string.IsNullOrEmpty(Data.battleDifficulty) ? tiers[0] : Data.battleDifficulty));
-        var tierDd = new PopupField<string>("난이도", tiers, ti);
+        if (tiers.Count == 0)
+        {
+            _battleFold.Add(new Label($"'{Data.battleNpc}'의 보스 프로필이 없습니다") { style = { color = new Color(1f, 0.5f, 0.5f) } });
+            Data.battleDifficulty = "";
+            return;
+        }
+
+        if (string.IsNullOrEmpty(Data.battleDifficulty) || !tiers.Contains(Data.battleDifficulty))
+            Data.battleDifficulty = tiers[0];
+
+        var tierDd = new PopupField<string>("난이도", tiers, tiers.IndexOf(Data.battleDifficulty));
         tierDd.RegisterValueChangedCallback(e =>
         {
-            Data.battleDifficulty = e.newValue == "(프로필 없음)" ? "" : e.newValue;
-            fold.text = BuildBattleSummary();
+            Data.battleDifficulty = e.newValue;
+            _battleFold.text = BuildBattleSummary();
         });
-        fold.Add(tierDd);
+        _battleFold.Add(tierDd);
 
         var knots = GraphKeySource.GetKnotNames();
         knots.Insert(0, "(기본값)");
@@ -95,26 +120,28 @@ public class DialogueGraphNode : Node
         int wi = Mathf.Max(0, knots.IndexOf(string.IsNullOrEmpty(Data.battleWinKnot) ? "(기본값)" : Data.battleWinKnot));
         var winDd = new PopupField<string>("승리 후", knots, wi);
         winDd.RegisterValueChangedCallback(e => Data.battleWinKnot = e.newValue == "(기본값)" ? "" : e.newValue);
-        fold.Add(winDd);
+        _battleFold.Add(winDd);
 
         int li = Mathf.Max(0, knots.IndexOf(string.IsNullOrEmpty(Data.battleLoseKnot) ? "(기본값)" : Data.battleLoseKnot));
         var loseDd = new PopupField<string>("패배 후", knots, li);
         loseDd.RegisterValueChangedCallback(e => Data.battleLoseKnot = e.newValue == "(기본값)" ? "" : e.newValue);
-        fold.Add(loseDd);
+        _battleFold.Add(loseDd);
 
         // 전투 중 보스 상태로 표시할 문구 키 (봐주는 중 / 전력 / 폭주 등)
         var stateField = new TextField("보스 상태 키") { value = Data.battleStateKey };
-        stateField.RegisterValueChangedCallback(e => { Data.battleStateKey = e.newValue; fold.text = BuildBattleSummary(); });
-        fold.Add(stateField);
+        stateField.RegisterValueChangedCallback(e => { Data.battleStateKey = e.newValue; _battleFold.text = BuildBattleSummary(); });
+        _battleFold.Add(stateField);
 
-        mainContainer.Add(fold);
+        // ★ 프로필을 새로 만들었는데 목록에 없으면 이 버튼으로 갱신
+        _battleFold.Add(new Button(() => { GraphKeySource.InvalidateCache(); RebuildBattleFold(); }) { text = "↻ 프로필 목록 새로고침" });
     }
 
     private string BuildBattleSummary()
     {
         if (string.IsNullOrEmpty(Data.battleNpc)) return "전투 (없음)";
+        string tier = string.IsNullOrEmpty(Data.battleDifficulty) ? "난이도 미지정" : Data.battleDifficulty;
         string state = string.IsNullOrEmpty(Data.battleStateKey) ? "" : $", {Data.battleStateKey}";
-        return $"전투 — {Data.battleNpc} ({Data.battleDifficulty}{state})";
+        return $"전투 — {Data.battleNpc} ({tier}{state})";
     }
 
     private void RebuildLines()
