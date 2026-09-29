@@ -1,11 +1,11 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-// °ÔÀÓ ³» ¸ğµç µ¥ÀÌÅÍ¸¦ ·ÎµåÇÏ°í º¸°üÇÏ´Â Áß¾Ó ÀúÀå¼Ò (Repository)
+// ê²Œì„ ë‚´ ëª¨ë“  ë°ì´í„°ë¥¼ ë¡œë“œí•˜ê³  ë³´ê´€í•˜ëŠ” ì¤‘ì•™ ì €ì¥ì†Œ (Repository)
 public class DataManager : Singleton<DataManager>
 {
-    // ¾À Á¤º¸, Æ÷Å» Á¤º¸, ÀÌº¥Æ® Á¤º¸  ++ ³ªÁß¿¡ ¸ó½ºÅÍ Á¤º¸µµ Ãß°¡ ¿¹Á¤
+    // ì”¬ ì •ë³´, í¬íƒˆ ì •ë³´, ì´ë²¤íŠ¸ ì •ë³´  ++ ë‚˜ì¤‘ì— ëª¬ìŠ¤í„° ì •ë³´ë„ ì¶”ê°€ ì˜ˆì •
     public Dictionary<int, string> SceneDict { get; private set; } = new Dictionary<int, string>();
     public Dictionary<int, PortalData> PortalDict { get; private set; } = new Dictionary<int, PortalData>();
     public Dictionary<int, EventData> EventDict { get; private set; } = new Dictionary<int, EventData>();
@@ -14,11 +14,11 @@ public class DataManager : Singleton<DataManager>
 
     public void LoadAllData()
     {
-        SceneDict.Clear(); PortalDict.Clear(); EventDict.Clear(); // ¡Ú Àç·Îµå ´ëºñ ÃÊ±âÈ­ Ãß°¡
+        SceneDict.Clear(); PortalDict.Clear(); EventDict.Clear(); // â˜… ì¬ë¡œë“œ ëŒ€ë¹„ ì´ˆê¸°í™” ì¶”ê°€
         LoadSceneData();
         LoadPortalData();
         LoadEventData();
-        Debug.Log("[DataManager] ¸ğµç CSV µ¥ÀÌÅÍ ·Îµå ¿Ï·á!");
+        Debug.Log("[DataManager] ëª¨ë“  CSV ë°ì´í„° ë¡œë“œ ì™„ë£Œ!");
     }
 
     private void LoadSceneData()
@@ -46,17 +46,18 @@ public class DataManager : Singleton<DataManager>
             SceneID = int.Parse(v[7]),
             Position = new Vector2(float.Parse(v[8]), float.Parse(v[9])),
             TimeTaken = int.Parse(v[10]),
-            AutoTrigger = CsvTableLoader.GetBool(v, 11),        // ¡Ú ºó °ª ¾ÈÀü
-            maxTriggerCount = CsvTableLoader.GetInt(v, 12, 0),  // ¡Ú ºó °ªÀÌ¸é 0 = ¹«Á¦ÇÑ
-            exhaustedInkNode = CsvTableLoader.Get(v, 13, ""),   // ¡Ú ºó °ªÀÌ¸é ¼û±è Ã³¸®
-            summonNPCs = CsvTableLoader.Get(v, 14, ""),              // ¡Ú Ãß°¡
-            despawnAfterEvent = CsvTableLoader.GetBool(v, 15, true), // ¡Ú Ãß°¡
+            AutoTrigger = CsvTableLoader.GetBool(v, 11),        // â˜… ë¹ˆ ê°’ ì•ˆì „
+            maxTriggerCount = CsvTableLoader.GetInt(v, 12, 0),  // â˜… ë¹ˆ ê°’ì´ë©´ 0 = ë¬´ì œí•œ
+            exhaustedInkNode = CsvTableLoader.Get(v, 13, ""),   // â˜… ë¹ˆ ê°’ì´ë©´ ìˆ¨ê¹€ ì²˜ë¦¬
+            summonNPCs = CsvTableLoader.Get(v, 14, ""),              // â˜… ì¶”ê°€
+            despawnAfterEvent = CsvTableLoader.GetBool(v, 15, true), // â˜… ì¶”ê°€
             triggerZoneSize = new Vector2(CsvTableLoader.GetFloat(v, 16, 0f), CsvTableLoader.GetFloat(v, 17, 0f)),
             triggerZoneOffset = new Vector2(CsvTableLoader.GetFloat(v, 18, 0f), CsvTableLoader.GetFloat(v, 19, 0f)),
+            DisplayKey = CsvTableLoader.Get(v, 20, ""),      // â˜… ì¶”ê°€ â€” ê¸°ë¡ì¥ í‘œì‹œ ì´ë¦„
         });
 
 #if UNITY_EDITOR
-    [ContextMenu("CSV ´Ù½Ã ·Îµå")]
+    [ContextMenu("CSV ë‹¤ì‹œ ë¡œë“œ")]
     private void ReloadFromMenu() => LoadAllData();
 #endif
 }

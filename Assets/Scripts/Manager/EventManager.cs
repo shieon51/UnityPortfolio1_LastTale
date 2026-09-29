@@ -20,6 +20,23 @@ public class EventData
     public int TimeTaken;
     public bool AutoTrigger;
 
+    [Tooltip("기록장에 표시할 이벤트 제목의 로컬라이제이션 키. 비우면 InkNodeName으로 대체된다")]
+    public string DisplayKey = "";                                      // ★ 신규
+
+    // 기록장·행적에 표시할 제목. 키가 없으면 노드 이름으로 대체해 최소한 구분은 되게 한다
+    public string ResolveDisplayName()
+    {
+        var loc = LocalizationManager.Instance;
+        if (!string.IsNullOrEmpty(DisplayKey) && loc != null && loc.Has(DisplayKey))
+            return loc.Get(DisplayKey);
+
+#if UNITY_EDITOR
+        if (!string.IsNullOrEmpty(DisplayKey))
+            Debug.LogWarning($"[EventData] 표시 이름 키가 로컬라이제이션 표에 없음: '{DisplayKey}' (이벤트 {EventID})");
+#endif
+        return string.IsNullOrEmpty(InkNodeName) ? EventName : InkNodeName;
+    }
+
     [Tooltip("이 이벤트를 최대 몇 번까지 실행할 수 있는지. 0이면 무제한")]
     public int maxTriggerCount = 0;
     [Tooltip("횟수를 다 쓰면 이 노드로 대체 (비우면 이벤트 자체가 숨겨짐)")]
@@ -365,8 +382,8 @@ public class EventManager : Singleton<EventManager>
     {
         MemoryManager.Instance.IncrementCounter(GetTriggerCountKey(eventData)); // 실행 횟수 누적
 
-        // ★ 기록장 "이번 흐름" 탭용 — 카운터 키만으로는 표시할 문장을 만들 수 없다
-        PlayerActionLog.Instance?.Record(RecordType.EventCompleted, eventData.EventName, 0, 0,
+        // ★ 기록장 "이번 흐름" 탭용 — key에 표시 제목, source에 화자(NPC)를 남긴다
+        PlayerActionLog.Instance?.Record(RecordType.EventCompleted, eventData.ResolveDisplayName(), 0, 0,
             IsNPCEvent(eventData.EventID) ? eventData.EventName : null);
 
         if (eventData.despawnAfterEvent && !string.IsNullOrEmpty(eventData.summonNPCs)) // ★ 추가

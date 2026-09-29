@@ -28,6 +28,9 @@ public class EventMarker : MonoBehaviour
     public int SceneID;
     public int TimeTaken = 1;
     public bool AutoTrigger = false;
+    [Tooltip("기록장에 표시할 제목의 로컬라이제이션 키 (예: event_liel_d1_fruit)")]
+    public string DisplayKey = "";                                      // ★ 신규
+
     [Tooltip("이 이벤트를 최대 몇 번까지 실행할 수 있는지. 0이면 무제한")]
     public int maxTriggerCount = 0;
     [Tooltip("횟수를 다 쓰면 이 노드로 대체 (비우면 이벤트 자체가 숨겨짐)")]
@@ -95,7 +98,9 @@ public class EventMarker : MonoBehaviour
 
 #if UNITY_EDITOR
         // 씬 뷰에서 ID와 이름이 보이도록 라벨 표시
-        UnityEditor.Handles.Label(transform.position + Vector3.up * 0.8f, $"ID:{EventID}\n{EventName}");
+        string label = string.IsNullOrEmpty(DisplayKey) ? $"ID:{EventID}\n{EventName}"
+                                                        : $"ID:{EventID}\n{EventName}\n[{DisplayKey}]";
+        UnityEditor.Handles.Label(transform.position + Vector3.up * 0.8f, label);
 #endif
     }
 }

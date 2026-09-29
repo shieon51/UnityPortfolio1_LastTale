@@ -125,7 +125,8 @@ public class DialogueGraphData : ScriptableObject
             npcTag = marker.EventName,
             startHour = marker.StartTime,
             endHour = marker.EndTime,
-            note = $"이벤트 ID {marker.EventID} / {(marker.AutoTrigger ? "자동 발동" : "수동")}",
+            note = $"이벤트 ID {marker.EventID} / {(marker.AutoTrigger ? "자동 발동" : "수동")}" +
+                   (string.IsNullOrEmpty(marker.DisplayKey) ? "" : $" / 제목: {marker.DisplayKey}"),
             position = new Vector2(0, nodes.Count * 200),
         };
         nodes.Add(node);
