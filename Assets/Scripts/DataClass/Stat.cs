@@ -25,6 +25,7 @@ public class Stat
     }
 
     // 수련/이벤트 등으로 영구적으로 스탯을 올릴 때 사용
+    // 수련 등으로 기본값 자체를 올린다 (장비 보정과 별개)
     public void AddBaseValue(int amount)
     {
         baseValue += amount;

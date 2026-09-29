@@ -306,6 +306,23 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         CallSpecialStatChanged(); // UI 갱신
     }
 
+    // ★ 훈련·수련으로 공·방·민이 오를 때 쓰는 공통 진입점.
+    //   노련미 보정을 함께 적용해, 한 번 도달해본 경지는 빠르게 되찾게 한다
+    public int TrainStat(StatType type, int rawAmount)
+    {
+        if (rawAmount <= 0) return 0;
+
+        int amount = Mathf.Max(1, Mathf.RoundToInt(rawAmount * CatchUpMultiplier));
+        switch (type)
+        {
+            case StatType.Attack: attack.AddBaseValue(amount); break;
+            case StatType.Defense: defense.AddBaseValue(amount); break;
+            case StatType.Agility: agility.AddBaseValue(amount); break;
+        }
+        CallProgressionChanged();
+        return amount;      // 실제로 오른 값 (기록장 태그에 그대로 쓴다)
+    }
+
     #endregion
 
     protected override void Die()

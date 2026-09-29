@@ -61,6 +61,8 @@ public class GameStateOverviewWindow : EditorWindow
             if (EditorGUI.EndChangeCheck()) sora.loopCount = newLoop;
             EditorGUILayout.LabelField($"피로도: {sora.currentFatigue}/{sora.maxFatigue}   정신력: {sora.currentMental}/{sora.maxMental}   요정화: {sora.fairyStage}단계");
             EditorGUILayout.LabelField($"시간결정체: {sora.timeCrystals}개");
+            EditorGUILayout.LabelField($"영혼 레벨: {sora.highestLevelReached}   " +
+                $"노련미 보정: ×{sora.CatchUpMultiplier:F2}{(sora.IsCatchingUp ? "" : " (없음)")}");
         }
         EditorGUILayout.EndVertical();
     }

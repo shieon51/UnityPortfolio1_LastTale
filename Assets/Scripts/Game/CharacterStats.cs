@@ -5,6 +5,8 @@ using UnityEngine;
 // 원소('영' 종류) 타입 정의 
 public enum ElementType { Normal, Light, Dark, Fire, Water, Wood, Wind, Spacetime }
 
+public enum StatType { Attack, Defense, Agility }
+
 // [CharacterStats.cs] 캐릭터 공통 스탯 베이스
 public class CharacterStats : MonoBehaviour
 {

@@ -20,9 +20,33 @@ public abstract class PlayableCharacter : CharacterStats
     public int fallbackMaxManaGain = 5;
     public int fallbackExpGrowth = 50;
 
+    [Header("노련미 보정")]
+    [Tooltip("몸 레벨이 영혼 레벨보다 뒤처질수록 성장이 빨라진다. 한 번 도달해본 경지는 되찾기 쉽다는 설정")]
+    public bool useExperienceCatchUp = true;
+    [Tooltip("최대 보너스. 2면 몸 레벨이 1이고 영혼 레벨이 아주 높을 때 성장 속도가 약 3배가 된다")]
+    [Range(0f, 5f)] public float maxCatchUpBonus = 2f;
+
+    // 지금 적용되는 성장 배율. 몸 레벨이 영혼 레벨을 따라잡으면 1로 돌아온다
+    public float CatchUpMultiplier
+    {
+        get
+        {
+            if (!useExperienceCatchUp || highestLevelReached <= 1 || level >= highestLevelReached) return 1f;
+            float gap = 1f - (float)level / highestLevelReached;   // 0(따라잡음) ~ 1에 가까움(크게 뒤처짐)
+            return 1f + maxCatchUpBonus * gap;
+        }
+    }
+
+    // 보정이 실제로 걸려 있는지 (UI 표시용)
+    public bool IsCatchingUp => CatchUpMultiplier > 1.001f;
+
     // UI 업데이트용 공통 이벤트
     public event Action OnProgressionChanged;
     public event Action OnSpecialStatChanged; // 피로도, 정신력 등 캐릭터 고유 스탯 UI 갱신용
+    // (보정 전, 보정 후) — 보정이 걸렸을 때 "경험치 +40 (×1.8)"처럼 보여주기 위함
+    public event Action<int, int> OnExperienceGained;
+    // 영혼 레벨을 경신했을 때 (기록장 금색 태그, 연출용)
+    public event Action<int> OnSoulLevelRecord;
 
     // 영혼 레벨 (경험한 최고 레벨) // ?
     public int highestLevelReached { get; protected set; } = 1;
@@ -60,9 +84,16 @@ public abstract class PlayableCharacter : CharacterStats
     }
 
     // 경험치 및 레벨업 (공통 로직)
-    public void GainExperience(int amount)
+    // ★ rawAmount는 보정 전 값. 실제로는 노련미 보정을 곱한 만큼 들어간다
+    public void GainExperience(int rawAmount)
     {
+        if (rawAmount <= 0) return;
+
+        float multiplier = CatchUpMultiplier;
+        int amount = Mathf.RoundToInt(rawAmount * multiplier);
         experience += amount;
+
+        OnExperienceGained?.Invoke(rawAmount, amount);   // 플로팅 텍스트·기록장이 사용
 
         // ★ experienceToNextLevel이 0 이하로 잘못 설정되면 while이 영원히 돌 수 있다
         int guard = 0;
@@ -79,6 +110,12 @@ public abstract class PlayableCharacter : CharacterStats
     {
         experience -= experienceToNextLevel;
         level++;
+
+        // ★ 영혼 레벨 경신 — 이 몸이 처음 도달한 경지
+        bool isNewRecord = level > highestLevelReached;
+        highestLevelReached = Mathf.Max(highestLevelReached, level);
+        if (isNewRecord) OnSoulLevelRecord?.Invoke(level);
+
         highestLevelReached = Mathf.Max(highestLevelReached, level); // 영혼 레벨 갱신(최고 도달 레벨)
 
         var data = LevelDataManager.Instance?.GetLevelData(level);
