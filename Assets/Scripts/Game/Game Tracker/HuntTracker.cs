@@ -1,23 +1,23 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 
-// »ç³É¿¡ ½Ã°£À» ºÙÀÎ´Ù. ÇÑ ¸¶¸®¸¶´Ù Â÷°¨ÇÏ¸é ¹ø°Å·Ó°í,
-// ¾Æ¿¹ ¾øÀ¸¸é "·¹º§À» ¿Ã¸®·Á¸é ½Ã°£À» ¾´´Ù"´Â ±³È¯ÀÌ ¼º¸³ÇÏÁö ¾Ê´Â´Ù.
+// ì‚¬ëƒ¥ì— ì‹œê°„ì„ ë¶™ì¸ë‹¤. í•œ ë§ˆë¦¬ë§ˆë‹¤ ì°¨ê°í•˜ë©´ ë²ˆê±°ë¡­ê³ ,
+// ì•„ì˜ˆ ì—†ìœ¼ë©´ "ë ˆë²¨ì„ ì˜¬ë¦¬ë ¤ë©´ ì‹œê°„ì„ ì“´ë‹¤"ëŠ” êµí™˜ì´ ì„±ë¦½í•˜ì§€ ì•ŠëŠ”ë‹¤.
 public class HuntTracker : Singleton<HuntTracker>
 {
-    [Header("½Ã°£ ¼Ò¸ğ ±âÁØ")]
-    [Tooltip("ÀÌ ¸¶¸´¼ö¸¶´Ù 1½Ã°£ÀÌ Èå¸¥´Ù (0ÀÌ¸é ¸¶¸´¼ö ±âÁØ »ç¿ë ¾È ÇÔ)")]
-    public int killsPerHour = 10;
-    [Tooltip("ÀÌ °æÇèÄ¡¸¶´Ù 1½Ã°£ÀÌ Èå¸¥´Ù (0ÀÌ¸é °æÇèÄ¡ ±âÁØ »ç¿ë ¾È ÇÔ)")]
-    public int expPerHour = 0;
+    [Header("ì‹œê°„ ì†Œëª¨ ê¸°ì¤€")]
+    [Tooltip("ì´ ë§ˆë¦¿ìˆ˜ë§ˆë‹¤ 1ì‹œê°„ (0ì´ë©´ ì‚¬ìš© ì•ˆ í•¨). ê²½í—˜ì¹˜ ê¸°ì¤€ì„ ì“¸ ë•ŒëŠ” ë³´ì¡°ìš©")]
+    public int killsPerHour = 0;
+    [Tooltip("ì´ ê²½í—˜ì¹˜ë§ˆë‹¤ 1ì‹œê°„ (ê¶Œì¥ ê¸°ì¤€). í”Œë ˆì´ì–´ê°€ ê°•í•´ì ¸ë„ ì„±ê³¼ë‹¹ ì‹œê°„ì´ ì¼ì •í•˜ë‹¤")]
+    public int expPerHour = 200;
 
-    [Header("±â·Ï")]
-    [Tooltip("ÀÌ ½Ã°£ µ¿¾È »ç³ÉÀÌ ¾øÀ¸¸é ÇÑ µ¢¾î¸®°¡ ³¡³­ °ÍÀ¸·Î º¸°í ±â·ÏÇÑ´Ù")]
+    [Header("ê¸°ë¡")]
+    [Tooltip("ì´ ì‹œê°„ ë™ì•ˆ ì‚¬ëƒ¥ì´ ì—†ìœ¼ë©´ í•œ ë©ì–´ë¦¬ê°€ ëë‚œ ê²ƒìœ¼ë¡œ ë³´ê³  ê¸°ë¡í•œë‹¤")]
     public float idleSecondsToFlush = 20f;
 
-    private int _pendingKills;          // ¾ÆÁ÷ ½Ã°£À¸·Î ¹Ù²îÁö ¾ÊÀº ¸¶¸´¼ö
+    private int _pendingKills;          // ì•„ì§ ì‹œê°„ìœ¼ë¡œ ë°”ë€Œì§€ ì•Šì€ ë§ˆë¦¿ìˆ˜
     private int _pendingExp;
-    private int _sessionKills;          // ÀÌ¹ø µ¢¾î¸®ÀÇ ´©Àû (±â·Ï¿ë)
+    private int _sessionKills;          // ì´ë²ˆ ë©ì–´ë¦¬ì˜ ëˆ„ì  (ê¸°ë¡ìš©)
     private int _sessionHours;
     private string _sessionTargetName;
     private float _lastKillTime = -999f;
@@ -27,7 +27,7 @@ public class HuntTracker : Singleton<HuntTracker>
         if (_sessionKills > 0 && Time.unscaledTime - _lastKillTime >= idleSecondsToFlush) FlushSession();
     }
 
-    // ¸ó½ºÅÍ°¡ Á×À» ¶§ È£ÃâÇÑ´Ù
+    // ëª¬ìŠ¤í„°ê°€ ì£½ì„ ë•Œ í˜¸ì¶œí•œë‹¤
     public void ReportKill(string targetName, int expGained)
     {
         _pendingKills++;
@@ -46,13 +46,13 @@ public class HuntTracker : Singleton<HuntTracker>
         GameManager.Instance?.CurrentGameMode?.ConsumeResourceForEvent(hours);
     }
 
-    // ÇÑ µ¢¾î¸®¸¦ ±â·ÏÀ¸·Î ³²±ä´Ù (¾À ÀÌµ¿¡¤´ëÈ­ ½ÃÀÛ Àü¿¡µµ È£Ãâ)
+    // í•œ ë©ì–´ë¦¬ë¥¼ ê¸°ë¡ìœ¼ë¡œ ë‚¨ê¸´ë‹¤ (ì”¬ ì´ë™Â·ëŒ€í™” ì‹œì‘ ì „ì—ë„ í˜¸ì¶œ)
     public void FlushSession()
     {
         if (_sessionKills <= 0) return;
 
-        string label = string.IsNullOrEmpty(_sessionTargetName) ? "»ç³É" : _sessionTargetName;
-        PlayerActionLog.Instance?.Record(RecordType.Hunt, $"{label} {_sessionKills}¸¶¸®", 0, _sessionHours);
+        string label = string.IsNullOrEmpty(_sessionTargetName) ? "ì‚¬ëƒ¥" : _sessionTargetName;
+        PlayerActionLog.Instance?.Record(RecordType.Hunt, $"{label} {_sessionKills}ë§ˆë¦¬", 0, _sessionHours);
 
         _sessionKills = 0;
         _sessionHours = 0;

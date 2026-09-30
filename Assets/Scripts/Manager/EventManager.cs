@@ -141,7 +141,12 @@ public class EventManager : Singleton<EventManager>
 
         UpdateEventTriggers();
         DialogueManager.Instance.OnDialogueEnd += EventResult;
+
+        // ★ 시간이 흐르면 배치를 다시 맞춘다 (사냥·이동으로도 시간이 가므로)
+        if (TimeManager.Instance != null) TimeManager.Instance.OnTimeUpdated += HandleTimeUpdated;
     }
+
+    private void HandleTimeUpdated(int remainingCoins, int currentDay) => UpdateEventTriggers();
 
     private void HandleCharacterPossessed(PlayableCharacter character)
     {
@@ -154,6 +159,8 @@ public class EventManager : Singleton<EventManager>
             PlayerManager.Instance.OnCharacterPossessed -= HandleCharacterPossessed;
         if (DialogueManager.Instance != null)
             DialogueManager.Instance.OnDialogueEnd -= EventResult;
+        if (TimeManager.Instance != null) 
+            TimeManager.Instance.OnTimeUpdated -= HandleTimeUpdated;
     }
 
     private void Update()
