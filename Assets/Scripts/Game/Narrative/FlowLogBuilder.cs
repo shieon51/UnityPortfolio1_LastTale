@@ -92,6 +92,16 @@ public static class FlowLogBuilder
                 entry.highlight = true;
                 break;
 
+            case RecordType.Travel:
+                entry.speaker = r.source;              // "이동" / "순간이동"
+                entry.title = r.key;                   // "마을 1 → 숲 초입"
+                entry.dimmed = true;                   // 회색 줄
+                break;
+
+            case RecordType.Hunt:
+                entry.speaker = Text("flow_hunt", "사냥");
+                entry.title = r.key;                   // "슬라임 15마리"
+                break;
             default:
                 return null;
         }

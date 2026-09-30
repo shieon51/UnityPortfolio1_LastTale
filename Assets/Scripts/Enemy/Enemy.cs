@@ -34,6 +34,12 @@ public class Enemy : CharacterStats
     private float contactDamageCooldown = 1.0f;  // 1초에 한 번만 몸빵 데미지 들어감 (다단히트 방지)
     private float lastContactTime = -1f;
 
+    [Header("처치 보상")]
+    [Tooltip("처치 시 주는 경험치. 사냥 시간 계산의 기준이기도 하다")]
+    public int expReward = 20;
+    [Tooltip("경험치 플로팅 텍스트가 뜰 높이")]
+    public float rewardTextHeight = 1.2f;
+
     protected Transform player; //
     protected Rigidbody2D rb;
     protected Animator animator;
@@ -165,6 +171,8 @@ public class Enemy : CharacterStats
         animator.SetTrigger("Die");
         rb.linearVelocity = Vector2.zero;
 
+        GrantKillReward();                                      // ★ 경험치·사냥 기록
+
         // 연결된 체력바 끄기
         if (activeHealthBar != null) PoolManager.Instance.ReturnToPool(activeHealthBar.gameObject);
 
@@ -173,5 +181,19 @@ public class Enemy : CharacterStats
         Destroy(gameObject, 0.6f); // 임시로 Destroy 유지
     }
 
+    // 처치 보상 — 경험치를 주고, 사냥 시간 계산에 보고한다
+    protected virtual void GrantKillReward()
+    {
+        if (expReward <= 0) return;
 
+        var character = PlayerManager.Instance?.CurrentCharacter;
+        if (character != null)
+        {
+            character.GainExperience(expReward);
+            FloatingTextManager.Instance?.ShowExpGain(expReward, transform.position + Vector3.up * rewardTextHeight);
+        }
+
+        // ★ 사냥은 낱개가 아니라 덩어리로 시간이 흐른다
+        HuntTracker.Instance?.ReportKill(name, expReward);
+    }
 }

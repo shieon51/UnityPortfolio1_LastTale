@@ -51,6 +51,8 @@ public class Portal : MonoBehaviour
         // 이동 가능한 포탈인지 확인
         if (_destinationData != null)
         {
+            // ★ 공용 포탈은 시간을 쓰지 않는다 (대신 자격·비용을 치른다)
+            TravelTimeTracker.Instance?.SkipNextTravelCost();
             // -> 검색(Find) 없이 즉시 접근: 목적지 씬 ID와 목적지 좌표를 바로 씬 로더에 전달(Zero-lookup 방식)
             SceneLoader.Instance.LoadScene(_destinationData.OwnerSceneID, _destinationData.Position);
         }

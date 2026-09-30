@@ -219,6 +219,7 @@ public class DialogueManager : Singleton<DialogueManager>
         _currentActiveBubble = null;
         UIManager.Instance.ClearChoices();
 
+        HuntTracker.Instance?.FlushSession();   // ★ 사냥 덩어리를 먼저 기록으로 남긴다
         curEventData = eventData;
         _pendingSpeakerKey = null; _pendingSpeakerDisplayName = null;
         _queuedText = null;

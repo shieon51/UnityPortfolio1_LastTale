@@ -11,7 +11,9 @@ public enum RecordType
     MemoryHeard,      // 이미 아는 정보를 다시 들은 경우까지 포함
     BattleResult,     // 전투 승패
     AnchorSet,        // 시간의 닻 설치
-    StatGain          // 공·방·민 상승 (훈련·수련)
+    StatGain,         // 공·방·민 상승 (훈련·수련)
+    Travel,           // 지역 이동
+    Hunt              // 사냥
 }
 
 [Serializable]
@@ -69,8 +71,10 @@ public class PlayerActionLog : Singleton<PlayerActionLog>
         RecordType.LevelUp,
         RecordType.BattleResult,
         RecordType.Loop,
-        RecordType.AnchorSet,      // ★ 추가
-        RecordType.StatGain,       // ★ 추가
+        RecordType.AnchorSet,    
+        RecordType.StatGain,
+        RecordType.Travel,        
+        RecordType.Hunt,         
     };
 
     public static bool IsPlayerVisible(RecordType type) => VisibleTypes.Contains(type);
