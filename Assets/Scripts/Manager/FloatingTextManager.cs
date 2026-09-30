@@ -20,6 +20,13 @@ public class FloatingTextManager : Singleton<FloatingTextManager>
     public Color parryColor = new Color(1f, 0.9f, 0.2f);
     public Color dodgeColor = new Color(0.6f, 1f, 0.6f);
 
+    [Header("노련미 보정 표시")]
+    public Color catchUpColor = new Color(1f, 0.85f, 0.45f);
+    [Tooltip("경험치 텍스트 기준 위치 오프셋")]
+    public Vector3 catchUpOffset = new Vector3(0.7f, -0.35f, 0f);
+    [Range(0.3f, 1f)] public float catchUpFontScale = 0.65f;
+    public string catchUpFormat = "노련미 +{0}";
+
     public void Show(string text, Vector3 worldPos, Color color)
     {
         GameObject go = PoolManager.Instance.SpawnFromPool("FloatingText", worldPos, Quaternion.identity);
@@ -34,17 +41,29 @@ public class FloatingTextManager : Singleton<FloatingTextManager>
     public void ShowGuardedDamage(int amount, Vector3 worldPos) => Show("일부 방어! " + amount, worldPos, guardColor);
 
     // -- 획득 관련 ---------
-    public void ShowAcquisition(string text, Vector3 worldPos, Color color)
+    public void ShowAcquisition(string text, Vector3 worldPos, Color color, float fontScale = 1f)
     {
         GameObject go = PoolManager.Instance.SpawnFromPool("FloatingText", worldPos, Quaternion.identity);
         var instance = go?.GetComponent<FloatingTextInstance>();
         if (instance == null) return;
-        instance.Play(text, color, acquisitionDuration, acquisitionRise); // ★ 오버라이드 버전 사용
+        instance.Play(text, color, acquisitionDuration, acquisitionRise, fontScale);
     }
 
     public void ShowNewInfo(Vector3 worldPos) => ShowAcquisition("+ 새로운 정보", worldPos, newInfoColor);
     public void ShowUnderstandingUp(string npcName, Vector3 worldPos) => ShowAcquisition($"{npcName} 이해도 상승", worldPos, new Color(0.7f, 0.9f, 1f));
     public void ShowItemGain(string itemName, Vector3 worldPos) => ShowAcquisition($"+ {itemName}", worldPos, itemColor);
     public void ShowExpGain(int amount, Vector3 worldPos) => ShowAcquisition($"+{amount} EXP", worldPos, expColor);
+
+    // ★ 경험치 + 노련미 보정분을 함께 표시한다.
+    //   회귀로 몸이 초기화된 뒤 "다시 키우는 게 빠르다"를 플레이어가 체감하도록
+    public void ShowExpGain(int baseAmount, int finalAmount, Vector3 worldPos)
+    {
+        ShowAcquisition($"+{finalAmount} EXP", worldPos, expColor);
+
+        int bonus = finalAmount - baseAmount;
+        if (bonus > 0)
+            ShowAcquisition(string.Format(catchUpFormat, bonus), worldPos + catchUpOffset, catchUpColor, catchUpFontScale);
+    }
+
     public void ShowTimeCrystal(Vector3 worldPos) => ShowAcquisition("+ 시간의 결정체", worldPos, timeCrystalColor);
 }

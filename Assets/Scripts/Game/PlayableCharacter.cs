@@ -85,9 +85,10 @@ public abstract class PlayableCharacter : CharacterStats
 
     // 경험치 및 레벨업 (공통 로직)
     // ★ rawAmount는 보정 전 값. 실제로는 노련미 보정을 곱한 만큼 들어간다
-    public void GainExperience(int rawAmount)
+    // ★ 실제로 들어간 경험치를 반환한다 (표시용)
+    public int GainExperience(int rawAmount)
     {
-        if (rawAmount <= 0) return;
+        if (rawAmount <= 0) return 0;
 
         float multiplier = CatchUpMultiplier;
         int amount = Mathf.RoundToInt(rawAmount * multiplier);
@@ -104,6 +105,7 @@ public abstract class PlayableCharacter : CharacterStats
         if (guard >= 100) Debug.LogError($"[{name}] 레벨업 루프 안전장치 작동 — experienceToNextLevel 값을 확인하세요");
 
         CallProgressionChanged();
+        return amount;              // ★ 추가
     }
 
     private void LevelUp() //레벨업

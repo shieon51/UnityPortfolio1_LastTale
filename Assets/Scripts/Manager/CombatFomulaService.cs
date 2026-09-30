@@ -15,6 +15,10 @@ public class CombatFormulaService : Singleton<CombatFormulaService>
     [Header("Parry")]
     [SerializeField] private ParryChanceFormula _parryChanceFormula;
 
+    [Header("Reward")]
+    [SerializeField] private KillRewardFormula _killRewardFormula;
+    [SerializeField] private BattleRewardFormula _battleRewardFormula;
+
     public int CalculateDamage(CombatContext ctx)
     {
         // 스킬에 전용 수식이 지정되어 있으면 그걸 우선 사용, 없으면 기본 수식
@@ -45,6 +49,17 @@ public class CombatFormulaService : Singleton<CombatFormulaService>
 
     public float CalculateParryChance(CharacterStats defender, CharacterStats attacker)
         => _parryChanceFormula != null ? _parryChanceFormula.CalculateChance(defender.agility.GetValue(), attacker.agility.GetValue()) : 0f;
+
+    // 몬스터 처치 보상 (노련미 보정 전 값 — 사냥 시간 기준이기도 하다)
+    public int CalculateKillExp(int baseExp, int targetLevel, int playerLevel)
+        => _killRewardFormula != null ? _killRewardFormula.Calculate(baseExp, targetLevel, playerLevel) : baseExp;
+
+    // 보스전 보상
+    public int CalculateBattleExp(int baseExp, BossDifficultyTier tier, int bossLevel, int playerLevel, bool win, int retryCount)
+        => _battleRewardFormula != null
+            ? _battleRewardFormula.Calculate(baseExp, tier, bossLevel, playerLevel, win, retryCount)
+            : baseExp;
+
 }
 
 /*

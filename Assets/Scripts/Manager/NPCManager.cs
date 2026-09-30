@@ -53,11 +53,16 @@ public class NPCManager : Singleton<NPCManager>
 
     public string CurrentBattleStateKey { get; private set; }       // ★ 전투 HUD가 보스 상태 문구로 사용
 
+    [Tooltip("이번 전투에서 이미 사용한 재도전 횟수. 재도전 기능 구현 시 갱신된다")]
+    private int _currentRetryCount = 0;                    // ★ 추가
+
     private string _pendingWinNode, _pendingLoseNode;
 
     [Header("Battle End")]
     [Tooltip("전투가 끝난 뒤 결과 대화가 뜨기까지의 짧은 정지 시간(초)")]
     public float resultDialogueDelay = 1f;
+    [Tooltip("전투 보상 경험치 텍스트가 뜰 높이")]
+    public float battleRewardTextHeight = 1.5f;            // ★ 추가
 
     [Header("Ground Snap")]
     [Tooltip("NPC가 자동으로 안착할 바닥으로 인정할 레이어들 (Ground + OneWayPlatform 둘 다 체크)")]
@@ -112,6 +117,7 @@ public class NPCManager : Singleton<NPCManager>
         data.trustInRelatedNPCs = def.trustInRelatedNPCs;
         data.suspicionSensitivity = def.suspicionSensitivity;
         data.trustThresholdForSora = def.trustThresholdForSora;
+        data.battleBaseExp = def.battleBaseExp;            // ★ 추가
         return data;
     }
 
@@ -265,6 +271,7 @@ public class NPCManager : Singleton<NPCManager>
         string winNode = null, string loseNode = null, string stateKey = null)
     {
         CurrentBattleStateKey = stateKey;                           // ★ 추가
+        _currentRetryCount = 0;                            // ★ 추가 — 새 전투 시작
 
         if (_activeBossBattle != null) // ★ 중복 트리거 방지 (원래 없던 안전장치)
         {
@@ -357,6 +364,9 @@ public class NPCManager : Singleton<NPCManager>
         string resultText = $"{tier}({(win ? "승" : "패")}) {Mathf.FloorToInt(elapsed / 60f)}분 {Mathf.FloorToInt(elapsed % 60f)}초";
         PlayerActionLog.Instance?.Record(RecordType.BattleResult, resultText, 0, 0, bossName);
 
+        // ★ 전투 보상 — 난이도·레벨 차이·승패·재도전 횟수를 반영한다
+        GrantBattleReward(bossName, bossStats, win);
+
         _activeBossBattle = null;
 
         UIModeManager.Instance.SetMode(UIMode.Normal);
@@ -368,6 +378,29 @@ public class NPCManager : Singleton<NPCManager>
 
         PlayerManager.Instance.CurrentCharacter.GetComponent<BossPhaseTransitionLock>()?.UnbindCurrent();
         CameraDirector.Instance?.ClearSecondaryTarget();
+    }
+
+    // 전투 보상 지급. 수식은 CombatFormulaService가 담당하고, 여기서는 재료만 모은다
+    private void GrantBattleReward(string bossName, NPC bossStats, bool win)
+    {
+        var player = PlayerManager.Instance?.CurrentCharacter;
+        if (player == null) return;
+
+        int baseExp = GetNPCData(bossName).battleBaseExp;
+        if (baseExp <= 0) return;
+
+        var tierForReward = bossStats is Liel_AI liel ? liel.currentDifficultyTier : BossDifficultyTier.Training;
+
+        int battleExp = CombatFormulaService.Instance != null
+            ? CombatFormulaService.Instance.CalculateBattleExp(
+                baseExp, tierForReward, bossStats.level, player.level, win, _currentRetryCount)
+            : baseExp;
+
+        int gained = player.GainExperience(battleExp);     // 노련미 보정은 여기서 추가로 붙는다
+        FloatingTextManager.Instance?.ShowExpGain(battleExp, gained,
+            player.transform.position + Vector3.up * battleRewardTextHeight);
+
+        Debug.Log($"[전투 보상] {bossName} ({tierForReward}, {(win ? "승" : "패")}) — 기본 {baseExp} → 지급 {gained}");
     }
 
     private IEnumerator PlayBattleResultAfterDelay(string bossName, bool win)

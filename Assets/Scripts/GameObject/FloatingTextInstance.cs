@@ -10,9 +10,14 @@ public class FloatingTextInstance : MonoBehaviour
     public float duration = 0.8f;
     public AnimationCurve alphaCurve = AnimationCurve.EaseInOut(0, 1, 1, 0);
 
+    private float _baseFontSize = -1f;
+
     // FloatingTextInstance.cs — 지속시간/거리 오버라이드 가능하게
-    public void Play(string text, Color color, float overrideDuration = -1f, float overrideRise = -1f)
+    public void Play(string text, Color color, float overrideDuration = -1f, float overrideRise = -1f, float fontScale = 1f)
     {
+        if (_baseFontSize < 0f) _baseFontSize = textMesh.fontSize;   // ★ 원래 크기를 한 번만 기억
+        textMesh.fontSize = _baseFontSize * fontScale;
+
         textMesh.text = text;
         textMesh.color = color;
         float d = overrideDuration > 0f ? overrideDuration : duration;
