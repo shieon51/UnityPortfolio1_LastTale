@@ -24,4 +24,8 @@ public class NPCDefinition : ScriptableObject
     [Range(0f, 2f)] public float suspicionSensitivity = 1f;
     [Tooltip("소라와의 호감도가 이 값 이상이면 의심을 완화함")]
     public int trustThresholdForSora = 20;
+
+    [Header("전투 보상")]
+    [Tooltip("이 NPC와의 전투에서 주는 기본 경험치 (난이도·레벨 차이로 보정된다)")]
+    public int battleBaseExp = 300;
 }

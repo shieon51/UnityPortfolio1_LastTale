@@ -161,12 +161,6 @@ public class Enemy : CharacterStats
             {
                 activeHealthBar.UpdateHealth(currentHealth);
             }
-
-            if (currentHealth <= 0 && currentState != EnemyState.Die)
-            {
-                currentState = EnemyState.Die;
-                Die();
-            }
         }
 
         return applied;
@@ -174,6 +168,11 @@ public class Enemy : CharacterStats
 
     protected override void Die()
     {
+        // ★ 부모의 TakeDamage가 이미 Die()를 호출하므로 중복 방지가 필요하다
+        //   (없으면 경험치가 두 번 지급되고 사냥 기록도 두 번 남는다)
+        if (currentState == EnemyState.Die) return;
+        currentState = EnemyState.Die;
+
         base.Die();
         animator.SetTrigger("Die");
         rb.linearVelocity = Vector2.zero;
@@ -196,12 +195,12 @@ public class Enemy : CharacterStats
         var character = PlayerManager.Instance?.CurrentCharacter;
         if (character == null) return;
 
-        int scaledExp = RewardService.Instance != null
-            ? RewardService.Instance.ResolveExp(expReward, level, character.level)
+        int scaledExp = CombatFormulaService.Instance != null
+            ? CombatFormulaService.Instance.CalculateKillExp(expReward, level, character.level)
             : expReward;
 
-        character.GainExperience(scaledExp);      // 여기서 노련미 보정이 추가로 붙는다
-        FloatingTextManager.Instance?.ShowExpGain(scaledExp, transform.position + Vector3.up * rewardTextHeight);
+        int gained = character.GainExperience(scaledExp);      // 실제로 들어간 값
+        FloatingTextManager.Instance?.ShowExpGain(scaledExp, gained, transform.position + Vector3.up * rewardTextHeight);
 
         // ★ 사냥 시간은 노련미 보정 전 값을 기준으로 한다 (실제 들인 노력)
         HuntTracker.Instance?.ReportKill(DisplayName, scaledExp);

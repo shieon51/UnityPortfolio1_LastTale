@@ -38,6 +38,10 @@ public class NPCData
     public int bossPhase = 1; // 보스전 돌입 시 현재 페이즈
     public bool rememberAcrossLoops = false; // 회귀해도 호감도가 리셋 안 되는 특별한 NPC
 
+    [Header("전투 보상")]
+    [Tooltip("이 NPC와의 전투에서 주는 기본 경험치 (NPCDefinition에서 복사됨)")]
+    public int battleBaseExp = 300;                       // ★ 추가
+
     // 생성자
     public NPCData(string name)
     {

@@ -405,7 +405,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 582328358}
   - {fileID: 1496462324}
   - {fileID: 1195595476}
   - {fileID: 258450569}
@@ -2907,54 +2906,6 @@ MonoBehaviour:
   bgmSourceA: {fileID: 0}
   bgmSourceB: {fileID: 0}
   bgmCrossfadeDuration: 1.5
---- !u!1 &582328357
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 582328358}
-  - component: {fileID: 582328359}
-  m_Layer: 0
-  m_Name: RewardService
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &582328358
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 582328357}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 4.6724224, y: 2.2323024, z: -0.0455945}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 79130433}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &582328359
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 582328357}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0659e37bcff12d04694ac0902a84ab31, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RewardService
-  fullBonusGap: 10
-  noRewardGap: -15
-  maxMultiplier: 1.5
-  minMultiplier: 0.1
 --- !u!1 &598186597
 GameObject:
   m_ObjectHideFlags: 0
@@ -3198,6 +3149,7 @@ MonoBehaviour:
   - tier: 5
     minScore: 150
   resultDialogueDelay: 1
+  battleRewardTextHeight: 1.5
   groundSnapLayer:
     serializedVersion: 2
     m_Bits: 1032
@@ -5699,6 +5651,10 @@ MonoBehaviour:
   guardColor: {r: 0.5, g: 0.8, b: 1, a: 1}
   parryColor: {r: 1, g: 0.9, b: 0.2, a: 1}
   dodgeColor: {r: 0.6, g: 1, b: 0.6, a: 1}
+  catchUpColor: {r: 1, g: 0.85, b: 0.45, a: 1}
+  catchUpOffset: {x: 0.7, y: -0.35, z: 0}
+  catchUpFontScale: 0.65
+  catchUpFormat: "\uB178\uB828\uBBF8 +{0}"
 --- !u!1 &1090285959
 GameObject:
   m_ObjectHideFlags: 0
@@ -7732,6 +7688,8 @@ MonoBehaviour:
   _telegraphFormula: {fileID: 11400000, guid: e98238ef2d1b1c74bbd35c51aa7cb562, type: 2}
   _groggyFormula: {fileID: 11400000, guid: adfc3e7d1bec97647a3c55c5766fa0c1, type: 2}
   _parryChanceFormula: {fileID: 11400000, guid: 6656b49be6d2e0c468d528c86d3547f2, type: 2}
+  _killRewardFormula: {fileID: 11400000, guid: 1258950f15b22574e9b84d6610630d46, type: 2}
+  _battleRewardFormula: {fileID: 11400000, guid: 08cc0c63ce934b34c804c3b480b25b36, type: 2}
 --- !u!1 &1418321288
 GameObject:
   m_ObjectHideFlags: 0
