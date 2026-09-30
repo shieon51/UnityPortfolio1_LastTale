@@ -351,6 +351,12 @@ public class NPCManager : Singleton<NPCManager>
             PlayerManager.Instance.CurrentCharacter.Heal(1); // ★ 훈련모드는 봐주는 대련 — 패배해도 완전히 죽지 않고 1HP로
         }
 
+        // ★ 기록장 전투 태그 — "훈련모드(승) 3분 12초"
+        float elapsed = BattleTimerDisplay.Instance != null ? BattleTimerDisplay.Instance.Elapsed : 0f;
+        string tier = bossStats is Liel_AI liel2 ? liel2.currentDifficultyTier.ToString() : "";
+        string resultText = $"{tier}({(win ? "승" : "패")}) {Mathf.FloorToInt(elapsed / 60f)}분 {Mathf.FloorToInt(elapsed % 60f)}초";
+        PlayerActionLog.Instance?.Record(RecordType.BattleResult, resultText, 0, 0, bossName);
+
         _activeBossBattle = null;
 
         UIModeManager.Instance.SetMode(UIMode.Normal);

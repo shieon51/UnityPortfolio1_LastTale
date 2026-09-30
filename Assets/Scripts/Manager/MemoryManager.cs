@@ -97,7 +97,9 @@ public class MemoryManager : Singleton<MemoryManager>
 
         // ★ 이미 아는 정보라도 "이번 흐름에서 들었다"는 사실은 남긴다.
         //   (이 기록이 없으면 기록장 '이번 흐름' 탭에서 재청취를 알 수 없다)
-        PlayerActionLog.Instance?.Record(RecordType.MemoryHeard, flagId, 0, 0, sourceNpc);
+        // ★ after에 1이면 이번이 처음 알게 된 것 (기록장이 새 정보/재확인을 구분하는 근거)
+        bool isNew = !_acquiredFlags.Contains(flagId);
+        PlayerActionLog.Instance?.Record(RecordType.MemoryHeard, flagId, 0, isNew ? 1 : 0, sourceNpc);
 
         if (_acquiredFlags.Add(flagId))
         {

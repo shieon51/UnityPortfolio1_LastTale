@@ -2625,6 +2625,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf5b88cd12c50cf4a8991cce49268245, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxStaticTriggers: 10
+  eventTriggerPrefabPath: Prefabs/EventTrigger
   preferFacingDirection: 1
   facingDeadzone: 0.3
 --- !u!1 &555899560
@@ -3128,6 +3130,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NPCManager
   npcDefinitionFolder: NPCDefinitions
+  npcPrefabFolder: Prefabs/NPC
+  affectionMin: -50
+  affectionMax: 100
+  tierThresholds:
+  - tier: 0
+    minScore: -2147483648
+  - tier: 1
+    minScore: 10
+  - tier: 2
+    minScore: 30
+  - tier: 3
+    minScore: 60
+  - tier: 4
+    minScore: 100
+  - tier: 5
+    minScore: 150
   resultDialogueDelay: 1
   groundSnapLayer:
     serializedVersion: 2

@@ -109,11 +109,17 @@ public abstract class PlayableCharacter : CharacterStats
     private void LevelUp() //레벨업
     {
         experience -= experienceToNextLevel;
+        int before = level;
         level++;
 
         // ★ 영혼 레벨 경신 — 이 몸이 처음 도달한 경지
         bool isNewRecord = level > highestLevelReached;
         highestLevelReached = Mathf.Max(highestLevelReached, level);
+
+        // 기록장 태그 (경신이면 금색 ★)
+        PlayerActionLog.Instance?.Record(RecordType.LevelUp,
+            isNewRecord ? "soul_record" : "level", before, level);
+
         if (isNewRecord) OnSoulLevelRecord?.Invoke(level);
 
         highestLevelReached = Mathf.Max(highestLevelReached, level); // 영혼 레벨 갱신(최고 도달 레벨)

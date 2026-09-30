@@ -382,18 +382,20 @@ public class EventManager : Singleton<EventManager>
     {
         MemoryManager.Instance.IncrementCounter(GetTriggerCountKey(eventData)); // 실행 횟수 누적
 
+        // 변경 후 — 대화 중 #time 태그로 덮어쓴 값이 있으면 그것을 쓴다
+        int timeTaken = DialogueManager.Instance != null
+            ? DialogueManager.Instance.ResolveTimeTaken(eventData)
+            : eventData.TimeTaken;
+
         // ★ 기록장 "이번 흐름" 탭용 — key에 표시 제목, source에 화자(NPC)를 남긴다
-        PlayerActionLog.Instance?.Record(RecordType.EventCompleted, eventData.ResolveDisplayName(), 0, 0,
+        // ★ after에 소모 시간을 넣어 기록장이 "1h"를 표시할 수 있게 한다
+        PlayerActionLog.Instance?.Record(RecordType.EventCompleted, eventData.ResolveDisplayName(), 0, timeTaken,
             IsNPCEvent(eventData.EventID) ? eventData.EventName : null);
 
         if (eventData.despawnAfterEvent && !string.IsNullOrEmpty(eventData.summonNPCs)) // ★ 추가
             NPCManager.Instance.DespawnEventNPCs();
 
         // 시간 코인 소모 로직을 GameMode에게 위임! (1부면 코인 소모, 2부면 행동력 소모)
-        // 변경 후 — 대화 중 #time 태그로 덮어쓴 값이 있으면 그것을 쓴다
-        int timeTaken = DialogueManager.Instance != null
-            ? DialogueManager.Instance.ResolveTimeTaken(eventData)
-            : eventData.TimeTaken;
         GameManager.Instance.CurrentGameMode.ConsumeResourceForEvent(timeTaken);
 
         // 대화가 끝난 게 NPC라면 대화 종료 알림

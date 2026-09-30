@@ -319,6 +319,17 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
             case StatType.Defense: defense.AddBaseValue(amount); break;
             case StatType.Agility: agility.AddBaseValue(amount); break;
         }
+
+        // ★ 기록장 태그 — key는 화면에 그대로 쓰이므로 짧게
+        string label = type switch
+        {
+            StatType.Attack => "ATK",
+            StatType.Defense => "DEF",
+            StatType.Agility => "AGI",
+            _ => type.ToString(),
+        };
+        PlayerActionLog.Instance?.Record(RecordType.StatGain, label, 0, amount);
+
         CallProgressionChanged();
         return amount;      // 실제로 오른 값 (기록장 태그에 그대로 쓴다)
     }

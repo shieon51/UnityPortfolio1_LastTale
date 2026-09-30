@@ -183,7 +183,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             _activeMarkers[snapshot] = markerObj; // ★ 리스트 대신 딕셔너리
         }
 
-        PlayerActionLog.Instance?.Record(RecordType.Counter, "anchor_set");
+        PlayerActionLog.Instance?.Record(RecordType.AnchorSet, $"{_anchors.Count}", 0, 0);
 
         return true;
     }
