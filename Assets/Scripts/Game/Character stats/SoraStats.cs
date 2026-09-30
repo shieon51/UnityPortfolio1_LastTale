@@ -338,8 +338,18 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
 
     protected override void Die()
     {
-        Debug.Log("소라 사망. 타임루프(회귀) 발동!");
-        TimeLoopManager.Instance?.HandleDeath(); // ★ 추가 — 이게 빠져있었음
+        Debug.Log("소라 사망.");
+
+        // ★ 보스전 패배는 NPCManager가 흐름을 주관한다.
+        //   (사망 연출 → 패배 대사 → 해설자 재도전 제안 → 선택에 따라 회귀)
+        //   여기서 바로 회귀하면 패배 대사가 회귀 후에 뜨게 된다
+        if (NPCManager.Instance != null && NPCManager.Instance.IsDefeatFlowActive)
+        {
+            Debug.Log("[소라] 보스전 패배 흐름으로 넘깁니다 — 회귀는 대사 이후에");
+            return;
+        }
+
+        TimeLoopManager.Instance?.HandleDeath();
     }
 
     // ★ 닻 없이 사망했을 때(경로 3) — 몸만 시작 상태로 되돌린다.

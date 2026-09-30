@@ -28,8 +28,8 @@ public class BattleRewardFormula : ScriptableObject
     public float loseRatio = 0.2f;
 
     [Header("재도전")]
-    [Tooltip("재도전 1회마다 줄어드는 비율")]
-    [Range(0f, 0.5f)] public float retryPenaltyPerTry = 0.1f;
+    [Tooltip("재도전 1회마다 줄어드는 비율. 기본 0 — 실패에는 이미 마나·닻·시간·정신력 비용이 있다")]
+    [Range(0f, 0.5f)] public float retryPenaltyPerTry = 0f;
     [Range(0f, 1f)] public float minRetryRatio = 0.4f;
 
     [Header("레벨 차이")]

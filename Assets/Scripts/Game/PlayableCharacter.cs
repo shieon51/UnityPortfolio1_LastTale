@@ -149,8 +149,6 @@ public abstract class PlayableCharacter : CharacterStats
 
         if (isNewRecord) OnSoulLevelRecord?.Invoke(level);
 
-        highestLevelReached = Mathf.Max(highestLevelReached, level); // 영혼 레벨 갱신(최고 도달 레벨)
-
         var data = LevelDataManager.Instance?.GetLevelData(level);
         if (data != null)
         {

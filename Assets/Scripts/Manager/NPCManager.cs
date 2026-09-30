@@ -63,6 +63,17 @@ public class NPCManager : Singleton<NPCManager>
     public float resultDialogueDelay = 1f;
     [Tooltip("전투 보상 경험치 텍스트가 뜰 높이")]
     public float battleRewardTextHeight = 1.5f;            // ★ 추가
+    [Tooltip("훈련 모드는 봐주는 대련이므로 패배해도 회귀하지 않는다")]
+    public bool skipLoopOnTrainingDefeat = true;              // ★ 추가
+
+    // ★ 패배 흐름이 진행 중인지. OnHealthChanged가 Die()보다 먼저 발생해
+    //   _activeBossBattle이 이미 비워진 뒤에 Die()가 불리므로 별도 플래그가 필요하다
+    private bool _defeatFlowActive;
+    private bool _pendingDefeatLoop;        // 패배 대사가 끝나면 회귀할지
+    private string _defeatBossName;
+
+    public bool IsBattleActive => _activeBossBattle != null;
+    public bool IsDefeatFlowActive => _defeatFlowActive;      // ★ SoraStats.Die가 참조
 
     [Header("Ground Snap")]
     [Tooltip("NPC가 자동으로 안착할 바닥으로 인정할 레이어들 (Ground + OneWayPlatform 둘 다 체크)")]
@@ -88,6 +99,36 @@ public class NPCManager : Singleton<NPCManager>
         // 나중에는 여기서 Save 파일 데이터를 불러와서 npcDataDict에 덮어씌울 것.
         // 현재 세이브 기능이 없으니 임시로 초기 데이터 세팅
         InitializeDefaultNPCData();
+    }
+
+    private void Start()
+    {
+        // 패배 대사가 끝나는 시점을 알아야 회귀를 이어갈 수 있다
+        if (DialogueManager.Instance != null)
+            DialogueManager.Instance.OnDialogueEnd += HandleResultDialogueEnd;
+    }
+
+    private void OnDestroy()
+    {
+        if (DialogueManager.Instance != null)
+            DialogueManager.Instance.OnDialogueEnd -= HandleResultDialogueEnd;
+    }
+
+    // 패배 대사가 끝나면 회귀로 넘어간다.
+    // 재도전 화면(기획서 7-7)이 만들어지면 이 자리에서 해설자 제안을 먼저 띄우게 된다
+    private void HandleResultDialogueEnd(EventData data)
+    {
+        if (!_defeatFlowActive) return;
+        if (data == null || data.EventName != _defeatBossName) return;
+
+        _defeatFlowActive = false;
+        _defeatBossName = null;
+
+        if (!_pendingDefeatLoop) return;
+        _pendingDefeatLoop = false;
+
+        Debug.Log("[전투] 패배 대사 종료 — 회귀를 시작합니다");
+        TimeLoopManager.Instance?.HandleDeath();
     }
 
     private void InitializeDefaultNPCData()
@@ -341,7 +382,20 @@ public class NPCManager : Singleton<NPCManager>
     {
         if (_activeBossBattle == null) return;
 
-        CurrentBattleStateKey = null; //? *
+        // ★ 패배면 여기서부터 패배 흐름이 시작된다.
+        //   Die()가 곧 불리는데, 그때는 _activeBossBattle이 이미 비워진 뒤이므로
+        //   이 플래그로 "회귀를 아직 하지 마라"를 알린다
+        if (!win)
+        {
+            var tierForDefeat = _activeBossBattle is Liel_AI lielDefeat
+                ? lielDefeat.currentDifficultyTier : BossDifficultyTier.Training;
+
+            _defeatFlowActive = true;
+            _defeatBossName = _activeBossBattle.npcName;
+            _pendingDefeatLoop = !(skipLoopOnTrainingDefeat && tierForDefeat == BossDifficultyTier.Training);
+        }
+
+        CurrentBattleStateKey = null; 
 
         _activeBossBattle.OnHealthChanged -= HandleBossHealthChanged;
         PlayerManager.Instance.CurrentCharacter.OnHealthChanged -= HandlePlayerHealthChangedDuringBattle;
