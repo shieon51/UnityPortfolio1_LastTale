@@ -335,7 +335,7 @@ public class PlayerController : MonoBehaviour, IPlayerMotor
 
         if (_oneWayPlatform.TryPassThrough(hit.collider))
         {
-            Debug.Log($"[DBG {Time.time:F3}] OneWayPlatform 통과 시작");
+            //Debug.Log($"[DBG {Time.time:F3}] OneWayPlatform 통과 시작");
 
             _goToUnder = true;
             StartCoroutine(ResetGoToUnderFlagRoutine(_oneWayPlatform.passThroughDuration));

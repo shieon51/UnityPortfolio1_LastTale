@@ -10,14 +10,16 @@ public class BattleRewardFormula : ScriptableObject
     {
         public BossDifficultyTier tier;
         public float multiplier = 1f;
+        [Tooltip("레벨 차이 보정을 적용할지. 훈련 모드는 상대가 봐주므로 끄는 것을 권장")]
+        public bool applyLevelFactor = true;          // ★ 추가
     }
 
     [Header("난이도 배율")]
     public TierMultiplier[] tierMultipliers =
     {
-        new() { tier = BossDifficultyTier.Training, multiplier = 0.3f },
-        new() { tier = BossDifficultyTier.Normal,   multiplier = 1f },
-        new() { tier = BossDifficultyTier.Hard,     multiplier = 2f },
+        new() { tier = BossDifficultyTier.Training, multiplier = 0.3f, applyLevelFactor = false },
+        new() { tier = BossDifficultyTier.Normal,   multiplier = 1f,   applyLevelFactor = true },
+        new() { tier = BossDifficultyTier.Hard,     multiplier = 2f,   applyLevelFactor = true },
     };
 
     [Header("승패")]
@@ -36,19 +38,29 @@ public class BattleRewardFormula : ScriptableObject
 
     public int Calculate(int baseExp, BossDifficultyTier tier, int bossLevel, int playerLevel, bool win, int retryCount)
     {
-        float result = baseExp * GetTierMultiplier(tier);
+        var tierInfo = GetTierInfo(tier);
+        float tierMul = tierInfo?.multiplier ?? 1f;
+        float levelMul = 1f;
+        if (levelFormula != null && (tierInfo == null || tierInfo.applyLevelFactor))
+            levelMul = levelFormula.GetLevelFactor(bossLevel, playerLevel);
 
-        if (levelFormula != null) result *= levelFormula.GetLevelFactor(bossLevel, playerLevel);
-        if (!win) result *= loseRatio;
-        if (retryCount > 0) result *= Mathf.Max(minRetryRatio, 1f - retryPenaltyPerTry * retryCount);
+        float winMul = win ? 1f : loseRatio;
+        float retryMul = retryCount > 0 ? Mathf.Max(minRetryRatio, 1f - retryPenaltyPerTry * retryCount) : 1f;
 
-        return Mathf.Max(1, Mathf.RoundToInt(result));
+        int result = Mathf.Max(1, Mathf.RoundToInt(baseExp * tierMul * levelMul * winMul * retryMul));
+
+#if UNITY_EDITOR
+        Debug.Log($"[전투 보상] 기본 {baseExp} × 난이도({tier}) {tierMul:F2} × " +
+                  $"레벨차({bossLevel} − {playerLevel}) {levelMul:F2} × {(win ? "승" : "패")} {winMul:F2} × " +
+                  $"재도전({retryCount}회) {retryMul:F2} = {result}");
+#endif
+        return result;
     }
 
-    private float GetTierMultiplier(BossDifficultyTier tier)
+    private TierMultiplier GetTierInfo(BossDifficultyTier tier)
     {
-        if (tierMultipliers == null) return 1f;
-        foreach (var t in tierMultipliers) if (t.tier == tier) return t.multiplier;
-        return 1f;
+        if (tierMultipliers == null) return null;
+        foreach (var t in tierMultipliers) if (t.tier == tier) return t;
+        return null;
     }
 }

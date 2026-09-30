@@ -141,7 +141,7 @@ public class CharacterStats : MonoBehaviour
     [TextArea(6, 14)]
     public string statsSummary;
 
-    private void OnValidate()
+    protected virtual void OnValidate()
     {
         statsSummary =
             $"Lv.{level} | HP {maxHealth} | MP {maxMana}\n" +

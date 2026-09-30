@@ -63,7 +63,7 @@ public class HUDStatusPanel : MonoBehaviour
 
     private void UpdateSliderUI()
     {
-        Debug.Log("[HUDStatusPanel] UpdateSliderUI 호출");   // ★ 임시 확인용, 나중에 삭제
+        //Debug.Log("[HUDStatusPanel] UpdateSliderUI 호출");   // ★ 임시 확인용, 나중에 삭제
         var c = PlayerManager.Instance.CurrentCharacter;
         if (c == null) return;
 

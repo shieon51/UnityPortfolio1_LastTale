@@ -48,8 +48,28 @@ public abstract class PlayableCharacter : CharacterStats
     // 영혼 레벨을 경신했을 때 (기록장 금색 태그, 연출용)
     public event Action<int> OnSoulLevelRecord;
 
+    // 영혼 레벨 (경험한 최고 레벨) — 회귀해도 유지된다
+    [Header("Soul Level")]
+    [SerializeField]
+    [Tooltip("이 몸이 도달했던 최고 레벨. 노련미 보정의 기준이며 회귀해도 유지된다")]
+    private int _highestLevelReached = 1;
+
     // 영혼 레벨 (경험한 최고 레벨) // ?
-    public int highestLevelReached { get; protected set; } = 1;
+    public int highestLevelReached
+    {
+        get => _highestLevelReached;
+        protected set => _highestLevelReached = Mathf.Max(1, value);
+    }
+
+#if UNITY_EDITOR
+    // 인스펙터에서 레벨을 직접 바꿨을 때 영혼 레벨이 뒤처지지 않게 맞춘다
+    protected virtual void OnValidate()
+    {
+        base.OnValidate();
+
+        if (_highestLevelReached < level) _highestLevelReached = level;
+    }
+#endif
 
     // 범용 특수 스탯(피로도, 신성력 등) 프로퍼티 정의
     // 자식 클래스(SoraStats, LielStats)가 무조건 이 값을 어떻게 줄지 정의해야 함
@@ -105,6 +125,11 @@ public abstract class PlayableCharacter : CharacterStats
         if (guard >= 100) Debug.LogError($"[{name}] 레벨업 루프 안전장치 작동 — experienceToNextLevel 값을 확인하세요");
 
         CallProgressionChanged();
+
+#if UNITY_EDITOR
+        if (multiplier > 1.001f)
+            Debug.Log($"[노련미] 획득 {rawAmount} × 배율 {multiplier:F2} (몸 {level} / 영혼 {highestLevelReached}) = {amount}");
+#endif
         return amount;              // ★ 추가
     }
 

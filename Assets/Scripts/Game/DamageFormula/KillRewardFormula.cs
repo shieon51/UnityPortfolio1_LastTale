@@ -17,11 +17,29 @@ public class KillRewardFormula : ScriptableObject
     public float GetLevelFactor(int targetLevel, int playerLevel)
     {
         int gap = targetLevel - playerLevel;
-        if (gap >= fullBonusGap) return maxMultiplier;
+
+        // ★ 같은 레벨(gap 0)이 정확히 1배가 되도록 0을 기준으로 두 구간을 나눈다
+        if (gap == 0) return 1f;
+
+        if (gap > 0)
+        {
+            if (gap >= fullBonusGap) return maxMultiplier;
+            return Mathf.Lerp(1f, maxMultiplier, (float)gap / fullBonusGap);
+        }
+
         if (gap <= noRewardGap) return minMultiplier;
-        return Mathf.Lerp(minMultiplier, maxMultiplier, Mathf.InverseLerp(noRewardGap, fullBonusGap, gap));
+        return Mathf.Lerp(1f, minMultiplier, (float)gap / noRewardGap);
     }
 
     public int Calculate(int baseExp, int targetLevel, int playerLevel)
-        => Mathf.Max(1, Mathf.RoundToInt(baseExp * GetLevelFactor(targetLevel, playerLevel)));
+    {
+        float factor = GetLevelFactor(targetLevel, playerLevel);
+        int result = Mathf.Max(1, Mathf.RoundToInt(baseExp * factor));
+
+#if UNITY_EDITOR
+        Debug.Log($"[처치 보상] 기본 {baseExp} × 레벨차({targetLevel} − {playerLevel} = {targetLevel - playerLevel}) {factor:F2} = {result}");
+#endif
+        return result;
+    }
+
 }
