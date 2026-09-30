@@ -405,6 +405,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 582328358}
   - {fileID: 1496462324}
   - {fileID: 1195595476}
   - {fileID: 258450569}
@@ -2906,6 +2907,54 @@ MonoBehaviour:
   bgmSourceA: {fileID: 0}
   bgmSourceB: {fileID: 0}
   bgmCrossfadeDuration: 1.5
+--- !u!1 &582328357
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 582328358}
+  - component: {fileID: 582328359}
+  m_Layer: 0
+  m_Name: RewardService
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &582328358
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 582328357}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 4.6724224, y: 2.2323024, z: -0.0455945}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 79130433}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &582328359
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 582328357}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0659e37bcff12d04694ac0902a84ab31, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RewardService
+  fullBonusGap: 10
+  noRewardGap: -15
+  maxMultiplier: 1.5
+  minMultiplier: 0.1
 --- !u!1 &598186597
 GameObject:
   m_ObjectHideFlags: 0
@@ -8169,6 +8218,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TravelTimeTracker
   settlementSceneIds: 01000000
   minTravelHours: 1
+  extraHoursPerScene: 1
   maxTravelHours: 0
   keyTravelWalk: flow_travel_walk
   keyTravelInstant: flow_travel_instant

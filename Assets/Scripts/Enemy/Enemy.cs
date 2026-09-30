@@ -35,10 +35,17 @@ public class Enemy : CharacterStats
     private float lastContactTime = -1f;
 
     [Header("처치 보상")]
-    [Tooltip("처치 시 주는 경험치. 사냥 시간 계산의 기준이기도 하다")]
+    [Tooltip("기록장·플로팅 텍스트에 쓸 이름. 비우면 오브젝트 이름을 쓴다")]
+    public string enemyDisplayName = "";
+    [Tooltip("처치 시 주는 기본 경험치. 레벨 차이에 따라 보정된다")]
     public int expReward = 20;
     [Tooltip("경험치 플로팅 텍스트가 뜰 높이")]
     public float rewardTextHeight = 1.2f;
+
+    // 표시용 이름 — Instantiate된 "Slime(Clone)" 대신 쓴다
+    public string DisplayName => string.IsNullOrEmpty(enemyDisplayName)
+        ? gameObject.name.Replace("(Clone)", "").Trim()
+        : enemyDisplayName;
 
     protected Transform player; //
     protected Rigidbody2D rb;
@@ -181,19 +188,22 @@ public class Enemy : CharacterStats
         Destroy(gameObject, 0.6f); // 임시로 Destroy 유지
     }
 
-    // 처치 보상 — 경험치를 주고, 사냥 시간 계산에 보고한다
+    // 처치 보상 — 레벨 차이를 반영한 경험치를 주고, 사냥 시간 계산에 보고한다
     protected virtual void GrantKillReward()
     {
         if (expReward <= 0) return;
 
         var character = PlayerManager.Instance?.CurrentCharacter;
-        if (character != null)
-        {
-            character.GainExperience(expReward);
-            FloatingTextManager.Instance?.ShowExpGain(expReward, transform.position + Vector3.up * rewardTextHeight);
-        }
+        if (character == null) return;
 
-        // ★ 사냥은 낱개가 아니라 덩어리로 시간이 흐른다
-        HuntTracker.Instance?.ReportKill(name, expReward);
+        int scaledExp = RewardService.Instance != null
+            ? RewardService.Instance.ResolveExp(expReward, level, character.level)
+            : expReward;
+
+        character.GainExperience(scaledExp);      // 여기서 노련미 보정이 추가로 붙는다
+        FloatingTextManager.Instance?.ShowExpGain(scaledExp, transform.position + Vector3.up * rewardTextHeight);
+
+        // ★ 사냥 시간은 노련미 보정 전 값을 기준으로 한다 (실제 들인 노력)
+        HuntTracker.Instance?.ReportKill(DisplayName, scaledExp);
     }
 }
