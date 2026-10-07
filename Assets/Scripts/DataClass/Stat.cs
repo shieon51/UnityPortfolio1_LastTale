@@ -31,6 +31,11 @@ public class Stat
         baseValue += amount;
     }
 
+    // ★ 회귀 시 몸 상태를 되돌리기 위해 기본값을 읽고 쓸 수 있게 한다.
+    //   버프·디버프(modifiers)는 건드리지 않는다 (요정화 보정 등은 그대로 유지)
+    public int BaseValue => baseValue;
+    public void SetBaseValue(int value) => baseValue = value;
+
     // 일시적인 버프/디버프 추가 (요정화 등)
     public void AddModifier(int modifier)
     {

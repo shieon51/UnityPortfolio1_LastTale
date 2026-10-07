@@ -40,6 +40,7 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
 
     // 완전 리셋용 기본값 캐싱 
     private int _baseLevel, _baseMaxHealth, _baseMaxMana;
+    private int _baseAttack, _baseDefense, _baseAgility;   // ★ 경로 3에서 되돌릴 시작 공·방·민
 
     [Header("Time Loop")]
     public int loopCount = 0; // 회귀 횟수 (나중에 실제 회귀 시스템과 연동)
@@ -146,6 +147,10 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         _baseLevel = level;
         _baseMaxHealth = maxHealth;
         _baseMaxMana = maxMana;
+
+        _baseAttack = attack.BaseValue;      // ★ 일시 보정 제외한 기본값만 기억
+        _baseDefense = defense.BaseValue;
+        _baseAgility = agility.BaseValue;
     }
 
     // 플레이어가 소라를 조종하기 시작할 때 호출됨 (빙의)
@@ -362,11 +367,35 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         maxHealth = _baseMaxHealth;
         maxMana = _baseMaxMana;
 
+        attack.SetBaseValue(_baseAttack);     // ★ 훈련으로 오른 공·방·민도 시작 값으로 (기획서 11-3)
+        defense.SetBaseValue(_baseDefense);
+        agility.SetBaseValue(_baseAgility);
+
         currentHealth = 0;
         currentMana = 0;
         FullHP();                 // Heal/RecoverMana를 거쳐야 HUD가 갱신된다
         FullMP();
         CallProgressionChanged();
+    }
+
+    // ★ 신규 — 강제 복귀(경로 2) 시 몸 상태를 닻 시점으로 되돌린다.
+    //   기존에는 TimeLoopManager가 필드를 직접 대입하고 갱신 이벤트를 부르지 않아
+    //   레벨·경험치 표시가 바로 따라오지 않았다. 대입과 갱신을 소라 쪽에 모은다
+    public void RestoreBodyFromAnchor(TimeAnchorSnapshot snapshot)
+    {
+        if (snapshot == null) return;
+
+        level = snapshot.level;
+        maxHealth = snapshot.maxHealth;
+        maxMana = snapshot.maxMana;
+        experience = snapshot.experience;
+        experienceToNextLevel = Mathf.Max(1, snapshot.expToNextLevel);   // 레벨과 요구 경험치가 어긋나지 않게
+
+        attack.SetBaseValue(snapshot.attackBase);     // ★ 공·방·민도 닻 시점으로
+        defense.SetBaseValue(snapshot.defenseBase);
+        agility.SetBaseValue(snapshot.agilityBase);
+
+        CallProgressionChanged();   // ★ 레벨·경험치·능력치 표시 갱신
     }
 
     public void ResetProgression() // 디버그 하드리셋 전용
@@ -377,6 +406,9 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         experienceToNextLevel = baseExpToNextLevel;
         maxHealth = _baseMaxHealth;
         maxMana = _baseMaxMana;
+        attack.SetBaseValue(_baseAttack);     // ★ 하드 리셋도 공·방·민을 함께 초기화
+        defense.SetBaseValue(_baseDefense);
+        agility.SetBaseValue(_baseAgility);
         currentHealth = maxHealth;
         currentMana = maxMana;
         CallProgressionChanged();

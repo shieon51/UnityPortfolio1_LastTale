@@ -13,6 +13,8 @@ public class TimeAnchorSnapshot
     // 몸 상태 (강제 복귀 시에만 되돌린다)
     public int level, maxHealth, maxMana, experience;
     public int expToNextLevel;
+    // ★ 공·방·민 기본값 (훈련으로 오른 값 포함). 강제 복귀 시 레벨과 함께 되돌린다 (기획서 11-3)
+    public int attackBase, defenseBase, agilityBase;
 
     // ★ HashSet은 순서를 보장하지 않아 복원 시 획득 순서가 사라진다 → List로 변경
     //   (지금은 기억을 되돌리지 않지만, 기록·디버그 표시에 순서가 쓰인다)

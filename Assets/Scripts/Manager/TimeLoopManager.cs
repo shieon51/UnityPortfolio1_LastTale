@@ -163,7 +163,10 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             maxHealth = sora.maxHealth,
             maxMana = sora.maxMana,
             experience = sora.experience,
-            expToNextLevel = sora.experienceToNextLevel,      // ★ 추가
+            expToNextLevel = sora.experienceToNextLevel,     
+            attackBase = sora.attack.BaseValue,       // ★ 공·방·민도 몸 상태로 함께 저장
+            defenseBase = sora.defense.BaseValue,
+            agilityBase = sora.agility.BaseValue,
             // 변경 후 — 순서를 보존하고, 혼 층위인 개인친밀도는 담지 않는다
             acquiredMemoryFlags = new List<string>(MemoryManager.Instance.GetAllAcquired()),
             npcAffections = NPCManager.Instance.SnapshotAffections(),    
@@ -214,14 +217,9 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     }
 
     // 몸 상태를 그 시점으로 되돌린다 (강제 복귀 전용)
+    // ★ 대입은 SoraStats.RestoreBodyFromAnchor로 옮겼다 (갱신 이벤트까지 한 곳에서 처리)
     private void RestoreBody(SoraStats sora, TimeAnchorSnapshot snapshot)
-    {
-        sora.level = snapshot.level;
-        sora.maxHealth = snapshot.maxHealth;
-        sora.maxMana = snapshot.maxMana;
-        sora.experience = snapshot.experience;
-        sora.experienceToNextLevel = Mathf.Max(1, snapshot.expToNextLevel);   // ★ 레벨과 요구 경험치가 어긋나지 않게
-    }
+        => sora.RestoreBodyFromAnchor(snapshot);
 
     // ★ currentHealth에 직접 대입하면 변경 이벤트가 발생하지 않아 HUD가 갱신되지 않는다.
     //   Heal/RecoverMana를 거쳐야 슬라이더가 즉시 따라온다
