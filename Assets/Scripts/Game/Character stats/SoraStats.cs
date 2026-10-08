@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // PlayableCharacter를 상속받는 1부 전용 주인공 '소라'
-public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSource
+public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSource, IRecordable   // ★ 기록 시스템 2단계 — 몸 층위로 등록
 {
     // ===============================================================
     // 요정화 단계 (fairyStage) — 화면 표시와 내부 값이 같다
@@ -157,7 +157,11 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         _baseAttack = attack.BaseValue;      // ★ 일시 보정 제외한 기본값만 기억
         _baseDefense = defense.BaseValue;
         _baseAgility = agility.BaseValue;
+
+        RecordSystem.Register(this, replaceExisting: true);   // ★ 소라는 씬마다 새로 생길 수 있어 최신 것으로 교체
     }
+
+    private void OnDestroy() => RecordSystem.Unregister(this);   // ★
 
     // 플레이어가 소라를 조종하기 시작할 때 호출됨 (빙의)
     public override void OnPossessed()
@@ -414,6 +418,50 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         agility.SetBaseValue(snapshot.agilityBase);
 
         CallProgressionChanged();   // ★ 레벨·경험치·능력치 표시 갱신
+    }
+
+    // ---------------- IRecordable (★ 기록 시스템 2단계) ----------------
+    // 몸 층위: TimeAnchorSnapshot의 몸 필드와 같은 범위. 현재 HP·MP는 회귀 경로마다 따로 정하므로 담지 않는다
+    // 덩어리 안의 키. 바꾸지 않는다
+    private const string StateKeyLevel = "level";
+    private const string StateKeyMaxHealth = "max_health";
+    private const string StateKeyMaxMana = "max_mana";
+    private const string StateKeyExp = "exp";
+    private const string StateKeyExpToNext = "exp_to_next";
+    private const string StateKeyAttack = "attack_base";
+    private const string StateKeyDefense = "defense_base";
+    private const string StateKeyAgility = "agility_base";
+
+    public string RecordId => RecordIds.SoraBody;
+    public RecordLayer Layer => RecordLayer.Body;
+    public int StateVersion => 1;
+
+    public void WriteState(StateWriter writer)
+    {
+        writer.WriteInt(StateKeyLevel, level);
+        writer.WriteInt(StateKeyMaxHealth, maxHealth);
+        writer.WriteInt(StateKeyMaxMana, maxMana);
+        writer.WriteInt(StateKeyExp, experience);
+        writer.WriteInt(StateKeyExpToNext, experienceToNextLevel);
+        writer.WriteInt(StateKeyAttack, attack.BaseValue);
+        writer.WriteInt(StateKeyDefense, defense.BaseValue);
+        writer.WriteInt(StateKeyAgility, agility.BaseValue);
+    }
+
+    // ★ RestoreBodyFromAnchor와 같은 대입·갱신 경로. 닻 복원을 교체하면 그 함수는 이것으로 대체된다
+    public void ReadState(StateReader reader, int version)
+    {
+        level = reader.ReadInt(StateKeyLevel, level);
+        maxHealth = reader.ReadInt(StateKeyMaxHealth, maxHealth);
+        maxMana = reader.ReadInt(StateKeyMaxMana, maxMana);
+        experience = reader.ReadInt(StateKeyExp, experience);
+        experienceToNextLevel = Mathf.Max(1, reader.ReadInt(StateKeyExpToNext, experienceToNextLevel));
+
+        attack.SetBaseValue(reader.ReadInt(StateKeyAttack, attack.BaseValue));
+        defense.SetBaseValue(reader.ReadInt(StateKeyDefense, defense.BaseValue));
+        agility.SetBaseValue(reader.ReadInt(StateKeyAgility, agility.BaseValue));
+
+        CallProgressionChanged();
     }
 
     public void ResetProgression() // 디버그 하드리셋 전용

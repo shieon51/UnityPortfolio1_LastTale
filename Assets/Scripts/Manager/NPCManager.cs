@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using static EventManager;
 
-public class NPCManager : Singleton<NPCManager>
+public class NPCManager : Singleton<NPCManager>, IRecordable   // ★ 기록 시스템 2단계 — 호감도를 세계 층위로 등록
 {
     [Header("NPC 정의")]
     [Tooltip("Resources 하위 폴더 — 이 안의 모든 NPCDefinition을 자동으로 읽어옴")]
@@ -99,6 +99,7 @@ public class NPCManager : Singleton<NPCManager>
         // 나중에는 여기서 Save 파일 데이터를 불러와서 npcDataDict에 덮어씌울 것.
         // 현재 세이브 기능이 없으니 임시로 초기 데이터 세팅
         InitializeDefaultNPCData();
+        RecordSystem.Register(this);   // ★ 범용 스냅샷에 포함
     }
 
     private void Start()
@@ -112,6 +113,7 @@ public class NPCManager : Singleton<NPCManager>
     {
         if (DialogueManager.Instance != null)
             DialogueManager.Instance.OnDialogueEnd -= HandleResultDialogueEnd;
+        RecordSystem.Unregister(this);   // ★
     }
 
     // 패배 대사가 끝나면 회귀로 넘어간다.
@@ -510,6 +512,25 @@ public class NPCManager : Singleton<NPCManager>
             data.hiddenAffection = kvp.Value;
         }
     }
+
+    // ---------------- IRecordable (★ 기록 시스템 2단계) ----------------
+    private const string StateKeyAffection = "affection";   // 덩어리 안의 키. 바꾸지 않는다
+
+    public string RecordId => RecordIds.NpcAffection;
+    public RecordLayer Layer => RecordLayer.World;
+    public int StateVersion => 1;
+
+    // ★ 회귀를 넘어 기억하는 NPC는 담지 않는다 — RestoreAffections도 이들을 되돌리지 않으므로 같은 기준을 쓴다
+    public void WriteState(StateWriter writer)
+    {
+        var map = new Dictionary<string, int>();
+        foreach (var kvp in npcDataDict)
+            if (!kvp.Value.rememberAcrossLoops) map[kvp.Key] = kvp.Value.hiddenAffection;
+        writer.WriteIntMap(StateKeyAffection, map);
+    }
+
+    public void ReadState(StateReader reader, int version)
+        => RestoreAffections(reader.ReadIntMap(StateKeyAffection));
 
     public void ResetAllNPCData() // 디버그 완전 리셋 전용
     {

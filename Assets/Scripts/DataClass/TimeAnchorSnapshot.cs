@@ -31,6 +31,10 @@ public class TimeAnchorSnapshot
     public int loopCountAtSave;                // 어느 회차에서 저장했는지 (서사용)
     public List<ActionRecord> actionLog;       // 이번 흐름의 행적
 
+    // ★ 기록 시스템 2단계 — 같은 순간의 범용 스냅샷. 지금은 옛 복원 결과와 비교하는 데만 쓴다.
+    //   검증이 끝나면 복원을 이것으로 바꾸고, 위의 손으로 나열한 필드들을 걷어낸다
+    public Snapshot recordSnapshot;
+
     // ※ soraPersonalBond는 제거했다.
     //   개인친밀도는 소라의 '의지'에 속해 회귀해도 유지되므로 스냅샷 대상이 아니다 (기획서 8장)
 }

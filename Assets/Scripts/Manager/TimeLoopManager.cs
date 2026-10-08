@@ -34,6 +34,10 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     //[Tooltip("닻 없이 사망했을 때(경로 3) 되돌아가는 몸 레벨")]
     //public int resetBodyLevel = 1;
 
+    [Header("기록 시스템 검증 (개발용)")]
+    [Tooltip("닻 복귀 직후, 옛 방식으로 복원한 상태가 닻의 범용 스냅샷과 같은지 비교해 콘솔에 남긴다. 에디터·개발 빌드에서만 동작")]
+    public bool verifyRecordSnapshot = true;   // ★ 기록 시스템 2단계 — 복원 교체 전 검증용
+
     [Header("닻 최대 개수 (영혼 레벨 기준)")]
     [Tooltip("영혼 레벨이 이만큼 오를 때마다 최대 개수가 1개씩 늘어난다")]
     public int levelsPerExtraAnchor = 10;
@@ -184,6 +188,8 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             counters = MemoryManager.Instance.SnapshotCounters(),          
             loopCountAtSave = sora.loopCount,                              
             actionLog = PlayerActionLog.Instance.Snapshot(),
+            // ★ 기록 시스템 2단계 — 같은 순간을 범용 스냅샷으로도 찍어 둔다 (지금은 비교용, 복원에는 쓰지 않음)
+            recordSnapshot = RecordSystem.TakeSnapshot(SnapshotReason.Anchor),
         };
         _anchors.Add(snapshot);
 
@@ -224,6 +230,21 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         SuspicionManager.Instance.RestoreLineCrossed(snapshot.npcLineCrossed);
         MemoryManager.Instance.RestoreCounters(snapshot.counters);
         PlayerActionLog.Instance.Restore(snapshot.actionLog);
+    }
+
+    // ★ 기록 시스템 2단계 — 옛 방식으로 복원한 직후의 상태가 닻의 범용 스냅샷과 같은지 비교만 한다.
+    //   다른 곳이 있으면 범용 스냅샷이 빠뜨린 값(또는 옛 복원이 빠뜨린 값)이다. 복원 교체 전 근거로 쓴다
+    [System.Diagnostics.Conditional("UNITY_EDITOR"), System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
+    private void VerifyRecordSnapshot(TimeAnchorSnapshot anchor, RecordLayerMask mask)
+    {
+        if (!verifyRecordSnapshot || anchor?.recordSnapshot == null) return;
+
+        var now = RecordSystem.TakeSnapshot(SnapshotReason.Verify, mask);
+        var diffs = RecordSystem.Compare(anchor.recordSnapshot, now, mask);
+        if (diffs.Count == 0)
+            Debug.Log($"[RecordSystem] 닻 #{anchor.anchorId} 검증 일치 ({mask}, 덩어리 {now.blocks.Count}개)");
+        else
+            Debug.LogWarning($"[RecordSystem] 닻 #{anchor.anchorId} 검증 불일치 ({mask}) {diffs.Count}건\n- " + string.Join("\n- ", diffs));
     }
 
     // 몸 상태를 그 시점으로 되돌린다 (강제 복귀 전용)
@@ -290,6 +311,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         sora.loopCount++;                                     // 시간 역행이므로 회차 증가
 
         RestoreWorldState(anchor);
+        VerifyRecordSnapshot(anchor, RecordLayerMask.World);   // ★ 자발적 회귀는 세계만 되돌린다
         ConsumeAnchor(anchor, ReturnPath.Voluntary);          // ★ 1회용 + 이후 닻 소멸
 
         // ★ 복원 뒤에 기록해야 한다. RestoreWorldState가 행적 로그를 그 시점으로 되돌리므로,
@@ -318,6 +340,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         {
             sora.UseMana(returnManaCost);
             RestoreWorldState(latest);
+            VerifyRecordSnapshot(latest, RecordLayerMask.World);   // ★ 경로 1은 세계만 되돌린다
             SetVitals(sora, Mathf.Max(minHealthAfterReturn, sora.currentHealth), sora.currentMana);   // ★
 
             ConsumeAnchor(latest, ReturnPath.Normal);
@@ -331,6 +354,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             // ★ 기억은 되돌리지 않는다 (기존에는 RestoreAcquired로 기억까지 되돌렸다)
             RestoreWorldState(latest);
             RestoreBody(sora, latest);
+            VerifyRecordSnapshot(latest, RecordLayerMask.World | RecordLayerMask.Body);   // ★ 경로 2는 세계와 몸
             sora.LoseMental(forcedReturnMentalPenalty);
             SetVitals(sora,
                 Mathf.Max(minHealthAfterReturn, Mathf.RoundToInt(sora.maxHealth * forcedReturnHealthRatio)),

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SuspicionManager : Singleton<SuspicionManager>
+public class SuspicionManager : Singleton<SuspicionManager>, IRecordable   // ★ 기록 시스템 2단계 — 세계 층위로 등록
 {
     private Dictionary<string, int> _suspicion = new();
 
@@ -157,4 +157,31 @@ public class SuspicionManager : Singleton<SuspicionManager>
     public void RestoreLineCrossed(Dictionary<string, int> s) { _lineCrossed.Clear(); if (s != null) foreach (var k in s) _lineCrossed[k.Key] = k.Value; }
 
     public void ResetForNewLoop() { _suspicion.Clear(); _trustEarned.Clear(); _lineCrossed.Clear(); } // ★ 수정
+
+    // ---------------- IRecordable (★ 기록 시스템 2단계) ----------------
+    private void Awake() => RecordSystem.Register(this);        // ★ 범용 스냅샷에 포함
+    private void OnDestroy() => RecordSystem.Unregister(this);
+
+    // 덩어리 안의 키. 바꾸지 않는다
+    private const string StateKeySuspicion = "suspicion";
+    private const string StateKeyTrust = "trust_earned";
+    private const string StateKeyLineCrossed = "line_crossed";
+
+    public string RecordId => RecordIds.NpcSuspicion;
+    public RecordLayer Layer => RecordLayer.World;
+    public int StateVersion => 1;
+
+    public void WriteState(StateWriter writer)
+    {
+        writer.WriteIntMap(StateKeySuspicion, _suspicion);
+        writer.WriteIntMap(StateKeyTrust, _trustEarned);
+        writer.WriteIntMap(StateKeyLineCrossed, _lineCrossed);
+    }
+
+    public void ReadState(StateReader reader, int version)
+    {
+        Restore(reader.ReadIntMap(StateKeySuspicion));
+        RestoreTrust(reader.ReadIntMap(StateKeyTrust));
+        RestoreLineCrossed(reader.ReadIntMap(StateKeyLineCrossed));
+    }
 }

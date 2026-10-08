@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-public class MemoryManager : Singleton<MemoryManager>
+public class MemoryManager : Singleton<MemoryManager>, IRecordable   // ★ 기록 시스템 2단계 — 카운터를 세계 층위로 등록
 {
     [Tooltip("Resources 하위 폴더 경로 — 이 안의 모든 MemoryFragmentData를 자동으로 긁어옴")]
     public string resourcesFolder = "MemoryFragments";
@@ -37,7 +37,10 @@ public class MemoryManager : Singleton<MemoryManager>
     {
         LoadRegistry();
         LoadTopicRegistry();   // ★ 추가 — 주제는 지금까지 런타임에 로드되지 않았다
+        RecordSystem.Register(this);   // ★ 범용 스냅샷에 포함
     }
+
+    private void OnDestroy() => RecordSystem.Unregister(this);   // ★
 
     private void LoadRegistry()
     {
@@ -189,6 +192,18 @@ public class MemoryManager : Singleton<MemoryManager>
         _counters.Clear();
         foreach (var kvp in snapshot) _counters[kvp.Key] = kvp.Value;
     }
+
+    // ---------------- IRecordable (★ 기록 시스템 2단계) ----------------
+    // 카운터(세계)만 담는다. 획득한 기억은 소라의 의지 층위라 회귀로 되돌리지 않으므로 아직 넣지 않는다
+    // (한 클래스에 두 층위가 섞인 경우의 처리 방식은 기록시스템_설계 13-2 [미결])
+    private const string StateKeyCounters = "counters";   // 덩어리 안의 키. 바꾸지 않는다
+
+    public string RecordId => RecordIds.MemoryCounters;
+    public RecordLayer Layer => RecordLayer.World;
+    public int StateVersion => 1;
+
+    public void WriteState(StateWriter writer) => writer.WriteIntMap(StateKeyCounters, _counters);
+    public void ReadState(StateReader reader, int version) => RestoreCounters(reader.ReadIntMap(StateKeyCounters));
 
     // ---------------- 기록장 조회 ----------------
 
