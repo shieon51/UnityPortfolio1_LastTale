@@ -26,13 +26,17 @@ public class OneWayPlatformController : MonoBehaviour
     private readonly Dictionary<Collider2D, bool> _autoIgnoreState = new Dictionary<Collider2D, bool>();
     private readonly HashSet<Collider2D> _manualPassThrough = new HashSet<Collider2D>();
     private readonly Collider2D[] _overlapBuffer = new Collider2D[8];
+    private ContactFilter2D _platformFilter; // ★ OverlapCircle용 필터 (매 FixedUpdate에 레이어를 다시 넣어 인스펙터 변경도 반영)
 
     private void Awake() => _selfCollider = GetComponent<Collider2D>();
 
     private void FixedUpdate()
     {
         float feetY = transform.position.y + feetOffset.y;
-        int count = Physics2D.OverlapCircleNonAlloc(transform.position, detectionRadius, _overlapBuffer, oneWayPlatformLayer);
+        // ★ Unity 6 — OverlapCircleNonAlloc는 사용 중단(Obsolete). 같은 조건(레이어 마스크, 트리거는 프로젝트 설정)을 ContactFilter2D로 건넨다
+        _platformFilter.SetLayerMask(oneWayPlatformLayer);
+        _platformFilter.useTriggers = Physics2D.queriesHitTriggers;
+        int count = Physics2D.OverlapCircle(transform.position, detectionRadius, _platformFilter, _overlapBuffer);
 
         for (int i = 0; i < count; i++)
         {

@@ -1921,3 +1921,24 @@ UI 구현에 들어갈 때 함께 정리한다. 확실도가 "확인 필요"인 
 | 사냥·이동으로 시각이 바뀜 | NPC 배치가 즉시 갱신 |
 | 기록장 변환기 | 정보 태그가 뒤따르는 이벤트 줄에 붙고, 재확인이 회색으로 구분 |
 | 보스전 승리 | 전투 보상 경험치 지급, 행적에 전투 결과 |
+
+### D-4. 에디터 도구·경고 정리 (2026-10-09)
+
+전제: `Persistent Scene`과 맵 씬(`BeginnerTown`)을 함께 열고, 활성 씬은 `Persistent Scene`인 상태에서 시작한다.
+
+| 확인 | 기대 결과 |
+| --- | --- |
+| Map Tool 열기 | "맵 씬: BeginnerTown (ID 1)"이 초록색. "활성 씬이 'Persistent Scene'입니다" 경고와 "'BeginnerTown'을 활성 씬으로" 버튼이 보인다 |
+| 상주 씬에 남아 있는 옛 마커 | 맨 위에 빨간 안내 "맵 씬이 아닌 씬에 이벤트 마커가 있습니다: Persistent Scene N개". "삭제" → 하이어라키의 상주 씬에서 마커가 사라지고 Ctrl+Z로 되돌아온다. 확인 후 다시 삭제하고 상주 씬을 저장한다 |
+| "+ NPC" | 마커가 `BeginnerTown` 아래에 생긴다(활성 씬이 상주 씬이어도). SceneID는 1 |
+| Load CSV | `BeginnerTown`의 마커만 지우고 다시 불러온다. 상주 씬은 바뀌지 않는다 |
+| Save Current Scene | Scene 1로 저장된다. 상주 씬에 마커가 있으면 "[저장 제외]"가 경고 창에 나온다 |
+| 같은 마커를 Ctrl+D로 복제한 뒤 Save | 경고 창에 "[ID 중복] EventID N가 2개" |
+| 이동 ID 2(Forest) | `Persistent Scene`은 남고 `BeginnerTown`이 닫히며 `Forest`가 열리고 활성 씬이 된다. Forest 마커가 Forest 아래에 불러와진다 |
+| 마커를 옮긴 뒤 이동 → "저장 후 이동" → 경고 창에서 "취소" | 이동하지 않는다(예전에는 저장 없이 이동했다) |
+| 타일 등 마커 외 변경 후 이동 | Unity의 씬 저장 여부 창이 뜬다. 창에서 취소하면 이동하지 않고 마커가 다시 불러와진다 |
+| 상주 씬만 열린 상태에서 Save·Load·+ NPC | "맵 씬 없음" 안내만 나오고 아무것도 만들지 않는다 |
+| 마커 인스펙터에서 Ink Node Name에 `"`나 탭 넣기 | 빨간 HelpBox에 금지 문자 표시, Ink 버튼 두 개 비활성, 아래 "발동 영역"·"대화 그래프 연동"이 그대로 보인다. 콘솔에 `Illegal characters in path` 예외가 없다 |
+| 컴파일 후 Visual Studio 오류 목록 | `FindObjectOfType`·`FindObjectsOfType`·`OverlapCircleNonAlloc`(CS0618)과 `PlayableCharacter.OnValidate`(CS0114) 경고가 없다 |
+| 원웨이 플랫폼 아래에서 점프·위에서 아래 키 | 이전과 같이 아래에서 통과해 올라서고, 아래 키로 내려간다 |
+| 오버뷰·보스 AI 프로필 창에서 "라이브 적용", 전투 중 연출 대사 말풍선 위치, 스킬 오버뷰 창 열기 | 이전과 같이 동작한다 |

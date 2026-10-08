@@ -1,4 +1,4 @@
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -25,7 +25,7 @@ public class UIThemeManager : Singleton<UIThemeManager>
     public void SetTheme(UITheme newTheme)
     {
         CurrentTheme = newTheme;
-        foreach (var p in FindObjectsOfType<ThemedPanel>(true)) p.Apply();
+        foreach (var p in FindObjectsByType<ThemedPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None)) p.Apply(); // ★ Unity 6 — FindObjectsOfType(true)는 사용 중단(Obsolete). 비활성 포함은 그대로
     }
 }
 

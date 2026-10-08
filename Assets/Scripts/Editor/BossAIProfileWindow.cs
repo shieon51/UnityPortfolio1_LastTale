@@ -35,7 +35,7 @@ public class BossAIProfileWindow : EditorWindow
 
         if (Application.isPlaying)
         {
-            var liveLiel = Object.FindObjectsOfType<Liel_AI>().FirstOrDefault();
+            var liveLiel = Object.FindAnyObjectByType<Liel_AI>(); // ★ Unity 6 — 하나만 필요하므로 FindAnyObjectByType
             if (liveLiel != null)
                 EditorGUILayout.HelpBox($"현재 씬: {liveLiel.currentDifficultyTier} / {liveLiel.currentCombatStyle} / Phase {liveLiel.bossPhase} / HP {liveLiel.currentHealth}/{liveLiel.maxHealth}", MessageType.Info);
         }
@@ -80,7 +80,7 @@ public class BossAIProfileWindow : EditorWindow
 
     private void ApplyProfileToLiveNPC(NPCBossProfile profile, Liel_AI.LielCombatStyle style)
     {
-        var target = Object.FindObjectsOfType<NPC>()
+        var target = Object.FindObjectsByType<NPC>(FindObjectsSortMode.None) // ★ Unity 6 — FindObjectsOfType는 사용 중단(Obsolete)
             .FirstOrDefault(n => n.npcName == profile.npcName) as IBossProfileTarget; // ★ NPC로 이름 찾고, 인터페이스로 다룸
 
         if (target == null) { Debug.LogWarning($"씬에서 {profile.npcName}에 해당하는 IBossProfileTarget을 찾을 수 없습니다."); return; }

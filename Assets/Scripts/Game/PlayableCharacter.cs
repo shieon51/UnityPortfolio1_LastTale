@@ -63,7 +63,7 @@ public abstract class PlayableCharacter : CharacterStats
 
 #if UNITY_EDITOR
     // 인스펙터에서 레벨을 직접 바꿨을 때 영혼 레벨이 뒤처지지 않게 맞춘다
-    protected virtual void OnValidate()
+    protected override void OnValidate() // ★ CS0114 — virtual로 다시 선언해 부모를 숨기고 있었다. 의도는 재정의
     {
         base.OnValidate();
 

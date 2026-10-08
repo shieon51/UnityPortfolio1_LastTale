@@ -34,12 +34,20 @@ public class EventMarkerEditor : Editor
 
         // -----------------------------------------------------------------------
 
+        // ★ 경로 금지 문자(" < > | 탭·줄바꿈 등)가 있으면 Path.Combine이 예외를 던져 인스펙터 아랫부분이 그려지지 않았다
+        //    → 경로를 조립하기 전에 검사하고, 걸리면 안내만 띄우고 Ink 버튼을 끈다
+        string invalidChars = FindInvalidPathChars(rawNodeName);
+        bool pathValid = invalidChars.Length == 0;
+        if (!pathValid)
+            EditorGUILayout.HelpBox($"Ink Node Name에 파일 이름으로 쓸 수 없는 문자가 있습니다: {invalidChars}\n붙여넣기로 공백·줄바꿈이 섞이지 않았는지 확인하세요.", MessageType.Error);
+
         // 경로 설정
         string baseDir = Path.Combine(Application.dataPath, "Datas");
-        string targetDir = Path.Combine(baseDir, folderName);
-        string fullPath = Path.Combine(targetDir, $"{fileName}.ink");
+        string targetDir = pathValid ? Path.Combine(baseDir, folderName) : "";            // ★ 금지 문자가 있으면 조립하지 않는다
+        string fullPath = pathValid ? Path.Combine(targetDir, $"{fileName}.ink") : "";    // ★
         string assetPath = $"Assets/Datas/{folderName}/{fileName}.ink";
 
+        EditorGUI.BeginDisabledGroup(!pathValid); // ★ 경로가 잘못되면 Ink 버튼 비활성화
         GUILayout.BeginHorizontal();
 
         // 1. Ink 파일 열기
@@ -88,6 +96,7 @@ public class EventMarkerEditor : Editor
             }
         }
         GUILayout.EndHorizontal();
+        EditorGUI.EndDisabledGroup(); // ★
 
         GUILayout.Space(5);
         GUIStyle style = new GUIStyle(EditorStyles.helpBox);
@@ -173,6 +182,26 @@ public class EventMarkerEditor : Editor
             marker.InkNodeName = knots[picked];
             EditorUtility.SetDirty(marker);
         }
+    }
+
+    // ★ 파일 이름에 쓸 수 없는 문자를 보이는 형태로 모아 돌려준다 (없으면 빈 문자열)
+    private static string FindInvalidPathChars(string name)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        var found = new System.Collections.Generic.List<string>();
+        foreach (char c in name)
+        {
+            if (System.Array.IndexOf(invalid, c) < 0) continue;
+            string shown = c switch
+            {
+                '\t' => "\\t",
+                '\n' => "\\n",
+                '\r' => "\\r",
+                _ => char.IsControl(c) ? $"\\u{(int)c:X4}" : c.ToString(),
+            };
+            if (!found.Contains(shown)) found.Add(shown);
+        }
+        return string.Join(" ", found);
     }
 
     // main.ink에 INCLUDE 구문 추가하는 함수

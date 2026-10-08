@@ -8,6 +8,6 @@ public static class SpeakerResolver
     public static Transform Resolve(string key)
     {
         if (key == "Player") return PlayerManager.Instance?.CurrentCharacter?.transform;
-        return Object.FindObjectsOfType<NPC>().FirstOrDefault(n => n.npcName == key)?.transform;
+        return Object.FindObjectsByType<NPC>(FindObjectsSortMode.None).FirstOrDefault(n => n.npcName == key)?.transform; // ★ Unity 6 — FindObjectsOfType는 사용 중단(Obsolete)
     }
 }

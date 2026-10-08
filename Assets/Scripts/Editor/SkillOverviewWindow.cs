@@ -40,7 +40,7 @@ public class SkillOverviewWindow : EditorWindow
             .Select(g => AssetDatabase.LoadAssetAtPath<SkillSequenceData>(AssetDatabase.GUIDToAssetPath(g)))
             .OrderBy(s => s.name).ToList();
 
-        _poolManager = FindObjectOfType<PoolManager>();
+        _poolManager = FindAnyObjectByType<PoolManager>(); // ★ Unity 6 — FindObjectOfType는 사용 중단(Obsolete)
     }
 
     private void OnGUI()

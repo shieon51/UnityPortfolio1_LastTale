@@ -3,6 +3,7 @@ using UnityEditor;
 using System.IO;
 using System.Collections.Generic;
 using UnityEditor.SceneManagement;
+using UnityEngine.SceneManagement; // ★ 맵 씬을 Scene 단위로 다루기 위해
 using System.Linq;
 using System;
 using System.Text; // 한글 깨짐 방지(UTF-8)
@@ -61,15 +62,16 @@ public class MapDataEditor : EditorWindow
     }
 
     // ★ [유령 데이터 방지] 씬 진입 시 좀비 마커 삭제 및 데이터 동기화
-    private void OnSceneOpened(UnityEngine.SceneManagement.Scene scene, OpenSceneMode mode)
+    private void OnSceneOpened(Scene scene, OpenSceneMode mode)
     {
-        ClearMarkers(); // 씬에 남아있는 좀비 마커 제거
+        // ★ 상주 씬 등 SceneTable에 없는 씬이 열릴 때는 마커를 건드리지 않는다
+        //    (예전에는 모든 씬의 마커를 지우고 활성 씬에 다시 불러와, 상주 씬에 마커가 생겼다)
+        if (!IsMapScene(scene)) return;
+
+        LoadMarkers(scene); // ★ 열린 맵 씬의 좀비 마커만 지우고 그 씬에 다시 불러온다
         DetectCurrentSceneID(); // 현재 씬 ID 갱신
 
-        // 필요하다면 자동으로 로드 (원치 않으면 주석 처리)
-        LoadMarkers(); 
-
-        Debug.Log($"[MapEditor] 씬 진입: {scene.name} (ID: {targetSceneID}) - 유령 마커 정리 완료");
+        Debug.Log($"[MapEditor] 씬 진입: {scene.name} (ID: {GetSceneIDByName(scene.name)}) - 유령 마커 정리 완료"); // ★ 열린 씬 기준 ID
     }
 
     private int GetBaseIdFor(EventMarkerType type) => type switch
@@ -104,16 +106,42 @@ public class MapDataEditor : EditorWindow
     // =================================================================================
     private void DrawMapEditorTab()
     {
+        Scene mapScene = FindMapScene(); // ★ 활성 씬 대신 열린 씬 중 SceneTable에 있는 씬을 기준으로 삼는다
+        DrawStrayMarkerWarning(mapScene); // ★ 상주 씬 등에 잘못 들어간 마커 안내
+
         GUILayout.Label("1. 씬 이동 & 설정", EditorStyles.boldLabel);
 
-        string currentSceneName = EditorSceneManager.GetActiveScene().name;
         string targetNameFromCSV = GetSceneNameByID(targetSceneID);
-        bool isMatch = (currentSceneName == targetNameFromCSV);
 
-        GUIStyle statusStyle = new GUIStyle(EditorStyles.label);
-        statusStyle.normal.textColor = isMatch ? Color.green : Color.red;
-        statusStyle.fontStyle = FontStyle.Bold;
-        GUILayout.Label($"현재 씬: {currentSceneName} / 타겟 ID({targetSceneID}): {targetNameFromCSV}", statusStyle);
+        if (!mapScene.IsValid())
+        {
+            // ★ 상주 씬만 열려 있는 경우 — 저장·불러오기·생성이 모두 막힌다
+            EditorGUILayout.HelpBox($"열린 씬 중 SceneTable.csv에 등록된 맵 씬이 없습니다. 이동할 Scene ID를 입력하고 '이동'을 누르세요. (타겟 ID({targetSceneID}): {targetNameFromCSV})", MessageType.Warning);
+        }
+        else
+        {
+            int mapID = GetSceneIDByName(mapScene.name);
+            bool isMatch = (mapID == targetSceneID);
+
+            GUIStyle statusStyle = new GUIStyle(EditorStyles.label);
+            statusStyle.normal.textColor = isMatch ? Color.green : Color.red;
+            statusStyle.fontStyle = FontStyle.Bold;
+            GUILayout.Label($"맵 씬: {mapScene.name} (ID {mapID}) / 타겟 ID({targetSceneID}): {targetNameFromCSV}", statusStyle); // ★ 활성 씬 이름 대신 맵 씬
+
+            if (!isMatch) EditorGUILayout.HelpBox("맵 씬과 타겟 ID가 다릅니다. 이동 시 저장 여부를 확인합니다.", MessageType.Warning);
+
+            // ★ 맵 씬이 여러 개 열려 있으면 어느 씬에 작업하는지 알린다
+            if (GetOpenMapScenes().Count > 1)
+                EditorGUILayout.HelpBox($"맵 씬이 2개 이상 열려 있습니다. 마커 작업은 '{mapScene.name}'에만 적용됩니다.", MessageType.Warning);
+
+            // ★ 활성 씬이 상주 씬이면, 하이어라키에서 직접 만든 오브젝트가 상주 씬에 생긴다
+            Scene activeScene = EditorSceneManager.GetActiveScene();
+            if (activeScene != mapScene)
+            {
+                EditorGUILayout.HelpBox($"활성 씬이 '{activeScene.name}'입니다. 직접 만드는 오브젝트는 활성 씬에 생깁니다.", MessageType.Warning);
+                if (GUILayout.Button($"'{mapScene.name}'을 활성 씬으로")) EditorSceneManager.SetActiveScene(mapScene);
+            }
+        }
 
         GUILayout.BeginHorizontal();
         targetSceneID = EditorGUILayout.IntField("이동할 Scene ID", targetSceneID);
@@ -124,8 +152,6 @@ public class MapDataEditor : EditorWindow
             TryOpenScene(targetSceneID);
         }
         GUILayout.EndHorizontal();
-
-        if (!isMatch) EditorGUILayout.HelpBox("현재 씬과 타겟 ID가 다릅니다. 이동 시 저장 여부를 확인합니다.", MessageType.Warning);
 
         markerPrefab = (GameObject)EditorGUILayout.ObjectField("Prefab", markerPrefab, typeof(GameObject), false);
 
@@ -149,29 +175,26 @@ public class MapDataEditor : EditorWindow
         GUILayout.Space(10);
         GUILayout.Label("4. 데이터 관리", EditorStyles.boldLabel);
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Load CSV", GUILayout.Height(40))) LoadMarkers();
+        if (GUILayout.Button("Load CSV", GUILayout.Height(40)))
+        {
+            if (TryGetMapScene(out Scene scene)) LoadMarkers(scene); // ★ 맵 씬의 ID로 불러온다 (입력칸 ID를 쓰면 다른 씬 마커가 섞였다)
+        }
 
-        // ★ [안전장치] 현재 씬 ID로 강제 저장
+        // ★ [안전장치] 맵 씬 ID로만 저장 — "입력된 ID로 저장" 대체 경로는 상주 씬 마커가 섞이는 통로라 없앴다
         if (GUILayout.Button("Save Current Scene", GUILayout.Height(40)))
         {
-            int realID = GetSceneIDByName(EditorSceneManager.GetActiveScene().name);
-            if (realID != -1)
+            if (TryGetMapScene(out Scene scene))
             {
-                SaveMarkers(realID);
-                targetSceneID = realID;
-            }
-            else
-            {
-                if (EditorUtility.DisplayDialog("경고", "SceneTable에 없는 씬입니다. 입력된 ID로 저장할까요?", "네", "아니오"))
-                    SaveMarkers(targetSceneID);
+                int realID = GetSceneIDByName(scene.name);
+                if (SaveMarkers(scene, realID)) targetSceneID = realID;
             }
         }
         GUILayout.EndHorizontal();
 
         GUILayout.Space(5);
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button("ID 재정렬")) AutoAssignIDs();
-        if (GUILayout.Button("전체 데이터 삭제")) ClearMarkers();
+        if (GUILayout.Button("ID 재정렬")) { if (TryGetMapScene(out Scene scene)) AutoAssignIDs(scene); } // ★ 맵 씬 한정
+        if (GUILayout.Button("전체 데이터 삭제")) { if (TryGetMapScene(out Scene scene)) ClearMarkers(scene); } // ★ 맵 씬 한정
         GUILayout.EndHorizontal();
 
         GUILayout.Space(10);
@@ -183,6 +206,10 @@ public class MapDataEditor : EditorWindow
                 " - 이동 시 저장 여부를 물어 데이터 손실/덮어쓰기를 방지합니다.\n" +
                 " - 씬 진입 시 '유령 마커'를 자동으로 청소합니다.\n" +
                 " - 저장 시 .csv 형식으로 백업되며 한글 깨짐(UTF-8 BOM)이 해결되었습니다.\n\n" +
+                " [상주 씬과 함께 쓰기]\n" + // ★ 상주 씬 + 맵 씬 작업 방식 설명
+                " - 열린 씬 중 SceneTable.csv에 있는 씬을 '맵 씬'으로 보고, 마커는 맵 씬에만 만들고 저장합니다.\n" +
+                " - 이동은 새 맵을 추가로 열고 옛 맵만 닫습니다. 상주 씬은 그대로 남습니다.\n" +
+                " - 맵 씬이 아닌 씬에 마커가 있으면 맨 위에 빨간 안내가 뜹니다.\n\n" +
                 " [NPC Schedule]\n" +
                 " - 상단 탭을 눌러 NPC들의 전체 동선을 확인할 수 있습니다."+
                 " [기본 사용법]\n" +
@@ -209,13 +236,13 @@ public class MapDataEditor : EditorWindow
         GUILayout.BeginHorizontal();
         bool prev = filterEnable;
         filterEnable = EditorGUILayout.Toggle("필터 적용", filterEnable);
-        if (prev != filterEnable) ApplyFilter();
+        if (prev != filterEnable) ApplyFilter(FindMapScene()); // ★ 맵 씬 한정
 
         if (filterEnable)
         {
             filterDay = EditorGUILayout.IntField("Day", filterDay);
             filterTime = EditorGUILayout.IntField("Time", filterTime);
-            if (GUILayout.Button("Apply")) ApplyFilter();
+            if (GUILayout.Button("Apply")) ApplyFilter(FindMapScene()); // ★ 맵 씬 한정
         }
         else
         {
@@ -224,8 +251,66 @@ public class MapDataEditor : EditorWindow
         GUILayout.EndHorizontal();
     }
 
+    // ★ 맵 씬이 아닌 씬(상주 씬 등)에 들어간 마커를 알리고, 맵 씬으로 옮기거나 지우게 한다
+    private void DrawStrayMarkerWarning(Scene mapScene)
+    {
+        var strays = GetStrayMarkers();
+        if (strays.Count == 0) return;
+
+        string where = string.Join(", ", strays.GroupBy(m => m.gameObject.scene.name).Select(g => $"{g.Key} {g.Count()}개"));
+        EditorGUILayout.HelpBox(
+            $"맵 씬이 아닌 씬에 이벤트 마커가 있습니다: {where}\n" +
+            "이 마커는 저장·불러오기에서 빠집니다. 맵 씬으로 옮기거나 삭제하세요.\n" +
+            "처리한 뒤 해당 씬을 저장(Ctrl+S)해야 씬 파일에 반영됩니다.", MessageType.Error);
+
+        GUILayout.BeginHorizontal();
+        using (new EditorGUI.DisabledScope(!mapScene.IsValid()))
+        {
+            string label = mapScene.IsValid() ? $"'{mapScene.name}'으로 옮기기" : "옮길 맵 씬 없음";
+            if (GUILayout.Button(label)) MoveStrayMarkers(strays, mapScene);
+        }
+        if (GUILayout.Button("삭제")) DeleteStrayMarkers(strays);
+        GUILayout.EndHorizontal();
+        GUILayout.Space(5);
+    }
+
+    // ★ 잘못 들어간 마커를 맵 씬으로 옮긴다. 같은 EventID가 이미 있으면 먼저 알린다 (Ctrl+Z로 되돌릴 수 있다)
+    private void MoveStrayMarkers(List<EventMarker> strays, Scene mapScene)
+    {
+        var existingIDs = new HashSet<int>(GetMarkersIn(mapScene).Select(m => m.EventID).Where(id => id != 0));
+        int dupCount = strays.Count(m => existingIDs.Contains(m.EventID));
+
+        string msg = $"마커 {strays.Count}개를 '{mapScene.name}'으로 옮깁니다.";
+        if (dupCount > 0)
+            msg += $"\n\n이 중 {dupCount}개는 맵 씬에 같은 EventID가 이미 있습니다. 옮기면 저장할 때 ID 중복으로 표시됩니다.\n같은 마커의 복사본이라면 '삭제'가 맞습니다.";
+        if (!EditorUtility.DisplayDialog("마커 옮기기", msg, "옮기기", "취소")) return;
+
+        foreach (var m in strays)
+        {
+            if (m == null) continue;
+            GameObject go = m.gameObject;
+            if (go.transform.parent != null) Undo.SetTransformParent(go.transform, null, "Move Stray Markers"); // 씬 이동은 루트 오브젝트만 가능
+            Undo.MoveGameObjectToScene(go, mapScene, "Move Stray Markers");
+        }
+        Debug.Log($"[MapEditor] 맵 씬 밖 마커 {strays.Count}개를 {mapScene.name}으로 옮김");
+    }
+
+    // ★ 잘못 들어간 마커를 지운다 (Ctrl+Z로 되돌릴 수 있다)
+    private void DeleteStrayMarkers(List<EventMarker> strays)
+    {
+        string where = string.Join(", ", strays.GroupBy(m => m.gameObject.scene.name).Select(g => $"{g.Key} {g.Count()}개"));
+        if (!EditorUtility.DisplayDialog("마커 삭제", $"맵 씬 밖의 마커를 삭제합니다: {where}\nCSV는 바뀌지 않습니다.", "삭제", "취소")) return;
+
+        foreach (var m in strays)
+        {
+            if (m == null) continue;
+            Undo.DestroyObjectImmediate(m.gameObject);
+        }
+        Debug.Log($"[MapEditor] 맵 씬 밖 마커 삭제: {where}");
+    }
+
     // =================================================================================
-    // [탭 2] NPC 스케줄표 
+    // [탭 2] NPC 스케줄표
     // =================================================================================
     private void DrawScheduleTab()
     {
@@ -323,48 +408,61 @@ public class MapDataEditor : EditorWindow
 
     private void TryOpenScene(int nextSceneID)
     {
-        // 1. 현재 씬 ID 파악
-        string currentSceneName = EditorSceneManager.GetActiveScene().name;
-        int currentID = GetSceneIDByName(currentSceneName);
+        // 1. 현재 맵 씬 파악 (★ 활성 씬은 상주 씬일 수 있어 맵 씬으로 판별)
+        Scene oldMap = FindMapScene();
+        int currentID = oldMap.IsValid() ? GetSceneIDByName(oldMap.name) : -1;
 
-        // 2. 변경사항이 있는지 검사 (Smart Check)
-        bool isDirty = IsCurrentSceneDirty(currentID);
-
-        // 3. 변경사항이 있을 때만 물어봄
-        if (isDirty)
+        // ★ 이미 그 맵에 있으면 활성 씬만 맞춘다
+        if (currentID == nextSceneID)
         {
-            int option = EditorUtility.DisplayDialogComplex("변경사항 감지",
-                $"현재 씬({currentSceneName})에 '저장되지 않은 변경사항'이 있습니다.\n저장하지 않고 이동하면 사라집니다.",
-                "저장 후 이동", "그냥 이동 (삭제됨)", "취소");
+            EditorSceneManager.SetActiveScene(oldMap);
+            return;
+        }
 
-            switch (option)
+        if (oldMap.IsValid())
+        {
+            // 2. 변경사항이 있는지 검사 (Smart Check)
+            bool isDirty = IsCurrentSceneDirty(oldMap, currentID);
+
+            // 3. 변경사항이 있을 때만 물어봄
+            if (isDirty)
             {
-                case 0: // 저장 후 이동
-                    if (currentID != -1) { SaveMarkers(currentID); ClearMarkers(); OpenSceneByID(nextSceneID); }
-                    else EditorUtility.DisplayDialog("오류", "현재 씬 ID를 알 수 없어 저장할 수 없습니다.", "확인");
-                    break;
-                case 1: // 그냥 이동
-                    ClearMarkers(); OpenSceneByID(nextSceneID);
-                    break;
-                case 2: return; // 취소
+                int option = EditorUtility.DisplayDialogComplex("변경사항 감지",
+                    $"현재 씬({oldMap.name})에 '저장되지 않은 변경사항'이 있습니다.\n저장하지 않고 이동하면 사라집니다.",
+                    "저장 후 이동", "그냥 이동 (삭제됨)", "취소");
+
+                switch (option)
+                {
+                    case 0: // 저장 후 이동
+                        if (!SaveMarkers(oldMap, currentID)) return; // ★ 검증 창에서 취소하면 이동도 멈춘다 (예전에는 저장 없이 이동했다)
+                        break;
+                    case 1: // 그냥 이동
+                        break;
+                    case 2: return; // 취소
+                }
+            }
+
+            // ★ 마커는 CSV가 원본이므로 씬에서 걷어낸 뒤, 마커 외 변경(타일 등)이 있으면 씬 저장 여부를 묻는다
+            //    Additive 씬 닫기(CloseScene)는 Single 열기와 마찬가지로 변경을 말없이 버리기 때문
+            ClearMarkers(oldMap);
+            if (oldMap.isDirty && !EditorSceneManager.SaveModifiedScenesIfUserWantsTo(new[] { oldMap }))
+            {
+                LoadMarkers(oldMap); // 취소 — 걷어낸 마커를 CSV에서 되살린다
+                return;
             }
         }
-        else
-        {
-            // 변경사항 없으면 묻지도 따지지도 않고 바로 이동
-            ClearMarkers();
-            OpenSceneByID(nextSceneID);
-        }
+
+        OpenSceneByID(nextSceneID, oldMap);
     }
 
     // 1. 현재 씬과 CSV 파일 내용 비교 함수
-    private bool IsCurrentSceneDirty(int sceneID)
+    private bool IsCurrentSceneDirty(Scene scene, int sceneID) // ★ 비교 대상을 맵 씬으로 한정
     {
         if (sceneID == -1) return false;
 
         // A. 현재 화면에 있는 마커들을 문자열 리스트로 변환
         List<string> currentMarkerData = new List<string>();
-        var markers = FindObjectsOfType<EventMarker>(true);
+        var markers = GetMarkersIn(scene); // ★ 열린 모든 씬 대신 맵 씬만
         foreach (var m in markers) SyncSummonPointsToData(m); // ★ 추가
         foreach (var m in markers)
         {
@@ -434,9 +532,10 @@ public class MapDataEditor : EditorWindow
         return $"{cols[0]},{cols[1]},{cols[2]},{cols[3]},{cols[4]},{cols[5]},{cols[6]},{cols[7]},{pX},{pY},{cols[10]},{autoTrigger},{maxCount},{exhausted},{summon},{despawn},{zoneW},{zoneH},{zoneOX},{zoneOY},{displayKey}";
     }
 
-    private void SaveMarkers(int saveAsID)
+    // ★ 저장 대상을 맵 씬으로 한정. 검증 창에서 취소하면 false를 돌려준다
+    private bool SaveMarkers(Scene scene, int saveAsID)
     {
-        var markersToCheck = FindObjectsOfType<EventMarker>(true);
+        var markersToCheck = GetMarkersIn(scene); // ★ 열린 모든 씬 대신 맵 씬만
         foreach (var m in markersToCheck) SyncSummonPointsToData(m); // ★ 검증 전에 먼저 동기화
 
         var problems = new List<string>();
@@ -471,16 +570,25 @@ public class MapDataEditor : EditorWindow
             }
         }
 
+        // ★ 검증 3 — 같은 EventID가 둘 이상 (복사·옮기기로 생긴 중복을 저장 전에 잡는다)
+        foreach (var g in markersToCheck.Where(m => m.EventID != 0).GroupBy(m => m.EventID).Where(g => g.Count() > 1))
+            problems.Add($"· [ID 중복] EventID {g.Key}가 {g.Count()}개: {string.Join(", ", g.Select(m => m.EventName))}");
+
+        // ★ 검증 4 — 맵 씬 밖(상주 씬 등)의 마커는 저장에서 빠진다
+        var strays = GetStrayMarkers();
+        if (strays.Count > 0)
+            problems.Add($"· [저장 제외] 맵 씬 밖에 마커 {strays.Count}개가 있습니다 ({string.Join(", ", strays.Select(m => m.gameObject.scene.name).Distinct())}). 이 마커는 저장되지 않습니다");
+
         if (problems.Count > 0)
         {
             bool proceed = EditorUtility.DisplayDialog("설정 확인 필요",
                 "다음 문제가 발견되었습니다:\n\n" + string.Join("\n", problems) + "\n\n그래도 저장할까요?",
                 "저장", "취소");
-            if (!proceed) return;
+            if (!proceed) return false; // ★
         }
 
         CreateBackup();
-        AutoAssignIDs();
+        AutoAssignIDs(scene); // ★ 맵 씬 한정
 
         List<string> allRows = new List<string>();
         string header = "EventID,EventName,IsAnytime,EventDay,StartTime,EndTime,NodeName,SceneID,PositionX,PositionY,TimeTaken,AutoTrigger,MaxTriggerCount,ExhaustedInkNode,SummonNPCs,DespawnAfterEvent,ZoneW,ZoneH,ZoneOffsetX,ZoneOffsetY,DisplayKey";
@@ -496,8 +604,7 @@ public class MapDataEditor : EditorWindow
             }
         }
 
-        var markers = FindObjectsOfType<EventMarker>(true);
-        foreach (var m in markers)
+        foreach (var m in markersToCheck) // ★ 맵 씬 마커만 저장
         {
             m.SceneID = saveAsID;
             string pX = m.transform.position.x.ToString("F2");
@@ -511,7 +618,8 @@ public class MapDataEditor : EditorWindow
 
         File.WriteAllLines(eventCsvPath, final.ToArray(), new UTF8Encoding(true)); // UTF-8 BOM
         AssetDatabase.Refresh();
-        Debug.Log($"[Save] Scene {saveAsID} 저장 완료.");
+        Debug.Log($"[Save] Scene {saveAsID} ({scene.name}) 저장 완료.");
+        return true;
     }
 
     private void CreateBackup()
@@ -522,9 +630,14 @@ public class MapDataEditor : EditorWindow
         File.WriteAllLines(f, File.ReadAllLines(eventCsvPath), new UTF8Encoding(true));
     }
 
-    private void LoadMarkers()
+    // ★ 대상 맵 씬을 받아, 그 씬의 ID로 걸러 그 씬에 마커를 만든다
+    private void LoadMarkers(Scene scene)
     {
-        ClearMarkers();
+        int sceneID = scene.IsValid() ? GetSceneIDByName(scene.name) : -1;
+        if (sceneID == -1) return; // ★ 맵 씬이 아니면 불러오지 않는다
+        if (markerPrefab == null) { Debug.LogWarning("[MapEditor] 마커 프리팹이 비어 있어 불러올 수 없습니다."); return; } // ★
+
+        ClearMarkers(scene); // ★ 이 씬의 마커만 지운다
         if (!File.Exists(eventCsvPath)) return;
         string[] lines = File.ReadAllLines(eventCsvPath);
 
@@ -532,9 +645,9 @@ public class MapDataEditor : EditorWindow
         {
             if (string.IsNullOrEmpty(lines[i])) continue;
             string[] cols = lines[i].Split(',');
-            if (int.Parse(cols[7]) != targetSceneID) continue;
+            if (int.Parse(cols[7]) != sceneID) continue; // ★ 입력칸 ID 대신 맵 씬 ID
 
-            GameObject go = (GameObject)PrefabUtility.InstantiatePrefab(markerPrefab);
+            GameObject go = (GameObject)PrefabUtility.InstantiatePrefab(markerPrefab, scene); // ★ 활성 씬이 아니라 맵 씬에 생성
             go.transform.position = new Vector3(float.Parse(cols[8]), float.Parse(cols[9]), 0);
             var m = go.GetComponent<EventMarker>();
             m.EventID = int.Parse(cols[0]);
@@ -573,25 +686,26 @@ public class MapDataEditor : EditorWindow
             m.markerType = GetTypeFromId(m.EventID);
             go.name = $"Marker_{m.EventID}_{m.EventName}";
         }
-        if (filterEnable) ApplyFilter();
+        if (filterEnable) ApplyFilter(scene); // ★
     }
 
-    private void ClearMarkers() { foreach (var m in FindObjectsOfType<EventMarker>(true)) DestroyImmediate(m.gameObject); }
+    private void ClearMarkers(Scene scene) { foreach (var m in GetMarkersIn(scene)) if (m != null) DestroyImmediate(m.gameObject); } // ★ 맵 씬 한정 (예전에는 상주 씬 마커까지 지웠다)
 
     private void CreateNewMarker(EventMarkerType type)
     {
         if (markerPrefab == null) return;
+        if (!TryGetMapScene(out Scene mapScene)) return; // ★ 맵 씬이 없으면 만들지 않는다
         SceneView view = SceneView.lastActiveSceneView;
         Vector3 spawnPos = view ? view.camera.transform.position : Vector3.zero; spawnPos.z = 0;
         float x = Mathf.Round(spawnPos.x / gridSize) * gridSize;
         float y = Mathf.Round(spawnPos.y / gridSize) * gridSize;
-        GameObject go = (GameObject)PrefabUtility.InstantiatePrefab(markerPrefab);
+        GameObject go = (GameObject)PrefabUtility.InstantiatePrefab(markerPrefab, mapScene); // ★ 활성 씬(상주 씬)이 아니라 맵 씬에 생성
         go.transform.position = new Vector3(x, y, 0);
 
         var m = go.GetComponent<EventMarker>();
-        m.markerType = type; 
-        m.EventID = 0; 
-        m.SceneID = targetSceneID;
+        m.markerType = type;
+        m.EventID = 0;
+        m.SceneID = GetSceneIDByName(mapScene.name); // ★ 입력칸 ID 대신 실제로 놓인 맵 씬의 ID
         m.EventName = type switch
         {
             EventMarkerType.Normal_NPC => "NPC",
@@ -601,10 +715,11 @@ public class MapDataEditor : EditorWindow
             _ => "Event",
         };
         if (type == EventMarkerType.Cutscene) m.AutoTrigger = true; // 연출은 보통 자동 발동
+        Undo.RegisterCreatedObjectUndo(go, "Create Event Marker"); // ★ 생성도 Ctrl+Z로 되돌릴 수 있게
         Selection.activeGameObject = go;
     }
 
-    private void AutoAssignIDs()
+    private void AutoAssignIDs(Scene scene) // ★ 맵 씬 한정
     {
         HashSet<int> used = new HashSet<int>();
         if (File.Exists(eventCsvPath))
@@ -614,7 +729,7 @@ public class MapDataEditor : EditorWindow
                 if (!string.IsNullOrEmpty(lines[i])) used.Add(int.Parse(lines[i].Split(',')[0]));
         }
 
-        foreach (var m in FindObjectsOfType<EventMarker>(true))
+        foreach (var m in GetMarkersIn(scene)) // ★
         {
             if (m.EventID != 0) continue;
             int newID = GetBaseIdFor(m.markerType);
@@ -626,19 +741,106 @@ public class MapDataEditor : EditorWindow
         }
     }
 
-    private void SnapAllMarkers() { foreach (var m in FindObjectsOfType<EventMarker>(true)) { m.transform.position = new Vector3(Mathf.Round(m.transform.position.x / gridSize) * gridSize, Mathf.Round(m.transform.position.y / gridSize) * gridSize, 0); } }
-    private void ApplyFilter() { foreach (var m in FindObjectsOfType<EventMarker>(true)) m.gameObject.SetActive(m.IsAnytime || (m.Day == filterDay && filterTime >= m.StartTime && filterTime < m.EndTime)); }
-    private void ShowAllMarkers() { foreach (var m in FindObjectsOfType<EventMarker>(true)) m.gameObject.SetActive(true); }
+    // ★ 세 함수 모두 열린 모든 씬 대신 맵 씬의 마커만 다룬다
+    private void SnapAllMarkers() { foreach (var m in GetMarkersIn(FindMapScene())) { m.transform.position = new Vector3(Mathf.Round(m.transform.position.x / gridSize) * gridSize, Mathf.Round(m.transform.position.y / gridSize) * gridSize, 0); } }
+    private void ApplyFilter(Scene scene) { foreach (var m in GetMarkersIn(scene)) m.gameObject.SetActive(m.IsAnytime || (m.Day == filterDay && filterTime >= m.StartTime && filterTime < m.EndTime)); }
+    private void ShowAllMarkers() { foreach (var m in GetMarkersIn(FindMapScene())) m.gameObject.SetActive(true); }
+
+    // =================================================================================
+    // ★ 맵 씬 판별 — 상주 씬(Persistent Scene)과 맵 씬을 함께 열어 두고 작업하기 때문에
+    //    활성 씬 대신 "열린 씬 중 SceneTable.csv에 등록된 씬"을 맵 씬으로 본다
+    // =================================================================================
+    private bool IsMapScene(Scene s) => s.IsValid() && s.isLoaded && GetSceneIDByName(s.name) != -1;
+
+    private List<Scene> GetOpenMapScenes()
+    {
+        var list = new List<Scene>();
+        for (int i = 0; i < EditorSceneManager.sceneCount; i++)
+        {
+            Scene s = EditorSceneManager.GetSceneAt(i);
+            if (IsMapScene(s)) list.Add(s);
+        }
+        return list;
+    }
+
+    // 활성 씬이 맵 씬이면 그것을, 아니면 처음 찾은 맵 씬을 돌려준다. 없으면 default(IsValid() == false)
+    private Scene FindMapScene()
+    {
+        Scene active = EditorSceneManager.GetActiveScene();
+        if (IsMapScene(active)) return active;
+        var maps = GetOpenMapScenes();
+        return maps.Count > 0 ? maps[0] : default;
+    }
+
+    // 맵 씬이 없으면 안내 창을 띄우고 false
+    private bool TryGetMapScene(out Scene scene)
+    {
+        scene = FindMapScene();
+        if (scene.IsValid()) return true;
+        EditorUtility.DisplayDialog("맵 씬 없음", "열린 씬 중 SceneTable.csv에 등록된 맵 씬이 없습니다.\n맵 씬을 열거나, 새 맵이면 SceneTable.csv에 먼저 등록하세요.", "확인");
+        return false;
+    }
+
+    // 한 씬 안의 마커만 모은다 (비활성 포함)
+    private List<EventMarker> GetMarkersIn(Scene scene)
+    {
+        var list = new List<EventMarker>();
+        if (!scene.IsValid() || !scene.isLoaded) return list;
+        foreach (var root in scene.GetRootGameObjects())
+            list.AddRange(root.GetComponentsInChildren<EventMarker>(true));
+        return list;
+    }
+
+    // 맵 씬이 아닌 씬(상주 씬 등)에 들어간 마커
+    private List<EventMarker> GetStrayMarkers()
+    {
+        var list = new List<EventMarker>();
+        for (int i = 0; i < EditorSceneManager.sceneCount; i++)
+        {
+            Scene s = EditorSceneManager.GetSceneAt(i);
+            if (!s.isLoaded || IsMapScene(s)) continue;
+            list.AddRange(GetMarkersIn(s));
+        }
+        return list;
+    }
 
     // 헬퍼 함수
-    private void OpenSceneByID(int id)
+    // ★ 새 맵을 Additive로 열고 활성 씬으로 지정한 뒤 옛 맵만 닫는다 — 상주 씬은 그대로 남는다
+    //    (예전에는 Single 모드라 상주 씬까지 모두 닫혔다)
+    private void OpenSceneByID(int id, Scene oldMap)
     {
         string tName = GetSceneNameByID(id);
-        if (tName != "Unknown")
+        if (tName == "Unknown")
         {
-            var guids = AssetDatabase.FindAssets($"{tName} t:Scene");
-            if (guids.Length > 0) { EditorSceneManager.OpenScene(AssetDatabase.GUIDToAssetPath(guids[0])); targetSceneID = id; }
+            EditorUtility.DisplayDialog("이동 불가", $"SceneTable.csv에 ID {id}가 없습니다.", "확인"); // ★
+            return;
         }
+
+        // 이미 열려 있으면 새로 열지 않는다
+        Scene opened = default;
+        for (int i = 0; i < EditorSceneManager.sceneCount; i++)
+        {
+            Scene s = EditorSceneManager.GetSceneAt(i);
+            if (s.isLoaded && s.name == tName) { opened = s; break; }
+        }
+
+        if (!opened.IsValid())
+        {
+            // ★ FindAssets는 이름 일부만 맞아도 찾으므로 파일 이름이 정확히 같은 씬을 고른다
+            string path = AssetDatabase.FindAssets($"{tName} t:Scene")
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .FirstOrDefault(p => Path.GetFileNameWithoutExtension(p) == tName);
+            if (string.IsNullOrEmpty(path))
+            {
+                EditorUtility.DisplayDialog("이동 불가", $"'{tName}' 씬 파일을 찾을 수 없습니다.", "확인");
+                return;
+            }
+            opened = EditorSceneManager.OpenScene(path, OpenSceneMode.Additive); // OnSceneOpened가 마커를 불러온다
+        }
+
+        EditorSceneManager.SetActiveScene(opened);
+        if (oldMap.IsValid() && oldMap != opened) EditorSceneManager.CloseScene(oldMap, true);
+        targetSceneID = id;
     }
     private string GetSceneNameByID(int id)
     {
@@ -654,7 +856,7 @@ public class MapDataEditor : EditorWindow
         for (int i = 1; i < lines.Length; i++) { var c = lines[i].Split(','); if (c.Length > 1 && c[1].Trim() == name.Trim()) return int.Parse(c[0]); }
         return -1;
     }
-    private void DetectCurrentSceneID() { int id = GetSceneIDByName(EditorSceneManager.GetActiveScene().name); if (id != -1) targetSceneID = id; }
+    private void DetectCurrentSceneID() { Scene map = FindMapScene(); if (map.IsValid()) targetSceneID = GetSceneIDByName(map.name); } // ★ 활성 씬 대신 맵 씬
 
     class ScheduleItem { public string Name; public int Day; public int Start; public int End; public int SceneID; public Vector2 Pos; public bool IsCutscene; }
 
@@ -687,20 +889,35 @@ public class MapDataEditor : EditorWindow
             EditorGUILayout.HelpBox("Play 모드로 실행해서 원하는 위치로 걸어간 뒤 저장하는 걸 추천해.", MessageType.Info);
         }
 
-        var marker = FindObjectOfType<StartPositionMarker>();
+        // ★ 시작 위치 마커도 맵 씬 안에서만 찾는다 (FindObjectOfType은 상주 씬까지 훑었다)
+        Scene mapScene = FindMapScene();
+        StartPositionMarker marker = null;
+        if (mapScene.IsValid())
+        {
+            foreach (var root in mapScene.GetRootGameObjects())
+            {
+                marker = root.GetComponentInChildren<StartPositionMarker>(true);
+                if (marker != null) break;
+            }
+        }
+
         if (marker == null)
         {
             if (GUILayout.Button("씬에 시작 위치 마커 배치"))
             {
-                var go = new GameObject("StartPositionMarker");
-                go.transform.position = new Vector3(startConfig.startPosition.x, startConfig.startPosition.y, 0);
-                go.AddComponent<StartPositionMarker>();
-                Selection.activeGameObject = go;
+                if (TryGetMapScene(out Scene scene)) // ★ 맵 씬이 없으면 배치하지 않는다
+                {
+                    var go = new GameObject("StartPositionMarker");
+                    SceneManager.MoveGameObjectToScene(go, scene); // ★ 새 오브젝트는 활성 씬에 생기므로 맵 씬으로 옮긴다
+                    go.transform.position = new Vector3(startConfig.startPosition.x, startConfig.startPosition.y, 0);
+                    go.AddComponent<StartPositionMarker>();
+                    Selection.activeGameObject = go;
+                }
             }
         }
         else if (GUILayout.Button("마커 위치를 시작 위치로 저장"))
         {
-            int realID = GetSceneIDByName(EditorSceneManager.GetActiveScene().name);
+            int realID = GetSceneIDByName(marker.gameObject.scene.name); // ★ 마커가 놓인 맵 씬의 ID
             if (realID == -1)
                 EditorUtility.DisplayDialog("경고", "지금 열려있는 씬이 SceneTable.csv에 등록된 맵이 아닙니다. 실제 맵 씬을 열어서 마커를 배치해주세요.", "확인");
             else
