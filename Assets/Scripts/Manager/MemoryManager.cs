@@ -38,9 +38,15 @@ public class MemoryManager : Singleton<MemoryManager>, IRecordable   // ★ 기�
         LoadRegistry();
         LoadTopicRegistry();   // ★ 추가 — 주제는 지금까지 런타임에 로드되지 않았다
         RecordSystem.Register(this);   // ★ 범용 스냅샷에 포함
+        _acquiredState = new AcquiredState(this);
+        RecordSystem.Register(_acquiredState);   // ★ 2-B — 기억(의지 층위)은 어댑터로 따로
     }
 
-    private void OnDestroy() => RecordSystem.Unregister(this);   // ★
+    private void OnDestroy()
+    {
+        RecordSystem.Unregister(this);   // ★
+        RecordSystem.Unregister(_acquiredState);
+    }
 
     private void LoadRegistry()
     {
@@ -194,9 +200,10 @@ public class MemoryManager : Singleton<MemoryManager>, IRecordable   // ★ 기�
     }
 
     // ---------------- IRecordable (★ 기록 시스템 2단계) ----------------
-    // 카운터(세계)만 담는다. 획득한 기억은 소라의 의지 층위라 회귀로 되돌리지 않으므로 아직 넣지 않는다
-    // (한 클래스에 두 층위가 섞인 경우의 처리 방식은 기록시스템_설계 13-2 [미결])
+    // 이 클래스 자신은 카운터(세계)만 담는다. 획득한 기억(의지)은 아래 AcquiredState 어댑터가 맡는다
+    // ★ 2-B — 한 클래스에 두 층위가 있으면 어댑터로 나눈다 (기록시스템_설계 13-2-5 [확정])
     private const string StateKeyCounters = "counters";   // 덩어리 안의 키. 바꾸지 않는다
+    private const string StateKeyAcquired = "acquired";
 
     public string RecordId => RecordIds.MemoryCounters;
     public RecordLayer Layer => RecordLayer.World;
@@ -204,6 +211,23 @@ public class MemoryManager : Singleton<MemoryManager>, IRecordable   // ★ 기�
 
     public void WriteState(StateWriter writer) => writer.WriteIntMap(StateKeyCounters, _counters);
     public void ReadState(StateReader reader, int version) => RestoreCounters(reader.ReadIntMap(StateKeyCounters));
+
+    private AcquiredState _acquiredState;
+
+    // ★ 획득한 기억 — 소라의 의지 층위. 회귀로 되돌리지 않고 세이브에만 쓰인다
+    private class AcquiredState : IRecordable
+    {
+        private readonly MemoryManager _owner;
+        public AcquiredState(MemoryManager owner) { _owner = owner; }
+
+        public string RecordId => RecordIds.MemoryAcquired;
+        public RecordLayer Layer => RecordLayer.Will;
+        public int StateVersion => 1;
+
+        // 획득 순서를 보존한다 (기록장·디버그 표시에 순서가 쓰인다)
+        public void WriteState(StateWriter writer) => writer.WriteStringList(StateKeyAcquired, _owner._acquiredOrder);
+        public void ReadState(StateReader reader, int version) => _owner.RestoreAcquired(reader.ReadStringList(StateKeyAcquired));
+    }
 
     // ---------------- 기록장 조회 ----------------
 

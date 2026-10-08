@@ -31,6 +31,9 @@ public enum RecordType
     TimeAdvance,        // 시각 변화 (값은 절대 시각, 시간 단위)
     SceneEnter,         // 씬 진입 (payload: 위치)
     VitalsCheckpoint,   // 행동 단위가 끝날 때의 체력·마나 (key: 캐릭터, before: HP, after: MP, payload: "최대HP,최대MP")
+
+    // ---- 기록 시스템 2단계 ----
+    DebugEdit,          // ★ 디버그 도구의 직접 수정 (key: 대상, source: "debug"). 기록장에는 표시하지 않는다
 }
 
 // ★ 기록이 상태에 하는 일. 복원할 때 다시 적용할 수 있는지를 가른다 (기록 시스템 설계 5-2)
@@ -50,6 +53,8 @@ public static class RecordKeys
     public const string TimeCrystal = "time_crystal";
     public const string Exp = "exp";
     public const string Time = "time";
+    public const string LoopCount = "loop_count";     // ★ DebugEdit 대상
+    public const string DebugSource = "debug";        // ★ 디버그 도구가 남긴 기록의 source
 }
 
 [Serializable]
@@ -113,7 +118,7 @@ public class PlayerActionLog : Singleton<PlayerActionLog>
             or RecordType.StatGain or RecordType.MentalChange or RecordType.FatigueChange
             or RecordType.TimeCrystalChange or RecordType.PersonalBondChange
             or RecordType.ExpChange or RecordType.TimeAdvance or RecordType.SceneEnter
-            or RecordType.VitalsCheckpoint => ChangeOp.Set,
+            or RecordType.VitalsCheckpoint or RecordType.DebugEdit => ChangeOp.Set,   // ★ DebugEdit
 
         _ => ChangeOp.Event,   // EventCompleted, Loop, MemoryHeard, BattleResult, Travel, Hunt
     };

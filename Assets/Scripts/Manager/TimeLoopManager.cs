@@ -368,18 +368,33 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         }
         else                                                        // [경로 3] 닻 없음 — Day 1부터
         {
-            MemoryManager.Instance.ClearAllCounters();
-            NPCManager.Instance.ResetAffectionForNewLoop();
-            PlayerActionLog.Instance.ClearAll();
-            PlayerActionLog.Instance.Record(RecordType.Loop, "full_reset");
-
-            sora.ResetBodyForNewLoop();                             // ★ 영혼 레벨은 유지
-            PlayerActionLog.Instance?.RecordVitals();   // ★ 회귀 직후의 체력·마나
-
-            var cfg = SceneLoader.Instance.startConfig;
-            TimeManager.Instance.ResetToDay1();
-            LoadScene(cfg.startSceneID, cfg.startPosition, 1, 0);
+            StartNewLoopFromDay1(sora, null);   // ★ 2-B — 디버그 "다음 회차로"와 같은 절차를 쓰도록 함수로 뺐다
         }
+    }
+
+    // ★ 2-B — 경로 3의 "Day 1부터 새 회차" 절차. 내용은 기존 경로 3 그대로다.
+    //   디버그 도구도 이 함수를 불러 실제 규칙과 어긋나지 않게 한다. 회차 증가는 부르는 쪽에서 한다
+    //   source: 기록의 출처 (실제 게임은 null, 디버그 도구는 RecordKeys.DebugSource)
+    public void StartNewLoopFromDay1(SoraStats sora, string source)
+    {
+        if (sora == null) return;
+
+        // ★ Day 1은 모든 닻보다 과거다 — "과거로 가면 뒤의 닻은 사라진다"(기획서 7-5).
+        //   실제 경로 3은 닻이 없을 때만 오므로 여기서 지워지는 닻은 디버그로 왔을 때뿐이다
+        for (int i = _anchors.Count - 1; i >= 0; i--)
+            DiscardAnchor(_anchors[i], RecordType.AnchorVanished, 0);
+
+        MemoryManager.Instance.ClearAllCounters();
+        NPCManager.Instance.ResetAffectionForNewLoop();
+        PlayerActionLog.Instance.ClearAll();
+        PlayerActionLog.Instance.Record(RecordType.Loop, "full_reset", source: source);
+
+        sora.ResetBodyForNewLoop();                             // ★ 영혼 레벨은 유지
+        PlayerActionLog.Instance?.RecordVitals();   // ★ 회귀 직후의 체력·마나
+
+        var cfg = SceneLoader.Instance.startConfig;
+        TimeManager.Instance.ResetToDay1();
+        LoadScene(cfg.startSceneID, cfg.startPosition, 1, 0);
     }
 
     private void LoadScene(int sceneID, Vector2 pos, int day, int hour)

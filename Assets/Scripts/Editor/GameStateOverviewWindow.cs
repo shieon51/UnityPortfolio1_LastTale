@@ -67,7 +67,7 @@ public class GameStateOverviewWindow : EditorWindow
         {
             EditorGUI.BeginChangeCheck();
             int newLoop = EditorGUILayout.IntField("회귀 횟수", sora.loopCount);
-            if (EditorGUI.EndChangeCheck()) sora.loopCount = newLoop;
+            if (EditorGUI.EndChangeCheck()) DebugLoopTools.SetLoopCount(newLoop);   // ★ 2-B — 직접 대입 대신 기록을 남기는 경로
             EditorGUILayout.LabelField($"피로도: {sora.currentFatigue}/{sora.maxFatigue}   정신력: {sora.currentMental}/{sora.maxMental}   요정화: {sora.fairyStage}단계");
             EditorGUILayout.LabelField($"시간결정체: {sora.timeCrystals}개");
             EditorGUILayout.LabelField($"영혼 레벨: {sora.highestLevelReached}   " +

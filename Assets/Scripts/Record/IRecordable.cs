@@ -23,4 +23,10 @@ public static class RecordIds
     public const string NpcSuspicion = "npc.suspicion";
     public const string MemoryCounters = "memory.counters";
     public const string SoraBody = "sora.body";
+
+    // ★ 2-B — 한 클래스에 두 층위가 있으면 어댑터로 덩어리를 나눈다 (기록시스템_설계 13-2-5)
+    public const string MemoryAcquired = "memory.acquired";   // MemoryManager 안 어댑터 (Will)
+    public const string SoraWill = "sora.will";               // SoraStats 안 어댑터 (Will)
+    public const string SoraLoop = "sora.loop";               // SoraStats 안 어댑터 (Player)
+    public const string VisitedNodes = "player.visited_nodes";
 }

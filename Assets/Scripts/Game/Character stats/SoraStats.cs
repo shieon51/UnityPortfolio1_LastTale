@@ -159,9 +159,18 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         _baseAgility = agility.BaseValue;
 
         RecordSystem.Register(this, replaceExisting: true);   // ★ 소라는 씬마다 새로 생길 수 있어 최신 것으로 교체
+        _willState = new WillState(this);                       // ★ 2-B — 의지·플레이어 층위는 어댑터로 따로
+        _loopState = new LoopState(this);
+        RecordSystem.Register(_willState, replaceExisting: true);
+        RecordSystem.Register(_loopState, replaceExisting: true);
     }
 
-    private void OnDestroy() => RecordSystem.Unregister(this);   // ★
+    private void OnDestroy()
+    {
+        RecordSystem.Unregister(this);   // ★
+        RecordSystem.Unregister(_willState);
+        RecordSystem.Unregister(_loopState);
+    }
 
     // 플레이어가 소라를 조종하기 시작할 때 호출됨 (빙의)
     public override void OnPossessed()
@@ -421,8 +430,11 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     }
 
     // ---------------- IRecordable (★ 기록 시스템 2단계) ----------------
-    // 몸 층위: TimeAnchorSnapshot의 몸 필드와 같은 범위. 현재 HP·MP는 회귀 경로마다 따로 정하므로 담지 않는다
+    // 이 클래스 자신은 몸 층위. 의지 층위는 WillState, 플레이어 층위(회차 수)는 LoopState 어댑터가 맡는다
+    // 몸: TimeAnchorSnapshot의 몸 필드 + 피로도(공·방·민과 같은 취급, 2-B 결정). 현재 HP·MP는 회귀 경로마다 따로 정하므로 담지 않는다
+    // ※ 피로도는 옛 복원(RestoreBodyFromAnchor·ResetBodyForNewLoop)에 없어, 2-C에서 복원을 교체해야 실제로 되돌아간다
     // 덩어리 안의 키. 바꾸지 않는다
+    private const string StateKeyFatigue = "fatigue";
     private const string StateKeyLevel = "level";
     private const string StateKeyMaxHealth = "max_health";
     private const string StateKeyMaxMana = "max_mana";
@@ -446,6 +458,7 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         writer.WriteInt(StateKeyAttack, attack.BaseValue);
         writer.WriteInt(StateKeyDefense, defense.BaseValue);
         writer.WriteInt(StateKeyAgility, agility.BaseValue);
+        writer.WriteInt(StateKeyFatigue, currentFatigue);   // ★ 2-B
     }
 
     // ★ RestoreBodyFromAnchor와 같은 대입·갱신 경로. 닻 복원을 교체하면 그 함수는 이것으로 대체된다
@@ -460,8 +473,79 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         attack.SetBaseValue(reader.ReadInt(StateKeyAttack, attack.BaseValue));
         defense.SetBaseValue(reader.ReadInt(StateKeyDefense, defense.BaseValue));
         agility.SetBaseValue(reader.ReadInt(StateKeyAgility, agility.BaseValue));
+        currentFatigue = Mathf.Clamp(reader.ReadInt(StateKeyFatigue, currentFatigue), 0, maxFatigue);   // ★ 2-B
 
         CallProgressionChanged();
+        CallSpecialStatChanged();   // ★ 피로도 HUD 갱신
+    }
+
+    private WillState _willState;
+    private LoopState _loopState;
+
+    // ★ 2-B — 소라의 의지 층위. 회귀로 되돌리지 않고 세이브에만 쓰인다
+    private class WillState : IRecordable
+    {
+        private const string KeyMental = "mental";
+        private const string KeyPersonalBond = "personal_bond";
+        private const string KeyUsedBondKeys = "used_bond_keys";
+        private const string KeySoulLevel = "soul_level";
+        private const string KeyTimeCrystals = "time_crystals";
+
+        private readonly SoraStats _owner;
+        public WillState(SoraStats owner) { _owner = owner; }
+
+        public string RecordId => RecordIds.SoraWill;
+        public RecordLayer Layer => RecordLayer.Will;
+        public int StateVersion => 1;
+
+        public void WriteState(StateWriter writer)
+        {
+            writer.WriteInt(KeyMental, _owner.currentMental);
+            writer.WriteIntMap(KeyPersonalBond, _owner._soraPersonalBond);
+            writer.WriteStringList(KeyUsedBondKeys, _owner._usedBondKeys);
+            writer.WriteInt(KeySoulLevel, _owner.highestLevelReached);
+            writer.WriteInt(KeyTimeCrystals, _owner.timeCrystals);
+        }
+
+        public void ReadState(StateReader reader, int version)
+        {
+            int beforeMental = _owner.currentMental;
+            _owner.currentMental = Mathf.Clamp(reader.ReadInt(KeyMental, beforeMental), 0, _owner.maxMental);
+            _owner.RestorePersonalBond(reader.ReadIntMap(KeyPersonalBond));
+            _owner._usedBondKeys.Clear();
+            foreach (var key in reader.ReadStringList(KeyUsedBondKeys)) _owner._usedBondKeys.Add(key);
+            _owner.highestLevelReached = reader.ReadInt(KeySoulLevel, _owner.highestLevelReached);
+            _owner.timeCrystals = reader.ReadInt(KeyTimeCrystals, _owner.timeCrystals);
+
+            // 하나씩 기록하지 않는다 — 복원은 회귀·불러오기 기록 하나로 남는다. HUD만 갱신한다
+            _owner.CallSpecialStatChanged();
+            if (_owner.currentMental != beforeMental) _owner.OnMentalChanged?.Invoke(beforeMental, _owner.currentMental);
+        }
+    }
+
+    // ★ 2-B — 플레이어 층위: 회차 수. 전적이므로 어떤 경로에서도 절대 되돌리지 않는다
+    private class LoopState : IRecordable
+    {
+        private const string KeyLoopCount = "loop_count";
+
+        private readonly SoraStats _owner;
+        public LoopState(SoraStats owner) { _owner = owner; }
+
+        public string RecordId => RecordIds.SoraLoop;
+        public RecordLayer Layer => RecordLayer.Player;
+        public int StateVersion => 1;
+
+        public void WriteState(StateWriter writer) => writer.WriteInt(KeyLoopCount, _owner.loopCount);
+        public void ReadState(StateReader reader, int version) => _owner.loopCount = reader.ReadInt(KeyLoopCount, _owner.loopCount);
+    }
+
+    // ★ 2-B — 디버그 도구 전용. 회차 수를 직접 바꾸되 기록을 남긴다 (CLAUDE.md: 디버그 수정도 기록)
+    public void SetLoopCountForDebug(int value)
+    {
+        int before = loopCount;
+        if (before == value) return;
+        loopCount = value;
+        PlayerActionLog.Instance?.Record(RecordType.DebugEdit, RecordKeys.LoopCount, before, value, source: RecordKeys.DebugSource);
     }
 
     public void ResetProgression() // 디버그 하드리셋 전용
