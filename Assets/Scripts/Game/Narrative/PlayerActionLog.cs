@@ -30,6 +30,7 @@ public enum RecordType
     AnchorVanished,     // 과거로 돌아가며 사라진 닻
     TimeAdvance,        // 시각 변화 (값은 절대 시각, 시간 단위)
     SceneEnter,         // 씬 진입 (payload: 위치)
+    VitalsCheckpoint,   // 행동 단위가 끝날 때의 체력·마나 (key: 캐릭터, before: HP, after: MP, payload: "최대HP,최대MP")
 }
 
 // ★ 기록이 상태에 하는 일. 복원할 때 다시 적용할 수 있는지를 가른다 (기록 시스템 설계 5-2)
@@ -111,12 +112,21 @@ public class PlayerActionLog : Singleton<PlayerActionLog>
             or RecordType.TrustEarned or RecordType.LineCrossed or RecordType.LevelUp
             or RecordType.StatGain or RecordType.MentalChange or RecordType.FatigueChange
             or RecordType.TimeCrystalChange or RecordType.PersonalBondChange
-            or RecordType.ExpChange or RecordType.TimeAdvance or RecordType.SceneEnter => ChangeOp.Set,
+            or RecordType.ExpChange or RecordType.TimeAdvance or RecordType.SceneEnter
+            or RecordType.VitalsCheckpoint => ChangeOp.Set,
 
         _ => ChangeOp.Event,   // EventCompleted, Loop, MemoryHeard, BattleResult, Travel, Hunt
     };
 
     // ---------------- 표시용 조회 ----------------
+    // ★ 행동 단위(이벤트, 전투, 회귀)가 끝날 때의 체력·마나. 타격마다 남기지 않는다 (기록 시스템 설계 6-1)
+    public void RecordVitals()
+    {
+        var c = PlayerManager.Instance?.CurrentCharacter;
+        if (c == null) return;
+        Record(RecordType.VitalsCheckpoint, c.GetType().Name, c.currentHealth, c.currentMana,
+            payload: string.Format(CultureInfo.InvariantCulture, "{0},{1}", c.maxHealth, c.maxMana));
+    }
 
     // ★ 장소 표시 이름은 기록 시점이 아니라 표시 시점에 조회한다
     public static string ResolvePlaceName(ActionRecord r)

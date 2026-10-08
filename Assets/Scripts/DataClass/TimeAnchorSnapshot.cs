@@ -3,7 +3,7 @@ using UnityEngine;
 
 // "시간의 닻"을 내린 시점의 스냅샷.
 // 여기 담기는 것은 "세계 쪽 상태"와 "그 시점의 몸 상태"다.
-// 소라의 혼에 속한 것(기억, 개인친밀도, 스킬 숙련도)은 회귀해도 유지되므로 담지 않는다.
+// 소라의 '의지'에 속한 것(기억, 개인친밀도, 스킬 숙련도)은 회귀해도 유지되므로 담지 않는다.
 public class TimeAnchorSnapshot
 {
     public int anchorId;   // ★ 누적 닻 번호 (기획서 6-6-4). 거둔 닻도 번호를 쓴다
@@ -32,5 +32,5 @@ public class TimeAnchorSnapshot
     public List<ActionRecord> actionLog;       // 이번 흐름의 행적
 
     // ※ soraPersonalBond는 제거했다.
-    //   개인친밀도는 소라의 혼에 속해 회귀해도 유지되므로 스냅샷 대상이 아니다 (기획서 8장)
+    //   개인친밀도는 소라의 '의지'에 속해 회귀해도 유지되므로 스냅샷 대상이 아니다 (기획서 8장)
 }

@@ -412,14 +412,15 @@ public class NPCManager : Singleton<NPCManager>
             PlayerManager.Instance.CurrentCharacter.Heal(1); // ★ 훈련모드는 봐주는 대련 — 패배해도 완전히 죽지 않고 1HP로
         }
 
-        // ★ 기록장 전투 태그 — "훈련모드(승) 3분 12초"
+        // ★ 기록장 전투 태그 — 문구를 조립하지 않고 난이도·승패·경과 초를 남긴다 (표시는 FlowLogBuilder가)
         float elapsed = BattleTimerDisplay.Instance != null ? BattleTimerDisplay.Instance.Elapsed : 0f;
-        string tier = bossStats is Liel_AI liel2 ? liel2.currentDifficultyTier.ToString() : "";
-        string resultText = $"{tier}({(win ? "승" : "패")}) {Mathf.FloorToInt(elapsed / 60f)}분 {Mathf.FloorToInt(elapsed % 60f)}초";
-        PlayerActionLog.Instance?.Record(RecordType.BattleResult, resultText, 0, 0, bossName);
+        string tierKey = bossStats is Liel_AI liel2 ? liel2.currentDifficultyTier.ToString() : "";
+        PlayerActionLog.Instance?.Record(RecordType.BattleResult, tierKey, win ? 1 : 0, Mathf.RoundToInt(elapsed), bossName);
 
         // ★ 전투 보상 — 난이도·레벨 차이·승패·재도전 횟수를 반영한다
         GrantBattleReward(bossName, bossStats, win);
+
+        PlayerActionLog.Instance?.RecordVitals();   // ★ 전투가 끝난 뒤의 체력·마나
 
         _activeBossBattle = null;
 

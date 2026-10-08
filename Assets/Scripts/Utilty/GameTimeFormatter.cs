@@ -5,7 +5,7 @@ using System;
 // 12시간제/24시간제를 바꾸면 이벤트를 구독한 화면이 다시 그린다.
 public static class GameTimeFormatter
 {
-    // ★ 설정 화면 연결 전 임시 저장소. 1-B에서 GameSettings 값을 여기로 넘기게 한다
+    // 실제 값은 GameSettings가 시작할 때 넣어준다 (PlayerPrefs에 저장된 설정)
     public static bool Use24Hour { get; private set; } = true;
 
     public static event Action OnFormatChanged;
@@ -17,10 +17,12 @@ public static class GameTimeFormatter
         OnFormatChanged?.Invoke();
     }
 
-    // "13:00" 또는 "1:00 PM"
+    // "13:00" 또는 "오후 1:00"
     public static string FormatTime(int hour, int minute = 0)
     {
-        if (Use24Hour)
+        // ★ AM/PM은 하루가 24시간일 때만 의미가 있다 (TimeCoinPanel에 있던 규칙을 이곳으로)
+        bool use24 = Use24Hour || (TimeManager.Instance != null && TimeManager.Instance.coinsPerDay != 24);
+        if (use24)
             return Format("time_format_24", "{0:00}:{1:00}", hour, minute);
 
         bool isPm = hour >= 12;

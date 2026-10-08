@@ -20,6 +20,14 @@ public class GameStateOverviewWindow : EditorWindow
 
     private bool _showFullLog = false;
 
+    private bool _hideFrequentRecords = true;
+    // ★ 너무 잦아서 평소엔 숨기는 기록 종류
+    private static readonly HashSet<RecordType> FrequentTypes = new()
+    {
+        RecordType.TimeAdvance, RecordType.SceneEnter, RecordType.ExpChange,
+        RecordType.MentalChange, RecordType.FatigueChange, RecordType.VitalsCheckpoint,
+    };
+
     private void OnGUI()
     {
         if (!Application.isPlaying)
@@ -38,10 +46,11 @@ public class GameStateOverviewWindow : EditorWindow
         DrawMemorySection(); // 날짜/카테고리별 전체 뷰
         EditorGUILayout.Space(10);
         DrawFullActionLogSection();
-        EditorGUILayout.EndScrollView();
-
+        EditorGUILayout.Space(10);
         DrawDebugToolsSection();
+        EditorGUILayout.Space(10);
         DrawTimeAnchorSection();
+        EditorGUILayout.EndScrollView();
 
         Repaint(); // 실시간 갱신
     }
@@ -80,11 +89,12 @@ public class GameStateOverviewWindow : EditorWindow
 
             EditorGUILayout.LabelField($"이해도: {data.CurrentUnderstandingCount} (상한 {data.maxObtainableUnderstanding}, {data.UnderstandingPercent:F0}%)");
             int newA = EditorGUILayout.IntField("호감도", data.hiddenAffection);
-            if (data.hiddenAffection != newA) { data.hiddenAffection = Mathf.Clamp(newA, -50, 100); NPCManager.Instance.SaveNPCData(data); }
+            // ★ 직접 대입하지 않고 AddAffection을 거친다 — 범위는 NPCManager 설정을 따르고 기록에도 남는다
+            if (data.hiddenAffection != newA) data.AddAffection(newA - data.hiddenAffection);
 
             EditorGUILayout.LabelField($"모드: {data.currentMode}   관계 등급: {data.GetRelationshipTier()}");
 
-            var live = Object.FindObjectsOfType<NPC>().FirstOrDefault(n => n.npcName == kvp.Key);
+            var live = FindObjectsByType<NPC>(FindObjectsSortMode.None).FirstOrDefault(n => n.npcName == kvp.Key);
             if (live != null) EditorGUILayout.LabelField($"HP: {live.currentHealth}/{live.maxHealth}   MP: {live.currentMana}/{live.maxMana}");
 
             DrawNPCMemoryHierarchy(kvp.Key);
@@ -276,8 +286,6 @@ public class GameStateOverviewWindow : EditorWindow
         EditorGUILayout.EndVertical();
     }
 
-    
-
     private void DrawTimeAnchorSection()
     {
         EditorGUILayout.LabelField("시간 고정(앵커) 목록", EditorStyles.boldLabel);
@@ -290,14 +298,14 @@ public class GameStateOverviewWindow : EditorWindow
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
             EditorGUILayout.BeginHorizontal();
-            if (!_anchorFoldouts.ContainsKey(i)) _anchorFoldouts[i] = false;
-            _anchorFoldouts[i] = EditorGUILayout.Foldout(_anchorFoldouts[i],
-                $"#{i + 1}  Scene {a.sceneID}  Day {a.day} {a.hour}시  Lv.{a.level}  ({a.loopCountAtSave}회차에 저장)", true);
+            if (!_anchorFoldouts.ContainsKey(a.anchorId)) _anchorFoldouts[a.anchorId] = false;   // ★ 순번 대신 누적 번호
+            _anchorFoldouts[a.anchorId] = EditorGUILayout.Foldout(_anchorFoldouts[a.anchorId],
+                $"{a.anchorId}번 닻  Scene {a.sceneID}  {GameTimeFormatter.FormatDayTime(a.day, a.hour)}  Lv.{a.level}  ({a.loopCountAtSave}회차에 설치)", true);
             if (GUILayout.Button("이동", GUILayout.Width(60))) TimeLoopManager.Instance.TravelToAnchor(a);
             if (GUILayout.Button("삭제", GUILayout.Width(60))) TimeLoopManager.Instance.RemoveAnchor(a);
             EditorGUILayout.EndHorizontal();
 
-            if (_anchorFoldouts[i])
+            if (_anchorFoldouts[a.anchorId])
             {
                 EditorGUI.indentLevel++;
 
@@ -342,21 +350,32 @@ public class GameStateOverviewWindow : EditorWindow
         if (PlayerActionLog.Instance == null) return;
 
         var records = PlayerActionLog.Instance.Records;
-        _showFullLog = EditorGUILayout.Foldout(_showFullLog, $"전체 기록 ({records.Count}건)", true);
+        _showFullLog = EditorGUILayout.Foldout(_showFullLog, $"전체 기록 ({records.Count}건, 다음 순번 {PlayerActionLog.Instance.NextSeq})", true);
         if (!_showFullLog) return;
+
+        _hideFrequentRecords = EditorGUILayout.ToggleLeft("잦은 기록 숨기기 (시각·씬·경험치·정신력·피로도)", _hideFrequentRecords);
 
         EditorGUI.indentLevel++;
         foreach (var r in records)
         {
+            if (_hideFrequentRecords && FrequentTypes.Contains(r.type)) continue;
+
             string detail = r.valueBefore == r.valueAfter ? r.key : $"{r.key}: {r.valueBefore} → {r.valueAfter}";
+            string extra = (string.IsNullOrEmpty(r.source) ? "" : $" ← {r.source}")
+                         + (string.IsNullOrEmpty(r.payload) ? "" : $" [{r.payload}]");
+
             GUI.color = r.type switch
             {
                 RecordType.MemoryAcquired => Color.cyan,
                 RecordType.SuspicionChange => new Color(1f, 0.6f, 0.6f),
                 RecordType.AffectionChange => new Color(1f, 0.85f, 0.5f),
+                RecordType.AnchorSet or RecordType.AnchorUsed
+                    or RecordType.AnchorVanished or RecordType.AnchorRetracted => new Color(0.75f, 0.65f, 1f),   // ★
+                RecordType.Loop => Color.yellow,                                                                // ★
                 _ => Color.white,
             };
-            EditorGUILayout.LabelField($"[{r.loopCount}회차 Day{r.day} {r.hour}시] ({r.type}) {detail} @{PlayerActionLog.ResolvePlaceName(r)}");
+            EditorGUILayout.LabelField(
+                $"#{r.seq} [{r.loopCount}회차 {GameTimeFormatter.FormatDayTime(r.day, r.hour)}] ({r.type}/{r.op}) {detail}{extra} @{PlayerActionLog.ResolvePlaceName(r)}");
             GUI.color = Color.white;
         }
         EditorGUI.indentLevel--;

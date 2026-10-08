@@ -175,7 +175,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             attackBase = sora.attack.BaseValue,       // ★ 공·방·민도 몸 상태로 함께 저장
             defenseBase = sora.defense.BaseValue,
             agilityBase = sora.agility.BaseValue,
-            // 변경 후 — 순서를 보존하고, 혼 층위인 개인친밀도는 담지 않는다
+            // 순서를 보존한다. '의지' 층위인 개인친밀도는 담지 않는다
             acquiredMemoryFlags = new List<string>(MemoryManager.Instance.GetAllAcquired()),
             npcAffections = NPCManager.Instance.SnapshotAffections(),    
             npcSuspicions = SuspicionManager.Instance.Snapshot(),
@@ -213,7 +213,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     }
 
     // ★ 세 경로에 흩어져 있던 복원 코드를 하나로 모음.
-    //   되돌리는 것은 "세계 쪽 상태"뿐이다. 기억·개인친밀도는 소라의 혼에 속해 유지된다
+    //   되돌리는 것은 "세계 쪽 상태"뿐이다. 기억·개인친밀도는 소라의 의지에 속해 유지된다
     private void RestoreWorldState(TimeAnchorSnapshot snapshot)
     {
         if (snapshot == null) return;
@@ -319,11 +319,11 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             sora.UseMana(returnManaCost);
             RestoreWorldState(latest);
             SetVitals(sora, Mathf.Max(minHealthAfterReturn, sora.currentHealth), sora.currentMana);   // ★
-            //sora.currentHealth = Mathf.Max(minHealthAfterReturn, sora.currentHealth);
 
             ConsumeAnchor(latest, ReturnPath.Normal);
             PlayerActionLog.Instance?.Record(RecordType.Loop, "death_return", latest.loopCountAtSave, latest.anchorId,
                 payload: PlayerActionLog.EncodeDayHour(latest.day, latest.hour));
+            PlayerActionLog.Instance?.RecordVitals();   // ★ 회귀 직후의 체력·마나
             LoadScene(latest.sceneID, latest.position, latest.day, latest.hour);
         }
         else if (latest != null)                                    // [경로 2] 마나 부족 강제 복귀
@@ -335,11 +335,11 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             SetVitals(sora,
                 Mathf.Max(minHealthAfterReturn, Mathf.RoundToInt(sora.maxHealth * forcedReturnHealthRatio)),
                 Mathf.RoundToInt(sora.maxMana * forcedReturnHealthRatio));
-            //sora.currentHealth = Mathf.Max(minHealthAfterReturn, Mathf.RoundToInt(sora.maxHealth * forcedReturnHealthRatio));
 
             ConsumeAnchor(latest, ReturnPath.Forced);
             PlayerActionLog.Instance?.Record(RecordType.Loop, "death_return", latest.loopCountAtSave, latest.anchorId,
                 payload: PlayerActionLog.EncodeDayHour(latest.day, latest.hour));
+            PlayerActionLog.Instance?.RecordVitals();   // ★ 회귀 직후의 체력·마나
             LoadScene(latest.sceneID, latest.position, latest.day, latest.hour);
         }
         else                                                        // [경로 3] 닻 없음 — Day 1부터
@@ -350,6 +350,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             PlayerActionLog.Instance.Record(RecordType.Loop, "full_reset");
 
             sora.ResetBodyForNewLoop();                             // ★ 영혼 레벨은 유지
+            PlayerActionLog.Instance?.RecordVitals();   // ★ 회귀 직후의 체력·마나
 
             var cfg = SceneLoader.Instance.startConfig;
             TimeManager.Instance.ResetToDay1();
@@ -359,6 +360,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
 
     private void LoadScene(int sceneID, Vector2 pos, int day, int hour)
     {
+        TravelTimeTracker.Instance?.CancelJourney();   // ★ 회귀는 걸어서 온 게 아니다 — 이동 시간이 차감되던 문제
         TimeManager.Instance.SetTime(day, hour);
         SceneLoader.Instance.LoadScene(sceneID, pos);
     }

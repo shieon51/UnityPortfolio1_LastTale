@@ -37,6 +37,19 @@ public class EventData
         return string.IsNullOrEmpty(InkNodeName) ? EventName : InkNodeName;
     }
 
+    // ★ 기록에 남기는 고유 키. 표시 제목(번역문)을 저장하면 언어를 바꿀 때 옛 기록이 옛 언어로 남는다.
+    //   표에 없는 이벤트(꿈 등, EventID 0)는 노드 이름으로 구분한다
+    public string RecordKey => EventID != 0 ? $"evt:{EventID}" : $"node:{InkNodeName}";
+
+    // 기록 키로 원래 이벤트를 찾는다 (표시할 때 사용)
+    public static EventData FindByRecordKey(string recordKey)
+    {
+        if (string.IsNullOrEmpty(recordKey) || DataManager.Instance == null) return null;
+        foreach (var e in DataManager.Instance.EventDict.Values)
+            if (e.RecordKey == recordKey) return e;
+        return null;
+    }
+
     [Tooltip("이 이벤트를 최대 몇 번까지 실행할 수 있는지. 0이면 무제한")]
     public int maxTriggerCount = 0;
     [Tooltip("횟수를 다 쓰면 이 노드로 대체 (비우면 이벤트 자체가 숨겨짐)")]
@@ -95,8 +108,9 @@ public class EventManager : Singleton<EventManager>
     private Dictionary<int, IEventBehavior> eventBehaviors;
 
     // 이벤트 실행 횟수 판정 헬퍼 추가
-    private string GetTriggerCountKey(EventData data) => $"event_trigger_{data.EventID}";
-
+    // ★ EventID가 0인 이벤트(꿈 등)는 모두 같은 카운터를 쓰던 문제 — 노드 이름으로 나눈다
+    private string GetTriggerCountKey(EventData data)
+        => data.EventID != 0 ? $"event_trigger_{data.EventID}" : $"event_trigger_{data.InkNodeName}";
     private string GetAutoFiredKey(EventData data) => $"auto_fired_{data.EventID}";
 
     public bool HasAutoTriggered(EventData data)
@@ -394,10 +408,11 @@ public class EventManager : Singleton<EventManager>
             ? DialogueManager.Instance.ResolveTimeTaken(eventData)
             : eventData.TimeTaken;
 
-        // ★ 기록장 "이번 흐름" 탭용 — key에 표시 제목, source에 화자(NPC)를 남긴다
-        // ★ after에 소모 시간을 넣어 기록장이 "1h"를 표시할 수 있게 한다
-        PlayerActionLog.Instance?.Record(RecordType.EventCompleted, eventData.ResolveDisplayName(), 0, timeTaken,
-            IsNPCEvent(eventData.EventID) ? eventData.EventName : null);
+        // ★ 기록장 "이번 흐름" 탭용 — 표시 제목 대신 고유 키를 남기고, 제목은 표시할 때 찾는다.
+        //   after에 소모 시간, source에 화자(NPC), payload에 표시 키
+        PlayerActionLog.Instance?.Record(RecordType.EventCompleted, eventData.RecordKey, 0, timeTaken,
+            IsNPCEvent(eventData.EventID) ? eventData.EventName : null,
+            payload: string.IsNullOrEmpty(eventData.DisplayKey) ? null : eventData.DisplayKey);
 
         if (eventData.despawnAfterEvent && !string.IsNullOrEmpty(eventData.summonNPCs)) // ★ 추가
             NPCManager.Instance.DespawnEventNPCs();
@@ -420,6 +435,8 @@ public class EventManager : Singleton<EventManager>
         {
             new DefaultEventBehavior().Execute(eventData); // 매핑 안 된 일반 NPC 대화 등
         }
+
+        PlayerActionLog.Instance?.RecordVitals();   // ★ 이벤트(잠자기·훈련 포함)가 끝난 뒤의 체력·마나
 
         UpdateEventTriggers(); // ★ 대화 종료 시점마다 현재 시각 기준으로 NPC 위치·상태 재동기화
     }

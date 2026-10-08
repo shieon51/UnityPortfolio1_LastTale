@@ -125,7 +125,10 @@ public class LocalizationManager : Singleton<LocalizationManager>
         OnLanguageChanged?.Invoke();   // ★ 화면에 떠 있는 UI가 스스로 갱신
     }
 
-    public bool Has(string key) => !string.IsNullOrEmpty(key) && _table.ContainsKey(key);
+    // ★ 현재 언어에 없어도 대체 언어(한국어)에 있으면 "있다"로 본다.
+    //   기존에는 EN 칸이 비면 false가 되어, 표의 한국어 대신 코드 기본 문구가 쓰였다
+    public bool Has(string key)
+        => !string.IsNullOrEmpty(key) && (_table.ContainsKey(key) || _fallbackTable.ContainsKey(key));
 
     // 못 찾으면 키 자체가 보여서 누락을 바로 발견할 수 있다
     public string Get(string key)

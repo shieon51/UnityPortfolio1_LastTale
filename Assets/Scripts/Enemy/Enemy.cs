@@ -35,17 +35,39 @@ public class Enemy : CharacterStats
     private float lastContactTime = -1f;
 
     [Header("처치 보상")]
-    [Tooltip("기록장·플로팅 텍스트에 쓸 이름. 비우면 오브젝트 이름을 쓴다")]
+    [Tooltip("기록에 남는 고유 ID (예: slime). 표시 이름은 로컬라이제이션 키 enemy_name_{ID}에서 찾는다")]
+    public string enemyId = "";                                 // ★
+    [Tooltip("로컬라이제이션 키가 없을 때 쓸 대체 이름. 비우면 ID나 오브젝트 이름을 쓴다")]
     public string enemyDisplayName = "";
     [Tooltip("처치 시 주는 기본 경험치. 레벨 차이에 따라 보정된다")]
     public int expReward = 20;
     [Tooltip("경험치 플로팅 텍스트가 뜰 높이")]
     public float rewardTextHeight = 1.2f;
 
-    // 표시용 이름 — Instantiate된 "Slime(Clone)" 대신 쓴다
-    public string DisplayName => string.IsNullOrEmpty(enemyDisplayName)
-        ? gameObject.name.Replace("(Clone)", "").Trim()
-        : enemyDisplayName;
+    // ★ 기록용 ID — "Slime(Clone)" 같은 오브젝트 이름 대신 고정 ID를 쓴다
+    public string RecordId => !string.IsNullOrEmpty(enemyId)
+        ? enemyId
+        : gameObject.name.Replace("(Clone)", "").Trim();
+
+    // 표시용 이름 — 로컬라이제이션 → 대체 이름 → ID 순
+    public string DisplayName
+    {
+        get
+        {
+            string localized = ResolveName(RecordId, null);
+            if (localized != null) return localized;
+            return string.IsNullOrEmpty(enemyDisplayName) ? RecordId : enemyDisplayName;
+        }
+    }
+
+    // ★ 기록장도 같은 규칙으로 이름을 찾도록 공용으로 둔다
+    public static string ResolveName(string enemyId, string fallback)
+    {
+        if (string.IsNullOrEmpty(enemyId)) return fallback;
+        var loc = LocalizationManager.Instance;
+        string key = $"enemy_name_{enemyId.ToLowerInvariant()}";
+        return (loc != null && loc.Has(key)) ? loc.Get(key) : fallback;
+    }
 
     protected Transform player; //
     protected Rigidbody2D rb;
@@ -203,6 +225,6 @@ public class Enemy : CharacterStats
         FloatingTextManager.Instance?.ShowExpGain(scaledExp, gained, transform.position + Vector3.up * rewardTextHeight);
 
         // ★ 사냥 시간은 노련미 보정 전 값을 기준으로 한다 (실제 들인 노력)
-        HuntTracker.Instance?.ReportKill(DisplayName, scaledExp);
+        HuntTracker.Instance?.ReportKill(RecordId, scaledExp);   // ★ 표시 이름 대신 고유 ID
     }
 }

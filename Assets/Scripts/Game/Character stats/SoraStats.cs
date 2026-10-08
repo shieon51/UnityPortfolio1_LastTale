@@ -376,7 +376,7 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     }
 
     // ★ 닻 없이 사망했을 때(경로 3) — 몸만 시작 상태로 되돌린다.
-    //   영혼 레벨(highestLevelReached)은 소라의 혼에 속하므로 유지한다
+    //   영혼 레벨(highestLevelReached)은 소라의 '의지'에 속하므로 유지한다
     public void ResetBodyForNewLoop()
     {
         level = _baseLevel;

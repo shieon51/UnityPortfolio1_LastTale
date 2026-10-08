@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Globalization;
 using UnityEngine;
 
 // 사냥에 시간을 붙인다. 한 마리마다 차감하면 번거롭고,
@@ -19,7 +19,7 @@ public class HuntTracker : Singleton<HuntTracker>
     private int _pendingExp;
     private int _sessionKills;          // 이번 덩어리의 누적 (기록용)
     private int _sessionHours;
-    private string _sessionTargetName;
+    private string _sessionTargetId;    // ★ 표시 이름 대신 고유 ID
     private float _lastKillTime = -999f;
 
     private void Update()
@@ -28,12 +28,15 @@ public class HuntTracker : Singleton<HuntTracker>
     }
 
     // 몬스터가 죽을 때 호출한다
-    public void ReportKill(string targetName, int expGained)
+    public void ReportKill(string targetId, int expGained)
     {
+        // ★ 대상이 바뀌면 이전 덩어리를 먼저 기록한다 (섞인 사냥이 마지막 대상 이름으로만 남던 문제)
+        if (_sessionKills > 0 && _sessionTargetId != targetId) FlushSession();
+
         _pendingKills++;
         _pendingExp += expGained;
         _sessionKills++;
-        _sessionTargetName = targetName;
+        _sessionTargetId = targetId;
         _lastKillTime = Time.unscaledTime;
 
         int hours = 0;
@@ -51,11 +54,12 @@ public class HuntTracker : Singleton<HuntTracker>
     {
         if (_sessionKills <= 0) return;
 
-        string label = string.IsNullOrEmpty(_sessionTargetName) ? "사냥" : _sessionTargetName;
-        PlayerActionLog.Instance?.Record(RecordType.Hunt, $"{label} {_sessionKills}마리", 0, _sessionHours);
+        // ★ 문구("슬라임 15마리")를 조립하지 않는다. key: 대상 ID, after: 소모 시간, payload: 마릿수
+        PlayerActionLog.Instance?.Record(RecordType.Hunt, _sessionTargetId ?? string.Empty, 0, _sessionHours,
+            payload: _sessionKills.ToString(CultureInfo.InvariantCulture));
 
         _sessionKills = 0;
         _sessionHours = 0;
-        _sessionTargetName = null;
+        _sessionTargetId = null;
     }
 }
