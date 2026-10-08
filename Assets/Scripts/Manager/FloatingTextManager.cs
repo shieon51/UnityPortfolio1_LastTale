@@ -1,31 +1,31 @@
-// FloatingTextManager.cs (½Å±Ô)
+ï»¿// FloatingTextManager.cs (ì‹ ê·œ)
 using UnityEngine;
 
 public class FloatingTextManager : Singleton<FloatingTextManager>
 {
-    [Header("È¹µæ ¾Ë¸² (ÀüÅõ ÇÇµå¹éº¸´Ù ´À¸®°Ô, ¿À·¡)")]
+    [Header("íšë“ ì•Œë¦¼ (ì „íˆ¬ í”¼ë“œë°±ë³´ë‹¤ ëŠë¦¬ê²Œ, ì˜¤ë˜)")]
     public float acquisitionDuration = 1.6f;
     public float acquisitionRise = 1.6f;
 
-    [Header("¾Ë¸² »ö»ó")]
+    [Header("ì•Œë¦¼ ìƒ‰ìƒ")]
     public Color newInfoColor = new Color(0.4f, 0.9f, 1f);
     public Color understandingColor = new Color(0.7f, 0.9f, 1f);
     public Color itemColor = new Color(1f, 0.9f, 0.5f);
     public Color expColor = new Color(0.8f, 1f, 0.6f);
     public Color timeCrystalColor = new Color(0.8f, 0.6f, 1f);
 
-    [Header("ÀüÅõ ÇÇµå¹é »ö»ó")]
+    [Header("ì „íˆ¬ í”¼ë“œë°± ìƒ‰ìƒ")]
     public Color damageColor = Color.white;
     public Color guardColor = new Color(0.5f, 0.8f, 1f);
     public Color parryColor = new Color(1f, 0.9f, 0.2f);
     public Color dodgeColor = new Color(0.6f, 1f, 0.6f);
 
-    [Header("³ë·Ã¹Ì º¸Á¤ Ç¥½Ã")]
+    [Header("ë…¸ë ¨ë¯¸ ë³´ì • í‘œì‹œ")]
     public Color catchUpColor = new Color(1f, 0.85f, 0.45f);
-    [Tooltip("°æÇèÄ¡ ÅØ½ºÆ® ±âÁØ À§Ä¡ ¿ÀÇÁ¼Â")]
+    [Tooltip("ê²½í—˜ì¹˜ í…ìŠ¤íŠ¸ ê¸°ì¤€ ìœ„ì¹˜ ì˜¤í”„ì…‹")]
     public Vector3 catchUpOffset = new Vector3(0.7f, -0.35f, 0f);
     [Range(0.3f, 1f)] public float catchUpFontScale = 0.65f;
-    public string catchUpFormat = "³ë·Ã¹Ì +{0}";
+    public string catchUpFormat = "ë…¸ë ¨ë¯¸ +{0}";
 
     public void Show(string text, Vector3 worldPos, Color color)
     {
@@ -34,13 +34,13 @@ public class FloatingTextManager : Singleton<FloatingTextManager>
     }
 
     public void ShowDamage(int amount, Vector3 worldPos) => Show(amount.ToString(), worldPos, damageColor);
-    public void ShowGuard(Vector3 worldPos) => Show("¹æ¾î!", worldPos, guardColor);
-    public void ShowParry(Vector3 worldPos) => Show("ÆĞ¸µ!", worldPos, parryColor);
-    public void ShowDodge(Vector3 worldPos) => Show("È¸ÇÇ!", worldPos, dodgeColor);
+    public void ShowGuard(Vector3 worldPos) => Show("ë°©ì–´!", worldPos, guardColor);
+    public void ShowParry(Vector3 worldPos) => Show("íŒ¨ë§!", worldPos, parryColor);
+    public void ShowDodge(Vector3 worldPos) => Show("íšŒí”¼!", worldPos, dodgeColor);
 
-    public void ShowGuardedDamage(int amount, Vector3 worldPos) => Show("ÀÏºÎ ¹æ¾î! " + amount, worldPos, guardColor);
+    public void ShowGuardedDamage(int amount, Vector3 worldPos) => Show("ì¼ë¶€ ë°©ì–´! " + amount, worldPos, guardColor);
 
-    // -- È¹µæ °ü·Ã ---------
+    // -- íšë“ ê´€ë ¨ ---------
     public void ShowAcquisition(string text, Vector3 worldPos, Color color, float fontScale = 1f)
     {
         GameObject go = PoolManager.Instance.SpawnFromPool("FloatingText", worldPos, Quaternion.identity);
@@ -49,13 +49,13 @@ public class FloatingTextManager : Singleton<FloatingTextManager>
         instance.Play(text, color, acquisitionDuration, acquisitionRise, fontScale);
     }
 
-    public void ShowNewInfo(Vector3 worldPos) => ShowAcquisition("+ »õ·Î¿î Á¤º¸", worldPos, newInfoColor);
-    public void ShowUnderstandingUp(string npcName, Vector3 worldPos) => ShowAcquisition($"{npcName} ÀÌÇØµµ »ó½Â", worldPos, new Color(0.7f, 0.9f, 1f));
+    public void ShowNewInfo(Vector3 worldPos) => ShowAcquisition("+ ìƒˆë¡œìš´ ì •ë³´", worldPos, newInfoColor);
+    public void ShowUnderstandingUp(string npcName, Vector3 worldPos) => ShowAcquisition($"{npcName} ì´í•´ë„ ìƒìŠ¹", worldPos, new Color(0.7f, 0.9f, 1f));
     public void ShowItemGain(string itemName, Vector3 worldPos) => ShowAcquisition($"+ {itemName}", worldPos, itemColor);
     public void ShowExpGain(int amount, Vector3 worldPos) => ShowAcquisition($"+{amount} EXP", worldPos, expColor);
 
-    // ¡Ú °æÇèÄ¡ + ³ë·Ã¹Ì º¸Á¤ºĞÀ» ÇÔ²² Ç¥½ÃÇÑ´Ù.
-    //   È¸±Í·Î ¸öÀÌ ÃÊ±âÈ­µÈ µÚ "´Ù½Ã Å°¿ì´Â °Ô ºü¸£´Ù"¸¦ ÇÃ·¹ÀÌ¾î°¡ Ã¼°¨ÇÏµµ·Ï
+    // â˜… ê²½í—˜ì¹˜ + ë…¸ë ¨ë¯¸ ë³´ì •ë¶„ì„ í•¨ê»˜ í‘œì‹œí•œë‹¤.
+    //   íšŒê·€ë¡œ ëª¸ì´ ì´ˆê¸°í™”ëœ ë’¤ "ë‹¤ì‹œ í‚¤ìš°ëŠ” ê²Œ ë¹ ë¥´ë‹¤"ë¥¼ í”Œë ˆì´ì–´ê°€ ì²´ê°í•˜ë„ë¡
     public void ShowExpGain(int baseAmount, int finalAmount, Vector3 worldPos)
     {
         ShowAcquisition($"+{finalAmount} EXP", worldPos, expColor);
@@ -65,5 +65,5 @@ public class FloatingTextManager : Singleton<FloatingTextManager>
             ShowAcquisition(string.Format(catchUpFormat, bonus), worldPos + catchUpOffset, catchUpColor, catchUpFontScale);
     }
 
-    public void ShowTimeCrystal(Vector3 worldPos) => ShowAcquisition("+ ½Ã°£ÀÇ °áÁ¤Ã¼", worldPos, timeCrystalColor);
+    public void ShowTimeCrystal(Vector3 worldPos) => ShowAcquisition("+ ì‹œê°„ì˜ ê²°ì •ì²´", worldPos, timeCrystalColor);
 }

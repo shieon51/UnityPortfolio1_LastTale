@@ -1,21 +1,21 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using System.Collections;
 
-// HitStopVisualOverlay.cs (½Å±Ô) - È÷Æ®½ºÅé ½Ã »ö¼öÂ÷ È¿°ú
+// HitStopVisualOverlay.cs (ì‹ ê·œ) - íˆíŠ¸ìŠ¤í†± ì‹œ ìƒ‰ìˆ˜ì°¨ íš¨ê³¼
 public class HitStopVisualOverlay : Singleton<HitStopVisualOverlay>
 {
     public Volume globalVolume;
     private ChromaticAberration _chromatic;
     private Coroutine _routine;
-    private LensDistortion _lensDistortion; // ·»Áî ¿Ö°î
+    private LensDistortion _lensDistortion; // ë Œì¦ˆ ì™œê³¡
 
-    [Header("»ö¼öÂ÷ ±âº»°ª")]
+    [Header("ìƒ‰ìˆ˜ì°¨ ê¸°ë³¸ê°’")]
     public float defaultChromaticIntensity = 0.6f;
 
-    [Header("·»Áî ¿Ö°î ±âº»°ª")]
-    [Tooltip("È£ÃâºÎ°¡ °ªÀ» ¾È ³Ñ°åÀ» ¶§ ¾²ÀÌ´Â ±âº» °­µµ")]
+    [Header("ë Œì¦ˆ ì™œê³¡ ê¸°ë³¸ê°’")]
+    [Tooltip("í˜¸ì¶œë¶€ê°€ ê°’ì„ ì•ˆ ë„˜ê²¼ì„ ë•Œ ì“°ì´ëŠ” ê¸°ë³¸ ê°•ë„")]
     public float defaultLensIntensity = 0.3f;
 
     private void Awake()
@@ -36,13 +36,13 @@ public class HitStopVisualOverlay : Singleton<HitStopVisualOverlay>
             if (_routine != null) StopCoroutine(_routine);
             _routine = StartCoroutine(PulseRoutine(duration, chromaticIntensity));
         }
-        if (_lensDistortion != null) StartCoroutine(LensPulseRoutine(duration, -lensIntensity)); // ¡Ú À½¼ö·Î º¯È¯ÇØ¼­ ¿À¸ñÇÏ°Ô
+        if (_lensDistortion != null) StartCoroutine(LensPulseRoutine(duration, -lensIntensity)); // â˜… ìŒìˆ˜ë¡œ ë³€í™˜í•´ì„œ ì˜¤ëª©í•˜ê²Œ
     }
 
-    private IEnumerator LensPulseRoutine(float duration, float targetIntensity) // ¡Ú ÇÏµåÄÚµù -0.4f Á¦°Å, ¸Å°³º¯¼ö·Î
+    private IEnumerator LensPulseRoutine(float duration, float targetIntensity) // â˜… í•˜ë“œì½”ë”© -0.4f ì œê±°, ë§¤ê°œë³€ìˆ˜ë¡œ
     {
-        float attackTime = duration * 0.15f; // Á¤Á¡±îÁö Æ¢¾î¿À¸£´Â ½Ã°£
-        float releaseTime = duration - attackTime; // Á¤Á¡¿¡¼­ ¿ø»óº¹±¸µÇ´Â ½Ã°£
+        float attackTime = duration * 0.15f; // ì •ì ê¹Œì§€ íŠ€ì–´ì˜¤ë¥´ëŠ” ì‹œê°„
+        float releaseTime = duration - attackTime; // ì •ì ì—ì„œ ì›ìƒë³µêµ¬ë˜ëŠ” ì‹œê°„
         float t = 0f;
         while (t < attackTime) 
         { 
@@ -63,8 +63,8 @@ public class HitStopVisualOverlay : Singleton<HitStopVisualOverlay>
 
     private IEnumerator PulseRoutine(float duration, float maxIntensity)
     {
-        float attackTime = duration * 0.15f; // È® Æ¢´Â ±¸°£
-        float holdTime = duration * 0.25f;   // Á¤Á¡¿¡¼­ ¸Ó¹«´Â ±¸°£ 
+        float attackTime = duration * 0.15f; // í™• íŠ€ëŠ” êµ¬ê°„
+        float holdTime = duration * 0.25f;   // ì •ì ì—ì„œ ë¨¸ë¬´ëŠ” êµ¬ê°„ 
         float releaseTime = duration - attackTime - holdTime;
 
         float t = 0f;

@@ -1,9 +1,9 @@
-// SummonPointMarker.cs (½Å±Ô)
+ï»¿// SummonPointMarker.cs (ì‹ ê·œ)
 using UnityEngine;
 
 public class SummonPointMarker : MonoBehaviour
 {
-    [Tooltip("¿©±â¼­ µîÀåÇÒ NPC ÀÌ¸§ (ÇÁ¸®ÆÕ ÀÌ¸§°ú ÀÏÄ¡)")]
+    [Tooltip("ì—¬ê¸°ì„œ ë“±ì¥í•  NPC ì´ë¦„ (í”„ë¦¬íŒ¹ ì´ë¦„ê³¼ ì¼ì¹˜)")]
     public string npcName = "Liel";
 
     private void Awake() { if (Application.isPlaying) Destroy(gameObject); }
@@ -19,7 +19,7 @@ public class SummonPointMarker : MonoBehaviour
             Gizmos.DrawLine(transform.position, parent.transform.position);
         }
 #if UNITY_EDITOR
-        UnityEditor.Handles.Label(transform.position + Vector3.up * 0.5f, $"µîÀå: {npcName}");
+        UnityEditor.Handles.Label(transform.position + Vector3.up * 0.5f, $"ë“±ì¥: {npcName}");
 #endif
     }
 }

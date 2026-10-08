@@ -1,10 +1,10 @@
-// NarrativeCuePlayer.cs (½Å±Ô)
+ï»¿// NarrativeCuePlayer.cs (ì‹ ê·œ)
 using System.Collections.Generic;
 using UnityEngine;
 
 public class NarrativeCuePlayer : Singleton<NarrativeCuePlayer>
 {
-    public string resourcesFolder = "NarrativeCues"; // MemoryManager¿Í °°Àº ÀÚµ¿ ·Îµå ÆĞÅÏ
+    public string resourcesFolder = "NarrativeCues"; // MemoryManagerì™€ ê°™ì€ ìë™ ë¡œë“œ íŒ¨í„´
     private Dictionary<string, NarrativeCue> _lookup;
 
     private void Awake() => LoadCues();
@@ -14,14 +14,14 @@ public class NarrativeCuePlayer : Singleton<NarrativeCuePlayer>
         _lookup = new Dictionary<string, NarrativeCue>();
         foreach (var cue in Resources.LoadAll<NarrativeCue>(resourcesFolder))
             if (!string.IsNullOrEmpty(cue.cueId)) _lookup[cue.cueId] = cue;
-        Debug.Log($"[NarrativeCuePlayer] Å¥ {_lookup.Count}°³ ·Îµå ¿Ï·á");
+        Debug.Log($"[NarrativeCuePlayer] í {_lookup.Count}ê°œ ë¡œë“œ ì™„ë£Œ");
     }
 
     public void Play(string cueId)
     {
-        if (!_lookup.TryGetValue(cueId, out var cue)) { Debug.LogWarning($"[NarrativeCuePlayer] µî·Ï ¾È µÈ cueId: {cueId}"); return; }
-        if (cue.cameraCue != null) CameraDirector.Instance?.PlayCue(cue.cameraCue); // ¡Ú Èçµé¸²+ÇÃ·¡½Ã ´Ù ¿©±â¼­
-        if (cue.cameraShot != null) CameraDirector.Instance?.PlayShot(cue.cameraShot); // ¡Ú Ãß°¡
+        if (!_lookup.TryGetValue(cueId, out var cue)) { Debug.LogWarning($"[NarrativeCuePlayer] ë“±ë¡ ì•ˆ ëœ cueId: {cueId}"); return; }
+        if (cue.cameraCue != null) CameraDirector.Instance?.PlayCue(cue.cameraCue); // â˜… í”ë“¤ë¦¼+í”Œë˜ì‹œ ë‹¤ ì—¬ê¸°ì„œ
+        if (cue.cameraShot != null) CameraDirector.Instance?.PlayShot(cue.cameraShot); // â˜… ì¶”ê°€
         if (!string.IsNullOrEmpty(cue.sfxKey)) SoundManager.Instance?.PlaySFX(cue.sfxKey);
         if (!string.IsNullOrEmpty(cue.bgmKey)) SoundManager.Instance?.PlayBGM(cue.bgmKey);
         if (!string.IsNullOrEmpty(cue.animationKey))
@@ -32,7 +32,7 @@ public class NarrativeCuePlayer : Singleton<NarrativeCuePlayer>
     }
 
 #if UNITY_EDITOR
-    [ContextMenu("Å¥ ´Ù½Ã ·Îµå")]
+    [ContextMenu("í ë‹¤ì‹œ ë¡œë“œ")]
     private void ReloadFromMenu() => LoadCues();
 #endif
 }

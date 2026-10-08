@@ -1,8 +1,8 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 
-// ¾î´À ´ëÈ­ ³ëµå¸¦ Áö³µ´ÂÁö ±â·ÏÇÑ´Ù. È¸±Í¡¤¸®¼Â°ú ¹«°üÇÏ°Ô ´©ÀûµÇ´Â ÇÃ·¹ÀÌ¾î ÃşÀ§ µ¥ÀÌÅÍ·Î,
-// ÀĞÀº ´ë»ç ºü¸£°Ô ³Ñ±â±â / ½Ã¹Ä·¹ÀÌ¼Ç ÁøÇà·ü / ³ª¸¸ÀÇ ÀÌ¾ß±â ¹®¾çÀÌ °°Àº ±â·ÏÀ» ¾´´Ù.
+// ì–´ëŠ ëŒ€í™” ë…¸ë“œë¥¼ ì§€ë‚¬ëŠ”ì§€ ê¸°ë¡í•œë‹¤. íšŒê·€Â·ë¦¬ì…‹ê³¼ ë¬´ê´€í•˜ê²Œ ëˆ„ì ë˜ëŠ” í”Œë ˆì´ì–´ ì¸µìœ„ ë°ì´í„°ë¡œ,
+// ì½ì€ ëŒ€ì‚¬ ë¹ ë¥´ê²Œ ë„˜ê¸°ê¸° / ì‹œë®¬ë ˆì´ì…˜ ì§„í–‰ë¥  / ë‚˜ë§Œì˜ ì´ì•¼ê¸° ë¬¸ì–‘ì´ ê°™ì€ ê¸°ë¡ì„ ì“´ë‹¤.
 public class VisitedNodeLog : Singleton<VisitedNodeLog>
 {
     private readonly HashSet<string> _visited = new();
@@ -13,12 +13,12 @@ public class VisitedNodeLog : Singleton<VisitedNodeLog>
     public bool MarkVisited(string nodeId)
     {
         if (string.IsNullOrEmpty(nodeId)) return false;
-        return _visited.Add(nodeId);        // true¸é ÀÌ¹øÀÌ Ã³À½
+        return _visited.Add(nodeId);        // trueë©´ ì´ë²ˆì´ ì²˜ìŒ
     }
 
     public IEnumerable<string> All => _visited;
 
-    // ¼¼ÀÌºê ¿¬µ¿ Àü±îÁö´Â ¸Ş¸ğ¸®¿¡¸¸ À¯ÁöµÈ´Ù
+    // ì„¸ì´ë¸Œ ì—°ë™ ì „ê¹Œì§€ëŠ” ë©”ëª¨ë¦¬ì—ë§Œ ìœ ì§€ëœë‹¤
     public void RestoreFrom(IEnumerable<string> ids)
     {
         _visited.Clear();
@@ -26,5 +26,5 @@ public class VisitedNodeLog : Singleton<VisitedNodeLog>
         foreach (var id in ids) _visited.Add(id);
     }
 
-    public void ClearAll() => _visited.Clear();   // °ø½Ä ÇÏµå ¸®¼Â Àü¿ë
+    public void ClearAll() => _visited.Clear();   // ê³µì‹ í•˜ë“œ ë¦¬ì…‹ ì „ìš©
 }

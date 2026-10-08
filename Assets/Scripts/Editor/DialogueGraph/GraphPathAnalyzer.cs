@@ -1,14 +1,14 @@
-// GraphPathAnalyzer.cs (½Å±Ô, Editor Æú´õ)
+ï»¿// GraphPathAnalyzer.cs (ì‹ ê·œ, Editor í´ë”)
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 public class PathResult
 {
-    public List<string> steps = new();                      // Áö³ª¿Â °æ·Î ¼³¸í
-    public Dictionary<string, int> deltas = new();           // º¯¼öº° ÃÑ º¯È­·®
+    public List<string> steps = new();                      // ì§€ë‚˜ì˜¨ ê²½ë¡œ ì„¤ëª…
+    public Dictionary<string, int> deltas = new();           // ë³€ìˆ˜ë³„ ì´ ë³€í™”ëŸ‰
     public List<string> acquiredMemories = new();
-    public bool truncated;                                   // ±íÀÌ Á¦ÇÑ¿¡ °É¸²
+    public bool truncated;                                   // ê¹Šì´ ì œí•œì— ê±¸ë¦¼
 }
 
 public static class GraphPathAnalyzer
@@ -21,8 +21,8 @@ public static class GraphPathAnalyzer
 
     public static string ColorOf(string speakerKey)
     {
-        if (string.IsNullOrEmpty(speakerKey)) return "#BBBBBB";        // ³»·¹ÀÌ¼Ç
-        if (speakerKey == "Player") return "#FF9ECB";                  // ¼Ò¶ó = ÇÎÅ©
+        if (string.IsNullOrEmpty(speakerKey)) return "#BBBBBB";        // ë‚´ë ˆì´ì…˜
+        if (speakerKey == "Player") return "#FF9ECB";                  // ì†Œë¼ = í•‘í¬
         if (!_speakerColorMap.TryGetValue(speakerKey, out var c))
         {
             c = SpeakerColors[_speakerColorMap.Count % SpeakerColors.Length];
@@ -46,12 +46,12 @@ public static class GraphPathAnalyzer
     {
         if (results.Count >= MaxPaths) return;
         if (node == null || depth > MaxDepth) { current.truncated = true; results.Add(current); return; }
-        if (!visited.Add(node.guid)) { results.Add(current); return; } // ·çÇÁ ¹æÁö
+        if (!visited.Add(node.guid)) { results.Add(current); return; } // ë£¨í”„ ë°©ì§€
 
         switch (node.nodeType)
         {
             case "Start":
-                current.steps.Add($"¢º {node.knotName}");
+                current.steps.Add($"â–¶ {node.knotName}");
                 Walk(asset, Next(asset, node.guid, 0), current, visited, results, depth + 1);
                 break;
 
@@ -61,7 +61,7 @@ public static class GraphPathAnalyzer
                     if (!string.IsNullOrWhiteSpace(line.text))
                     {
                         string color = ColorOf(line.speakerKey);
-                        string who = string.IsNullOrEmpty(line.speakerName) ? "³»·¹ÀÌ¼Ç" : line.speakerName;
+                        string who = string.IsNullOrEmpty(line.speakerName) ? "ë‚´ë ˆì´ì…˜" : line.speakerName;
                         current.steps.Add($"  <color={color}>[{who}]</color> \"{Trunc(line.text)}\"");
                     }
                     foreach (var l in line.logics) ApplyLogic(current, l);
@@ -73,8 +73,8 @@ public static class GraphPathAnalyzer
                 for (int i = 0; i <= node.branchCases.Count; i++)
                 {
                     string label = i < node.branchCases.Count
-                        ? $"[Á¶°Ç: {ConditionUtil.BuildSummary(node.branchCases[i].condition)}]"
-                        : "[±× ¿Ü]";
+                        ? $"[ì¡°ê±´: {ConditionUtil.BuildSummary(node.branchCases[i].condition)}]"
+                        : "[ê·¸ ì™¸]";
                     Fork(asset, node, i, label, current, visited, results, depth);
                     current.steps.Add($"<color=#C86EC8>{label}</color>");
                 }
@@ -85,9 +85,9 @@ public static class GraphPathAnalyzer
                 {
                     var opt = node.choiceOptions[i];
                     string cond = opt.condition.entries.Count > 0
-                        ? $" (Á¶°Ç: {ConditionUtil.BuildSummary(opt.condition)})" : "";
-                    Fork(asset, node, i, $"¡æ ¼±ÅÃ \"{Trunc(opt.text)}\"{cond}", current, visited, results, depth);
-                    current.steps.Add($"<color=#FF9ECB>¡æ ¼±ÅÃ \"{Trunc(opt.text)}\"</color>{cond}");
+                        ? $" (ì¡°ê±´: {ConditionUtil.BuildSummary(opt.condition)})" : "";
+                    Fork(asset, node, i, $"â†’ ì„ íƒ \"{Trunc(opt.text)}\"{cond}", current, visited, results, depth);
+                    current.steps.Add($"<color=#FF9ECB>â†’ ì„ íƒ \"{Trunc(opt.text)}\"</color>{cond}");
                 }
                 return;
         }
@@ -127,16 +127,16 @@ public static class GraphPathAnalyzer
         return edge == null ? null : asset.nodes.FirstOrDefault(n => n.guid == edge.toGuid);
     }
 
-    private static string Trunc(string s) => s.Length <= 24 ? s : s.Substring(0, 24) + "¡¦";
+    private static string Trunc(string s) => s.Length <= 24 ? s : s.Substring(0, 24) + "â€¦";
 
     public static string Format(List<PathResult> paths)
     {
         var sb = new StringBuilder();
-        sb.AppendLine($"ÃÑ {paths.Count}°³ °æ·Î{(paths.Any(p => p.truncated) ? " (ÀÏºÎ´Â ±íÀÌ Á¦ÇÑÀ¸·Î Àß¸²)" : "")}\n");
+        sb.AppendLine($"ì´ {paths.Count}ê°œ ê²½ë¡œ{(paths.Any(p => p.truncated) ? " (ì¼ë¶€ëŠ” ê¹Šì´ ì œí•œìœ¼ë¡œ ì˜ë¦¼)" : "")}\n");
 
         for (int i = 0; i < paths.Count; i++)
         {
-            sb.AppendLine($"¦¡¦¡ °æ·Î {i + 1} ¦¡¦¡");
+            sb.AppendLine($"â”€â”€ ê²½ë¡œ {i + 1} â”€â”€");
             foreach (var s in paths[i].steps) sb.AppendLine(s);
 
             if (paths[i].deltas.Count > 0)
@@ -146,10 +146,10 @@ public static class GraphPathAnalyzer
                     string col = d.Value >= 0 ? "#8FE38F" : "#FF8080";
                     return $"<color={col}>{d.Key} {(d.Value >= 0 ? "+" : "")}{d.Value}</color>";
                 });
-                sb.AppendLine($"  ¢¹ ¼öÄ¡: {string.Join(", ", parts)}");
+                sb.AppendLine($"  â–· ìˆ˜ì¹˜: {string.Join(", ", parts)}");
             }
             if (paths[i].acquiredMemories.Count > 0)
-                sb.AppendLine($"  ¢¹ <color=#7FD4FF>Á¤º¸: {string.Join(", ", paths[i].acquiredMemories)}</color>");
+                sb.AppendLine($"  â–· <color=#7FD4FF>ì •ë³´: {string.Join(", ", paths[i].acquiredMemories)}</color>");
             sb.AppendLine();
         }
         return sb.ToString();

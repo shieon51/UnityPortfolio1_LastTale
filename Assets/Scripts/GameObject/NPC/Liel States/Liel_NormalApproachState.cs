@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class Liel_NormalApproachState : NPCState
 {
@@ -21,7 +21,7 @@ public class Liel_NormalApproachState : NPCState
 
         if (dist <= liel.approachDistance && !liel.hasApproached)
         {
-            liel.LookAtPlayer_Public(); // (Á¢±ÙÀ» À§ÇØ Liel_AI ÂÊ¿¡ public ·¡ÆÛ ÇÔ¼ö Ãß°¡ ¿¹Á¤)
+            liel.LookAtPlayer_Public(); // (ì ‘ê·¼ì„ ìœ„í•´ Liel_AI ìª½ì— public ëž˜í¼ í•¨ìˆ˜ ì¶”ê°€ ì˜ˆì •)
 
             if (dist > liel.stopDistance)
             {

@@ -1,6 +1,6 @@
-
-// 'Çàµ¿ ºÒ°¡' »óÅÂ¸¦ ¸¸µå´Â ¼Ò½º¸¦ ÀÏ¹İÈ­. ´ëÈ­/°ø°İ/³Ë¹é ¿Ü¿¡
-// ÆûÃ¼ÀÎÁö µô·¹ÀÌÃ³·³ ¾ÕÀ¸·Î Ãß°¡µÉ Àá±İ ¿øÀÎµéÀ» PlayerController ÄÚµå¸¦ °Çµå¸®Áö ¾Ê°í Ãß°¡ °¡´ÉÇÏ°Ô ÇÔ.
+ï»¿
+// 'í–‰ë™ ë¶ˆê°€' ìƒíƒœë¥¼ ë§Œë“œëŠ” ì†ŒìŠ¤ë¥¼ ì¼ë°˜í™”. ëŒ€í™”/ê³µê²©/ë„‰ë°± ì™¸ì—
+// í¼ì²´ì¸ì§€ ë”œë ˆì´ì²˜ëŸ¼ ì•ìœ¼ë¡œ ì¶”ê°€ë  ì ê¸ˆ ì›ì¸ë“¤ì„ PlayerController ì½”ë“œë¥¼ ê±´ë“œë¦¬ì§€ ì•Šê³  ì¶”ê°€ ê°€ëŠ¥í•˜ê²Œ í•¨.
 using System;
 
 public interface IActionLockSource
@@ -8,14 +8,14 @@ public interface IActionLockSource
     bool IsLocked { get; }
 }
 
-// ÆûÃ¼ÀÎÁö(¿äÁ¤È­)¸¦ Áö¿øÇÏ´Â Ä³¸¯ÅÍ¸¸ ±¸Çö. ½ÃÁğ2/3 Ä³¸¯ÅÍ´Â ±¸Çö ¾È ÇØµµ ÀüÃ¼ ½Ã½ºÅÛÀÌ Á¤»ó µ¿ÀÛÇÔ(null Çã¿ë).
+// í¼ì²´ì¸ì§€(ìš”ì •í™”)ë¥¼ ì§€ì›í•˜ëŠ” ìºë¦­í„°ë§Œ êµ¬í˜„. ì‹œì¦Œ2/3 ìºë¦­í„°ëŠ” êµ¬í˜„ ì•ˆ í•´ë„ ì „ì²´ ì‹œìŠ¤í…œì´ ì •ìƒ ë™ì‘í•¨(null í—ˆìš©).
 public interface IFormStageProvider
 {
-    int FormStage { get; }        // 0=1´Ü°è, 1=2´Ü°è(ºñÇà), 2=3´Ü°è
-    int TargetFormStage { get; } // Áö±İ ¾îµğ·Î ÀüÈ¯ ÁßÀÎÁö
-    bool IsFlightForm { get; }    // ºñÇà °ü·Ã ÀÌµ¿/¸ğ¼Ç Àû¿ë ¿©ºÎ
-    bool IsTransforming { get; } // ¿äÁ¤È­ º¯½ÅÁß
+    int FormStage { get; }        // 0=1ë‹¨ê³„, 1=2ë‹¨ê³„(ë¹„í–‰), 2=3ë‹¨ê³„
+    int TargetFormStage { get; } // ì§€ê¸ˆ ì–´ë””ë¡œ ì „í™˜ ì¤‘ì¸ì§€
+    bool IsFlightForm { get; }    // ë¹„í–‰ ê´€ë ¨ ì´ë™/ëª¨ì…˜ ì ìš© ì—¬ë¶€
+    bool IsTransforming { get; } // ìš”ì •í™” ë³€ì‹ ì¤‘
 
-    event Action OnFormTransformStarted;  // º¯½Å ½ÃÀÛ (¿¬Ãâ ¸ğ¼Ç Æ®¸®°Å¿ë)
-    event Action<int> OnFormStageChanged; // º¯½Å ¿Ï·á (ÆÄÃ÷ ±³Ã¼¿ë)
+    event Action OnFormTransformStarted;  // ë³€ì‹  ì‹œì‘ (ì—°ì¶œ ëª¨ì…˜ íŠ¸ë¦¬ê±°ìš©)
+    event Action<int> OnFormStageChanged; // ë³€ì‹  ì™„ë£Œ (íŒŒì¸  êµì²´ìš©)
 }

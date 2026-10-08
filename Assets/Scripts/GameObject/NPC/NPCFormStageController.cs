@@ -1,9 +1,9 @@
-using System;
+ï»¿using System;
 using System.Collections;
 using UnityEngine;
 
-// º¸½º AI(FSM)°¡ ÆäÀÌÁî ÀüÈ¯ Á¶°ÇÀ» ÆÇ´ÜÇØ¼­ Á÷Á¢ È£ÃâÇØÁÖ´Â ÆûÃ¼ÀÎÁö ÄÁÆ®·Ñ·¯.
-// SoraStats¿Í Æ®¸®°Å ¹æ½Ä¸¸ ´Ù¸¦ »Ó, ÀÎÅÍÆäÀÌ½º´Â µ¿ÀÏÇØ¼­ CharacterAppearance°¡ ±×´ë·Î ¹İÀÀÇÔ.
+// ë³´ìŠ¤ AI(FSM)ê°€ í˜ì´ì¦ˆ ì „í™˜ ì¡°ê±´ì„ íŒë‹¨í•´ì„œ ì§ì ‘ í˜¸ì¶œí•´ì£¼ëŠ” í¼ì²´ì¸ì§€ ì»¨íŠ¸ë¡¤ëŸ¬.
+// SoraStatsì™€ íŠ¸ë¦¬ê±° ë°©ì‹ë§Œ ë‹¤ë¥¼ ë¿, ì¸í„°í˜ì´ìŠ¤ëŠ” ë™ì¼í•´ì„œ CharacterAppearanceê°€ ê·¸ëŒ€ë¡œ ë°˜ì‘í•¨.
 public class NPCFormStageController : MonoBehaviour, IFormStageProvider
 {
     public int FormStage { get; private set; } = 0;
@@ -13,12 +13,12 @@ public class NPCFormStageController : MonoBehaviour, IFormStageProvider
     public event Action OnFormTransformStarted;
     public event Action<int> OnFormStageChanged;
 
-    [Tooltip("º¯½Å ¿¬Ãâ µô·¹ÀÌ(ÃÊ)")]
+    [Tooltip("ë³€ì‹  ì—°ì¶œ ë”œë ˆì´(ì´ˆ)")]
     public float transformDuration = 1.0f;
 
     public bool IsTransforming { get; private set; }
 
-    // ¿¹: Liel_BattleIdleState¿¡¼­ HP°¡ ÀÓ°èÄ¡ ¾Æ·¡·Î ¶³¾îÁö¸é ÀÌ°É È£Ãâ
+    // ì˜ˆ: Liel_BattleIdleStateì—ì„œ HPê°€ ì„ê³„ì¹˜ ì•„ë˜ë¡œ ë–¨ì–´ì§€ë©´ ì´ê±¸ í˜¸ì¶œ
     public void TransitionToStage(int newStage, bool isFlightForm = false)
     {
         if (IsTransforming || newStage == FormStage) return;
@@ -28,7 +28,7 @@ public class NPCFormStageController : MonoBehaviour, IFormStageProvider
     private IEnumerator TransformRoutine(int newStage, bool isFlightForm)
     {
         IsTransforming = true;
-        TargetFormStage = newStage; // ¡Ú ÀüÈ¯ ½ÃÀÛ Àü¿¡ ¹Ì¸® ¼¼ÆÃ
+        TargetFormStage = newStage; // â˜… ì „í™˜ ì‹œì‘ ì „ì— ë¯¸ë¦¬ ì„¸íŒ…
         OnFormTransformStarted?.Invoke();
 
         yield return new WaitForSeconds(transformDuration);

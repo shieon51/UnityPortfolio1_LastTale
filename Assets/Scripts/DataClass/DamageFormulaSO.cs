@@ -1,6 +1,6 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
-//  µ¥¹ÌÁö °è»ê Àü·«ÀÇ º£ÀÌ½º
+//  ë°ë¯¸ì§€ ê³„ì‚° ì „ëµì˜ ë² ì´ìŠ¤
 public abstract class DamageFormulaSO : ScriptableObject
 {
     public abstract int CalculateDamage(CombatContext ctx);

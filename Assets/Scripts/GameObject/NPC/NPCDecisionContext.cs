@@ -1,6 +1,6 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
-// Utility AI °¡ÁßÄ¡ °è»ê °ü·Ã - npc Çàµ¿ °áÁ¤
+// Utility AI ê°€ì¤‘ì¹˜ ê³„ì‚° ê´€ë ¨ - npc í–‰ë™ ê²°ì •
 public struct NPCDecisionContext
 {
     public NPC Self;
@@ -9,5 +9,5 @@ public struct NPCDecisionContext
     public float SelfHealthPercent;
     public float SelfManaPercent;
     public bool PlayerIsAttacking;
-    public NPCActionBase LastUsedAction; // Çàµ¿ Å¥(ÄŞº¸) ÆÇ´Ü¿ë
+    public NPCActionBase LastUsedAction; // í–‰ë™ í(ì½¤ë³´) íŒë‹¨ìš©
 }

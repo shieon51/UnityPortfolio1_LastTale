@@ -1,30 +1,30 @@
-// AmbientEventData.cs (½Å±Ô)
+ï»¿// AmbientEventData.cs (ì‹ ê·œ)
 using UnityEngine;
 
-// À§Ä¡ ¹«°ü ÀÚµ¿ ÀÌº¥Æ® (²Ş, È¸»ó µî)
+// ìœ„ì¹˜ ë¬´ê´€ ìë™ ì´ë²¤íŠ¸ (ê¿ˆ, íšŒìƒ ë“±)
 [CreateAssetMenu(menuName = "LastMarchan/Narrative/Ambient Event")]
 public class AmbientEventData : ScriptableObject
 {
     public string eventId;
     public string inkNodeName;
 
-    [Header("¹ßµ¿ Á¶°Ç")]
-    [Tooltip("ÀÌ ½Ã°¢ ÀÌÈÄ¿¡¸¸ (0ÀÌ¸é ¹«°ü)")]
+    [Header("ë°œë™ ì¡°ê±´")]
+    [Tooltip("ì´ ì‹œê° ì´í›„ì—ë§Œ (0ì´ë©´ ë¬´ê´€)")]
     public int minHour = 0;
-    [Tooltip("ÀÌ ½Ã°¢ ÀÌÀü¿¡¸¸ (24¸é ¹«°ü)")]
+    [Tooltip("ì´ ì‹œê° ì´ì „ì—ë§Œ (24ë©´ ë¬´ê´€)")]
     public int maxHour = 24;
-    [Tooltip("ÀÌ È¸Â÷ ÀÌ»óÀÏ ¶§¸¸ ¹ßµ¿ (0ÀÌ¸é ¹«°ü)")]
+    [Tooltip("ì´ íšŒì°¨ ì´ìƒì¼ ë•Œë§Œ ë°œë™ (0ì´ë©´ ë¬´ê´€)")]
     public int minLoopCount = 0;
-    [Tooltip("ÀÌ Á¤º¸¸¦ °¡Áö°í ÀÖ¾î¾ß ¹ßµ¿ (ºñ¿ì¸é ¹«°ü)")]
+    [Tooltip("ì´ ì •ë³´ë¥¼ ê°€ì§€ê³  ìˆì–´ì•¼ ë°œë™ (ë¹„ìš°ë©´ ë¬´ê´€)")]
     public string requiredFlagId = "";
-    [Tooltip("Á¤½Å·ÂÀÌ ÀÌ ºñÀ²(%) ÀÌÇÏÀÏ ¶§¸¸ (100ÀÌ¸é ¹«°ü)")]
+    [Tooltip("ì •ì‹ ë ¥ì´ ì´ ë¹„ìœ¨(%) ì´í•˜ì¼ ë•Œë§Œ (100ì´ë©´ ë¬´ê´€)")]
     public int maxMentalPercent = 100;
 
-    [Header("¹ßµ¿ ¹æ½Ä")]
-    [Tooltip("Á¶°Ç ÃæÁ· ½Ã ¸Å ÆÇÁ¤¸¶´Ù ¹ßµ¿ÇÒ È®·ü (0~1)")]
+    [Header("ë°œë™ ë°©ì‹")]
+    [Tooltip("ì¡°ê±´ ì¶©ì¡± ì‹œ ë§¤ íŒì •ë§ˆë‹¤ ë°œë™í•  í™•ë¥  (0~1)")]
     [Range(0f, 1f)] public float chance = 0.2f;
-    [Tooltip("ÇÑ ¹ø ¹ßµ¿ÇÏ¸é ´Ù½Ã ¹ßµ¿ÇÏÁö ¾ÊÀ½")]
+    [Tooltip("í•œ ë²ˆ ë°œë™í•˜ë©´ ë‹¤ì‹œ ë°œë™í•˜ì§€ ì•ŠìŒ")]
     public bool onceOnly = true;
-    [Tooltip("ÀáÀÚ±â Á÷ÈÄ¿¡¸¸ ÆÇÁ¤ (²Ş ¿¬Ãâ¿ë)")]
+    [Tooltip("ì ìê¸° ì§í›„ì—ë§Œ íŒì • (ê¿ˆ ì—°ì¶œìš©)")]
     public bool onlyAfterSleep = false;
 }

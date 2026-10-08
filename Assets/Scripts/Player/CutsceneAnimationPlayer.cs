@@ -1,17 +1,17 @@
-using System.Collections;
+ï»¿using System.Collections;
 using UnityEngine;
 
-// Player ·çÆ®¿¡ ºÎÂø
+// Player ë£¨íŠ¸ì— ë¶€ì°©
 public class CutsceneAnimationPlayer : MonoBehaviour, IActionLockSource
 {
     [SerializeField] private CutsceneAnimationCatalog _catalog;
     [SerializeField] private Animator[] _bodyAnimators;
-    [SerializeField] private Animator _faceAnimator; // Ç¥Á¤ ÆÄÃ÷°¡ ¾øÀ¸¸é ºñ¿öµÒ
+    [SerializeField] private Animator _faceAnimator; // í‘œì • íŒŒì¸ ê°€ ì—†ìœ¼ë©´ ë¹„ì›Œë‘ 
 
     //private PlayerVisual _visual;
     private bool _isPlaying;
 
-    public bool IsLocked => _isPlaying; // Àç»ı Áß¿£ ÀÌµ¿/°ø°İ ÀÚµ¿ Àá±İ 
+    public bool IsLocked => _isPlaying; // ì¬ìƒ ì¤‘ì—” ì´ë™/ê³µê²© ìë™ ì ê¸ˆ 
 
     //private void Awake() => _visual = GetComponentInChildren<PlayerVisual>();
 
@@ -20,7 +20,7 @@ public class CutsceneAnimationPlayer : MonoBehaviour, IActionLockSource
         var data = _catalog.Get(key);
         if (data == null)
         {
-            Debug.LogWarning($"[CutsceneAnimationPlayer] Á¸ÀçÇÏÁö ¾Ê´Â ¿¬Ãâ Å°: {key}");
+            Debug.LogWarning($"[CutsceneAnimationPlayer] ì¡´ì¬í•˜ì§€ ì•ŠëŠ” ì—°ì¶œ í‚¤: {key}");
             return;
         }
         StartCoroutine(PlayRoutine(data));
@@ -43,7 +43,7 @@ public class CutsceneAnimationPlayer : MonoBehaviour, IActionLockSource
             yield return new WaitForSeconds(data.duration);
             EndCutscene();
         }
-        // duration == -1ÀÌ¸é Å¬¸³ ³¡ÀÇ Animation Event°¡ EndCutscene()À» È£Ãâ
+        // duration == -1ì´ë©´ í´ë¦½ ëì˜ Animation Eventê°€ EndCutscene()ì„ í˜¸ì¶œ
     }
 
     public void EndCutscene()

@@ -1,20 +1,20 @@
-using TMPro;
+ï»¿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// HUD Äü¹öÆ°. Ã¢ ID¸¸ ÁöÁ¤ÇÏ¸é ¿­°í ´İ±â¿Í ´ÜÃàÅ° ±ÛÀÚ Ç¥½Ã¸¦ ´ã´çÇÑ´Ù.
+// HUD í€µë²„íŠ¼. ì°½ IDë§Œ ì§€ì •í•˜ë©´ ì—´ê³  ë‹«ê¸°ì™€ ë‹¨ì¶•í‚¤ ê¸€ì í‘œì‹œë¥¼ ë‹´ë‹¹í•œë‹¤.
 [RequireComponent(typeof(Button))]
 public class UIWindowButton : MonoBehaviour
 {
-    [Header("´ë»ó")]
+    [Header("ëŒ€ìƒ")]
     public UIWindowId windowId;
-    [Tooltip("ÀÌ Ã¢À» ¿©´Â ´ÜÃàÅ°. ¹öÆ°¿¡ ±ÛÀÚ¸¦ Ç¥½ÃÇÒ ¶§ »ç¿ëÇÑ´Ù")]
+    [Tooltip("ì´ ì°½ì„ ì—¬ëŠ” ë‹¨ì¶•í‚¤. ë²„íŠ¼ì— ê¸€ìë¥¼ í‘œì‹œí•  ë•Œ ì‚¬ìš©í•œë‹¤")]
     public InputAction hotkey = InputAction.Journal;
 
-    [Header("Ç¥½Ã")]
-    [Tooltip("´ÜÃàÅ° ±ÛÀÚ¸¦ Ç¥½ÃÇÒ ÅØ½ºÆ® (¾øÀ¸¸é »ı·«)")]
+    [Header("í‘œì‹œ")]
+    [Tooltip("ë‹¨ì¶•í‚¤ ê¸€ìë¥¼ í‘œì‹œí•  í…ìŠ¤íŠ¸ (ì—†ìœ¼ë©´ ìƒëµ)")]
     public TMP_Text hotkeyLabel;
-    [Tooltip("°»½Å ¾Ë¸² »¡°£ Á¡ (¾øÀ¸¸é »ı·«)")]
+    [Tooltip("ê°±ì‹  ì•Œë¦¼ ë¹¨ê°„ ì  (ì—†ìœ¼ë©´ ìƒëµ)")]
     public GameObject unreadDot;
 
     private Button _button;
@@ -38,10 +38,10 @@ public class UIWindowButton : MonoBehaviour
     {
         if (UIWindowManager.Instance == null) return;
         UIWindowManager.Instance.Toggle(windowId);
-        SetUnread(false);            // ¿­¾îºÃÀ¸¸é ¾Ë¸² Á¡À» ²ö´Ù
+        SetUnread(false);            // ì—´ì–´ë´¤ìœ¼ë©´ ì•Œë¦¼ ì ì„ ëˆë‹¤
     }
 
-    // ±â·ÏÀå µî¿¡ »õ ³»¿ëÀÌ »ı±â¸é ¿ÜºÎ¿¡¼­ È£ÃâÇÑ´Ù
+    // ê¸°ë¡ì¥ ë“±ì— ìƒˆ ë‚´ìš©ì´ ìƒê¸°ë©´ ì™¸ë¶€ì—ì„œ í˜¸ì¶œí•œë‹¤
     public void SetUnread(bool hasUnread)
     {
         if (unreadDot != null) unreadDot.SetActive(hasUnread);

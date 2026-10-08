@@ -1,4 +1,4 @@
-// HitStopManager.cs (½Å±Ô)
+ï»¿// HitStopManager.cs (ì‹ ê·œ)
 using System.Collections;
 using UnityEngine;
 
@@ -6,8 +6,8 @@ public class HitStopManager : Singleton<HitStopManager>
 {
     private Coroutine _routine;
 
-    [Header("´À¸° ¼Óµµ Á¶Àı")]
-    [Tooltip("È÷Æ®½ºÅé µ¿¾È ¾Ö´Ï¸ŞÀÌÅÍ Àç»ı ¼Óµµ. 0¿¡ °¡±î¿ï¼ö·Ï °ÅÀÇ ¸ØÃá µí, 1¿¡ °¡±î¿ï¼ö·Ï Á¤»ó¼Óµµ")]
+    [Header("ëŠë¦° ì†ë„ ì¡°ì ˆ")]
+    [Tooltip("íˆíŠ¸ìŠ¤í†± ë™ì•ˆ ì• ë‹ˆë©”ì´í„° ì¬ìƒ ì†ë„. 0ì— ê°€ê¹Œìš¸ìˆ˜ë¡ ê±°ì˜ ë©ˆì¶˜ ë“¯, 1ì— ê°€ê¹Œìš¸ìˆ˜ë¡ ì •ìƒì†ë„")]
     public float hitStopSlowSpeed = 0.08f;
 
     public void Trigger(CharacterStats a, CharacterStats b, float duration, float chromaticIntensity = -1f, float lensIntensity = -1f)
@@ -29,14 +29,14 @@ public class HitStopManager : Singleton<HitStopManager>
     {
         if (c == null) return;
         var pv = c.GetComponentInChildren<PlayerVisual>();
-        if (pv != null) { pv.TriggerHitStop(duration); return; } // ±âÁ¸ ÀÖ´ø ±â´É Àç»ç¿ë
+        if (pv != null) { pv.TriggerHitStop(duration); return; } // ê¸°ì¡´ ìˆë˜ ê¸°ëŠ¥ ì¬ì‚¬ìš©
         var nv = c.GetComponentInChildren<NPCVisual>();
         if (nv != null) StartCoroutine(NPCHitStopRoutine(nv, duration));
     }
 
     private IEnumerator NPCHitStopRoutine(NPCVisual nv, float duration)
     {
-        nv.SetAnimatorSpeed(hitStopSlowSpeed); // ¡Ú 0f ¡æ hitStopSlowSpeed
+        nv.SetAnimatorSpeed(hitStopSlowSpeed); // â˜… 0f â†’ hitStopSlowSpeed
         yield return new WaitForSecondsRealtime(duration);
         nv.SetAnimatorSpeed(1f);
     }

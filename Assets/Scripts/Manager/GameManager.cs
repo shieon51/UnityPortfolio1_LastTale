@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class GameManager : Singleton<GameManager>
 {
@@ -6,13 +6,13 @@ public class GameManager : Singleton<GameManager>
 
     private void Awake()
     {
-        // ÀÓ½Ã·Î °ÔÀÓ ½ÃÀÛ ½Ã 1ºÎ(Season1) ¸ğµå·Î ¼³Á¤
+        // ì„ì‹œë¡œ ê²Œì„ ì‹œì‘ ì‹œ 1ë¶€(Season1) ëª¨ë“œë¡œ ì„¤ì •
         SetGameMode(new Season1Mode());
     }
 
     public void SetGameMode(IGameMode mode)
     {
         CurrentGameMode = mode;
-        Debug.Log($"[GameManager] °ÔÀÓ ¸ğµå º¯°æµÊ: {mode.GetType().Name}");
+        Debug.Log($"[GameManager] ê²Œì„ ëª¨ë“œ ë³€ê²½ë¨: {mode.GetType().Name}");
     }
 }

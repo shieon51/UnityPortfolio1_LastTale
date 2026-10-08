@@ -1,10 +1,10 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "New Skill Sequence", menuName = "LastMarchan/Skills/Skill Sequence")]
 public class SkillSequenceData : ScriptableObject
 {
     [Header("Combo Steps")]
-    [Tooltip("¼ø¼­´ë·Î 1Å¸, 2Å¸, 3Å¸ ½ºÅ³ µ¥ÀÌÅÍ¸¦ ³ÖÀ¸¼¼¿ä.")]
+    [Tooltip("ìˆœì„œëŒ€ë¡œ 1íƒ€, 2íƒ€, 3íƒ€ ìŠ¤í‚¬ ë°ì´í„°ë¥¼ ë„£ìœ¼ì„¸ìš”.")]
     public List<SkillBase> comboSteps;
 }

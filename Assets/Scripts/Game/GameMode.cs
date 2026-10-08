@@ -1,24 +1,24 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 // [GameMode.cs]
 public interface IGameMode
 {
-    // ÀÌº¥Æ®°¡ È°¼ºÈ­µÉ Á¶°Ç(½Ã°£, ³¯Â¥ µî)ÀÌ ¸Â´ÂÁö °Ë»çÇÏ´Â ÇÔ¼ö
+    // ì´ë²¤íŠ¸ê°€ í™œì„±í™”ë  ì¡°ê±´(ì‹œê°„, ë‚ ì§œ ë“±)ì´ ë§ëŠ”ì§€ ê²€ì‚¬í•˜ëŠ” í•¨ìˆ˜
     bool IsEventValid(EventData eventData, int currentSceneID);
 
-    // ÀÌº¥Æ®¸¦ °Ş¾úÀ» ¶§ ½Ã°£ÀÌ³ª Çàµ¿·ÂÀ» ¼ÒºñÇÏ´Â ·ê
+    // ì´ë²¤íŠ¸ë¥¼ ê²ªì—ˆì„ ë•Œ ì‹œê°„ì´ë‚˜ í–‰ë™ë ¥ì„ ì†Œë¹„í•˜ëŠ” ë£°
     void ConsumeResourceForEvent(int amount);
 }
 
-// 1ºÎ Àü¿ë ·ê (¼Ò¶ó, ½Ã°£ ÄÚÀÎ ½Ã½ºÅÛ)
+// 1ë¶€ ì „ìš© ë£° (ì†Œë¼, ì‹œê°„ ì½”ì¸ ì‹œìŠ¤í…œ)
 public class Season1Mode : IGameMode
 {
     public bool IsEventValid(EventData eventData, int currentSceneID)
     {
-        // 1. ¾À ÀÏÄ¡ ¿©ºÎ
+        // 1. ì”¬ ì¼ì¹˜ ì—¬ë¶€
         if (eventData.SceneID != currentSceneID) return false;
 
-        // 2. ½Ã°£/³¯Â¥ ÀÏÄ¡ ¿©ºÎ (1ºÎ Àü¿ë ·ê)
+        // 2. ì‹œê°„/ë‚ ì§œ ì¼ì¹˜ ì—¬ë¶€ (1ë¶€ ì „ìš© ë£°)
         int currentDay = TimeManager.Instance.currentDay;
         int currentTime = TimeManager.Instance.currentHour;
 
@@ -28,22 +28,22 @@ public class Season1Mode : IGameMode
 
     public void ConsumeResourceForEvent(int amount)
     {
-        TimeManager.Instance.UseTimeCoins(amount); // ½Ã°£ ÄÚÀÎ ¼Ò¸ğ
+        TimeManager.Instance.UseTimeCoins(amount); // ì‹œê°„ ì½”ì¸ ì†Œëª¨
     }
 }
 
-// 2ºÎ Àü¿ë ·ê (¸®¿¤, ÅÏÁ¦/Çàµ¿·Â ½Ã½ºÅÛ µîÀ¸·Î °¡Á¤)
+// 2ë¶€ ì „ìš© ë£° (ë¦¬ì—˜, í„´ì œ/í–‰ë™ë ¥ ì‹œìŠ¤í…œ ë“±ìœ¼ë¡œ ê°€ì •)
 public class Season2Mode : IGameMode
 {
     public bool IsEventValid(EventData eventData, int currentSceneID)
     {
-        // 2ºÎ¿¡¼­´Â ½Ã°£/³¯Â¥ »ó°ü¾øÀÌ ¾À¿¡ ÀÖÀ¸¸é ¹«Á¶°Ç ÀÌº¥Æ®°¡ ¹ß»ıÇÑ´Ù°í °¡Á¤
+        // 2ë¶€ì—ì„œëŠ” ì‹œê°„/ë‚ ì§œ ìƒê´€ì—†ì´ ì”¬ì— ìˆìœ¼ë©´ ë¬´ì¡°ê±´ ì´ë²¤íŠ¸ê°€ ë°œìƒí•œë‹¤ê³  ê°€ì •
         return eventData.SceneID == currentSceneID;
     }
 
     public void ConsumeResourceForEvent(int amount)
     {
-        // ¿¹: 2ºÎ¿¡¼­´Â ½Ã°£ ÄÚÀÎ ´ë½Å Çàµ¿·Â(Action Point) °¨¼Ò ·ÎÁ÷ È£Ãâ
+        // ì˜ˆ: 2ë¶€ì—ì„œëŠ” ì‹œê°„ ì½”ì¸ ëŒ€ì‹  í–‰ë™ë ¥(Action Point) ê°ì†Œ ë¡œì§ í˜¸ì¶œ
         // ActionPointManager.Instance.UseAP(amount); 
     }
 }

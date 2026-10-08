@@ -1,19 +1,19 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 [CreateAssetMenu(menuName = "LastMarchan/Combat/Formulas/Groggy Duration")]
 public class GroggyDurationFormula : ScriptableObject
 {
     public float baseDuration = 2.5f;
-    [Tooltip("·¹º§ 1´ç ±×·Î±â ½Ã°£ º¯È­ ºñÀ²")]
+    [Tooltip("ë ˆë²¨ 1ë‹¹ ê·¸ë¡œê¸° ì‹œê°„ ë³€í™” ë¹„ìœ¨")]
     public float levelScalingPerPoint = 0;
 
     public float minDuration = 0.5f; //?
     public float maxDuration = 5f; //?
 
-    // groggyTarget: ±×·Î±â °É¸®´Â ÂÊ(=ÆĞ¸µ´çÇÑ °ø°İÀÚ), opponent: ÆĞ¸µ ¼º°ø½ÃÅ² ÂÊ
+    // groggyTarget: ê·¸ë¡œê¸° ê±¸ë¦¬ëŠ” ìª½(=íŒ¨ë§ë‹¹í•œ ê³µê²©ì), opponent: íŒ¨ë§ ì„±ê³µì‹œí‚¨ ìª½
     public float CalculateDuration(int groggyTargetLevel, int opponentLevel)
     {
-        int diff = groggyTargetLevel - opponentLevel; // ±×·Î±â °É¸®´Â ÂÊÀÌ ·¹º§ ³ôÀ»¼ö·Ï diff ¾ç¼ö ¡æ Âª¾ÆÁü
+        int diff = groggyTargetLevel - opponentLevel; // ê·¸ë¡œê¸° ê±¸ë¦¬ëŠ” ìª½ì´ ë ˆë²¨ ë†’ì„ìˆ˜ë¡ diff ì–‘ìˆ˜ â†’ ì§§ì•„ì§
         float modifier = 1f - diff * levelScalingPerPoint;
         return Mathf.Clamp(baseDuration * modifier, minDuration, maxDuration);
     }

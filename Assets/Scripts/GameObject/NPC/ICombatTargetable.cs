@@ -1,5 +1,5 @@
-
-// npc °ø°İ °¡´É ¿©ºÎ ÆÇ´Ü
+ï»¿
+// npc ê³µê²© ê°€ëŠ¥ ì—¬ë¶€ íŒë‹¨
 public interface ICombatTargetable
 {
     bool IsValidCombatTarget(CharacterStats attacker);

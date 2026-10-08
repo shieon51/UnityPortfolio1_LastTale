@@ -1,10 +1,10 @@
-using TMPro;
+ï»¿using TMPro;
 using UnityEngine;
 
 [RequireComponent(typeof(TMP_Text))]
 public class LocalizedText : MonoBehaviour
 {
-    [Tooltip("LocalizationTable.csvÀÇ Å°")]
+    [Tooltip("LocalizationTable.csvì˜ í‚¤")]
     public string key;
 
     private TMP_Text _text;
@@ -25,14 +25,14 @@ public class LocalizedText : MonoBehaviour
         if (loc != null) loc.OnLanguageChanged -= Refresh;
     }
 
-    // ·±Å¸ÀÓ¿¡ ´Ù¸¥ ¹®±¸·Î ¹Ù²Ü ¶§
+    // ëŸ°íƒ€ì„ì— ë‹¤ë¥¸ ë¬¸êµ¬ë¡œ ë°”ê¿€ ë•Œ
     public void SetKey(string newKey)
     {
         key = newKey;
         Refresh();
     }
 
-    // "¸¶³ª°¡ {0} ºÎÁ·ÇÕ´Ï´Ù" Ã³·³ °ªÀÌ µé¾î°¡´Â ¹®±¸¿ë
+    // "ë§ˆë‚˜ê°€ {0} ë¶€ì¡±í•©ë‹ˆë‹¤" ì²˜ëŸ¼ ê°’ì´ ë“¤ì–´ê°€ëŠ” ë¬¸êµ¬ìš©
     public void SetArgs(params object[] args)
     {
         _args = args;

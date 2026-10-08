@@ -1,7 +1,7 @@
-// GameStartConfig.cs (½Å±Ô)
+ï»¿// GameStartConfig.cs (ì‹ ê·œ)
 using UnityEngine;
 
-// ÇÃ·¹ÀÌ¾î ½ÃÀÛ À§Ä¡ °ü·Ã
+// í”Œë ˆì´ì–´ ì‹œì‘ ìœ„ì¹˜ ê´€ë ¨
 [CreateAssetMenu(menuName = "LastMarchan/Game Start Config")]
 public class GameStartConfig : ScriptableObject
 {

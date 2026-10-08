@@ -1,25 +1,25 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
-// ½ºÅÃ¿¡ ¿Ã¶ó°¥ ¼ö ÀÖ´Â UIÀÇ Á¾·ù. ¼ıÀÚ°¡ Å¬¼ö·Ï À§¿¡ ½×ÀÎ´Ù.
+// ìŠ¤íƒì— ì˜¬ë¼ê°ˆ ìˆ˜ ìˆëŠ” UIì˜ ì¢…ë¥˜. ìˆ«ìê°€ í´ìˆ˜ë¡ ìœ„ì— ìŒ“ì¸ë‹¤.
 public enum UILayer { Window = 0, Popup = 1, Pause = 2 }
 
-// Ã¢¡¤ÆË¾÷¡¤ÀÏ½ÃÁ¤Áö ¸Ş´ºÀÇ °øÅë ±â¹İ.
-// Ç¥½Ã/¼û±è¸¸ ´ã´çÇÏ°í, ¿­°í ´İ´Â ¼ø¼­´Â UIWindowManager°¡ °ü¸®ÇÑ´Ù.
+// ì°½Â·íŒì—…Â·ì¼ì‹œì •ì§€ ë©”ë‰´ì˜ ê³µí†µ ê¸°ë°˜.
+// í‘œì‹œ/ìˆ¨ê¹€ë§Œ ë‹´ë‹¹í•˜ê³ , ì—´ê³  ë‹«ëŠ” ìˆœì„œëŠ” UIWindowManagerê°€ ê´€ë¦¬í•œë‹¤.
 public abstract class UIStackElement : MonoBehaviour
 {
     public abstract UILayer Layer { get; }
 
-    [Header("½ºÅÃ µ¿ÀÛ")]
-    [Tooltip("ESC·Î ´İÀ» ¼ö ÀÖ´ÂÁö")]
+    [Header("ìŠ¤íƒ ë™ì‘")]
+    [Tooltip("ESCë¡œ ë‹«ì„ ìˆ˜ ìˆëŠ”ì§€")]
     public bool closeOnEscape = true;
-    [Tooltip("¿­·Á ÀÖ´Â µ¿¾È ¿ùµå¸¦ ¸ØÃâÁö")]
+    [Tooltip("ì—´ë ¤ ìˆëŠ” ë™ì•ˆ ì›”ë“œë¥¼ ë©ˆì¶œì§€")]
     public bool pausesWorld = true;
-    [Tooltip("´ëÈ­ Áß¿¡µµ ¿­ ¼ö ÀÖ´ÂÁö")]
+    [Tooltip("ëŒ€í™” ì¤‘ì—ë„ ì—´ ìˆ˜ ìˆëŠ”ì§€")]
     public bool allowDuringDialogue = false;
 
     public bool IsOpen { get; private set; }
 
-    // ¸Å´ÏÀú°¡ È£ÃâÇÑ´Ù. Á÷Á¢ ºÎ¸£Áö ¸» °Í
+    // ë§¤ë‹ˆì €ê°€ í˜¸ì¶œí•œë‹¤. ì§ì ‘ ë¶€ë¥´ì§€ ë§ ê²ƒ
     public void OpenInternal()
     {
         IsOpen = true;
@@ -37,7 +37,7 @@ public abstract class UIStackElement : MonoBehaviour
     protected virtual void OnOpened() { }
     protected virtual void OnClosed() { }
 
-    // true¸¦ ¹İÈ¯ÇÏ¸é ÀÌ ¿ä¼Ò°¡ ESC¸¦ ÀÚÃ¼ Ã³¸®Çß´Ù´Â ¶æÀÌ¶ó ´İÈ÷Áö ¾Ê´Â´Ù
-    // (¿¹: ÇÏÀ§ ÅÇÀÌ ¿­·Á ÀÖÀ¸¸é ÅÇ¸¸ Á¢±â)
+    // trueë¥¼ ë°˜í™˜í•˜ë©´ ì´ ìš”ì†Œê°€ ESCë¥¼ ìì²´ ì²˜ë¦¬í–ˆë‹¤ëŠ” ëœ»ì´ë¼ ë‹«íˆì§€ ì•ŠëŠ”ë‹¤
+    // (ì˜ˆ: í•˜ìœ„ íƒ­ì´ ì—´ë ¤ ìˆìœ¼ë©´ íƒ­ë§Œ ì ‘ê¸°)
     public virtual bool HandleEscape() => false;
 }

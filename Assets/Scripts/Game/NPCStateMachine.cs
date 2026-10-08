@@ -1,15 +1,15 @@
-
-// ¸ğµç »óÅÂ°¡ »ó¼Ó¹ŞÀ» ±âº» ÀÎÅÍÆäÀÌ½º
+ï»¿
+// ëª¨ë“  ìƒíƒœê°€ ìƒì†ë°›ì„ ê¸°ë³¸ ì¸í„°í˜ì´ìŠ¤
 using UnityEngine;
 
 public interface IState
 {
     void Enter();
-    void Execute(); // Update¿¡¼­ ¸Å ÇÁ·¹ÀÓ È£Ãâ
+    void Execute(); // Updateì—ì„œ ë§¤ í”„ë ˆì„ í˜¸ì¶œ
     void Exit();
 }
 
-// »óÅÂ¸¦ °ü¸®ÇÏ´Â ¸Ó½Å
+// ìƒíƒœë¥¼ ê´€ë¦¬í•˜ëŠ” ë¨¸ì‹ 
 public class StateMachine
 {
     public IState CurrentState { get; private set; }

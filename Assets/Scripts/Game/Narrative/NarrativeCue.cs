@@ -1,20 +1,20 @@
-// NarrativeCue.cs (½Å±Ô)
+ï»¿// NarrativeCue.cs (ì‹ ê·œ)
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "LastMarchan/Narrative/Narrative Cue")]
 public class NarrativeCue : ScriptableObject
 {
-    public string cueId; // ink ÅÂ±×(#cue:xxx)¿Í ¸ÅÄª
-    [Header("Ä«¸Ş¶ó (Èçµé¸²+ÇÃ·¡½Ã ´Ù ¿©±â¼­ Ã³¸®µÊ)")]
+    public string cueId; // ink íƒœê·¸(#cue:xxx)ì™€ ë§¤ì¹­
+    [Header("ì¹´ë©”ë¼ (í”ë“¤ë¦¼+í”Œë˜ì‹œ ë‹¤ ì—¬ê¸°ì„œ ì²˜ë¦¬ë¨)")]
     public CameraCue cameraCue;
-    [Header("Ä«¸Ş¶ó ¼¦ (¿¬Ãâ¿ë, ±âÁ¸ Èçµé¸²/ÇÃ·¡½Ã¿Í º°°³)")]
-    public CameraShotData cameraShot; // ¡Ú Ãß°¡
-    [Header("Ä³¸¯ÅÍ Æ÷Áî/Ç¥Á¤")]
+    [Header("ì¹´ë©”ë¼ ìƒ· (ì—°ì¶œìš©, ê¸°ì¡´ í”ë“¤ë¦¼/í”Œë˜ì‹œì™€ ë³„ê°œ)")]
+    public CameraShotData cameraShot; // â˜… ì¶”ê°€
+    [Header("ìºë¦­í„° í¬ì¦ˆ/í‘œì •")]
     public string targetCharacterKey;
     public string animationKey;
-    [Header("»ç¿îµå")]
+    [Header("ì‚¬ìš´ë“œ")]
     public string sfxKey;
     public string bgmKey;
-    [Header("ÀÏ·¯½ºÆ®/ÄÆ¾À (ÃßÈÄ È®Àå)")]
+    [Header("ì¼ëŸ¬ìŠ¤íŠ¸/ì»·ì”¬ (ì¶”í›„ í™•ì¥)")]
     public Sprite standingIllustration;
 }

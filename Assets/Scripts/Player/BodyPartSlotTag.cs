@@ -1,6 +1,6 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
-// Visual ÇÏÀ§ °¢ ÆÄÃ÷ ¿ÀºêÁ§Æ®(Body, Face, Hair...)¿¡ ºÎÂø
+// Visual í•˜ìœ„ ê° íŒŒì¸  ì˜¤ë¸Œì íŠ¸(Body, Face, Hair...)ì— ë¶€ì°©
 [RequireComponent(typeof(Animator))]
 public class BodyPartSlotTag : MonoBehaviour
 {

@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,22 +11,22 @@ public class Sora_Q_MeleeDashSkill : SkillBase
     public float hitStopDuration = 0.08f;
     //public float damageMultiplier = 1f;
 
-    [Tooltip("ÀûÁß ½Ã ¹Ğ¾î³»´Â Èû")]
-    public float knockbackPower = 5f;     // ¡Ú ÇÏµåÄÚµù Á¦°Å
+    [Tooltip("ì ì¤‘ ì‹œ ë°€ì–´ë‚´ëŠ” í˜")]
+    public float knockbackPower = 5f;     // â˜… í•˜ë“œì½”ë”© ì œê±°
 
-    // ¾ÕÀ¸·Î Ä¡°í ³ª°¡´Â µ¿ÀÛ
+    // ì•ìœ¼ë¡œ ì¹˜ê³  ë‚˜ê°€ëŠ” ë™ì‘
     public override IEnumerator ExecuteSkillBehavior(PlayerCombat combat, Rigidbody2D rb, Animator anim, CharacterStats stats)
     {
-        // ½Ã°¢ÀûÀ¸·Î ¹İÀüµÈ flipX Á¤º¸¸¦ °¡Á®¿Í¼­ ¿Ïº®ÇÏ°Ô ¹æÇâÀ» ÀâÀ½
-        float dir = combat.FacingDirection * -1; // ** ÇöÀç ½ºÇÁ¶óÀÌÆ® ±âº» ¹æÇâÀÌ '¿ŞÂÊ'ÀÌ¶ó ÀÓ½Ã·Î -1 °öÇÔ
+        // ì‹œê°ì ìœ¼ë¡œ ë°˜ì „ëœ flipX ì •ë³´ë¥¼ ê°€ì ¸ì™€ì„œ ì™„ë²½í•˜ê²Œ ë°©í–¥ì„ ì¡ìŒ
+        float dir = combat.FacingDirection * -1; // ** í˜„ì¬ ìŠ¤í”„ë¼ì´íŠ¸ ê¸°ë³¸ ë°©í–¥ì´ 'ì™¼ìª½'ì´ë¼ ì„ì‹œë¡œ -1 ê³±í•¨
 
         Vector2 savedVelocity = rb.linearVelocity;
         float originalGravity = rb.gravityScale;
 
-        // °øÁß¿¡¼­ °ø°İÇÒ ¶§ ¶³¾îÁöÁö ¾Ê°Ô Ã¼°ø
+        // ê³µì¤‘ì—ì„œ ê³µê²©í•  ë•Œ ë–¨ì–´ì§€ì§€ ì•Šê²Œ ì²´ê³µ
         rb.gravityScale = 0f;
 
-        combat.GetComponent<AfterimageEffect>()?.Play(dashDuration); // ¡Ú ·çÇÁ ¹ÛÀ¸·Î, µü ÇÑ ¹ø¸¸
+        combat.GetComponent<AfterimageEffect>()?.Play(dashDuration); // â˜… ë£¨í”„ ë°–ìœ¼ë¡œ, ë”± í•œ ë²ˆë§Œ
 
         float elapsed = 0f;
         while (elapsed < dashDuration)
@@ -34,11 +34,11 @@ public class Sora_Q_MeleeDashSkill : SkillBase
             if (stats.isKnockedBack)
             {
                 rb.gravityScale = originalGravity;
-                combat.GetComponent<AfterimageEffect>()?.Stop(); // ¡Ú Á¶±â Á¾·á ½Ã¿¡µµ ¹İµå½Ã ²¨ÁÜ (ºüÁ®ÀÖ¾ú½À´Ï´Ù)
+                combat.GetComponent<AfterimageEffect>()?.Stop(); // â˜… ì¡°ê¸° ì¢…ë£Œ ì‹œì—ë„ ë°˜ë“œì‹œ êº¼ì¤Œ (ë¹ ì ¸ìˆì—ˆìŠµë‹ˆë‹¤)
                 yield break;
             }
             float currentSpeed = Mathf.Lerp(dashSpeed, 0f, elapsed / dashDuration);
-            // ¹Ù¶óº¸´Â ¹æÇâÀ¸·Î ÀüÁø
+            // ë°”ë¼ë³´ëŠ” ë°©í–¥ìœ¼ë¡œ ì „ì§„
             rb.linearVelocity = new Vector2(dir * currentSpeed, 0f);
             elapsed += Time.deltaTime;
             yield return null;
@@ -49,7 +49,7 @@ public class Sora_Q_MeleeDashSkill : SkillBase
         rb.linearVelocity = savedVelocity;
     }
 
-    // ´Ù´ÜÈ÷Æ® ¹æÁö È÷Æ®¹Ú½º ÆÇÁ¤
+    // ë‹¤ë‹¨íˆíŠ¸ ë°©ì§€ íˆíŠ¸ë°•ìŠ¤ íŒì •
     public override IEnumerator ExecuteHitbox(PlayerCombat combat, Transform parentTransform, CharacterStats stats)
     {
         float elapsed = 0f;
@@ -58,15 +58,15 @@ public class Sora_Q_MeleeDashSkill : SkillBase
 
         while (elapsed < activeDuration)
         {
-            // while ¹® ¾È¿¡¼­ ¸Å ÇÁ·¹ÀÓ¸¶´Ù ÇÃ·¹ÀÌ¾îÀÇ À§Ä¡¸¦ ´Ù½Ã °¡Á®¿À¹Ç·Î, 
-            // Á¡ÇÁ³ª ´ë½Ã Áß¿¡µµ È÷Æ®¹Ú½º°¡ ÇÃ·¹ÀÌ¾î¸¦ ¿Ïº®ÇÏ°Ô µû¶ó´Ù´Ô
+            // while ë¬¸ ì•ˆì—ì„œ ë§¤ í”„ë ˆì„ë§ˆë‹¤ í”Œë ˆì´ì–´ì˜ ìœ„ì¹˜ë¥¼ ë‹¤ì‹œ ê°€ì ¸ì˜¤ë¯€ë¡œ, 
+            // ì í”„ë‚˜ ëŒ€ì‹œ ì¤‘ì—ë„ íˆíŠ¸ë°•ìŠ¤ê°€ í”Œë ˆì´ì–´ë¥¼ ì™„ë²½í•˜ê²Œ ë”°ë¼ë‹¤ë‹˜
             float dir = combat.FacingDirection;
-            var (offset, size) = ResolveHitbox(combat.CurrentSkillContext); // * ÄÁÅØ½ºÆ®º° ¿À¹ö¶óÀÌµå°¡ ÀÖÀ¸¸é ±×°É »ç¿ë
+            var (offset, size) = ResolveHitbox(combat.CurrentSkillContext); // * ì»¨í…ìŠ¤íŠ¸ë³„ ì˜¤ë²„ë¼ì´ë“œê°€ ìˆìœ¼ë©´ ê·¸ê±¸ ì‚¬ìš©
 
             Vector2 currentOffset = new Vector2(offset.x * dir, offset.y);
             Vector2 center = (Vector2)parentTransform.position + currentOffset;
 
-            // ±âÁî¸ğ ±×¸®±â À§ÇØ ÃÖ½Å µ¥ÀÌÅÍ ³Ñ°ÜÁÜ (½Ç½Ã°£ ¹İ¿µ)
+            // ê¸°ì¦ˆëª¨ ê·¸ë¦¬ê¸° ìœ„í•´ ìµœì‹  ë°ì´í„° ë„˜ê²¨ì¤Œ (ì‹¤ì‹œê°„ ë°˜ì˜)
             combat.SetDebugHitbox(center, size);
 
             Collider2D[] hits = Physics2D.OverlapBoxAll(center, size, 0f, targetableLayers);
@@ -90,7 +90,7 @@ public class Sora_Q_MeleeDashSkill : SkillBase
             elapsed += Time.deltaTime;
             yield return null;
         }
-        // ±ËÀû ÆÇÁ¤ ³¡³ª¸é ±âÁî¸ğ ²û
+        // ê¶¤ì  íŒì • ëë‚˜ë©´ ê¸°ì¦ˆëª¨ ë”
         combat.ClearDebugHitbox();
     }
 }

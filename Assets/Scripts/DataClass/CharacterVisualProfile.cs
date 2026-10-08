@@ -1,7 +1,7 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 
-// Ä³¸¯ÅÍ 1¸í´ç 1°³ (Sora¿ë, ³ªÁß¿¡ Liel¿ë µî)
+// ìºë¦­í„° 1ëª…ë‹¹ 1ê°œ (Soraìš©, ë‚˜ì¤‘ì— Lielìš© ë“±)
 [CreateAssetMenu(menuName = "LastMarchan/Visual/Character Visual Profile")]
 public class CharacterVisualProfile : ScriptableObject
 {

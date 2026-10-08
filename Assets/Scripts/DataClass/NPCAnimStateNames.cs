@@ -1,4 +1,4 @@
-// ¸ğµç º¸½º NPCÀÇ º£ÀÌ½º ÄÁÆ®·Ñ·¯°¡ ¹İµå½Ã °¡Á®¾ß ÇÒ State ÀÌ¸§ °è¾à.
+ï»¿// ëª¨ë“  ë³´ìŠ¤ NPCì˜ ë² ì´ìŠ¤ ì»¨íŠ¸ë¡¤ëŸ¬ê°€ ë°˜ë“œì‹œ ê°€ì ¸ì•¼ í•  State ì´ë¦„ ê³„ì•½.
 public static class NPCAnimStateNames
 {
     public const string Idle = "Idle";

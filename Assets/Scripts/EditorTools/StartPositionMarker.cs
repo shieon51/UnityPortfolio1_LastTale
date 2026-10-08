@@ -1,4 +1,4 @@
-// StartPositionMarker.cs (½Å±Ô)
+ï»¿// StartPositionMarker.cs (ì‹ ê·œ)
 using UnityEngine;
 
 public class StartPositionMarker : MonoBehaviour
@@ -10,7 +10,7 @@ public class StartPositionMarker : MonoBehaviour
         Gizmos.color = Color.cyan;
         Gizmos.DrawSphere(transform.position, 0.4f);
 #if UNITY_EDITOR
-        UnityEditor.Handles.Label(transform.position + Vector3.up * 0.6f, "½ÃÀÛ À§Ä¡");
+        UnityEditor.Handles.Label(transform.position + Vector3.up * 0.6f, "ì‹œìž‘ ìœ„ì¹˜");
 #endif
     }
 }

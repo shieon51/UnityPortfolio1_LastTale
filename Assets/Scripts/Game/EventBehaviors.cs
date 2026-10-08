@@ -1,29 +1,29 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
-// ¸ğµç ÀÌº¥Æ® Çàµ¿ÀÌ ±¸ÇöÇØ¾ß ÇÒ ÀÎÅÍÆäÀÌ½º
+// ëª¨ë“  ì´ë²¤íŠ¸ í–‰ë™ì´ êµ¬í˜„í•´ì•¼ í•  ì¸í„°í˜ì´ìŠ¤
 public interface IEventBehavior
 {
     void Execute(EventData eventData);
 }
 
-// 1. ÀáÀÚ±â ÀÌº¥Æ® ·ÎÁ÷
+// 1. ì ìê¸° ì´ë²¤íŠ¸ ë¡œì§
 public class SleepEventBehavior : IEventBehavior
 {
     public void Execute(EventData eventData)
     {
-        // ÇöÀç Ä³¸¯ÅÍ°¡ '¼Ò¶ó'ÀÏ ¶§¸¸ ÇÇ·Îµµ ·ÎÁ÷ Àû¿ë
+        // í˜„ì¬ ìºë¦­í„°ê°€ 'ì†Œë¼'ì¼ ë•Œë§Œ í”¼ë¡œë„ ë¡œì§ ì ìš©
         if (PlayerManager.Instance.CurrentCharacter is SoraStats sora)
         {
             sora.RecoverFatigue(eventData.TimeTaken * 2);
         }
 
-        PlayerManager.Instance.CurrentCharacter.Heal(PlayerManager.Instance.CurrentCharacter.maxHealth); // FullHP ´ëÃ¼
+        PlayerManager.Instance.CurrentCharacter.Heal(PlayerManager.Instance.CurrentCharacter.maxHealth); // FullHP ëŒ€ì²´
         PlayerManager.Instance.CurrentCharacter.RecoverMana(eventData.TimeTaken);
-        AmbientEventManager.Instance?.TryTriggerAmbient(afterSleep: true); // ÀáÀÚ±â ÈÄ ²Ş ÆÇÁ¤
+        AmbientEventManager.Instance?.TryTriggerAmbient(afterSleep: true); // ì ìê¸° í›„ ê¿ˆ íŒì •
     }
 }
 
-// 2. ÈÆ·ÃÇÏ±â ÀÌº¥Æ® ·ÎÁ÷
+// 2. í›ˆë ¨í•˜ê¸° ì´ë²¤íŠ¸ ë¡œì§
 public class TrainingEventBehavior : IEventBehavior
 {
     public void Execute(EventData eventData)
@@ -33,11 +33,11 @@ public class TrainingEventBehavior : IEventBehavior
             sora.IncreaseFatigue(eventData.TimeTaken * 2);
         }
         PlayerManager.Instance.CurrentCharacter.GainExperience(eventData.TimeTaken * 10);
-        // ÃßÈÄ °ø°İ·Â/¹æ¾î·Â Áõ°¡ ·ÎÁ÷ Ãß°¡ °¡´É
+        // ì¶”í›„ ê³µê²©ë ¥/ë°©ì–´ë ¥ ì¦ê°€ ë¡œì§ ì¶”ê°€ ê°€ëŠ¥
     }
 }
 
-// 3. ¼ö·ÃÇÏ±â ÀÌº¥Æ® ·ÎÁ÷
+// 3. ìˆ˜ë ¨í•˜ê¸° ì´ë²¤íŠ¸ ë¡œì§
 public class PracticeEventBehavior : IEventBehavior
 {
     public void Execute(EventData eventData)
@@ -52,7 +52,7 @@ public class PracticeEventBehavior : IEventBehavior
     }
 }
 
-// 4. ±âº»/±âÅ¸ ÀÌº¥Æ® ·ÎÁ÷ (NPC ´ëÈ­ µî)
+// 4. ê¸°ë³¸/ê¸°íƒ€ ì´ë²¤íŠ¸ ë¡œì§ (NPC ëŒ€í™” ë“±)
 public class DefaultEventBehavior : IEventBehavior
 {
     public void Execute(EventData eventData)

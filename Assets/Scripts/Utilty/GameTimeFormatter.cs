@@ -1,11 +1,11 @@
-// GameTimeFormatter.cs (½Å±Ô)
+ï»¿// GameTimeFormatter.cs (ì‹ ê·œ)
 using System;
 
-// ¸ðµç È­¸éÀÇ ½Ã°¢ Ç¥±â°¡ ÀÌ°÷À» °ÅÄ£´Ù (±âÈ¹¼­ 5-4).
-// 12½Ã°£Á¦/24½Ã°£Á¦¸¦ ¹Ù²Ù¸é ÀÌº¥Æ®¸¦ ±¸µ¶ÇÑ È­¸éÀÌ ´Ù½Ã ±×¸°´Ù.
+// ëª¨ë“  í™”ë©´ì˜ ì‹œê° í‘œê¸°ê°€ ì´ê³³ì„ ê±°ì¹œë‹¤ (ê¸°íšì„œ 5-4).
+// 12ì‹œê°„ì œ/24ì‹œê°„ì œë¥¼ ë°”ê¾¸ë©´ ì´ë²¤íŠ¸ë¥¼ êµ¬ë…í•œ í™”ë©´ì´ ë‹¤ì‹œ ê·¸ë¦°ë‹¤.
 public static class GameTimeFormatter
 {
-    // ½ÇÁ¦ °ªÀº GameSettings°¡ ½ÃÀÛÇÒ ¶§ ³Ö¾îÁØ´Ù (PlayerPrefs¿¡ ÀúÀåµÈ ¼³Á¤)
+    // ì‹¤ì œ ê°’ì€ GameSettingsê°€ ì‹œìž‘í•  ë•Œ ë„£ì–´ì¤€ë‹¤ (PlayerPrefsì— ì €ìž¥ëœ ì„¤ì •)
     public static bool Use24Hour { get; private set; } = true;
 
     public static event Action OnFormatChanged;
@@ -17,10 +17,10 @@ public static class GameTimeFormatter
         OnFormatChanged?.Invoke();
     }
 
-    // "13:00" ¶Ç´Â "¿ÀÈÄ 1:00"
+    // "13:00" ë˜ëŠ” "ì˜¤í›„ 1:00"
     public static string FormatTime(int hour, int minute = 0)
     {
-        // ¡Ú AM/PMÀº ÇÏ·ç°¡ 24½Ã°£ÀÏ ¶§¸¸ ÀÇ¹Ì°¡ ÀÖ´Ù (TimeCoinPanel¿¡ ÀÖ´ø ±ÔÄ¢À» ÀÌ°÷À¸·Î)
+        // â˜… AM/PMì€ í•˜ë£¨ê°€ 24ì‹œê°„ì¼ ë•Œë§Œ ì˜ë¯¸ê°€ ìžˆë‹¤ (TimeCoinPanelì— ìžˆë˜ ê·œì¹™ì„ ì´ê³³ìœ¼ë¡œ)
         bool use24 = Use24Hour || (TimeManager.Instance != null && TimeManager.Instance.coinsPerDay != 24);
         if (use24)
             return Format("time_format_24", "{0:00}:{1:00}", hour, minute);
@@ -29,13 +29,13 @@ public static class GameTimeFormatter
         int h12 = hour % 12;
         if (h12 == 0) h12 = 12;
         string ampm = isPm ? Text("time_pm", "PM") : Text("time_am", "AM");
-        // ¾ð¾î¸¶´Ù ¿ÀÀü/¿ÀÈÄ À§Ä¡°¡ ´Ù¸£¹Ç·Î ¼ø¼­´Â ·ÎÄÃ¶óÀÌÁ¦ÀÌ¼Ç ¹®±¸°¡ Á¤ÇÑ´Ù
+        // ì–¸ì–´ë§ˆë‹¤ ì˜¤ì „/ì˜¤í›„ ìœ„ì¹˜ê°€ ë‹¤ë¥´ë¯€ë¡œ ìˆœì„œëŠ” ë¡œì»¬ë¼ì´ì œì´ì…˜ ë¬¸êµ¬ê°€ ì •í•œë‹¤
         return Format("time_format_12", "{0}:{1:00} {2}", h12, minute, ampm);
     }
 
-    // "Day 20 ¡¤ 13:00"
+    // "Day 20 Â· 13:00"
     public static string FormatDayTime(int day, int hour, int minute = 0)
-        => Format("daytime_format", "Day {0} ¡¤ {1}", day, FormatTime(hour, minute));
+        => Format("daytime_format", "Day {0} Â· {1}", day, FormatTime(hour, minute));
 
     private static string Text(string key, string fallback)
     {

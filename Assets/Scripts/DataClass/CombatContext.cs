@@ -1,8 +1,8 @@
-// ¸ğµç ÀüÅõ °è»êÀÇ Ç¥ÁØ ÀÔ·Â
+ï»¿// ëª¨ë“  ì „íˆ¬ ê³„ì‚°ì˜ í‘œì¤€ ì…ë ¥
 public struct CombatContext
 {
     public int IncomingDamage;
-    public CharacterStats Attacker; // Áö±İÀº ´ëºÎºĞ null (¾Æ·¡ ¼³¸í Âü°í)
+    public CharacterStats Attacker; // ì§€ê¸ˆì€ ëŒ€ë¶€ë¶„ null (ì•„ë˜ ì„¤ëª… ì°¸ê³ )
     public CharacterStats Defender;
     public ElementType AttackElement;
     public SkillBase Skill;

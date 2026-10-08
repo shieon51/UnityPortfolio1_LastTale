@@ -1,40 +1,40 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System;
 using UnityEngine.SceneManagement;
 using System.IO;
 
-/* SceneLoader - ÇöÀç ¾À¿¡ ¸ÂÃç ¸Ê SceneÀ» ·Îµå */
+/* SceneLoader - í˜„ì¬ ì”¬ì— ë§ì¶° ë§µ Sceneì„ ë¡œë“œ */
 
 public class SceneLoader : Singleton<SceneLoader>
 {
     private string currentMapScene = "";
     public int CurrentSceneID { get; private set; }
 
-    public GameObject player; // ÀÎ½ºÆåÅÍ¿¡¼­ ÇÒ´ç
-    public GameObject portalPrefab; // ÀÎ½ºÆåÅÍ¿¡¼­ ÇÒ´ç
+    public GameObject player; // ì¸ìŠ¤í™í„°ì—ì„œ í• ë‹¹
+    public GameObject portalPrefab; // ì¸ìŠ¤í™í„°ì—ì„œ í• ë‹¹
 
     [Header("Ground Snap")]
-    public LayerMask groundSnapLayer; // NPCManager¿Í °°Àº ·¹ÀÌ¾î·Î ¿¬°á
+    public LayerMask groundSnapLayer; // NPCManagerì™€ ê°™ì€ ë ˆì´ì–´ë¡œ ì—°ê²°
 
-    public GameStartConfig startConfig; // ¡Ú ÀÎ½ºÆåÅÍ¿¡ ¿¬°á
+    public GameStartConfig startConfig; // â˜… ì¸ìŠ¤í™í„°ì— ì—°ê²°
 
     public event Action<int> OnSceneLoaded;
 
     private void Awake()
     {
-        //LoadSceneData();   // ¾À id: ¾À ÀÌ¸§ ´ëÀÀ Á¤º¸ ºÒ·¯¿À±â
+        //LoadSceneData();   // ì”¬ id: ì”¬ ì´ë¦„ ëŒ€ì‘ ì •ë³´ ë¶ˆëŸ¬ì˜¤ê¸°
     }
 
     private void Start()
     {
-        LoadScene(startConfig.startSceneID, startConfig.startPosition); // ¡Ú ÇÏµåÄÚµùµÈ 1/player.position ´ë½Å (ºñ±â³Ê Å¸¿î)
+        LoadScene(startConfig.startSceneID, startConfig.startPosition); // â˜… í•˜ë“œì½”ë”©ëœ 1/player.position ëŒ€ì‹  (ë¹„ê¸°ë„ˆ íƒ€ìš´)
     }
 
     public string GetSceneName(int sceneID)
     {
-        // DataManager¿¡°Ô ¹°¾îº½
+        // DataManagerì—ê²Œ ë¬¼ì–´ë´„
         if (DataManager.Instance.SceneDict.TryGetValue(sceneID, out string name)) return name;
         return null;
     }
@@ -44,73 +44,73 @@ public class SceneLoader : Singleton<SceneLoader>
         StartCoroutine(LoadSceneAsync(targetSceneID, spawnPos));
     }
 
-    // (¾ÀÀ» ¸ğµÎ ·ÎµåÇÏ±â Àü±îÁø ÇÃ·¹ÀÌ¾î À§Ä¡ Á¶Á¤ ÇÏÁö ¾Êµµ·Ï)
+    // (ì”¬ì„ ëª¨ë‘ ë¡œë“œí•˜ê¸° ì „ê¹Œì§„ í”Œë ˆì´ì–´ ìœ„ì¹˜ ì¡°ì • í•˜ì§€ ì•Šë„ë¡)
     private IEnumerator LoadSceneAsync(int sceneID, Vector2 spawnPos)
     {
         
         if (!DataManager.Instance.SceneDict.ContainsKey(sceneID)) //?
         {
-            Debug.LogError("¾À ID¸¦ Ã£À» ¼ö ¾øÀ½: " + sceneID);
+            Debug.LogError("ì”¬ IDë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŒ: " + sceneID);
             yield break;
         }
 
-        // ÇöÀç ¾À ID 
-        int previousSceneId = CurrentSceneID;   // ¡Ú ±â·Ï¿ë
+        // í˜„ì¬ ì”¬ ID 
+        int previousSceneId = CurrentSceneID;   // â˜… ê¸°ë¡ìš©
         CurrentSceneID = sceneID;
         string nextSceneName = DataManager.Instance.SceneDict[sceneID]; //?
 
-        // ÀÌÀü ¸Ê ¾À unload
+        // ì´ì „ ë§µ ì”¬ unload
         if (!string.IsNullOrEmpty(currentMapScene))
         {
             yield return SceneManager.UnloadSceneAsync(currentMapScene);
         }
 
-        // ¾À(¸ÊÁöÇü) ·ÎµåÇÏ±â(Additive)
+        // ì”¬(ë§µì§€í˜•) ë¡œë“œí•˜ê¸°(Additive)
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(nextSceneName, LoadSceneMode.Additive);
         while (!asyncLoad.isDone)
             yield return null;
 
         currentMapScene = nextSceneName;
 
-        // ·ÎµåµÈ ¾ÀÀ» Active·Î ¼³Á¤ (¶óÀÌÆÃ ¹× ¿ÀºêÁ§Æ® »ı¼º À§Ä¡ º¸Á¤)
+        // ë¡œë“œëœ ì”¬ì„ Activeë¡œ ì„¤ì • (ë¼ì´íŒ… ë° ì˜¤ë¸Œì íŠ¸ ìƒì„± ìœ„ì¹˜ ë³´ì •)
         Scene loadedScene = SceneManager.GetSceneByName(nextSceneName);
         if (loadedScene.IsValid())
         {
             SceneManager.SetActiveScene(loadedScene);
         }
 
-        // ¾À ´Ù ÄÑÁ³À¸´Ï ÇØ´ç ¾À(sceneID)¿¡ ¸Â´Â Æ÷Å»µé ½É±â
+        // ì”¬ ë‹¤ ì¼œì¡Œìœ¼ë‹ˆ í•´ë‹¹ ì”¬(sceneID)ì— ë§ëŠ” í¬íƒˆë“¤ ì‹¬ê¸°
         if (portalPrefab != null)
         {
             PortalManager.Instance.SpawnPortalsForScene(sceneID, portalPrefab);
         }
         else
         {
-            Debug.LogError("SceneLoader¿¡ Portal PrefabÀÌ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù!");
+            Debug.LogError("SceneLoaderì— Portal Prefabì´ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤!");
         }
 
-        // Player À§Ä¡ ÀÌµ¿
+        // Player ìœ„ì¹˜ ì´ë™
         if (player != null)
         {
-            player.transform.position = ComputeSnappedPosition(spawnPos); // ¡Ú ½º³À Àû¿ë
-            // ¹°¸® Ãæµ¹·Î Æ¨°Ü³ª°¡Áö ¾Ê°Ô Àá½Ã ¹°¸® ²ô°Å³ª À§Ä¡ °­Á¦ µ¿±âÈ­
+            player.transform.position = ComputeSnappedPosition(spawnPos); // â˜… ìŠ¤ëƒ… ì ìš©
+            // ë¬¼ë¦¬ ì¶©ëŒë¡œ íŠ•ê²¨ë‚˜ê°€ì§€ ì•Šê²Œ ì ì‹œ ë¬¼ë¦¬ ë„ê±°ë‚˜ ìœ„ì¹˜ ê°•ì œ ë™ê¸°í™”
             Physics2D.SyncTransforms();
         }
 
-        // ÇÃ·¹ÀÌ¾î ÀÌµ¿ÀÌ ³¡³­ ÈÄ ÀÌº¥Æ®¸¦ °»½Å
+        // í”Œë ˆì´ì–´ ì´ë™ì´ ëë‚œ í›„ ì´ë²¤íŠ¸ë¥¼ ê°±ì‹ 
         if (EventManager.Instance != null)
         {
             EventManager.Instance.UpdateEventTriggers();
         }
 
-        // ¡Ú ¾À ÁøÀÔ°ú µµÂø À§Ä¡¸¦ ³²±ä´Ù (À§Ä¡ º¹¿ø¡¤¹ö±× ÃßÀû¿ë)
+        // â˜… ì”¬ ì§„ì…ê³¼ ë„ì°© ìœ„ì¹˜ë¥¼ ë‚¨ê¸´ë‹¤ (ìœ„ì¹˜ ë³µì›Â·ë²„ê·¸ ì¶”ì ìš©)
         PlayerActionLog.Instance?.Record(RecordType.SceneEnter, sceneID.ToString(), previousSceneId, sceneID,
             payload: PlayerActionLog.EncodePosition(player != null ? (Vector2)player.transform.position : spawnPos));
 
-        OnSceneLoaded?.Invoke(sceneID); // ¡Ú ¸Ç ¸¶Áö¸·¿¡ Ãß°¡
+        OnSceneLoaded?.Invoke(sceneID); // â˜… ë§¨ ë§ˆì§€ë§‰ì— ì¶”ê°€
     }
 
-    // ¶¥¿¡ ½º³À
+    // ë•…ì— ìŠ¤ëƒ…
     private Vector3 ComputeSnappedPosition(Vector2 desiredPos, float startOffset = 1f, float rayDistance = 3f)
     {
         Vector2 rayStart = desiredPos + Vector2.up * startOffset;

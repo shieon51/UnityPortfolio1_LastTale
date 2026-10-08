@@ -1,31 +1,31 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
-// ¾Ë¸² Å¥ µ¿ÀÛ È®ÀÎ¿ë ÀÓ½Ã ½ºÅ©¸³Æ®. È®ÀÎÀÌ ³¡³ª¸é ¿ÀºêÁ§Æ®Â° Áö¿ì¸é µÈ´Ù.
+// ì•Œë¦¼ í ë™ìž‘ í™•ì¸ìš© ìž„ì‹œ ìŠ¤í¬ë¦½íŠ¸. í™•ì¸ì´ ëë‚˜ë©´ ì˜¤ë¸Œì íŠ¸ì§¸ ì§€ìš°ë©´ ëœë‹¤.
 public class NotificationTester : MonoBehaviour
 {
-    [ContextMenu("1) ¾Ë¸² ÇÏ³ª")]
+    [ContextMenu("1) ì•Œë¦¼ í•˜ë‚˜")]
     private void TestSingle()
     {
-        NotificationManager.Instance.Show("Ã¹ ¹øÂ° ¾Ë¸²", NotificationType.Info);
+        NotificationManager.Instance.Show("ì²« ë²ˆì§¸ ì•Œë¦¼", NotificationType.Info);
     }
 
-    [ContextMenu("2) ¿¬¼Ó 3°³ (Å¥ È®ÀÎ)")]
+    [ContextMenu("2) ì—°ì† 3ê°œ (í í™•ì¸)")]
     private void TestQueue()
     {
-        NotificationManager.Instance.Show("°øÁß¿¡¼­´Â ½Ã°£À» °íÁ¤ÇÒ ¼ö ¾ø½À´Ï´Ù", NotificationType.Warning);
-        NotificationManager.Instance.Show("¸¶³ª°¡ ºÎÁ·ÇÕ´Ï´Ù", NotificationType.Failure);
-        NotificationManager.Instance.Show("»õ·Î¿î Á¤º¸¸¦ ¾ò¾ú½À´Ï´Ù", NotificationType.Info);
+        NotificationManager.Instance.Show("ê³µì¤‘ì—ì„œëŠ” ì‹œê°„ì„ ê³ ì •í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤", NotificationType.Warning);
+        NotificationManager.Instance.Show("ë§ˆë‚˜ê°€ ë¶€ì¡±í•©ë‹ˆë‹¤", NotificationType.Failure);
+        NotificationManager.Instance.Show("ìƒˆë¡œìš´ ì •ë³´ë¥¼ ì–»ì—ˆìŠµë‹ˆë‹¤", NotificationType.Info);
     }
 
-    [ContextMenu("3) °°Àº ¹®±¸ ¿¬¼Ó (Áßº¹ ¹«½Ã È®ÀÎ)")]
+    [ContextMenu("3) ê°™ì€ ë¬¸êµ¬ ì—°ì† (ì¤‘ë³µ ë¬´ì‹œ í™•ì¸)")]
     private void TestDuplicate()
     {
-        NotificationManager.Instance.Show("¸¶³ª°¡ ºÎÁ·ÇÕ´Ï´Ù", NotificationType.Failure);
-        NotificationManager.Instance.Show("¸¶³ª°¡ ºÎÁ·ÇÕ´Ï´Ù", NotificationType.Failure);
-        NotificationManager.Instance.Show("¸¶³ª°¡ ºÎÁ·ÇÕ´Ï´Ù", NotificationType.Failure);
+        NotificationManager.Instance.Show("ë§ˆë‚˜ê°€ ë¶€ì¡±í•©ë‹ˆë‹¤", NotificationType.Failure);
+        NotificationManager.Instance.Show("ë§ˆë‚˜ê°€ ë¶€ì¡±í•©ë‹ˆë‹¤", NotificationType.Failure);
+        NotificationManager.Instance.Show("ë§ˆë‚˜ê°€ ë¶€ì¡±í•©ë‹ˆë‹¤", NotificationType.Failure);
     }
 
-    [ContextMenu("4) ÀÏ½ÃÁ¤Áö Áß ¾Ë¸² (timeScale 0)")]
+    [ContextMenu("4) ì¼ì‹œì •ì§€ ì¤‘ ì•Œë¦¼ (timeScale 0)")]
     private void TestWhilePaused()
     {
         StopAllCoroutines();
@@ -35,23 +35,23 @@ public class NotificationTester : MonoBehaviour
     private System.Collections.IEnumerator PauseRoutine()
     {
         Time.timeScale = 0f;
-        NotificationManager.Instance.Show("ÀÏ½ÃÁ¤Áö Áß¿¡µµ º¸ÀÌ°í »ç¶óÁ®¾ß ÇÔ", NotificationType.Info);
+        NotificationManager.Instance.Show("ì¼ì‹œì •ì§€ ì¤‘ì—ë„ ë³´ì´ê³  ì‚¬ë¼ì ¸ì•¼ í•¨", NotificationType.Info);
 
-        // ¡Ú Invoke³ª WaitForSeconds´Â timeScale 0¿¡¼­ ÁøÇàµÇÁö ¾ÊÀ¸¹Ç·Î Realtime »ç¿ë
+        // â˜… Invokeë‚˜ WaitForSecondsëŠ” timeScale 0ì—ì„œ ì§„í–‰ë˜ì§€ ì•Šìœ¼ë¯€ë¡œ Realtime ì‚¬ìš©
         yield return new WaitForSecondsRealtime(3f);
 
         Time.timeScale = 1f;
-        Debug.Log("[NotificationTester] ½Ã°£ º¹±¸ ¿Ï·á");
+        Debug.Log("[NotificationTester] ì‹œê°„ ë³µêµ¬ ì™„ë£Œ");
     }
 
     private void ResumeTime() => Time.timeScale = 1f;
 
-    [ContextMenu("5) Å¥ ºñ¿ì±â")]
+    [ContextMenu("5) í ë¹„ìš°ê¸°")]
     private void TestClear()
     {
         NotificationManager.Instance.ClearAll();
     }
 
-    [ContextMenu("6) ½Ã°£ º¹±¸ (timeScale = 1)")]
+    [ContextMenu("6) ì‹œê°„ ë³µêµ¬ (timeScale = 1)")]
     private void ForceResume() => Time.timeScale = 1f;
 }

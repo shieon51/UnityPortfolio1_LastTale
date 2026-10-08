@@ -1,43 +1,43 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// ½Ã°£ ÄÚÀÎ Àü´ã. ½Ã°¢ ¹®±¸´Â GameTimeFormatter°¡ ¸¸µç´Ù (±âÈ¹¼­ 5-4)
+// ì‹œê°„ ì½”ì¸ ì „ë‹´. ì‹œê° ë¬¸êµ¬ëŠ” GameTimeFormatterê°€ ë§Œë“ ë‹¤ (ê¸°íšì„œ 5-4)
 public class TimeCoinPanel : MonoBehaviour
 {
-    [Header("ÂüÁ¶")]
+    [Header("ì°¸ì¡°")]
     public Transform coinParent;
     public GameObject coinPrefab;
     public TextMeshProUGUI timeText, dayText;
 
-    [Header("¹èÄ¡")]
-    [Tooltip("ÄÚÀÎÀÌ ¹èÄ¡µÉ ¿øÀÇ ¹İÁö¸§")]
+    [Header("ë°°ì¹˜")]
+    [Tooltip("ì½”ì¸ì´ ë°°ì¹˜ë  ì›ì˜ ë°˜ì§€ë¦„")]
     public float radius = 80f;
-    [Tooltip("Ã¹ ÄÚÀÎÀÇ °¢µµ. 90ÀÌ¸é 12½Ã ¹æÇâ¿¡¼­ ½ÃÀÛ")]
+    [Tooltip("ì²« ì½”ì¸ì˜ ê°ë„. 90ì´ë©´ 12ì‹œ ë°©í–¥ì—ì„œ ì‹œì‘")]
     public float startAngleDegrees = 90f;
-    [Tooltip("Ã¼Å©ÇÏ¸é ½Ã°è ¹æÇâÀ¸·Î ¹èÄ¡")]
+    [Tooltip("ì²´í¬í•˜ë©´ ì‹œê³„ ë°©í–¥ìœ¼ë¡œ ë°°ì¹˜")]
     public bool clockwise = true;
 
-    [Header("»ö»ó")]
+    [Header("ìƒ‰ìƒ")]
     public Color usedCoinColor = new Color(0.5f, 0, 0, 1);
     public Color unusedCoinColor = new Color(0, 1, 0.8f, 1);
 
-    [Header("¹®±¸ (·ÎÄÃ¶óÀÌÁ¦ÀÌ¼Ç Å°)")]
-    public string dayFormatKey = "hud_day_format";           // ¿¹: "Day {0}"
-    [Tooltip("Å×ÀÌºí¿¡ Å°°¡ ¾øÀ» ¶§")]
+    [Header("ë¬¸êµ¬ (ë¡œì»¬ë¼ì´ì œì´ì…˜ í‚¤)")]
+    public string dayFormatKey = "hud_day_format";           // ì˜ˆ: "Day {0}"
+    [Tooltip("í…Œì´ë¸”ì— í‚¤ê°€ ì—†ì„ ë•Œ")]
     public string dayFormatFallback = "Day {0}";
 
     private readonly List<Image> _coinImages = new();
 
-    // ÇÏ·ç ½Ã°£ ¼ö´Â TimeManager°¡ ±âÁØÀÌ´Ù
+    // í•˜ë£¨ ì‹œê°„ ìˆ˜ëŠ” TimeManagerê°€ ê¸°ì¤€ì´ë‹¤
     private int TotalCoins => TimeManager.Instance != null ? TimeManager.Instance.coinsPerDay : 24;
 
     private void Start()
     {
         CreateTimeCoins();
 
-        // ¡Ú ½Ã°£Á¦ ¼³Á¤ÀÌ³ª ¾ğ¾î°¡ ¹Ù²î¸é ´Ù½Ã ±×¸°´Ù
+        // â˜… ì‹œê°„ì œ ì„¤ì •ì´ë‚˜ ì–¸ì–´ê°€ ë°”ë€Œë©´ ë‹¤ì‹œ ê·¸ë¦°ë‹¤
         GameTimeFormatter.OnFormatChanged += Refresh;
         if (LocalizationManager.Instance != null) LocalizationManager.Instance.OnLanguageChanged += Refresh;
 
@@ -62,7 +62,7 @@ public class TimeCoinPanel : MonoBehaviour
     {
         if (coinPrefab == null || coinParent == null)
         {
-            Debug.LogError("[TimeCoinPanel] coinPrefab ¶Ç´Â coinParent°¡ ºñ¾îÀÖ½À´Ï´Ù.", this);
+            Debug.LogError("[TimeCoinPanel] coinPrefab ë˜ëŠ” coinParentê°€ ë¹„ì–´ìˆìŠµë‹ˆë‹¤.", this);
             return;
         }
 
@@ -93,7 +93,7 @@ public class TimeCoinPanel : MonoBehaviour
         for (int i = 0; i < _coinImages.Count; i++)
             _coinImages[i].color = (i < remainingCoins) ? unusedCoinColor : usedCoinColor;
 
-        // ¡Ú ³²Àº ÄÚÀÎ¿¡¼­ °Å²Ù·Î °è»êÇÏÁö ¾Ê°í ÇöÀç ½Ã°¢À» ±×´ë·Î ¾´´Ù
+        // â˜… ë‚¨ì€ ì½”ì¸ì—ì„œ ê±°ê¾¸ë¡œ ê³„ì‚°í•˜ì§€ ì•Šê³  í˜„ì¬ ì‹œê°ì„ ê·¸ëŒ€ë¡œ ì“´ë‹¤
         int hour = TimeManager.Instance != null ? TimeManager.Instance.currentHour : 0;
         if (timeText != null) timeText.text = GameTimeFormatter.FormatTime(hour);
         if (dayText != null) dayText.text = Format(dayFormatKey, dayFormatFallback, currentDay);

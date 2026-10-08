@@ -1,10 +1,10 @@
-// GraphFilter.cs (½Å±Ô, Editor Æú´õ)
+ï»¿// GraphFilter.cs (ì‹ ê·œ, Editor í´ë”)
 public class GraphFilter
 {
-    public int day = 0;              // 0 = ÀüÃ¼
-    public string npcTag = "";       // "" = ÀüÃ¼
+    public int day = 0;              // 0 = ì „ì²´
+    public string npcTag = "";       // "" = ì „ì²´
     public string colorTag = "";
-    public int hour = -1;            // -1 = ÀüÃ¼
+    public int hour = -1;            // -1 = ì „ì²´
     public string searchText = "";
 
     public bool IsEmpty => day == 0 && string.IsNullOrEmpty(npcTag)

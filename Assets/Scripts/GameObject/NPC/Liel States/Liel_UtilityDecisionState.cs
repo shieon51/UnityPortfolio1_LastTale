@@ -1,6 +1,6 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
-// Liel_UtilityDecisionState.cs (½Å±Ô, Liel_BattleIdleState¸¦ ´ëÃ¼)
+// Liel_UtilityDecisionState.cs (ì‹ ê·œ, Liel_BattleIdleStateë¥¼ ëŒ€ì²´)
 public class Liel_UtilityDecisionState : NPCState
 {
     private Liel_AI liel;
@@ -15,20 +15,20 @@ public class Liel_UtilityDecisionState : NPCState
     public override void Execute()
     {
         var formController = liel.GetComponent<NPCFormStageController>();
-        if (formController != null && formController.IsTransforming) return; // º¯½Å ¿¬ÃâÀº NPCVisualÀÌ ÀÌº¥Æ®·Î ÀÌ¹Ì Àç»ı Áß
+        if (formController != null && formController.IsTransforming) return; // ë³€ì‹  ì—°ì¶œì€ NPCVisualì´ ì´ë²¤íŠ¸ë¡œ ì´ë¯¸ ì¬ìƒ ì¤‘
         if (player == null) return;
 
-        if (visual.IsShowingReactionPose) return; // ¡Ú È÷Æ®/ÆĞ¸µ ¸®¾×¼Ç Àç»ı Áß¿£ Idle·Î µ¤¾î¾²Áö ¾ÊÀ½
+        if (visual.IsShowingReactionPose) return; // â˜… íˆíŠ¸/íŒ¨ë§ ë¦¬ì•¡ì…˜ ì¬ìƒ ì¤‘ì—” Idleë¡œ ë®ì–´ì“°ì§€ ì•ŠìŒ
 
-        // Ã¼·ÂÀÌ ³·À» ½Ã 'ÁıÁß' »óÅÂ µ¹ÀÔ
+        // ì²´ë ¥ì´ ë‚®ì„ ì‹œ 'ì§‘ì¤‘' ìƒíƒœ ëŒì…
         if (liel.currentMana < liel.maxMana * NPCCombatTuning.Instance.ManaConcentrationTriggerRatio
-             && Time.time - liel.LastConcentrationEndTime >= NPCCombatTuning.Instance.ConcentrationRetryCooldown) // ¡Ú Ãß°¡
+             && Time.time - liel.LastConcentrationEndTime >= NPCCombatTuning.Instance.ConcentrationRetryCooldown) // â˜… ì¶”ê°€
         {
             liel.StateMachine.ChangeState(new Liel_ConcentrationState(liel, visual, player));
             return;
         }
 
-        liel.CheckPhaseTransition(); // ÆäÀÌÁî ÀüÈ¯µµ ¿©±â¼­ °°ÀÌ Ã¼Å© (¾Æ·¡)
+        liel.CheckPhaseTransition(); // í˜ì´ì¦ˆ ì „í™˜ë„ ì—¬ê¸°ì„œ ê°™ì´ ì²´í¬ (ì•„ë˜)
 
         liel.LookAtPlayer_Public();
 

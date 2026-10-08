@@ -1,0 +1,9 @@
+# ★ 텍스트 파일 인코딩을 UTF-8로 고정한다.
+#   한국어 Windows의 Visual Studio는 새 파일을 CP949로 저장할 수 있어 한글 주석이 깨졌다 (2026-10-08, 69개 변환)
+root = true
+
+[*.{cs,ink,csv,json,txt,shader,uss,uxml,asmdef}]
+charset = utf-8-bom
+
+[*.md]
+charset = utf-8

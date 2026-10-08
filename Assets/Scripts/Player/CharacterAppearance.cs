@@ -1,7 +1,7 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 
-// Visual ¿ÀºêÁ§Æ®¿¡ ºÎÂø
+// Visual ì˜¤ë¸Œì íŠ¸ì— ë¶€ì°©
 public class CharacterAppearance : MonoBehaviour
 {
     [SerializeField] private CharacterVisualProfile _profile;
@@ -16,7 +16,7 @@ public class CharacterAppearance : MonoBehaviour
         _slotByAnimator = new Dictionary<Animator, BodyPartSlot>();
         foreach (var p in _parts)
         {
-            if (p.Animator == null) continue; // È¤½Ã ¸ğ¸¦ ´©¶ô ÆÄÃ÷´Â Á¶¿ëÈ÷ °Ç³Ê¶Ü
+            if (p.Animator == null) continue; // í˜¹ì‹œ ëª¨ë¥¼ ëˆ„ë½ íŒŒì¸ ëŠ” ì¡°ìš©íˆ ê±´ë„ˆëœ€
             _slotByAnimator[p.Animator] = p.slot;
         }
 
@@ -42,12 +42,12 @@ public class CharacterAppearance : MonoBehaviour
         }
     }
 
-    // ¾î´À CharacterVisualProfile¸¦ ¾µÁö ·±Å¸ÀÓ¿¡¼­ ¹Ù²Ü ¼ö ÀÖµµ·Ï ÇÔ
+    // ì–´ëŠ CharacterVisualProfileë¥¼ ì“¸ì§€ ëŸ°íƒ€ì„ì—ì„œ ë°”ê¿€ ìˆ˜ ìˆë„ë¡ í•¨
     public void SetProfile(CharacterVisualProfile newProfile)
     {
         if (newProfile == null) return;
         _profile = newProfile;
-        ApplyFormStage(_formProvider?.FormStage ?? 0); // ÇÁ·ÎÇÊ ±³Ã¼ Áï½Ã ÇöÀç ´Ü°è·Î ÀçÀû¿ë
+        ApplyFormStage(_formProvider?.FormStage ?? 0); // í”„ë¡œí•„ êµì²´ ì¦‰ì‹œ í˜„ì¬ ë‹¨ê³„ë¡œ ì¬ì ìš©
     }
 
     public void ApplyFormStage(int stage)
@@ -59,7 +59,7 @@ public class CharacterAppearance : MonoBehaviour
 
             if (data == null)
             {
-                part.gameObject.SetActive(false); // ÀÌ ´Ü°è¿¡ ¼³Á¤ ÀÚÃ¼°¡ ¾øÀ¸¸é ¾ÈÀüÇÏ°Ô ¼û±è (¿¹: 1´Ü°è¿£ Wings Ç×¸ñ ¾øÀ½)
+                part.gameObject.SetActive(false); // ì´ ë‹¨ê³„ì— ì„¤ì • ìì²´ê°€ ì—†ìœ¼ë©´ ì•ˆì „í•˜ê²Œ ìˆ¨ê¹€ (ì˜ˆ: 1ë‹¨ê³„ì—” Wings í•­ëª© ì—†ìŒ)
                 continue;
             }
 
@@ -69,8 +69,8 @@ public class CharacterAppearance : MonoBehaviour
         }
     }
 
-    // º¯½Å ½ÃÀÛ ½ÃÁ¡¿¡, ¸ñÇ¥ ´Ü°è¿¡¼­ º¸¿©¾ß ÇÒ ÆÄÃ÷(¿¹: ³¯°³)¸¦ ¹Ì¸® ÄÑµĞ´Ù.
-    // (ÇØÁ¦ ¹æÇâÀÏ ¶© ¾Æ¹«°Íµµ ¹Ì¸® ¾È ÄÑÁö¹Ç·Î, ³¯°³´Â Á¢È÷´Â Å¬¸³ÀÌ ³¡³¯ ¶§±îÁö ÀÚ¿¬½º·´°Ô °è¼Ó º¸ÀÓ)
+    // ë³€ì‹  ì‹œì‘ ì‹œì ì—, ëª©í‘œ ë‹¨ê³„ì—ì„œ ë³´ì—¬ì•¼ í•  íŒŒì¸ (ì˜ˆ: ë‚ ê°œ)ë¥¼ ë¯¸ë¦¬ ì¼œë‘”ë‹¤.
+    // (í•´ì œ ë°©í–¥ì¼ ë• ì•„ë¬´ê²ƒë„ ë¯¸ë¦¬ ì•ˆ ì¼œì§€ë¯€ë¡œ, ë‚ ê°œëŠ” ì ‘íˆëŠ” í´ë¦½ì´ ëë‚  ë•Œê¹Œì§€ ìì—°ìŠ¤ëŸ½ê²Œ ê³„ì† ë³´ì„)
     private void HandleTransformStarted()
     {
         if (_formProvider == null) return;
@@ -90,7 +90,7 @@ public class CharacterAppearance : MonoBehaviour
         }
     }
 
-    // ³ªÁß¿¡ Àåºñ ½Ã½ºÅÛ¿¡¼­ È£Ãâ: Æ¯Á¤ ½½·Ô ÇÏ³ª¸¸ ´Ù¸¥ ¸®¼Ò½º·Î ±³Ã¼ (Çì¾î½ºÅ¸ÀÏ/ÀÇ»ó º¯°æ µî)
+    // ë‚˜ì¤‘ì— ì¥ë¹„ ì‹œìŠ¤í…œì—ì„œ í˜¸ì¶œ: íŠ¹ì • ìŠ¬ë¡¯ í•˜ë‚˜ë§Œ ë‹¤ë¥¸ ë¦¬ì†ŒìŠ¤ë¡œ êµì²´ (í—¤ì–´ìŠ¤íƒ€ì¼/ì˜ìƒ ë³€ê²½ ë“±)
     public void SetPartOverride(BodyPartSlot slot, AnimatorOverrideController overrideController)
     {
         foreach (var part in _parts)

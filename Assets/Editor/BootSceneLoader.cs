@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+ï»¿#if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -6,32 +6,32 @@ using UnityEngine;
 [InitializeOnLoad]
 public class BootSceneLoader
 {
-    // »ó´Ü ¸Ş´º¹Ù¿¡ »ı±æ °æ·Î
+    // ìƒë‹¨ ë©”ë‰´ë°”ì— ìƒê¸¸ ê²½ë¡œ
     private const string MENU_PATH = "Tools/Always Start From Scene 0";
 
     static BootSceneLoader()
     {
-        // ¿¡µğÅÍ°¡ ÄÑÁú ¶§ ÀúÀåµÈ ¼³Á¤À» ºÒ·¯¿Í¼­ Àû¿ë
+        // ì—ë””í„°ê°€ ì¼œì§ˆ ë•Œ ì €ì¥ëœ ì„¤ì •ì„ ë¶ˆëŸ¬ì™€ì„œ ì ìš©
         EditorApplication.delayCall += () => {
             bool isEnabled = EditorPrefs.GetBool(MENU_PATH, false);
             SetPlayModeStartScene(isEnabled);
         };
     }
 
-    // ¸Ş´º Å¬¸¯ ½Ã ½ÇÇà (On/Off Åä±Û)
+    // ë©”ë‰´ í´ë¦­ ì‹œ ì‹¤í–‰ (On/Off í† ê¸€)
     [MenuItem(MENU_PATH)]
     private static void ToggleMode()
     {
         bool isEnabled = EditorPrefs.GetBool(MENU_PATH, false);
         bool newState = !isEnabled;
 
-        EditorPrefs.SetBool(MENU_PATH, newState); // ¼³Á¤ ÀúÀå
-        SetPlayModeStartScene(newState);          // ±â´É Àû¿ë
+        EditorPrefs.SetBool(MENU_PATH, newState); // ì„¤ì • ì €ì¥
+        SetPlayModeStartScene(newState);          // ê¸°ëŠ¥ ì ìš©
 
         Debug.Log($"[BootLoader] Always Start Scene 0: {(newState ? "ON" : "OFF")}");
     }
 
-    // ¸Ş´ºÀÇ Ã¼Å© Ç¥½Ã(v) °»½Å
+    // ë©”ë‰´ì˜ ì²´í¬ í‘œì‹œ(v) ê°±ì‹ 
     [MenuItem(MENU_PATH, true)]
     private static bool ToggleModeValidate()
     {
@@ -39,29 +39,29 @@ public class BootSceneLoader
         return true;
     }
 
-    // ½ÇÁ¦ ±â´ÉÀ» ¼öÇàÇÏ´Â ÇÔ¼ö
+    // ì‹¤ì œ ê¸°ëŠ¥ì„ ìˆ˜í–‰í•˜ëŠ” í•¨ìˆ˜
     private static void SetPlayModeStartScene(bool enable)
     {
         if (enable)
         {
-            // Build Settings¿¡ µî·ÏµÈ ¾À ¸ñ·Ï Áß 0¹øÂ°¸¦ °¡Á®¿È.
+            // Build Settingsì— ë“±ë¡ëœ ì”¬ ëª©ë¡ ì¤‘ 0ë²ˆì§¸ë¥¼ ê°€ì ¸ì˜´.
             if (EditorBuildSettings.scenes.Length > 0)
             {
                 string scenePath = EditorBuildSettings.scenes[0].path;
                 SceneAsset sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath);
 
-                // ¡Ú ÀÌ ¼³Á¤ÀÌ ÇÙ½É! ÇÃ·¹ÀÌ ¹öÆ° ´©¸¦ ¶§ ½ÃÀÛÇÒ ¾ÀÀ» °íÁ¤ÇÔ
+                // â˜… ì´ ì„¤ì •ì´ í•µì‹¬! í”Œë ˆì´ ë²„íŠ¼ ëˆ„ë¥¼ ë•Œ ì‹œì‘í•  ì”¬ì„ ê³ ì •í•¨
                 EditorSceneManager.playModeStartScene = sceneAsset;
             }
             else
             {
-                Debug.LogWarning("Build Settings¿¡ µî·ÏµÈ ¾ÀÀÌ ¾ø½À´Ï´Ù! (File -> Build Settings È®ÀÎ)");
+                Debug.LogWarning("Build Settingsì— ë“±ë¡ëœ ì”¬ì´ ì—†ìŠµë‹ˆë‹¤! (File -> Build Settings í™•ì¸)");
                 EditorSceneManager.playModeStartScene = null;
             }
         }
         else
         {
-            // null·Î ¼³Á¤ÇÏ¸é "ÇöÀç ¿­·ÁÀÖ´Â ¾À"¿¡¼­ ½ÃÀÛÇÔ.
+            // nullë¡œ ì„¤ì •í•˜ë©´ "í˜„ì¬ ì—´ë ¤ìˆëŠ” ì”¬"ì—ì„œ ì‹œì‘í•¨.
             EditorSceneManager.playModeStartScene = null;
         }
     }

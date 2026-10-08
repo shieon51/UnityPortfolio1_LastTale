@@ -1,8 +1,8 @@
-// IBossProfileTarget.cs (½Å±Ô)
+ï»¿// IBossProfileTarget.cs (ì‹ ê·œ)
 using System.Collections.Generic;
 
-// "³­ÀÌµµº° AI ÇÁ·ÎÇÊÀ» Àû¿ë¹ÞÀ» ¼ö ÀÖ´Â º¸½º"¶ó¸é ¹«Á¶°Ç ±¸ÇöÇØ¾ß ÇÏ´Â °è¾à.
-// BossAIProfileWindow °°Àº µµ±¸°¡ Liel_AI¸¦ Á÷Á¢ ¸ô¶óµµ µÇ°Ô ÇØÁÜ (SOLID: ÀÇÁ¸¼º ¿ªÀü)
+// "ë‚œì´ë„ë³„ AI í”„ë¡œí•„ì„ ì ìš©ë°›ì„ ìˆ˜ ìžˆëŠ” ë³´ìŠ¤"ë¼ë©´ ë¬´ì¡°ê±´ êµ¬í˜„í•´ì•¼ í•˜ëŠ” ê³„ì•½.
+// BossAIProfileWindow ê°™ì€ ë„êµ¬ê°€ Liel_AIë¥¼ ì§ì ‘ ëª°ë¼ë„ ë˜ê²Œ í•´ì¤Œ (SOLID: ì˜ì¡´ì„± ì—­ì „)
 public interface IBossProfileTarget
 {
     BossDifficultyTier CurrentDifficultyTier { get; set; }

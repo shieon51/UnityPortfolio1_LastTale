@@ -1,25 +1,25 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// '¹ß¹ØÀÌ ÇÃ·§Æû Ç¥¸éº¸´Ù À§¿¡ ÀÖ´Â°¡'¸¦ ¸Å FixedUpdate¸¶´Ù Á÷Á¢ °è»êÇØ¼­
-// Ãæµ¹ ¿©ºÎ¸¦ °­Á¦ È®Á¤ÇÑ´Ù. Effector2DÀÇ ¸ğ¼­¸® ÆÇÁ¤ ¾Ö¸ÅÇÔÀ» ¿øÃµ Â÷´Ü.
+// 'ë°œë°‘ì´ í”Œë«í¼ í‘œë©´ë³´ë‹¤ ìœ„ì— ìˆëŠ”ê°€'ë¥¼ ë§¤ FixedUpdateë§ˆë‹¤ ì§ì ‘ ê³„ì‚°í•´ì„œ
+// ì¶©ëŒ ì—¬ë¶€ë¥¼ ê°•ì œ í™•ì •í•œë‹¤. Effector2Dì˜ ëª¨ì„œë¦¬ íŒì • ì• ë§¤í•¨ì„ ì›ì²œ ì°¨ë‹¨.
 [RequireComponent(typeof(Collider2D))]
 public class OneWayPlatformController : MonoBehaviour
 {
-    [Tooltip("¿ø¿şÀÌ ÇÃ·§ÆûÀ¸·Î Ãë±ŞÇÒ ·¹ÀÌ¾î")]
+    [Tooltip("ì›ì›¨ì´ í”Œë«í¼ìœ¼ë¡œ ì·¨ê¸‰í•  ë ˆì´ì–´")]
     public LayerMask oneWayPlatformLayer;
 
-    [Tooltip("¹ß¹Ø ÆÇÁ¤ ±âÁØÁ¡ ¿ÀÇÁ¼Â (PlayerControllerÀÇ groundCheckOffset°ú µ¿ÀÏÇÏ°Ô)")]
+    [Tooltip("ë°œë°‘ íŒì • ê¸°ì¤€ì  ì˜¤í”„ì…‹ (PlayerControllerì˜ groundCheckOffsetê³¼ ë™ì¼í•˜ê²Œ)")]
     public Vector3 feetOffset = new Vector3(0, -0.5f, 0);
 
-    [Tooltip("Ç¥¸éº¸´Ù ÀÌ¸¸Å­ À§¿¡ ÀÖ¾î¾ß 'À§¿¡ ÀÖ´Ù'°í ÀÎÁ¤ÇÏ´Â ¿©À¯ ¸¶Áø")]
+    [Tooltip("í‘œë©´ë³´ë‹¤ ì´ë§Œí¼ ìœ„ì— ìˆì–´ì•¼ 'ìœ„ì— ìˆë‹¤'ê³  ì¸ì •í•˜ëŠ” ì—¬ìœ  ë§ˆì§„")]
     public float surfaceTolerance = 0.05f;
 
-    [Tooltip("ÁÖº¯ ¿ø¿şÀÌ ÇÃ·§ÆûÀ» Å½»öÇÒ ¹İ°æ")]
+    [Tooltip("ì£¼ë³€ ì›ì›¨ì´ í”Œë«í¼ì„ íƒìƒ‰í•  ë°˜ê²½")]
     public float detectionRadius = 1.5f;
 
-    [Tooltip("¾Æ·¡ ¹æÇâÅ°·Î °­Á¦ Åë°ú½ÃÅ³ ¶§ À¯ÁöµÇ´Â ½Ã°£(ÃÊ)")]
+    [Tooltip("ì•„ë˜ ë°©í–¥í‚¤ë¡œ ê°•ì œ í†µê³¼ì‹œí‚¬ ë•Œ ìœ ì§€ë˜ëŠ” ì‹œê°„(ì´ˆ)")]
     public float passThroughDuration = 0.5f;
 
     private Collider2D _selfCollider;

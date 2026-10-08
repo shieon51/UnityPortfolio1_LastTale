@@ -1,6 +1,6 @@
-
-// ¸ğµç ½ÃÁğ Ä³¸¯ÅÍÀÇ º£ÀÌ½º ÄÁÆ®·Ñ·¯°¡ ¹İµå½Ã °¡Á®¾ß ÇÒ State ÀÌ¸§ °è¾à.
-// »õ Ä³¸¯ÅÍ ¾Ö´Ï¸ŞÀÌÅÍ ¸¸µé ¶§ ÀÌ ÀÌ¸§µé ±×´ë·Î State¸¦ ¸¸µé¸é PlayerVisual ·ÎÁ÷ÀÌ ±×´ë·Î Àç»ç¿ëµÊ.
+ï»¿
+// ëª¨ë“  ì‹œì¦Œ ìºë¦­í„°ì˜ ë² ì´ìŠ¤ ì»¨íŠ¸ë¡¤ëŸ¬ê°€ ë°˜ë“œì‹œ ê°€ì ¸ì•¼ í•  State ì´ë¦„ ê³„ì•½.
+// ìƒˆ ìºë¦­í„° ì• ë‹ˆë©”ì´í„° ë§Œë“¤ ë•Œ ì´ ì´ë¦„ë“¤ ê·¸ëŒ€ë¡œ Stateë¥¼ ë§Œë“¤ë©´ PlayerVisual ë¡œì§ì´ ê·¸ëŒ€ë¡œ ì¬ì‚¬ìš©ë¨.
 public static class PlayerAnimStateNames
 {
     public const string Movement = "Movement";
@@ -12,5 +12,5 @@ public static class PlayerAnimStateNames
     public const string Hit = "Hit";
     public const string Guard = "Guard";
     public const string Parrying = "Parrying";
-    public const string Groggy = "Groggy"; // ´ëÄª ±×·Î±â¿ë
+    public const string Groggy = "Groggy"; // ëŒ€ì¹­ ê·¸ë¡œê¸°ìš©
 }

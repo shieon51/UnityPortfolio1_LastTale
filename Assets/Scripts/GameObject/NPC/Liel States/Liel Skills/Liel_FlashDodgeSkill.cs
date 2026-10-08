@@ -1,7 +1,7 @@
-using System.Collections;
+ï»¿using System.Collections;
 using UnityEngine;
 
-// ¸®¿¤ È¸ÇÇ - '¼¶±¤'
+// ë¦¬ì—˜ íšŒí”¼ - 'ì„¬ê´‘'
 [CreateAssetMenu(menuName = "LastMarchan/NPC Skills/Liel/Flash Dodge")]
 public class Liel_FlashDodgeSkill : NPCActionBase
 {
@@ -15,7 +15,7 @@ public class Liel_FlashDodgeSkill : NPCActionBase
     {
         if (!IsContextAllowed(ctx.Self.CurrentMovementContext)) return 0f;
         if (ctx.DistanceToPlayer > triggerWithinDistance) return 0f;
-        if (!ctx.PlayerIsAttacking) return 0f; // À§ÇùÀûÀÎ ¿¹°í ÁßÀÏ ¶§¸¸
+        if (!ctx.PlayerIsAttacking) return 0f; // ìœ„í˜‘ì ì¸ ì˜ˆê³  ì¤‘ì¼ ë•Œë§Œ
         return baseScore;
     }
 
@@ -26,8 +26,8 @@ public class Liel_FlashDodgeSkill : NPCActionBase
         float dir = self.SpriteRenderer.flipX ? -1f : 1f;
         Vector2 endPos = startPos + new Vector2(dir * dodgeDistance, 0f);
 
-        self.GetComponent<AfterimageEffect>()?.Play(dodgeDuration); // ¼Ò¶ó Q¿¡ ¾²´ø ÀÜ»ó ÀçÈ°¿ë
-        visual.PlayImmediate("Dodge"); // ¡Ú ¾Ö´Ï¸ŞÀÌÅÍ¿¡ State Ãß°¡ ÇÊ¿ä
+        self.GetComponent<AfterimageEffect>()?.Play(dodgeDuration); // ì†Œë¼ Qì— ì“°ë˜ ì”ìƒ ì¬í™œìš©
+        visual.PlayImmediate("Dodge"); // â˜… ì• ë‹ˆë©”ì´í„°ì— State ì¶”ê°€ í•„ìš”
 
         float t = 0f;
         while (t < dodgeDuration)

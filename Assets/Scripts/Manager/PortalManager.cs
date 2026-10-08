@@ -1,23 +1,23 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 using System;
 using System.IO;
 
-// ¾ÀÀº ¿©·¯ °³ÀÇ Æ÷Å»À» °¡Áö°í ÀÖÀ½
-// °¢ Æ÷Å»Àº ÀÌµ¿ÇÒ ´ÙÀ½ Æ÷Å» Á¤º¸¸¦ °¡Áö°í ÀÖÀ½ -> ÀÌ°É ¹æÇâ¼º ÀÖ´Â ¿§Áö¶ó ÇÏÀÚ
-// Áï ¾ÀÀº Æ÷Å» ¿§Áö¸¦ ¿©·¯ °³ Áö´Ò ¼ö ÀÖ´Ù
+// ì”¬ì€ ì—¬ëŸ¬ ê°œì˜ í¬íƒˆì„ ê°€ì§€ê³  ìˆìŒ
+// ê° í¬íƒˆì€ ì´ë™í•  ë‹¤ìŒ í¬íƒˆ ì •ë³´ë¥¼ ê°€ì§€ê³  ìˆìŒ -> ì´ê±¸ ë°©í–¥ì„± ìˆëŠ” ì—£ì§€ë¼ í•˜ì
+// ì¦‰ ì”¬ì€ í¬íƒˆ ì—£ì§€ë¥¼ ì—¬ëŸ¬ ê°œ ì§€ë‹ ìˆ˜ ìˆë‹¤
 
 public class PortalManager : Singleton<PortalManager>
 {
-    // 1. °Ë»ö¿ë µñ¼Å³Ê¸® (Save/Load, Debug¿ë)
+    // 1. ê²€ìƒ‰ìš© ë”•ì…”ë„ˆë¦¬ (Save/Load, Debugìš©)
     private Dictionary<int, PortalData> _allPortalData = new Dictionary<int, PortalData>();
 
-    // 2. ±æÃ£±â¿ë ±×·¡ÇÁ (BFS¿ë)
+    // 2. ê¸¸ì°¾ê¸°ìš© ê·¸ë˜í”„ (BFSìš©)
     private Dictionary<int, SceneNode> _sceneGraph = new Dictionary<int, SceneNode>();
 
     private List<Portal> _spawnedPortals = new List<Portal>();
 
-    // Manager°¡ °¡Àå ¸ÕÀú ÃÊ±âÈ­µÇ¾î¾ß ÇÔ
+    // Managerê°€ ê°€ì¥ ë¨¼ì € ì´ˆê¸°í™”ë˜ì–´ì•¼ í•¨
     private void Awake()
     {
         LoadAndBuildData();
@@ -30,14 +30,14 @@ public class PortalManager : Singleton<PortalManager>
 
     private void LoadAndBuildData()
     {
-        _allPortalData = DataManager.Instance.PortalDict; // DataManager°¡ ·ÎµåÇØµĞ Á¤º¸ °¡Á®¿À±â
+        _allPortalData = DataManager.Instance.PortalDict; // DataManagerê°€ ë¡œë“œí•´ë‘” ì •ë³´ ê°€ì ¸ì˜¤ê¸°
         _sceneGraph.Clear();
 
-        // 2. ±×·¡ÇÁ ±¸Ãà ¹× ÂüÁ¶ ¿¬°á 
+        // 2. ê·¸ë˜í”„ êµ¬ì¶• ë° ì°¸ì¡° ì—°ê²° 
         foreach (var myData in _allPortalData.Values)
         {
-            // 2-1. SceneGraph ³ëµå »ı¼º (±æÃ£±â¿ë)
-            if (!_sceneGraph.ContainsKey(myData.OwnerSceneID)) // ¾ÆÁ÷ ÇØ´ç ¾À³ëµå°¡ ±×·¡ÇÁ¿¡ ¾øÀ¸¸é ¸¸µé±â
+            // 2-1. SceneGraph ë…¸ë“œ ìƒì„± (ê¸¸ì°¾ê¸°ìš©)
+            if (!_sceneGraph.ContainsKey(myData.OwnerSceneID)) // ì•„ì§ í•´ë‹¹ ì”¬ë…¸ë“œê°€ ê·¸ë˜í”„ì— ì—†ìœ¼ë©´ ë§Œë“¤ê¸°
             {
                 SceneNode node = new SceneNode();
                 node.SceneID = myData.OwnerSceneID;
@@ -45,19 +45,19 @@ public class PortalManager : Singleton<PortalManager>
                 _sceneGraph.Add(myData.OwnerSceneID, node);
             }
 
-            // 2-2. PortalData³¢¸® Á÷Á¢ ¿¬°á (°Ë»ö ¾ø´Â ÀÌµ¿À» À§ÇØ)
+            // 2-2. PortalDataë¼ë¦¬ ì§ì ‘ ì—°ê²° (ê²€ìƒ‰ ì—†ëŠ” ì´ë™ì„ ìœ„í•´)
             if (myData.TargetPortalID != 0 && _allPortalData.ContainsKey(myData.TargetPortalID))
             {
-                // ÇØ´ç Æ÷Å»ÀÇ µµÂøÁö µ¥ÀÌÅÍ(°´Ã¼) 'ConnectedTargetData'¿¡ ¿¬°á
+                // í•´ë‹¹ í¬íƒˆì˜ ë„ì°©ì§€ ë°ì´í„°(ê°ì²´) 'ConnectedTargetData'ì— ì—°ê²°
                 myData.ConnectedTargetData = _allPortalData[myData.TargetPortalID];
             }
         }
 
-        // 2-3 ¾À ¿¬°áÀº ¸ğµç ³ëµå°¡ »ı¼ºµÈ ÈÄ ¼öÇà
+        // 2-3 ì”¬ ì—°ê²°ì€ ëª¨ë“  ë…¸ë“œê°€ ìƒì„±ëœ í›„ ìˆ˜í–‰
         BuildSceneConnections();
     }
 
-    // ¾À ±×·¡ÇÁ ¿¬°á ÇÔ¼ö (±æÃ£±â¿ë Áöµµ)
+    // ì”¬ ê·¸ë˜í”„ ì—°ê²° í•¨ìˆ˜ (ê¸¸ì°¾ê¸°ìš© ì§€ë„)
     private void BuildSceneConnections()
     {
         foreach (var myData in _allPortalData.Values)
@@ -73,7 +73,7 @@ public class PortalManager : Singleton<PortalManager>
                 {
                     SceneNode myNode = _sceneGraph[fromSceneID];
 
-                    // °¡´Â ¹æ¹ıÀ» ±â·Ï (ex. toSceneID(2¹ø ½£)·Î °¡°í ½ÍÀ¸¸é myData(1001¹ø Æ÷Å»)¸¦ Å¸¶ó)
+                    // ê°€ëŠ” ë°©ë²•ì„ ê¸°ë¡ (ex. toSceneID(2ë²ˆ ìˆ²)ë¡œ ê°€ê³  ì‹¶ìœ¼ë©´ myData(1001ë²ˆ í¬íƒˆ)ë¥¼ íƒ€ë¼)
                     if (!myNode.NavigationMap.ContainsKey(toSceneID))
                     {
                         myNode.NavigationMap.Add(toSceneID, myData);
@@ -83,60 +83,60 @@ public class PortalManager : Singleton<PortalManager>
         }
     }
 
-    // [±â´É 1] ¿ÜºÎ(Portal ½ºÅ©¸³Æ®)¿¡¼­ µ¥ÀÌÅÍ ¿äÃ»¿ë
+    // [ê¸°ëŠ¥ 1] ì™¸ë¶€(Portal ìŠ¤í¬ë¦½íŠ¸)ì—ì„œ ë°ì´í„° ìš”ì²­ìš©
     public PortalData GetData(int portalID)
     {
         if (_allPortalData.ContainsKey(portalID)) return _allPortalData[portalID];
         return null;
     }
 
-    // ÇÁ¸®ÆéÀ» ¹Ş¾Æ¼­ »ı¼ºÇÏ°í ÃÊ±âÈ­ÇÏ´Â ÇÔ¼ö
+    // í”„ë¦¬í©ì„ ë°›ì•„ì„œ ìƒì„±í•˜ê³  ì´ˆê¸°í™”í•˜ëŠ” í•¨ìˆ˜
     public void SpawnPortalsForScene(int sceneID, GameObject portalPrefab)
     {
-        // 1. ÀüÃ¼ µ¥ÀÌÅÍ Áß¿¡¼­ 'ÇöÀç ¾À(sceneID)'¿¡ ÀÖ´Â Æ÷Å»¸¸ °ñ¶ó³»±â
+        // 1. ì „ì²´ ë°ì´í„° ì¤‘ì—ì„œ 'í˜„ì¬ ì”¬(sceneID)'ì— ìˆëŠ” í¬íƒˆë§Œ ê³¨ë¼ë‚´ê¸°
         foreach (var data in _allPortalData.Values)
         {
             if (data.OwnerSceneID == sceneID)
             {
-                // 2. CSV¿¡ ÀûÈù ÁÂÇ¥(Position)¿¡ ÇÁ¸®Æé »ı¼º (Instantiate)
+                // 2. CSVì— ì íŒ ì¢Œí‘œ(Position)ì— í”„ë¦¬í© ìƒì„± (Instantiate)
                 GameObject go = Instantiate(portalPrefab, data.Position, Quaternion.identity);
 
-                // 3. »ı¼ºµÈ ¿ÀºêÁ§Æ®¿¡¼­ Portal ÄÄÆ÷³ÍÆ® °¡Á®¿À±â
+                // 3. ìƒì„±ëœ ì˜¤ë¸Œì íŠ¸ì—ì„œ Portal ì»´í¬ë„ŒíŠ¸ ê°€ì ¸ì˜¤ê¸°
                 Portal portalScript = go.GetComponent<Portal>();
 
-                // 4. ID ÁÖÀÔ (ÃÊ±âÈ­)
+                // 4. ID ì£¼ì… (ì´ˆê¸°í™”)
                 if (portalScript != null)
                 {
                     portalScript.Init(data.portalID);
                     if (portalScript != null) _spawnedPortals.Add(portalScript);
                 }
 
-                // (¼±ÅÃ) ÇÏÀÌ¾î¶óÅ°¿¡¼­ º¸±â ÁÁ°Ô ÀÌ¸§ º¯°æ
+                // (ì„ íƒ) í•˜ì´ì–´ë¼í‚¤ì—ì„œ ë³´ê¸° ì¢‹ê²Œ ì´ë¦„ ë³€ê²½
                 go.name = $"Portal_{data.portalID}";
             }
         }
     }
 
-    // Æ÷Å» È°¼ºÈ­ ¿©ºÎ
+    // í¬íƒˆ í™œì„±í™” ì—¬ë¶€
     public void SetPortalsActive(bool active)
     {
         foreach (var portal in _spawnedPortals)
             if (portal != null) portal.gameObject.SetActive(active);
     }
 
-    //public void ShowGuideArrow(List<int> path)  //++ ±æÃ£±â Å×½ºÆ®
+    //public void ShowGuideArrow(List<int> path)  //++ ê¸¸ì°¾ê¸° í…ŒìŠ¤íŠ¸
     //{
-    //    int currentSceneID = 1;      // ÇöÀç ¾À
-    //    int nextSceneID = path[1];   // ´ÙÀ½ °¡¾ß ÇÒ ¾À (2¹ø)
+    //    int currentSceneID = 1;      // í˜„ì¬ ì”¬
+    //    int nextSceneID = path[1];   // ë‹¤ìŒ ê°€ì•¼ í•  ì”¬ (2ë²ˆ)
 
     //    SceneNode currentNode = _sceneGraph[currentSceneID];
 
-    //    // Æ¯Á¤ ¾ÀÀ¸·Î °¡·Á¸é ¾î´À Æ÷Å»À» Å¸¾ßÇÏ´ÂÁö?
+    //    // íŠ¹ì • ì”¬ìœ¼ë¡œ ê°€ë ¤ë©´ ì–´ëŠ í¬íƒˆì„ íƒ€ì•¼í•˜ëŠ”ì§€?
     //    if (currentNode.NavigationMap.TryGetValue(nextSceneID, out PortalData portalToTake))
     //    {
-    //        Debug.Log($"È­»ìÇ¥ Ç¥½Ã: {portalToTake.Position} À§Ä¡¿¡ ÀÖ´Â {portalToTake.portalID}¹ø Æ÷Å»·Î °¡¼¼¿ä!");
+    //        Debug.Log($"í™”ì‚´í‘œ í‘œì‹œ: {portalToTake.Position} ìœ„ì¹˜ì— ìˆëŠ” {portalToTake.portalID}ë²ˆ í¬íƒˆë¡œ ê°€ì„¸ìš”!");
 
-    //        // ÀÎ°ÔÀÓ ±¸Çö: È­»ìÇ¥ UI¸¦ portalToTake.Position ÁÂÇ¥¿¡ ¶ç¿öÁÜ
+    //        // ì¸ê²Œì„ êµ¬í˜„: í™”ì‚´í‘œ UIë¥¼ portalToTake.Position ì¢Œí‘œì— ë„ì›Œì¤Œ
     //    }
     //}
 }

@@ -1,17 +1,17 @@
-// EnterIconIndicator.cs (Àç¼³°è)
+ï»¿// EnterIconIndicator.cs (ì¬ì„¤ê³„)
 using UnityEngine;
 
 public class EnterIconIndicator : MonoBehaviour
 {
-    [Tooltip("½ÇÁ¦·Î ²°´Ù ÄÓ È­»ìÇ¥ ¾ÆÀÌÄÜ ¿ÀºêÁ§Æ® (ÀÌ ½ºÅ©¸³Æ®´Â Ç×»ó ÄÑÁ®ÀÖ´Â ºÎ¸ğ¿¡ ºÙÀÏ °Í)")]
+    [Tooltip("ì‹¤ì œë¡œ ê»ë‹¤ ì¼¤ í™”ì‚´í‘œ ì•„ì´ì½˜ ì˜¤ë¸Œì íŠ¸ (ì´ ìŠ¤í¬ë¦½íŠ¸ëŠ” í•­ìƒ ì¼œì ¸ìˆëŠ” ë¶€ëª¨ì— ë¶™ì¼ ê²ƒ)")]
     public GameObject iconObject;
 
-    [Tooltip("¸»Ç³¼± Àü¿ëÀÌ¸é ¿¬°á, ÇÏ´Ü ÆĞ³Î¿ëÀÌ¸é ºñ¿öµÒ")]
+    [Tooltip("ë§í’ì„  ì „ìš©ì´ë©´ ì—°ê²°, í•˜ë‹¨ íŒ¨ë„ìš©ì´ë©´ ë¹„ì›Œë‘ ")]
     public SpeechBubbleController ownerBubble;
 
     private void OnEnable()
     {
-        if (iconObject == null) { Debug.LogWarning($"[EnterIconIndicator] {name}¿¡ Icon Object ¹Ì¿¬°á", this); return; }
+        if (iconObject == null) { Debug.LogWarning($"[EnterIconIndicator] {name}ì— Icon Object ë¯¸ì—°ê²°", this); return; }
         if (DialogueManager.Instance != null) DialogueManager.Instance.OnWaitingForInputChanged += HandleChanged;
         iconObject.SetActive(false);
     }

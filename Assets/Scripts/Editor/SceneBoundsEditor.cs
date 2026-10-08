@@ -1,7 +1,7 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEditor;
 
-// Assets/Scripts/Editor/SceneBoundsEditor.cs (½Å±Ô): ÀÌº¥Æ® ¸¶Ä¿Ã³·³ ÇÚµé·Î Á÷Á¢ ²ø ¼ö ÀÖ°Ô
+// Assets/Scripts/Editor/SceneBoundsEditor.cs (ì‹ ê·œ): ì´ë²¤íŠ¸ ë§ˆì»¤ì²˜ëŸ¼ í•¸ë“¤ë¡œ ì§ì ‘ ëŒ ìˆ˜ ìˆê²Œ
 [CustomEditor(typeof(SceneBounds))]
 public class SceneBoundsEditor : Editor
 {

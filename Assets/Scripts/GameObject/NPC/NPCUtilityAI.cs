@@ -1,7 +1,7 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 
-// ¼±ÅÃ ´ã´ç
+// ì„ íƒ ë‹´ë‹¹
 public class NPCUtilityAI : MonoBehaviour
 {
     public List<NPCActionBase> availableActions;
@@ -30,13 +30,13 @@ public class NPCUtilityAI : MonoBehaviour
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         DebugCombatLogPanel.Instance?.Log(best != null
-            ? $"[AI] {best.actionName} ¼±ÅÃ (Á¡¼ö {bestScore:F1}, °Å¸® {ctx.DistanceToPlayer:F1})"
-            : $"[AI] ¸¶¶¥ÇÑ Çàµ¿ ¾øÀ½ (°Å¸® {ctx.DistanceToPlayer:F1})");
+            ? $"[AI] {best.actionName} ì„ íƒ (ì ìˆ˜ {bestScore:F1}, ê±°ë¦¬ {ctx.DistanceToPlayer:F1})"
+            : $"[AI] ë§ˆë•…í•œ í–‰ë™ ì—†ìŒ (ê±°ë¦¬ {ctx.DistanceToPlayer:F1})");
 #endif
         return bestScore > 0f ? best : null;
     }
 
-    // ÀÌµ¿ Çàµ¿¸¸ ÈÄº¸·Î »ï´Â ¹öÀü (´ë±â Áß °è¼Ó ¿òÁ÷ÀÌ±â À§ÇØ)
+    // ì´ë™ í–‰ë™ë§Œ í›„ë³´ë¡œ ì‚¼ëŠ” ë²„ì „ (ëŒ€ê¸° ì¤‘ ê³„ì† ì›€ì§ì´ê¸° ìœ„í•´)
     public NPCActionBase ChooseMovementOnly(NPCDecisionContext ctx)
     {
         NPCActionBase best = null;
@@ -53,7 +53,7 @@ public class NPCUtilityAI : MonoBehaviour
 
     public void NotifyUsed(NPCActionBase action) { _lastUsedTime[action] = Time.time; LastUsedAction = action; }
 
-    // º¸½º ÇÁ·ÎÇÊ ¸Å´ÏÀú°¡ ÆäÀÌÁî ÀüÈ¯ ½Ã Çàµ¿ ¸ñ·ÏÀ» ÅëÂ°·Î ±³Ã¼ÇÒ ¶§ »ç¿ë
+    // ë³´ìŠ¤ í”„ë¡œí•„ ë§¤ë‹ˆì €ê°€ í˜ì´ì¦ˆ ì „í™˜ ì‹œ í–‰ë™ ëª©ë¡ì„ í†µì§¸ë¡œ êµì²´í•  ë•Œ ì‚¬ìš©
     public void ApplyActionList(List<NPCActionBase> actions) => availableActions = actions;
 
     public void ApplyProfile(NPCBossProfile profile, int phaseNumber)
@@ -63,7 +63,7 @@ public class NPCUtilityAI : MonoBehaviour
         if (phase != null) availableActions = phase.availableActions;
     }
 
-    // ¿¡µğÅÍ ¹Ì¸®º¸±â
+    // ì—ë””í„° ë¯¸ë¦¬ë³´ê¸°
 #if UNITY_EDITOR
     private void OnDrawGizmosSelected()
     {

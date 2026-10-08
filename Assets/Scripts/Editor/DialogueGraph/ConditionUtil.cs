@@ -1,4 +1,4 @@
-// ConditionUtil.cs (½Å±Ô, Editor Æú´õ)
+ï»¿// ConditionUtil.cs (ì‹ ê·œ, Editor í´ë”)
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,15 +6,15 @@ public static class ConditionUtil
 {
     public static string GetVarLabel(GraphVarType t) => t switch
     {
-        GraphVarType.Memory => "±â¾ï",
-        GraphVarType.Counter => "Ä«¿îÅÍ",
-        GraphVarType.Affection => "È£°¨µµ",
-        GraphVarType.Suspicion => "ÀÇ½É",
-        GraphVarType.Understanding => "ÀÌÇØµµ",
-        GraphVarType.TrustEarned => "½Å·Ú",
-        GraphVarType.LineCrossed => "¼±³ÑÀ½",
-        GraphVarType.PersonalBond => "°³ÀÎÄ£¹Ğµµ",
-        GraphVarType.MentalPercent => "Á¤½Å·Â",
+        GraphVarType.Memory => "ê¸°ì–µ",
+        GraphVarType.Counter => "ì¹´ìš´í„°",
+        GraphVarType.Affection => "í˜¸ê°ë„",
+        GraphVarType.Suspicion => "ì˜ì‹¬",
+        GraphVarType.Understanding => "ì´í•´ë„",
+        GraphVarType.TrustEarned => "ì‹ ë¢°",
+        GraphVarType.LineCrossed => "ì„ ë„˜ìŒ",
+        GraphVarType.PersonalBond => "ê°œì¸ì¹œë°€ë„",
+        GraphVarType.MentalPercent => "ì •ì‹ ë ¥",
         _ => "?",
     };
 
@@ -24,16 +24,16 @@ public static class ConditionUtil
     public static List<string> GetKeyOptions(GraphVarType t) => t switch
     {
         GraphVarType.Memory => GraphKeySource.GetMemoryFlagIds(),
-        GraphVarType.Counter => GraphKeySource.GetCounterIds(), // ¡Ú µå·Ó´Ù¿îÀ¸·Î
+        GraphVarType.Counter => GraphKeySource.GetCounterIds(), // â˜… ë“œë¡­ë‹¤ìš´ìœ¼ë¡œ
         GraphVarType.MentalPercent => new List<string>(),
         _ => GraphKeySource.GetNPCNames(),
     };
 
-    // ¡Ú µî·ÏµÈ Ä«¿îÅÍ°¡ ÇÏ³ªµµ ¾øÀ» ¶§¸¸ ÀÚÀ¯ ÀÔ·ÂÀ¸·Î Æú¹é
+    // â˜… ë“±ë¡ëœ ì¹´ìš´í„°ê°€ í•˜ë‚˜ë„ ì—†ì„ ë•Œë§Œ ììœ  ì…ë ¥ìœ¼ë¡œ í´ë°±
     public static bool UsesFreeText(GraphVarType t)
         => t == GraphVarType.Counter && GraphKeySource.GetCounterIds().Count == 0;
 
-    /// <summary>ink Á¶°Ç½ÄÀ¸·Î º¯È¯</summary>
+    /// <summary>ink ì¡°ê±´ì‹ìœ¼ë¡œ ë³€í™˜</summary>
     public static string ToInkExpr(ConditionGroup group)
     {
         if (group == null || group.entries.Count == 0) return "true";
@@ -70,39 +70,39 @@ public static class ConditionUtil
         return $"{getter} {opStr} {e.value}";
     }
 
-    /// <summary>Á¢¾úÀ» ¶§ º¸¿©ÁÙ ÇÑ±Û ¿ä¾à ÀÚµ¿ »ı¼º</summary>
+    /// <summary>ì ‘ì—ˆì„ ë•Œ ë³´ì—¬ì¤„ í•œê¸€ ìš”ì•½ ìë™ ìƒì„±</summary>
     public static string BuildSummary(ConditionGroup group)
     {
-        if (group == null) return "(Á¶°Ç ¾øÀ½)";
+        if (group == null) return "(ì¡°ê±´ ì—†ìŒ)";
         if (!string.IsNullOrEmpty(group.summaryOverride)) return group.summaryOverride;
-        if (group.entries.Count == 0) return "(Ç×»ó Âü)";
+        if (group.entries.Count == 0) return "(í•­ìƒ ì°¸)";
 
         var parts = group.entries.Select(e =>
         {
             if (IsBoolType(e.varType))
-                return e.op == CondOp.NotHas ? $"'{e.key}' ¸ğ¸§" : $"'{e.key}' ¾Ë°í ÀÖÀ½";
+                return e.op == CondOp.NotHas ? $"'{e.key}' ëª¨ë¦„" : $"'{e.key}' ì•Œê³  ìˆìŒ";
 
             string target = NeedsKey(e.varType) ? $"{e.key} " : "";
             string opKor = e.op switch
             {
-                CondOp.GreaterOrEqual => "ÀÌ»ó",
-                CondOp.LessOrEqual => "ÀÌÇÏ",
-                CondOp.Equal => "Á¤È®È÷",
-                CondOp.NotEqual => "ÀÌ ¾Æ´Ô",
-                _ => "ÀÌ»ó",
+                CondOp.GreaterOrEqual => "ì´ìƒ",
+                CondOp.LessOrEqual => "ì´í•˜",
+                CondOp.Equal => "ì •í™•íˆ",
+                CondOp.NotEqual => "ì´ ì•„ë‹˜",
+                _ => "ì´ìƒ",
             };
             return $"{target}{GetVarLabel(e.varType)} {e.value} {opKor}";
         });
 
-        return string.Join(group.join == CondJoin.And ? ", ±×¸®°í " : ", ¶Ç´Â ", parts);
+        return string.Join(group.join == CondJoin.And ? ", ê·¸ë¦¬ê³  " : ", ë˜ëŠ” ", parts);
     }
 
-    /// <summary>º¯¼ö Å¸ÀÔ¿¡ ¸ÂÁö ¾Ê´Â Å°¸¦ À¯È¿ÇÑ °ªÀ¸·Î ±³Á¤</summary>
+    /// <summary>ë³€ìˆ˜ íƒ€ì…ì— ë§ì§€ ì•ŠëŠ” í‚¤ë¥¼ ìœ íš¨í•œ ê°’ìœ¼ë¡œ êµì •</summary>
     public static void NormalizeKey(GraphVarType varType, ref string key)
     {
         if (UsesFreeText(varType) || !NeedsKey(varType)) return;
 
-        // ¡Ú Ä«¿îÅÍ´Â ¹Ìµî·Ï Å°¸¦ Áö¿ìÁö ¾Ê°í ±×´ë·Î µĞ´Ù (°ËÁõ¿¡¼­ °æ°í·Î ¾Ë¸²)
+        // â˜… ì¹´ìš´í„°ëŠ” ë¯¸ë“±ë¡ í‚¤ë¥¼ ì§€ìš°ì§€ ì•Šê³  ê·¸ëŒ€ë¡œ ë‘”ë‹¤ (ê²€ì¦ì—ì„œ ê²½ê³ ë¡œ ì•Œë¦¼)
         if (varType == GraphVarType.Counter) return;
 
         var options = GetKeyOptions(varType);

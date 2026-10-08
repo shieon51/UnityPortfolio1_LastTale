@@ -1,8 +1,8 @@
-using System;
+ï»¿using System;
 
-// PlayerController°¡ ±¸Çö.
-// ½ÃÁğ2/3¿¡¼­ ¿ÏÀüÈ÷ ´Ù¸¥ ÀÌµ¿ ·ÎÁ÷(¿¹: ³í-Á¡ÇÁ, ±×¸®µå ÀÌµ¿ µî)À» ¸¸µé¾îµµ
-// ÀÌ ÀÎÅÍÆäÀÌ½º¸¸ ±¸ÇöÇÏ¸é PlayerVisual/PlayerCombat/PlayerCutsceneAnimator¸¦ ±×´ë·Î Àç»ç¿ë °¡´É
+// PlayerControllerê°€ êµ¬í˜„.
+// ì‹œì¦Œ2/3ì—ì„œ ì™„ì „íˆ ë‹¤ë¥¸ ì´ë™ ë¡œì§(ì˜ˆ: ë…¼-ì í”„, ê·¸ë¦¬ë“œ ì´ë™ ë“±)ì„ ë§Œë“¤ì–´ë„
+// ì´ ì¸í„°í˜ì´ìŠ¤ë§Œ êµ¬í˜„í•˜ë©´ PlayerVisual/PlayerCombat/PlayerCutsceneAnimatorë¥¼ ê·¸ëŒ€ë¡œ ì¬ì‚¬ìš© ê°€ëŠ¥
 public interface IPlayerMotor
 {
     float CurrentSpeed { get; }
@@ -12,8 +12,8 @@ public interface IPlayerMotor
     bool CanFlip { get; }
     bool IsDialogueLocked { get; }
     bool IsActionLocked { get; }
-    bool IsExternallyLocked { get; }  // ³»°¡ ½º½º·Î °ø°İ ÁßÀÌ¶ó¼­ Àá±ä °ÍÀº ¹«½ÃÇÏ°í ±× ¿ÜÀÇ ÁøÂ¥ ¿ÜºÎ Àá±İ
-    float EffectiveHorizontalInput { get; } // Àá±İ/¹æ¾î µîÀÌ ¹İ¿µµÈ ÀÌ¹ø ÇÁ·¹ÀÓÀÇ ½ÇÁ¦ À¯È¿ ÀÔ·Â
+    bool IsExternallyLocked { get; }  // ë‚´ê°€ ìŠ¤ìŠ¤ë¡œ ê³µê²© ì¤‘ì´ë¼ì„œ ì ê¸´ ê²ƒì€ ë¬´ì‹œí•˜ê³  ê·¸ ì™¸ì˜ ì§„ì§œ ì™¸ë¶€ ì ê¸ˆ
+    float EffectiveHorizontalInput { get; } // ì ê¸ˆ/ë°©ì–´ ë“±ì´ ë°˜ì˜ëœ ì´ë²ˆ í”„ë ˆì„ì˜ ì‹¤ì œ ìœ íš¨ ì…ë ¥
     bool IsKnockedBack { get; }
     bool IsGuarding { get; }
     float SpeedMultiplier { get; }

@@ -1,9 +1,9 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 
-// ¾À ID ¡æ È­¸é¿¡ º¸¿©ÁÙ Àå¼Ò ÀÌ¸§.
-// SceneTable.csvÀÇ DisplayKey¸¦ ·ÎÄÃ¶óÀÌÁ¦ÀÌ¼ÇÀ¸·Î ¿Å°Ü µ¹·ÁÁØ´Ù.
-// (±â·Ï¡¤±â·ÏÀåÀº ³»ºÎ ¾À ÀÌ¸§ ´ë½Å ÀÌ °ªÀ» ¾´´Ù)
+// ì”¬ ID â†’ í™”ë©´ì— ë³´ì—¬ì¤„ ì¥ì†Œ ì´ë¦„.
+// SceneTable.csvì˜ DisplayKeyë¥¼ ë¡œì»¬ë¼ì´ì œì´ì…˜ìœ¼ë¡œ ì˜®ê²¨ ëŒë ¤ì¤€ë‹¤.
+// (ê¸°ë¡Â·ê¸°ë¡ì¥ì€ ë‚´ë¶€ ì”¬ ì´ë¦„ ëŒ€ì‹  ì´ ê°’ì„ ì“´ë‹¤)
 public static class SceneNameUtil
 {
     private const string TableFileName = "SceneTable.csv";
@@ -27,7 +27,7 @@ public static class SceneNameUtil
         });
     }
 
-    // ¾ğ¾î¸¦ ¹Ù²Ù¸é ´Ù½Ã ÀĞÀ» ÇÊ¿ä´Â ¾øÁö¸¸, Ç¥¸¦ ¼öÁ¤ÇßÀ» ¶§ ¾²·Á°í ¿­¾îµĞ´Ù
+    // ì–¸ì–´ë¥¼ ë°”ê¾¸ë©´ ë‹¤ì‹œ ì½ì„ í•„ìš”ëŠ” ì—†ì§€ë§Œ, í‘œë¥¼ ìˆ˜ì •í–ˆì„ ë•Œ ì“°ë ¤ê³  ì—´ì–´ë‘”ë‹¤
     public static void Reload() { _displayKeys = null; EnsureLoaded(); }
 
     public static string GetDisplayName(int sceneId, string fallbackInternalName = null)
@@ -39,11 +39,11 @@ public static class SceneNameUtil
             var loc = LocalizationManager.Instance;
             if (loc != null && loc.Has(key)) return loc.Get(key);
 #if UNITY_EDITOR
-            Debug.LogWarning($"[SceneNameUtil] ¾À {sceneId}ÀÇ Ç¥½Ã ÀÌ¸§ Å° '{key}'°¡ ·ÎÄÃ¶óÀÌÁ¦ÀÌ¼Ç Ç¥¿¡ ¾øÀ½");
+            Debug.LogWarning($"[SceneNameUtil] ì”¬ {sceneId}ì˜ í‘œì‹œ ì´ë¦„ í‚¤ '{key}'ê°€ ë¡œì»¬ë¼ì´ì œì´ì…˜ í‘œì— ì—†ìŒ");
 #endif
         }
 
-        if (!string.IsNullOrEmpty(fallbackInternalName)) return fallbackInternalName;   // ³»ºÎ ÀÌ¸§À¸·Î ´ëÃ¼
+        if (!string.IsNullOrEmpty(fallbackInternalName)) return fallbackInternalName;   // ë‚´ë¶€ ì´ë¦„ìœ¼ë¡œ ëŒ€ì²´
         return $"Scene {sceneId}";
     }
 }

@@ -1,45 +1,45 @@
-using System;
+ï»¿using System;
 using UnityEngine;
 
 
 
 public class Portal : MonoBehaviour
 {
-    public int myPortalID; // ÀÎ½ºÆåÅÍ¿¡¼­ 1001, 1002 ÀÔ·Â
+    public int myPortalID; // ì¸ìŠ¤í™í„°ì—ì„œ 1001, 1002 ì…ë ¥
 
-    // ÀÌµ¿ÇÒ ¸ñÀûÁöÀÇ µ¥ÀÌÅÍ¸¦ Á÷Á¢ µé°í ÀÖÀ½
+    // ì´ë™í•  ëª©ì ì§€ì˜ ë°ì´í„°ë¥¼ ì§ì ‘ ë“¤ê³  ìˆìŒ
     private PortalData _destinationData;
 
     private bool playerInRange = false;
 
-    // »ı¼ºµÇÀÚ¸¶ÀÚ ¸Å´ÏÀú°¡ È£ÃâÇØÁÙ ÃÊ±âÈ­ ÇÔ¼ö
+    // ìƒì„±ë˜ìë§ˆì ë§¤ë‹ˆì €ê°€ í˜¸ì¶œí•´ì¤„ ì´ˆê¸°í™” í•¨ìˆ˜
     public void Init(int id)
     {
         myPortalID = id;
 
-        // 1. ³» ID·Î ¸Å´ÏÀúÇÑÅ× ³» µ¥ÀÌÅÍ ¿øº» ¹Ş¾Æ¿À±â
+        // 1. ë‚´ IDë¡œ ë§¤ë‹ˆì €í•œí…Œ ë‚´ ë°ì´í„° ì›ë³¸ ë°›ì•„ì˜¤ê¸°
         PortalData myData = PortalManager.Instance.GetData(myPortalID);
 
         if (myData == null)
         {
-            Debug.LogError($"Portal {myPortalID} Data is NULL! (CSV È®ÀÎ ÇÊ¿ä)");
+            Debug.LogError($"Portal {myPortalID} Data is NULL! (CSV í™•ì¸ í•„ìš”)");
             return;
         }
 
-        // 2. ¹Ì¸® ¿¬°áµÈ µµÂøÁö µ¥ÀÌÅÍ(ÂüÁ¶) °¡Á®¿À±â
-        // (¸Å´ÏÀú°¡ LoadAndBuildData ÇÒ ¶§ ÀÌ¹Ì ¿¬°áÇØµÒ)
+        // 2. ë¯¸ë¦¬ ì—°ê²°ëœ ë„ì°©ì§€ ë°ì´í„°(ì°¸ì¡°) ê°€ì ¸ì˜¤ê¸°
+        // (ë§¤ë‹ˆì €ê°€ LoadAndBuildData í•  ë•Œ ì´ë¯¸ ì—°ê²°í•´ë‘ )
         _destinationData = myData.ConnectedTargetData;
 
-        // (µğ¹ö±ë¿ë) Å¸°ÙÀÌ Àß ¿¬°áµÆ³ª ·Î±× È®ÀÎ
+        // (ë””ë²„ê¹…ìš©) íƒ€ê²Ÿì´ ì˜ ì—°ê²°ëë‚˜ ë¡œê·¸ í™•ì¸
         // if (_destinationData != null) 
         //    Debug.Log($"Portal {id} initialized. Target: {_destinationData.ID}");
     }
 
     void Update()
     {
-        if (DialogueManager.Instance != null && DialogueManager.Instance.IsTalking) return; // ´ëÈ­ÁßÀÏ ¶© Æ÷Å» ÀÌµ¿ ºÒ°¡
+        if (DialogueManager.Instance != null && DialogueManager.Instance.IsTalking) return; // ëŒ€í™”ì¤‘ì¼ ë• í¬íƒˆ ì´ë™ ë¶ˆê°€
 
-        // ÇÃ·¹ÀÌ¾î°¡ ¹üÀ§ ¾È¿¡ ÀÖ°í À­Å° ´©¸£¸é ÀÌµ¿
+        // í”Œë ˆì´ì–´ê°€ ë²”ìœ„ ì•ˆì— ìˆê³  ìœ—í‚¤ ëˆ„ë¥´ë©´ ì´ë™
         if (playerInRange && Input.GetKeyDown(KeyCode.UpArrow))
         {
             TryEnterPortal();
@@ -48,17 +48,17 @@ public class Portal : MonoBehaviour
 
     private void TryEnterPortal()
     {
-        // ÀÌµ¿ °¡´ÉÇÑ Æ÷Å»ÀÎÁö È®ÀÎ
+        // ì´ë™ ê°€ëŠ¥í•œ í¬íƒˆì¸ì§€ í™•ì¸
         if (_destinationData != null)
         {
-            // ¡Ú °ø¿ë Æ÷Å»Àº ½Ã°£À» ¾²Áö ¾Ê´Â´Ù (´ë½Å ÀÚ°İ¡¤ºñ¿ëÀ» Ä¡¸¥´Ù)
+            // â˜… ê³µìš© í¬íƒˆì€ ì‹œê°„ì„ ì“°ì§€ ì•ŠëŠ”ë‹¤ (ëŒ€ì‹  ìê²©Â·ë¹„ìš©ì„ ì¹˜ë¥¸ë‹¤)
             TravelTimeTracker.Instance?.SkipNextTravelCost();
-            // -> °Ë»ö(Find) ¾øÀÌ Áï½Ã Á¢±Ù: ¸ñÀûÁö ¾À ID¿Í ¸ñÀûÁö ÁÂÇ¥¸¦ ¹Ù·Î ¾À ·Î´õ¿¡ Àü´Ş(Zero-lookup ¹æ½Ä)
+            // -> ê²€ìƒ‰(Find) ì—†ì´ ì¦‰ì‹œ ì ‘ê·¼: ëª©ì ì§€ ì”¬ IDì™€ ëª©ì ì§€ ì¢Œí‘œë¥¼ ë°”ë¡œ ì”¬ ë¡œë”ì— ì „ë‹¬(Zero-lookup ë°©ì‹)
             SceneLoader.Instance.LoadScene(_destinationData.OwnerSceneID, _destinationData.Position);
         }
         else
         {
-            Debug.Log("ÀÌµ¿ÇÒ ¼ö ¾ø´Â Æ÷Å»ÀÔ´Ï´Ù.");
+            Debug.Log("ì´ë™í•  ìˆ˜ ì—†ëŠ” í¬íƒˆì…ë‹ˆë‹¤.");
         }
     }
 

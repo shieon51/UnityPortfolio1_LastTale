@@ -1,9 +1,9 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 [CreateAssetMenu(menuName = "LastMarchan/Combat/Formulas/Basic Physical Damage")]
 public class BasicPhysicalDamageFormula : DamageFormulaSO
 {
-    [Tooltip("·¹º§ 1Â÷ÀÌ´ç µ¥¹ÌÁö º¸Á¤ ºñÀ² (¿¹½Ã°ª, ÃßÈÄ ±âÈ¹ È®Á¤ ½Ã Á¶Á¤)")]
+    [Tooltip("ë ˆë²¨ 1ì°¨ì´ë‹¹ ë°ë¯¸ì§€ ë³´ì • ë¹„ìœ¨ (ì˜ˆì‹œê°’, ì¶”í›„ ê¸°íš í™•ì • ì‹œ ì¡°ì •)")]
     public float levelDiffModifierPerLevel = 0.05f;
 
     public override int CalculateDamage(CombatContext ctx)

@@ -1,13 +1,13 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
-// ink ÅÂ±×·Î È£ÃâÇÒ ¿¬Ãâ¿ë ¾Ö´Ï¸ŞÀÌ¼Ç
+// ink íƒœê·¸ë¡œ í˜¸ì¶œí•  ì—°ì¶œìš© ì• ë‹ˆë©”ì´ì…˜
 [CreateAssetMenu(menuName = "LastMarchan/Visual/Cutscene Animation")]
 public class CutsceneAnimationData : ScriptableObject
 {
-    [Tooltip("ink ÅÂ±×(#emote:xxx)¿Í ¸ÅÄªµÉ °íÀ¯ Å°")]
+    [Tooltip("ink íƒœê·¸(#emote:xxx)ì™€ ë§¤ì¹­ë  ê³ ìœ  í‚¤")]
     public string key;
-    public string bodyStateName; // Face¸¦ Á¦¿ÜÇÑ ÆÄÃ÷µéÀÌ Àç»ıÇÒ State
-    public string faceStateName; // Face Àü¿ë Ç¥Á¤ State (¸ö µ¿ÀÛ°ú µ¶¸³ÀûÀ¸·Î Àç»ı °¡´É)
-    [Tooltip("-1ÀÌ¸é Å¬¸³ ±æÀÌ¸¸Å­ Àç»ı ÈÄ ÀÚµ¿ º¹±Í, 0 ÀÌ»óÀÌ¸é ÁöÁ¤ ½Ã°£ ÈÄ º¹±Í")]
+    public string bodyStateName; // Faceë¥¼ ì œì™¸í•œ íŒŒì¸ ë“¤ì´ ì¬ìƒí•  State
+    public string faceStateName; // Face ì „ìš© í‘œì • State (ëª¸ ë™ì‘ê³¼ ë…ë¦½ì ìœ¼ë¡œ ì¬ìƒ ê°€ëŠ¥)
+    [Tooltip("-1ì´ë©´ í´ë¦½ ê¸¸ì´ë§Œí¼ ì¬ìƒ í›„ ìë™ ë³µê·€, 0 ì´ìƒì´ë©´ ì§€ì • ì‹œê°„ í›„ ë³µê·€")]
     public float duration = -1f;
 }

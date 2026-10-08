@@ -1,4 +1,4 @@
-// BattleBarkTrigger.cs (�ű�)
+﻿// BattleBarkTrigger.cs (신규)
 [System.Serializable]
 public class BattleBarkTrigger
 {

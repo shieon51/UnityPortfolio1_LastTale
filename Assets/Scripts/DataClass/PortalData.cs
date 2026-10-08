@@ -1,30 +1,30 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 [Serializable]
 public class PortalData
 {
-    public int portalID;              // ³» Æ÷Å» ID
-    public int OwnerSceneID;    // ³»°¡ ¼ÓÇÑ ¾À ID
-    public int TargetPortalID;  // ¸ñÀûÁö Æ÷Å» ID (Edge Á¤º¸)
+    public int portalID;              // ë‚´ í¬íƒˆ ID
+    public int OwnerSceneID;    // ë‚´ê°€ ì†í•œ ì”¬ ID
+    public int TargetPortalID;  // ëª©ì ì§€ í¬íƒˆ ID (Edge ì •ë³´)
 
-    public Vector2 Position;    // ½ºÆùµÉ ÁÂÇ¥
+    public Vector2 Position;    // ìŠ¤í°ë  ì¢Œí‘œ
 
-    // ·±Å¸ÀÓ¿¡ ºü¸¥ ÀÌµ¿À» À§ÇØ ¿¬°áµÈ µµÂøÁö µ¥ÀÌÅÍ¸¦ Á÷Á¢ ÂüÁ¶
-    // CSV ·Îµå ÈÄ BuildGraph ´Ü°è¿¡¼­ Ã¤¿ö³ÖÀ½
+    // ëŸ°íƒ€ì„ì— ë¹ ë¥¸ ì´ë™ì„ ìœ„í•´ ì—°ê²°ëœ ë„ì°©ì§€ ë°ì´í„°ë¥¼ ì§ì ‘ ì°¸ì¡°
+    // CSV ë¡œë“œ í›„ BuildGraph ë‹¨ê³„ì—ì„œ ì±„ì›Œë„£ìŒ
     [NonSerialized]
     public PortalData ConnectedTargetData = null;
 }
 
-// [¹æÇâ ±×·¡ÇÁ] ¾À °£ÀÇ °ü°è¸¦ Á¤ÀÇÇÏ´Â ³ëµå (±æÃ£±â¿ë)
+// [ë°©í–¥ ê·¸ë˜í”„] ì”¬ ê°„ì˜ ê´€ê³„ë¥¼ ì •ì˜í•˜ëŠ” ë…¸ë“œ (ê¸¸ì°¾ê¸°ìš©)
 public class SceneNode
 {
     public int SceneID;
     public string SceneName;
 
-    // ±æÃ£±â ÇÙ½É µ¥ÀÌÅÍ
-    // Key: °¡°í ½ÍÀº ¸ñÀûÁö ¾À ID
-    // Value: ±×°÷À¸·Î °¡±â À§ÇØ ³»°¡ Å¸¾ß ÇÒ '³» ±¸¿ªÀÇ Æ÷Å»' µ¥ÀÌÅÍ
+    // ê¸¸ì°¾ê¸° í•µì‹¬ ë°ì´í„°
+    // Key: ê°€ê³  ì‹¶ì€ ëª©ì ì§€ ì”¬ ID
+    // Value: ê·¸ê³³ìœ¼ë¡œ ê°€ê¸° ìœ„í•´ ë‚´ê°€ íƒ€ì•¼ í•  'ë‚´ êµ¬ì—­ì˜ í¬íƒˆ' ë°ì´í„°
     public Dictionary<int, PortalData> NavigationMap = new Dictionary<int, PortalData>();
 }

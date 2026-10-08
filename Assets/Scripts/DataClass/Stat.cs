@@ -1,42 +1,42 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 
 
-// [Stat.cs] ÇÏ³ªÀÇ ´É·ÂÄ¡¸¦ °ü¸®ÇÏ´Â ¸ğµâ
+// [Stat.cs] í•˜ë‚˜ì˜ ëŠ¥ë ¥ì¹˜ë¥¼ ê´€ë¦¬í•˜ëŠ” ëª¨ë“ˆ
 [System.Serializable]
 public class Stat
 {
     [SerializeField]
     private int baseValue;
 
-    private List<int> modifiers = new List<int>(); //¹öÇÁ, µğ¹öÇÁ ¸®½ºÆ®
+    private List<int> modifiers = new List<int>(); //ë²„í”„, ë””ë²„í”„ ë¦¬ìŠ¤íŠ¸
 
     public Stat(int startingValue)
     {
         baseValue = startingValue;
     }
 
-    // ÃÖÁ¾ ½ºÅÈ °ª ¹İÈ¯ (±âº»°ª + ¹öÇÁ/µğ¹öÇÁ)
+    // ìµœì¢… ìŠ¤íƒ¯ ê°’ ë°˜í™˜ (ê¸°ë³¸ê°’ + ë²„í”„/ë””ë²„í”„)
     public int GetValue()
     {
         int finalValue = baseValue;
-        modifiers.ForEach(x => finalValue += x); //modifiers °¢°¢ÀÇ °ªÀ» finalValue¿¡ ´õÇØÁØ´Ù
+        modifiers.ForEach(x => finalValue += x); //modifiers ê°ê°ì˜ ê°’ì„ finalValueì— ë”í•´ì¤€ë‹¤
         return finalValue;
     }
 
-    // ¼ö·Ã/ÀÌº¥Æ® µîÀ¸·Î ¿µ±¸ÀûÀ¸·Î ½ºÅÈÀ» ¿Ã¸± ¶§ »ç¿ë
-    // ¼ö·Ã µîÀ¸·Î ±âº»°ª ÀÚÃ¼¸¦ ¿Ã¸°´Ù (Àåºñ º¸Á¤°ú º°°³)
+    // ìˆ˜ë ¨/ì´ë²¤íŠ¸ ë“±ìœ¼ë¡œ ì˜êµ¬ì ìœ¼ë¡œ ìŠ¤íƒ¯ì„ ì˜¬ë¦´ ë•Œ ì‚¬ìš©
+    // ìˆ˜ë ¨ ë“±ìœ¼ë¡œ ê¸°ë³¸ê°’ ìì²´ë¥¼ ì˜¬ë¦°ë‹¤ (ì¥ë¹„ ë³´ì •ê³¼ ë³„ê°œ)
     public void AddBaseValue(int amount)
     {
         baseValue += amount;
     }
 
-    // ¡Ú È¸±Í ½Ã ¸ö »óÅÂ¸¦ µÇµ¹¸®±â À§ÇØ ±âº»°ªÀ» ÀĞ°í ¾µ ¼ö ÀÖ°Ô ÇÑ´Ù.
-    //   ¹öÇÁ¡¤µğ¹öÇÁ(modifiers)´Â °Çµå¸®Áö ¾Ê´Â´Ù (¿äÁ¤È­ º¸Á¤ µîÀº ±×´ë·Î À¯Áö)
+    // â˜… íšŒê·€ ì‹œ ëª¸ ìƒíƒœë¥¼ ë˜ëŒë¦¬ê¸° ìœ„í•´ ê¸°ë³¸ê°’ì„ ì½ê³  ì“¸ ìˆ˜ ìˆê²Œ í•œë‹¤.
+    //   ë²„í”„Â·ë””ë²„í”„(modifiers)ëŠ” ê±´ë“œë¦¬ì§€ ì•ŠëŠ”ë‹¤ (ìš”ì •í™” ë³´ì • ë“±ì€ ê·¸ëŒ€ë¡œ ìœ ì§€)
     public int BaseValue => baseValue;
     public void SetBaseValue(int value) => baseValue = value;
 
-    // ÀÏ½ÃÀûÀÎ ¹öÇÁ/µğ¹öÇÁ Ãß°¡ (¿äÁ¤È­ µî)
+    // ì¼ì‹œì ì¸ ë²„í”„/ë””ë²„í”„ ì¶”ê°€ (ìš”ì •í™” ë“±)
     public void AddModifier(int modifier)
     {
         if (modifier != 0) modifiers.Add(modifier);

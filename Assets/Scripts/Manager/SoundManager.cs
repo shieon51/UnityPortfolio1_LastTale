@@ -1,4 +1,4 @@
-// SoundManager.cs (½Å±Ô)
+ï»¿// SoundManager.cs (ì‹ ê·œ)
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -43,21 +43,21 @@ public class SoundManager : Singleton<SoundManager>
     {
         if (!_sfxDict.TryGetValue(key, out AudioClip clip) || clip == null)
         {
-            Debug.LogWarning($"[SoundManager] SFX '{key}'°¡ µî·ÏµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            Debug.LogWarning($"[SoundManager] SFX '{key}'ê°€ ë“±ë¡ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
             return;
         }
         var src = _sfxPool.Dequeue();
         _sfxPool.Enqueue(src);
-        float finalVolume = volumeScale * (GameSettings.Instance?.SFXVolume ?? 1f); // º¼·ı Á¶Àı ¼³Á¤
+        float finalVolume = volumeScale * (GameSettings.Instance?.SFXVolume ?? 1f); // ë³¼ë¥¨ ì¡°ì ˆ ì„¤ì •
         src.PlayOneShot(clip, finalVolume);
     }
 
     public void PlayBGM(AudioClip clip) => StartCoroutine(CrossfadeBGM(clip));
 
-    public void PlayBGM(string key) // ¡Ú ¿À¹ö·Îµå
+    public void PlayBGM(string key) // â˜… ì˜¤ë²„ë¡œë“œ
     {
         if (_bgmDict.TryGetValue(key, out var clip) && clip != null) PlayBGM(clip);
-        else Debug.LogWarning($"[SoundManager] BGM '{key}'°¡ µî·ÏµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+        else Debug.LogWarning($"[SoundManager] BGM '{key}'ê°€ ë“±ë¡ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
     }
 
     private IEnumerator CrossfadeBGM(AudioClip newClip)

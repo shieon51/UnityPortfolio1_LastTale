@@ -1,4 +1,4 @@
-// PlayerLevelData.cs (½Å±Ô) - ÇÃ·¹ÀÌ¾î ·¹º§º° ¼öÄ¡(ÃÑ ¸¶³ª, Ã¼·Â, ´ÙÀ½ ·¹º§±îÁö ÇÊ¿ä °æÇèÄ¡)
+ï»¿// PlayerLevelData.cs (ì‹ ê·œ) - í”Œë ˆì´ì–´ ë ˆë²¨ë³„ ìˆ˜ì¹˜(ì´ ë§ˆë‚˜, ì²´ë ¥, ë‹¤ìŒ ë ˆë²¨ê¹Œì§€ í•„ìš” ê²½í—˜ì¹˜)
 [System.Serializable]
 public class PlayerLevelData
 {

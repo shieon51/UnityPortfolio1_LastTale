@@ -1,13 +1,13 @@
-using TMPro;
+ï»¿using TMPro;
 using UnityEngine;
 
-// BattleTimerDisplay.cs - º¸½ºÀü Å¸ÀÌ¸Ó
-// ¡Ú Ç¥½Ã ¿©ºÎ´Â UIModeManager(HUD_Battle)°¡ °ü¸®ÇÑ´Ù. ¿©±â¼­´Â ¾ËÆÄ¸¦ °Çµå¸®Áö ¾Ê´Â´Ù.
+// BattleTimerDisplay.cs - ë³´ìŠ¤ì „ íƒ€ì´ë¨¸
+// â˜… í‘œì‹œ ì—¬ë¶€ëŠ” UIModeManager(HUD_Battle)ê°€ ê´€ë¦¬í•œë‹¤. ì—¬ê¸°ì„œëŠ” ì•ŒíŒŒë¥¼ ê±´ë“œë¦¬ì§€ ì•ŠëŠ”ë‹¤.
 public class BattleTimerDisplay : Singleton<BattleTimerDisplay>
 {
     public TextMeshProUGUI timerText;
 
-    [Tooltip("Å¸ÀÌ¸Ó°¡ ¸ØÃèÀ» ¶§ Ç¥½ÃÇÒ ¹®±¸")]
+    [Tooltip("íƒ€ì´ë¨¸ê°€ ë©ˆì·„ì„ ë•Œ í‘œì‹œí•  ë¬¸êµ¬")]
     public string idleText = "00:00";
 
     private float _elapsed;
@@ -19,7 +19,7 @@ public class BattleTimerDisplay : Singleton<BattleTimerDisplay>
     private void Awake()
     {
         var cg = GetComponent<CanvasGroup>();
-        if (cg != null) { cg.alpha = 1f; cg.blocksRaycasts = false; }   // ¡Ú ºÎ¸ğ ¾ËÆÄ¿Í °öÇØÁö¹Ç·Î Ç×»ó 1
+        if (cg != null) { cg.alpha = 1f; cg.blocksRaycasts = false; }   // â˜… ë¶€ëª¨ ì•ŒíŒŒì™€ ê³±í•´ì§€ë¯€ë¡œ í•­ìƒ 1
 
         _elapsed = 0f;
         _running = false;

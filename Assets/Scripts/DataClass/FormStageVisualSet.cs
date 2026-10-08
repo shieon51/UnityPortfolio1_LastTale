@@ -1,4 +1,4 @@
-// FormStageVisualSet.cs (�ű�)
+﻿// FormStageVisualSet.cs (신규)
 using System.Collections.Generic;
 using UnityEngine;
 

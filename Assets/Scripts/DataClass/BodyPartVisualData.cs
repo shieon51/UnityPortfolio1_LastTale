@@ -1,4 +1,4 @@
-// BodyPartVisualData.cs (½Å±Ô)
+ï»¿// BodyPartVisualData.cs (ì‹ ê·œ)
 using UnityEngine;
 
 public enum BodyPartSlot
@@ -10,8 +10,8 @@ public enum BodyPartSlot
 public class BodyPartVisualData : ScriptableObject
 {
     public BodyPartSlot slot;
-    public AnimatorOverrideController overrideController; // ÀÌ ÆÄÃ÷°¡ ÀÌ »óÈ²¿¡¼­ Àç»ıÇÒ ¸ğ¼Ç ¼¼Æ®
+    public AnimatorOverrideController overrideController; // ì´ íŒŒì¸ ê°€ ì´ ìƒí™©ì—ì„œ ì¬ìƒí•  ëª¨ì…˜ ì„¸íŠ¸
 
-    [Tooltip("ÀÌ Æû ´Ü°è¿¡¼­ ÀÌ ÆÄÃ÷¸¦ º¸ÀÌ°Ô ÇÒÁö ¿©ºÎ")]
+    [Tooltip("ì´ í¼ ë‹¨ê³„ì—ì„œ ì´ íŒŒì¸ ë¥¼ ë³´ì´ê²Œ í• ì§€ ì—¬ë¶€")]
     public bool isVisible = true;
 }

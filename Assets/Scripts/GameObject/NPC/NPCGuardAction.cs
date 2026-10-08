@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "LastMarchan/NPC Skills/Guard Action")]
@@ -10,14 +10,14 @@ public class NPCGuardAction : NPCActionBase
     public float duration = 1.0f;
     public string defaultAnimStateName = "Guard";
 
-    [Header("Ã¼·Â ¿¬µ¿")]
+    [Header("ì²´ë ¥ ì—°ë™")]
     public float lowHealthGuardWeight = 25f;
 
     public override float EvaluateScore(NPCDecisionContext ctx)
     {
         if (!IsContextAllowed(ctx.Self.CurrentMovementContext)) return 0f;
         if (ctx.DistanceToPlayer > triggerWithinDistance) return 0f;
-        if (!ctx.PlayerIsAttacking) return 0f; // ¿ø·¡ ±âÈ¹¼­ Á¶°Ç: ÇÃ·¹ÀÌ¾î°¡ °­°ø°İ ¿¹°í ÁßÀÏ ¶§
+        if (!ctx.PlayerIsAttacking) return 0f; // ì›ë˜ ê¸°íšì„œ ì¡°ê±´: í”Œë ˆì´ì–´ê°€ ê°•ê³µê²© ì˜ˆê³  ì¤‘ì¼ ë•Œ
 
         float score = baseScore;
         score += (1f - ctx.SelfHealthPercent) * lowHealthGuardWeight; 

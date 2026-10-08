@@ -1,14 +1,14 @@
-// TimeAnchorMarker.cs (½Å±Ô)
+ï»¿// TimeAnchorMarker.cs (ì‹ ê·œ)
 using UnityEngine;
 using TMPro;
 
 public class TimeAnchorMarker : MonoBehaviour
 {
     public TimeAnchorSnapshot snapshotData;
-    public GameObject tooltipPrefab; // ¿ùµå½ºÆäÀÌ½º ÅøÆÁ UI ÇÁ¸®ÆÕ
+    public GameObject tooltipPrefab; // ì›”ë“œìŠ¤í˜ì´ìŠ¤ íˆ´íŒ UI í”„ë¦¬íŒ¹
     private GameObject _activeTooltip;
 
-    private void OnMouseEnter() // 2D Äİ¶óÀÌ´õ(Æ®¸®°Å) ÇÊ¿ä
+    private void OnMouseEnter() // 2D ì½œë¼ì´ë”(íŠ¸ë¦¬ê±°) í•„ìš”
     {
         if (tooltipPrefab == null || snapshotData == null) return;
         _activeTooltip = Instantiate(tooltipPrefab, transform.position + Vector3.up * 1f, Quaternion.identity);
@@ -16,7 +16,7 @@ public class TimeAnchorMarker : MonoBehaviour
         if (text != null)
         {
             var sora = PlayerManager.Instance.CurrentCharacter as SoraStats;
-            text.text = $"Day {snapshotData.day} {snapshotData.hour}½Ã\n{sora?.loopCount ?? 0}È¸Â÷";
+            text.text = $"Day {snapshotData.day} {snapshotData.hour}ì‹œ\n{sora?.loopCount ?? 0}íšŒì°¨";
         }
     }
 

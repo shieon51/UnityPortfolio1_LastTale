@@ -1,7 +1,7 @@
-// AmbientEventManager.cs (½Å±Ô)
+ï»¿// AmbientEventManager.cs (ì‹ ê·œ)
 using UnityEngine;
 
-// ²Ş, È¸»ó µî À§Ä¡ ¹«°ü ÀÌº¥Æ® °ü¸®
+// ê¿ˆ, íšŒìƒ ë“± ìœ„ì¹˜ ë¬´ê´€ ì´ë²¤íŠ¸ ê´€ë¦¬
 public class AmbientEventManager : Singleton<AmbientEventManager>
 {
     public string resourcesFolder = "AmbientEvents";
@@ -11,7 +11,7 @@ public class AmbientEventManager : Singleton<AmbientEventManager>
 
     private string FiredKey(AmbientEventData e) => $"ambient_fired_{e.eventId}";
 
-    /// <summary>½Ã°£ÀÌ Èå¸¥ µÚ³ª ÀáÀÚ±â Á÷ÈÄ µî¿¡¼­ È£Ãâ</summary>
+    /// <summary>ì‹œê°„ì´ íë¥¸ ë’¤ë‚˜ ì ìê¸° ì§í›„ ë“±ì—ì„œ í˜¸ì¶œ</summary>
     public void TryTriggerAmbient(bool afterSleep = false)
     {
         if (DialogueManager.Instance.IsTalking || GlobalActionLock.IsLocked) return;
@@ -32,7 +32,7 @@ public class AmbientEventManager : Singleton<AmbientEventManager>
             if (Random.value > e.chance) continue;
 
             MemoryManager.Instance.IncrementCounter(FiredKey(e));
-            Debug.Log($"[AmbientEvent] ¹ßµ¿: {e.eventId}");
+            Debug.Log($"[AmbientEvent] ë°œë™: {e.eventId}");
 
             DialogueManager.Instance.StartStory(new EventData
             {
@@ -42,7 +42,7 @@ public class AmbientEventManager : Singleton<AmbientEventManager>
                 IsAnytime = true,
                 TimeTaken = 0,
             });
-            return; // ÇÑ ¹ø¿¡ ÇÏ³ª¸¸
+            return; // í•œ ë²ˆì— í•˜ë‚˜ë§Œ
         }
     }
 }

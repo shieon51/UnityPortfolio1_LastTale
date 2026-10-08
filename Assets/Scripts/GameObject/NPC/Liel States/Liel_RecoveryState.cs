@@ -1,6 +1,6 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
-// °ø°İ ÈÄ Àá½Ã ¸ØÃß´Â 'ºóÆ´'À» ¸¸µå´Â »óÅÂ
+// ê³µê²© í›„ ì ì‹œ ë©ˆì¶”ëŠ” 'ë¹ˆí‹ˆ'ì„ ë§Œë“œëŠ” ìƒíƒœ
 public class Liel_RecoveryState : NPCState
 {
     private Liel_AI liel;

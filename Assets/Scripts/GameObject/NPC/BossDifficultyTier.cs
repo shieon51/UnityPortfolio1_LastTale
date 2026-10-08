@@ -1,5 +1,5 @@
-
-// ±âÈ¹ ¹®¼­ÀÇ Ãà (³­ÀÌµµ)
+ï»¿
+// ê¸°íš ë¬¸ì„œì˜ ì¶• (ë‚œì´ë„)
 public enum BossDifficultyTier 
 { 
     Training, Normal, Hard 

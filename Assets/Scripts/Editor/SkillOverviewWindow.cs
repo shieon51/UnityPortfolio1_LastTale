@@ -1,11 +1,11 @@
-using UnityEngine;
+Ôªøusing UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
 
 public class SkillOverviewWindow : EditorWindow
 {
-    private enum CharacterTab { Player, Liel } // ªı ƒ≥∏Ø≈Õ ª˝±‚∏È ø©±‚ √ﬂ∞°
+    private enum CharacterTab { Player, Liel } // ÏÉà Ï∫êÎ¶≠ÌÑ∞ ÏÉùÍ∏∞Î©¥ Ïó¨Í∏∞ Ï∂îÍ∞Ä
     private CharacterTab _characterTab = CharacterTab.Player;
 
     private enum SlotTab { All, Q, W, E, R }
@@ -22,7 +22,7 @@ public class SkillOverviewWindow : EditorWindow
     private List<SkillSequenceData> _sequences;
 
     [MenuItem("LastMarchan/Skill Overview")]
-    public static void Open() => GetWindow<SkillOverviewWindow>("Ω∫≈≥ ¿¸√º ∞¸∏Æ");
+    public static void Open() => GetWindow<SkillOverviewWindow>("Ïä§ÌÇ¨ Ï†ÑÏ≤¥ Í¥ÄÎ¶¨");
 
     private void OnEnable() => RefreshList();
 
@@ -62,20 +62,20 @@ public class SkillOverviewWindow : EditorWindow
     private void DrawToolbar()
     {
         EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-        if (GUILayout.Button("ªı∑Œ∞Ìƒß", EditorStyles.toolbarButton, GUILayout.Width(70))) RefreshList();
+        if (GUILayout.Button("ÏÉàÎ°úÍ≥†Ïπ®", EditorStyles.toolbarButton, GUILayout.Width(70))) RefreshList();
         GUILayout.FlexibleSpace();
         _searchText = EditorGUILayout.TextField(_searchText, EditorStyles.toolbarSearchField, GUILayout.Width(200));
         EditorGUILayout.EndHorizontal();
 
-        _characterTab = (CharacterTab)GUILayout.Toolbar((int)_characterTab, new[] { "«√∑π¿ÃæÓ (º“∂Û)", "∏Æø§" });
+        _characterTab = (CharacterTab)GUILayout.Toolbar((int)_characterTab, new[] { "ÌîåÎ†àÏù¥Ïñ¥ (ÏÜåÎùº)", "Î¶¨Ïóò" });
 
         if (_characterTab == CharacterTab.Player)
-            _slotTab = (SlotTab)GUILayout.Toolbar((int)_slotTab, new[] { "¿¸√º", "Q", "W", "E", "R" });
+            _slotTab = (SlotTab)GUILayout.Toolbar((int)_slotTab, new[] { "Ï†ÑÏ≤¥", "Q", "W", "E", "R" });
     }
 
     private void DrawSequenceSection()
     {
-        EditorGUILayout.LabelField("ƒﬁ∫∏ Ω√ƒˆΩ∫ (Q/W/E/R)", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("ÏΩ§Î≥¥ ÏãúÌÄÄÏä§ (Q/W/E/R)", EditorStyles.boldLabel);
         foreach (var seq in _sequences)
         {
             if (seq == null) continue;
@@ -87,9 +87,9 @@ public class SkillOverviewWindow : EditorWindow
             for (int i = 0; i < seq.comboSteps.Count; i++)
             {
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField($"{i + 1}≈∏:", GUILayout.Width(40));
+                EditorGUILayout.LabelField($"{i + 1}ÌÉÄ:", GUILayout.Width(40));
                 EditorGUILayout.ObjectField(seq.comboSteps[i], typeof(SkillBase), false);
-                if (GUILayout.Button("πŸ∑Œ∞°±‚", GUILayout.Width(60))) Selection.activeObject = seq.comboSteps[i];
+                if (GUILayout.Button("Î∞îÎ°úÍ∞ÄÍ∏∞", GUILayout.Width(60))) Selection.activeObject = seq.comboSteps[i];
                 EditorGUILayout.EndHorizontal();
             }
             EditorGUILayout.EndVertical();
@@ -108,7 +108,7 @@ public class SkillOverviewWindow : EditorWindow
         }
     }
 
-    // æ÷º¬ ¿Ã∏ß ±‘ƒ¢(Sora_Q1, Sora_W1...)¿∏∑Œ ΩΩ∑‘ « ≈Õ∏µ. ¿Ã∏ß ±‘ƒ¢ πŸ≤Ó∏È ø©±‚∏∏ ∞Ìƒ°∏È µ .
+    // Ïï†ÏÖã Ïù¥Î¶Ñ Í∑úÏπô(Sora_Q1, Sora_W1...)ÏúºÎ°ú Ïä¨Î°Ø ÌïÑÌÑ∞ÎßÅ. Ïù¥Î¶Ñ Í∑úÏπô Î∞îÎÄåÎ©¥ Ïó¨Í∏∞Îßå Í≥†ÏπòÎ©¥ Îê®.
     private bool MatchesSlot(string assetName, SlotTab tab)
     {
         string t = tab.ToString();
@@ -144,12 +144,12 @@ public class SkillOverviewWindow : EditorWindow
         List<SkillVFXCue> cues = skill switch { SkillBase sb => sb.vfxCues, NPCSkillBase nsb => nsb.vfxCues, _ => null };
         if (cues == null || cues.Count == 0 || _poolManager == null) return;
 
-        EditorGUILayout.LabelField("VFX πÃ∏Æ∫∏±‚", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("VFX ÎØ∏Î¶¨Î≥¥Í∏∞", EditorStyles.boldLabel);
         foreach (var cue in cues)
         {
             EditorGUILayout.LabelField($"[{cue.cueId}]", EditorStyles.miniBoldLabel);
             EditorGUILayout.BeginHorizontal();
-            DrawVFXThumbnail("±‚∫ª", cue.vfxKey);
+            DrawVFXThumbnail("Í∏∞Î≥∏", cue.vfxKey);
             foreach (var co in cue.contextOverrides) DrawVFXThumbnail(co.context.ToString(), co.vfxKey);
             EditorGUILayout.EndHorizontal();
         }
@@ -165,9 +165,9 @@ public class SkillOverviewWindow : EditorWindow
             var sr = poolInfo.prefab.GetComponentInChildren<SpriteRenderer>();
             Texture preview = sr != null && sr.sprite != null ? AssetPreview.GetAssetPreview(sr.sprite) : null;
             if (preview != null) GUILayout.Label(preview, GUILayout.Width(64), GUILayout.Height(64));
-            else GUILayout.Box("∑Œµ˘¡ﬂ", GUILayout.Width(64), GUILayout.Height(64));
+            else GUILayout.Box("Î°úÎî©Ï§ë", GUILayout.Width(64), GUILayout.Height(64));
         }
-        else GUILayout.Box("(πÃµÓ∑œ)", GUILayout.Width(64), GUILayout.Height(64));
+        else GUILayout.Box("(ÎØ∏Îì±Î°ù)", GUILayout.Width(64), GUILayout.Height(64));
         EditorGUILayout.EndVertical();
     }
 }
