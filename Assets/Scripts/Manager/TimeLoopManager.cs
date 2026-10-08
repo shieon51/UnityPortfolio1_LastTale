@@ -7,6 +7,13 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     private List<TimeAnchorSnapshot> _anchors = new();
     private List<GameObject> _anchorMarkers = new();
 
+    // ★ 누적 닻 번호. 세계 전체에서 하나씩 증가하며 회귀해도 되돌리지 않는다 (세이브가 생기면 저장 대상)
+    private int _anchorSerial = 0;
+    public int AnchorSerial => _anchorSerial;
+
+    // ★ 닻으로 돌아간 경로. 기록에 숫자로 남으므로 값을 바꾸지 않는다
+    public enum ReturnPath { Voluntary = 0, Normal = 1, Forced = 2 }
+
     [Header("앵커 개수/자원")]
     public int setAnchorManaCost = 20;
     public int returnManaCost = 30;
@@ -155,6 +162,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         sora.UseMana(setAnchorManaCost);
         var snapshot = new TimeAnchorSnapshot
         {
+            anchorId = ++_anchorSerial,                       // ★ 누적 번호
             sceneID = SceneLoader.Instance.CurrentSceneID,
             position = sora.transform.position,
             day = TimeManager.Instance.currentDay,
@@ -186,7 +194,8 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             _activeMarkers[snapshot] = markerObj; // ★ 리스트 대신 딕셔너리
         }
 
-        PlayerActionLog.Instance?.Record(RecordType.AnchorSet, $"{_anchors.Count}", 0, 0);
+        PlayerActionLog.Instance?.Record(RecordType.AnchorSet, snapshot.anchorId.ToString(), 0, snapshot.anchorId,
+            payload: PlayerActionLog.EncodeDayHour(snapshot.day, snapshot.hour));
 
         return true;
     }
@@ -200,6 +209,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             _activeMarkers.Remove(snapshot);
         }
         (PlayerManager.Instance.CurrentCharacter as SoraStats)?.RecoverMana(removeAnchorManaRefund);
+        PlayerActionLog.Instance?.Record(RecordType.AnchorRetracted, snapshot.anchorId.ToString(), snapshot.anchorId, 0);
     }
 
     // ★ 세 경로에 흩어져 있던 복원 코드를 하나로 모음.
@@ -232,7 +242,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     }
 
     // ★ 사용한 닻을 소모하고, 과거로 갔다면 그보다 뒤의 닻도 정리한다 (기획서 7-5)
-    private void ConsumeAnchor(TimeAnchorSnapshot used)
+    private void ConsumeAnchor(TimeAnchorSnapshot used, ReturnPath path)
     {
         if (used == null) return;
 
@@ -242,22 +252,25 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             for (int i = _anchors.Count - 1; i >= 0; i--)
             {
                 if (_anchors[i] == used) continue;
-                if (ToAbsoluteHour(_anchors[i].day, _anchors[i].hour) > usedAt) DiscardAnchor(_anchors[i]);
+                if (ToAbsoluteHour(_anchors[i].day, _anchors[i].hour) > usedAt)
+                    DiscardAnchor(_anchors[i], RecordType.AnchorVanished, 0);
             }
         }
 
-        if (consumeAnchorOnUse) DiscardAnchor(used);
+        if (consumeAnchorOnUse) DiscardAnchor(used, RecordType.AnchorUsed, (int)path);
     }
 
-    // 마나 환급 없이 조용히 제거 (사용·소멸용). RemoveAnchor는 플레이어가 직접 거둘 때 쓴다
-    private void DiscardAnchor(TimeAnchorSnapshot snapshot)
+    // 마나 환급 없이 제거 (사용·소멸용). RemoveAnchor는 플레이어가 직접 거둘 때 쓴다
+    // ★ 왜 사라졌는지 기록한다 — 이야기의 행적이 닻 아이콘 상태를 그릴 때 쓴다
+    private void DiscardAnchor(TimeAnchorSnapshot snapshot, RecordType reason, int detail)
     {
-        _anchors.Remove(snapshot);
+        if (!_anchors.Remove(snapshot)) return;
         if (_activeMarkers.TryGetValue(snapshot, out var marker))
         {
             if (marker != null) Destroy(marker);
             _activeMarkers.Remove(snapshot);
         }
+        PlayerActionLog.Instance?.Record(reason, snapshot.anchorId.ToString(), snapshot.anchorId, detail);
     }
 
     public bool TravelToAnchor(TimeAnchorSnapshot anchor)
@@ -277,12 +290,13 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         sora.loopCount++;                                     // 시간 역행이므로 회차 증가
 
         RestoreWorldState(anchor);
-        ConsumeAnchor(anchor);                                // ★ 1회용 + 이후 닻 소멸
+        ConsumeAnchor(anchor, ReturnPath.Voluntary);          // ★ 1회용 + 이후 닻 소멸
 
         // ★ 복원 뒤에 기록해야 한다. RestoreWorldState가 행적 로그를 그 시점으로 되돌리므로,
         //   먼저 기록하면 복원 과정에서 지워진다
-        PlayerActionLog.Instance?.Record(RecordType.Loop, "return_to_anchor", 0, 0,
-            $"{anchor.loopCountAtSave}회차 Day {anchor.day} {anchor.hour}:00");
+        // ★ 문구를 조립하지 않고 숫자만 남긴다 (회차 → before, 닻 번호 → after, 시각 → payload)
+        PlayerActionLog.Instance?.Record(RecordType.Loop, "return_to_anchor", anchor.loopCountAtSave, anchor.anchorId,
+            payload: PlayerActionLog.EncodeDayHour(anchor.day, anchor.hour));
 
         LoadScene(anchor.sceneID, anchor.position, anchor.day, anchor.hour);
         return true;
@@ -307,9 +321,9 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             SetVitals(sora, Mathf.Max(minHealthAfterReturn, sora.currentHealth), sora.currentMana);   // ★
             //sora.currentHealth = Mathf.Max(minHealthAfterReturn, sora.currentHealth);
 
-            ConsumeAnchor(latest);
-            PlayerActionLog.Instance?.Record(RecordType.Loop, "death_return", 0, 0,
-                $"{latest.loopCountAtSave}회차 Day {latest.day} {latest.hour}:00");
+            ConsumeAnchor(latest, ReturnPath.Normal);
+            PlayerActionLog.Instance?.Record(RecordType.Loop, "death_return", latest.loopCountAtSave, latest.anchorId,
+                payload: PlayerActionLog.EncodeDayHour(latest.day, latest.hour));
             LoadScene(latest.sceneID, latest.position, latest.day, latest.hour);
         }
         else if (latest != null)                                    // [경로 2] 마나 부족 강제 복귀
@@ -323,9 +337,9 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
                 Mathf.RoundToInt(sora.maxMana * forcedReturnHealthRatio));
             //sora.currentHealth = Mathf.Max(minHealthAfterReturn, Mathf.RoundToInt(sora.maxHealth * forcedReturnHealthRatio));
 
-            ConsumeAnchor(latest);
-            PlayerActionLog.Instance?.Record(RecordType.Loop, "death_return", 0, 0,
-                $"{latest.loopCountAtSave}회차 Day {latest.day} {latest.hour}:00");
+            ConsumeAnchor(latest, ReturnPath.Forced);
+            PlayerActionLog.Instance?.Record(RecordType.Loop, "death_return", latest.loopCountAtSave, latest.anchorId,
+                payload: PlayerActionLog.EncodeDayHour(latest.day, latest.hour));
             LoadScene(latest.sceneID, latest.position, latest.day, latest.hour);
         }
         else                                                        // [경로 3] 닻 없음 — Day 1부터

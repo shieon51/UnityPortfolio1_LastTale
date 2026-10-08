@@ -6,6 +6,7 @@ using UnityEngine;
 // 소라의 혼에 속한 것(기억, 개인친밀도, 스킬 숙련도)은 회귀해도 유지되므로 담지 않는다.
 public class TimeAnchorSnapshot
 {
+    public int anchorId;   // ★ 누적 닻 번호 (기획서 6-6-4). 거둔 닻도 번호를 쓴다
     public int sceneID;
     public Vector2 position;
     public int day, hour;

@@ -25,8 +25,9 @@ public static class FlowLogBuilder
                 log.days.Add(currentDay);
                 lastHour = -1;
             }
-            if (!string.IsNullOrEmpty(r.sceneName) && !currentDay.visitedPlaces.Contains(r.sceneName))
-                currentDay.visitedPlaces.Add(r.sceneName);
+            string placeName = PlayerActionLog.ResolvePlaceName(r);    // ★ 표시 시점에 조회
+            if (!string.IsNullOrEmpty(placeName) && !currentDay.visitedPlaces.Contains(placeName))
+                currentDay.visitedPlaces.Add(placeName);
 
             // 태그로만 쓰이는 기록은 줄을 만들지 않고 모아둔다
             var tag = BuildTag(r);
@@ -64,7 +65,7 @@ public static class FlowLogBuilder
         {
             hour = r.hour,
             durationHours = r.valueAfter,     // EventCompleted는 소모 시간을 여기에 담는다
-            place = r.sceneName,
+            place = PlayerActionLog.ResolvePlaceName(r),
         };
 
         switch (r.type)
@@ -85,9 +86,11 @@ public static class FlowLogBuilder
                 break;
 
             case RecordType.Loop:
-                entry.title = string.IsNullOrEmpty(r.source)
-                    ? Text("flow_loop_reset", "처음으로 되돌아감")
-                    : Format("flow_loop_return", "{0}에서 회귀", r.source);
+                // ★ 시각을 문자열로 저장하지 않고 숫자로 받아 포맷터로 조립한다 (설정·언어 변경이 지난 기록에도 적용)
+                entry.title = PlayerActionLog.TryDecodeDayHour(r.payload, out int loopDay, out int loopHour)
+                    ? Format("flow_loop_return_at", "{0}회차 {1}에서 회귀",
+                             r.valueBefore, GameTimeFormatter.FormatDayTime(loopDay, loopHour))
+                    : Text("flow_loop_reset", "처음으로 되돌아감");
                 entry.durationHours = 0;
                 entry.highlight = true;
                 break;

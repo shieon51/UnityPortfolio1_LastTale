@@ -117,13 +117,19 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     public int GetPersonalBond(string npc) => _soraPersonalBond.TryGetValue(npc, out var v) ? v : 0;
 
     public void AddPersonalBond(string npc, int amount)
-        => _soraPersonalBond[npc] = GetPersonalBond(npc) + amount;
+    {
+        int before = GetPersonalBond(npc);
+        _soraPersonalBond[npc] = before + amount;
+        PlayerActionLog.Instance?.Record(RecordType.PersonalBondChange, npc, before, before + amount);   // ★
+    }
+
 
     // ★ key는 이벤트마다 고유해야 한다 (예: "liel_first_rain")
     public bool AddPersonalBondOnce(string npc, int amount, string key)
     {
         if (string.IsNullOrEmpty(key)) { AddPersonalBond(npc, amount); return true; }
         if (!_usedBondKeys.Add(key)) return false;      // 이미 오른 적 있음
+        PlayerActionLog.Instance?.Record(RecordType.BondKeyUsed, key, source: npc);   // ★ 사용한 키도 상태다
         AddPersonalBond(npc, amount);
         return true;
     }
@@ -274,7 +280,9 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     #region 소라 고유 시스템 (시간결정체, 정신력, 피로도)
     public void CollectTimeCrystal()
     {
+        int before = timeCrystals;
         timeCrystals++;
+        PlayerActionLog.Instance?.Record(RecordType.TimeCrystalChange, RecordKeys.TimeCrystal, before, timeCrystals);   // ★
         Debug.Log($"[시간 결정체] 획득! 소라의 기억이 돌아옵니다. (현재: {timeCrystals}개)");
         FloatingTextManager.Instance?.ShowTimeCrystal(transform.position + Vector3.up * notificationHeightOffset);
         GainExperience(timeCrystalExpReward);
@@ -292,6 +300,7 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         currentMental = Mathf.Clamp(currentMental + delta, 0, maxMental);
         if (currentMental == before) return;
 
+        PlayerActionLog.Instance?.Record(RecordType.MentalChange, RecordKeys.Mental, before, currentMental);   // ★
         CallSpecialStatChanged();
         OnMentalChanged?.Invoke(before, currentMental);
 
@@ -300,14 +309,16 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     }
 
     // 2번: 피로도 관련 함수
-    public void IncreaseFatigue(int amount)
+    public void IncreaseFatigue(int amount) => ChangeFatigue(Mathf.Min(maxFatigue, currentFatigue + amount));
+    public void RecoverFatigue(int amount) => ChangeFatigue(Mathf.Max(0, currentFatigue - amount));
+
+    // ★ 피로도 변경의 단일 경로 — 기록과 UI 갱신을 한곳에서
+    private void ChangeFatigue(int newValue)
     {
-        currentFatigue = Mathf.Min(maxFatigue, currentFatigue + amount);
-        CallSpecialStatChanged();
-    }
-    public void RecoverFatigue(int amount)
-    {
-        currentFatigue = Mathf.Max(0, currentFatigue - amount);
+        int before = currentFatigue;
+        currentFatigue = newValue;
+        if (currentFatigue != before)
+            PlayerActionLog.Instance?.Record(RecordType.FatigueChange, RecordKeys.Fatigue, before, currentFatigue);
         CallSpecialStatChanged(); // UI 갱신
     }
 
@@ -318,12 +329,18 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         if (rawAmount <= 0) return 0;
 
         int amount = Mathf.Max(1, Mathf.RoundToInt(rawAmount * CatchUpMultiplier));
-        switch (type)
+
+        Stat target = type switch
         {
-            case StatType.Attack: attack.AddBaseValue(amount); break;
-            case StatType.Defense: defense.AddBaseValue(amount); break;
-            case StatType.Agility: agility.AddBaseValue(amount); break;
-        }
+            StatType.Attack => attack,
+            StatType.Defense => defense,
+            StatType.Agility => agility,
+            _ => null,
+        };
+        if (target == null) return 0;
+
+        int before = target.BaseValue;
+        target.AddBaseValue(amount);
 
         // ★ 기록장 태그 — key는 화면에 그대로 쓰이므로 짧게
         string label = type switch
@@ -333,7 +350,8 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
             StatType.Agility => "AGI",
             _ => type.ToString(),
         };
-        PlayerActionLog.Instance?.Record(RecordType.StatGain, label, 0, amount);
+        // ★ 실제 기본값의 전후를 남긴다 (태그는 차이로 그리므로 표시는 그대로)
+        PlayerActionLog.Instance?.Record(RecordType.StatGain, label, before, target.BaseValue);
 
         CallProgressionChanged();
         return amount;      // 실제로 오른 값 (기록장 태그에 그대로 쓴다)

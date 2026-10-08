@@ -111,6 +111,7 @@ public abstract class PlayableCharacter : CharacterStats
         if (rawAmount <= 0) return 0;
 
         float multiplier = CatchUpMultiplier;
+        int beforeExp = experience;     // ★ 기록용
         int amount = Mathf.RoundToInt(rawAmount * multiplier);
         experience += amount;
 
@@ -123,6 +124,10 @@ public abstract class PlayableCharacter : CharacterStats
             LevelUp();
         }
         if (guard >= 100) Debug.LogError($"[{name}] 레벨업 루프 안전장치 작동 — experienceToNextLevel 값을 확인하세요");
+
+        // ★ 레벨업이 끝난 뒤의 최종 경험치를 남긴다. 보정 전 값은 payload에 (노련미 추적용)
+        PlayerActionLog.Instance?.Record(RecordType.ExpChange, RecordKeys.Exp, beforeExp, experience,
+            source: GetType().Name, payload: rawAmount.ToString());
 
         CallProgressionChanged();
 

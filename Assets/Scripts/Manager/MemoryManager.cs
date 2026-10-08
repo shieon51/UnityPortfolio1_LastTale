@@ -124,7 +124,8 @@ public class MemoryManager : Singleton<MemoryManager>
         }
         if (_acquiredFlags.Remove(flagId)) 
         { 
-            _acquiredOrder.Remove(flagId); 
+            _acquiredOrder.Remove(flagId);
+            PlayerActionLog.Instance?.Record(RecordType.MemoryErased, flagId, 1, 0);   // ★ 빠져 있던 기록
             OnMemoryErased?.Invoke(flagId); 
         }
     }

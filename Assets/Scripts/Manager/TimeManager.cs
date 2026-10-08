@@ -13,10 +13,15 @@ public class TimeManager : Singleton<TimeManager>
 
     public event Action<int, int> OnTimeUpdated; // 남은 시간 코인, 현재 날짜 -> UIManager에서 시간 UI 업데이트
 
-    private void Awake() => timeCoins = coinsPerDay;  
+    // ★ Day 1 00:00부터 흐른 시간. 기록과 닻 간격 계산에 쓴다
+    public int AbsoluteHour => (currentDay - 1) * coinsPerDay + currentHour;
+
+    private void Awake() => timeCoins = coinsPerDay;
 
     public void UseTimeCoins(int amount)
     {
+        int before = AbsoluteHour;           // ★
+
         timeCoins -= amount;
         currentHour += amount;
 
@@ -25,7 +30,7 @@ public class TimeManager : Singleton<TimeManager>
             NextDay();
         }
 
-        //OnTimeChanged?.Invoke(); //**아직 안 쓰임
+        RecordTimeChange(before);            // ★
 
         // UI 갱신 이벤트 호출
         OnTimeUpdated?.Invoke(timeCoins, currentDay);
@@ -36,18 +41,18 @@ public class TimeManager : Singleton<TimeManager>
 
     private void NextDay()
     {
-        timeCoins += coinsPerDay;          // 변경 전: timeCoins += 24
-        currentHour -= coinsPerDay;        // 변경 전: currentHour -= 24
+        timeCoins += coinsPerDay;
+        currentHour -= coinsPerDay;
         currentDay++;
-
-        //OnDayChanged?.Invoke(); //** 아직 안 쓰임
     }
 
     public void ResetToDay1()
     {
+        int before = AbsoluteHour;           // ★
         timeCoins = coinsPerDay;
         currentHour = 0;
         currentDay = 1;
+        RecordTimeChange(before);            // ★
         OnTimeUpdated?.Invoke(timeCoins, currentDay);
         EventManager.Instance?.UpdateEventTriggers();
     }
@@ -55,10 +60,19 @@ public class TimeManager : Singleton<TimeManager>
     // 앵커 복귀 시 임의 시각으로 세팅하기 위함
     public void SetTime(int day, int hour)
     {
+        int before = AbsoluteHour;           // ★
         currentDay = day;
         currentHour = hour;
         timeCoins = coinsPerDay - hour;
+        RecordTimeChange(before);            // ★
         OnTimeUpdated?.Invoke(timeCoins, currentDay);
         EventManager.Instance?.UpdateEventTriggers();
+    }
+
+    // ★ 시각 변화 기록. 남은 코인은 시각에서 계산되므로 따로 남기지 않는다
+    private void RecordTimeChange(int beforeAbsolute)
+    {
+        if (AbsoluteHour == beforeAbsolute) return;
+        PlayerActionLog.Instance?.Record(RecordType.TimeAdvance, RecordKeys.Time, beforeAbsolute, AbsoluteHour);
     }
 }

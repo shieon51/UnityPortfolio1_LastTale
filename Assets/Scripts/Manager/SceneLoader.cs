@@ -55,6 +55,7 @@ public class SceneLoader : Singleton<SceneLoader>
         }
 
         // 현재 씬 ID 
+        int previousSceneId = CurrentSceneID;   // ★ 기록용
         CurrentSceneID = sceneID;
         string nextSceneName = DataManager.Instance.SceneDict[sceneID]; //?
 
@@ -101,6 +102,10 @@ public class SceneLoader : Singleton<SceneLoader>
         {
             EventManager.Instance.UpdateEventTriggers();
         }
+
+        // ★ 씬 진입과 도착 위치를 남긴다 (위치 복원·버그 추적용)
+        PlayerActionLog.Instance?.Record(RecordType.SceneEnter, sceneID.ToString(), previousSceneId, sceneID,
+            payload: PlayerActionLog.EncodePosition(player != null ? (Vector2)player.transform.position : spawnPos));
 
         OnSceneLoaded?.Invoke(sceneID); // ★ 맨 마지막에 추가
     }

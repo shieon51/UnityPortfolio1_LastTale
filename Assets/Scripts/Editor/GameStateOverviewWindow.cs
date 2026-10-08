@@ -195,7 +195,7 @@ public class GameStateOverviewWindow : EditorWindow
             {
                 if (r.type != RecordType.Counter) continue;                      // ★ 카운터 기록만
                 if (System.Array.IndexOf(observable, r.key) < 0) continue;       // ★ actionKey → key
-                EditorGUILayout.LabelField($"[{r.loopCount}회차 Day{r.day} {r.hour}시] {r.key} @{r.sceneName}");
+                EditorGUILayout.LabelField($"[{r.loopCount}회차 Day{r.day} {r.hour}시] {r.key} @{PlayerActionLog.ResolvePlaceName(r)}");
                 any = true;
             }
             if (!any) EditorGUILayout.LabelField("(기록 없음)");
@@ -356,7 +356,7 @@ public class GameStateOverviewWindow : EditorWindow
                 RecordType.AffectionChange => new Color(1f, 0.85f, 0.5f),
                 _ => Color.white,
             };
-            EditorGUILayout.LabelField($"[{r.loopCount}회차 Day{r.day} {r.hour}시] ({r.type}) {detail} @{r.sceneName}");
+            EditorGUILayout.LabelField($"[{r.loopCount}회차 Day{r.day} {r.hour}시] ({r.type}) {detail} @{PlayerActionLog.ResolvePlaceName(r)}");
             GUI.color = Color.white;
         }
         EditorGUI.indentLevel--;
