@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 
 // ★ 기록 시스템 2단계 — IRecordable 하나의 상태 덩어리 (기록시스템_설계 6-2)
-//   직렬화(4단계)를 고려해 기본형만 담는다: 정수 / 정수 사전 / 문자열 목록
+//   직렬화(4단계)를 고려해 기본형만 담는다: 정수 / 실수 / 정수 사전 / 문자열 목록
 public class StateBlock
 {
     public string recordId;
@@ -9,6 +9,7 @@ public class StateBlock
     public int version;
 
     public Dictionary<string, int> ints = new();
+    public Dictionary<string, float> floats = new();   // ★ 2-C-2 — 위치처럼 정수로 담을 수 없는 값
     public Dictionary<string, Dictionary<string, int>> intMaps = new();
     public Dictionary<string, List<string>> stringLists = new();
 }
@@ -20,6 +21,7 @@ public class StateWriter
     public StateWriter(StateBlock block) { _block = block; }
 
     public void WriteInt(string key, int value) => _block.ints[key] = value;
+    public void WriteFloat(string key, float value) => _block.floats[key] = value;   // ★ 2-C-2
 
     public void WriteIntMap(string key, IReadOnlyDictionary<string, int> map)
         => _block.intMaps[key] = map != null ? new Dictionary<string, int>(map) : new Dictionary<string, int>();
@@ -35,10 +37,14 @@ public class StateReader
     public StateReader(StateBlock block) { _block = block; }
 
     public bool Has(string key)
-        => _block.ints.ContainsKey(key) || _block.intMaps.ContainsKey(key) || _block.stringLists.ContainsKey(key);
+        => _block.ints.ContainsKey(key) || _block.floats.ContainsKey(key)
+        || _block.intMaps.ContainsKey(key) || _block.stringLists.ContainsKey(key);
 
     public int ReadInt(string key, int fallback = 0)
         => _block.ints.TryGetValue(key, out var v) ? v : fallback;
+
+    public float ReadFloat(string key, float fallback = 0f)   // ★ 2-C-2
+        => _block.floats.TryGetValue(key, out var v) ? v : fallback;
 
     public Dictionary<string, int> ReadIntMap(string key)
         => _block.intMaps.TryGetValue(key, out var m) ? new Dictionary<string, int>(m) : new Dictionary<string, int>();

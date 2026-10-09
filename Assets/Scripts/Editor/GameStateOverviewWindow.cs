@@ -330,8 +330,10 @@ public class GameStateOverviewWindow : EditorWindow
 
             EditorGUILayout.BeginHorizontal();
             if (!_anchorFoldouts.ContainsKey(a.anchorId)) _anchorFoldouts[a.anchorId] = false;   // ★ 순번 대신 누적 번호
+            // ★ 2-C-2 — 레벨은 닻의 손 나열 필드(level)가 아니라 범용 스냅샷의 몸 덩어리에서 읽는다
+            string lv = TryReadInt(a.recordSnapshot, RecordIds.SoraBody, SoraStats.StateKeyLevel, out int level) ? $"Lv.{level}" : "Lv.?";
             _anchorFoldouts[a.anchorId] = EditorGUILayout.Foldout(_anchorFoldouts[a.anchorId],
-                $"{a.anchorId}번 닻  Scene {a.sceneID}  {GameTimeFormatter.FormatDayTime(a.day, a.hour)}  Lv.{a.level}  ({a.loopCountAtSave}회차에 설치)", true);
+                $"{a.anchorId}번 닻  Scene {a.sceneID}  {GameTimeFormatter.FormatDayTime(a.day, a.hour)}  {lv}  ({a.loopCountAtSave}회차에 설치)", true);
             if (GUILayout.Button("이동", GUILayout.Width(60))) TimeLoopManager.Instance.TravelToAnchor(a);
             if (GUILayout.Button("삭제", GUILayout.Width(60))) TimeLoopManager.Instance.RemoveAnchor(a);
             EditorGUILayout.EndHorizontal();
@@ -339,40 +341,53 @@ public class GameStateOverviewWindow : EditorWindow
             if (_anchorFoldouts[a.anchorId])
             {
                 EditorGUI.indentLevel++;
-
-                EditorGUILayout.LabelField("— NPC 호감도 —", EditorStyles.miniBoldLabel);
-                if (a.npcAffections != null)
-                    foreach (var kvp in a.npcAffections)
-                        EditorGUILayout.LabelField($"{kvp.Key}: {kvp.Value}");
-
-                EditorGUILayout.LabelField("— NPC 의심도 —", EditorStyles.miniBoldLabel);
-                if (a.npcSuspicions != null && a.npcSuspicions.Count > 0)
-                    foreach (var kvp in a.npcSuspicions)
-                        EditorGUILayout.LabelField($"{kvp.Key}: {kvp.Value}");
-                else EditorGUILayout.LabelField("(없음)");
-
-                EditorGUILayout.LabelField("— NPC가 기억하는 행적/선택 (카운터) —", EditorStyles.miniBoldLabel);
-                if (a.counters != null && a.counters.Count > 0)
-                    foreach (var kvp in a.counters.OrderBy(k => k.Key))
-                        EditorGUILayout.LabelField($"{kvp.Key}: {kvp.Value}");
-                else EditorGUILayout.LabelField("(없음)");
-
-                EditorGUILayout.LabelField("— 이 시점에 보유한 정보 —", EditorStyles.miniBoldLabel);
-                if (a.acquiredMemoryFlags != null && a.acquiredMemoryFlags.Count > 0)
-                    foreach (var flag in a.acquiredMemoryFlags)
-                    {
-                        var frag = MemoryManager.Instance?.GetData(flag);
-                        string label = frag != null && LocalizationManager.Instance != null
-                            ? LocalizationManager.Instance.Get(frag.localizationKey) : flag;
-                        EditorGUILayout.LabelField($"✔ {label} ({flag})");
-                    }
-                else EditorGUILayout.LabelField("(없음)");
-
+                DrawSnapshotBlocks(a.recordSnapshot);   // ★ 2-C-2 — 항목별 손 표시 대신 덩어리를 모두 펼친다
                 EditorGUI.indentLevel--;
             }
 
             EditorGUILayout.EndVertical();
         }
+    }
+
+    // ★ 2-C-2 — 범용 스냅샷 표시. 등록된 시스템의 덩어리를 층위 순으로 모두 펼친다.
+    //   예전에는 호감도·의심·카운터·기억을 항목마다 손으로 그려, 시스템이 늘면 이 창도 고쳐야 했다.
+    //   이제 IRecordable을 등록하기만 하면 여기에 저절로 나온다
+    private static readonly string[] LayerNames = { "세계", "몸", "의지", "플레이어" };   // RecordLayer 순서
+
+    private void DrawSnapshotBlocks(Snapshot snapshot)
+    {
+        if (snapshot == null || snapshot.blocks.Count == 0) { EditorGUILayout.LabelField("(범용 스냅샷 없음)"); return; }
+
+        foreach (var block in snapshot.blocks.Values.OrderBy(b => b.layer).ThenBy(b => b.recordId))
+        {
+            int li = (int)block.layer;
+            string layerName = li >= 0 && li < LayerNames.Length ? LayerNames[li] : block.layer.ToString();
+            bool restored = block.layer == RecordLayer.World || block.layer == RecordLayer.Body;
+            EditorGUILayout.LabelField($"[{layerName}] {block.recordId}{(restored ? "" : "  (회귀해도 유지)")}", EditorStyles.miniBoldLabel);
+
+            var parts = new List<string>();
+            foreach (var kv in block.ints.OrderBy(k => k.Key)) parts.Add($"{kv.Key} {kv.Value}");
+            foreach (var kv in block.floats.OrderBy(k => k.Key)) parts.Add($"{kv.Key} {kv.Value:F2}");
+            if (parts.Count > 0) EditorGUILayout.LabelField(string.Join("  ·  ", parts), EditorStyles.wordWrappedLabel);
+
+            foreach (var map in block.intMaps.OrderBy(k => k.Key))
+            {
+                string items = map.Value.Count == 0 ? "(없음)" : string.Join(", ", map.Value.OrderBy(k => k.Key).Select(k => $"{k.Key} {k.Value}"));
+                EditorGUILayout.LabelField($"{map.Key}: {items}", EditorStyles.wordWrappedLabel);
+            }
+
+            foreach (var list in block.stringLists.OrderBy(k => k.Key))
+            {
+                string items = list.Value.Count == 0 ? "(없음)" : string.Join(", ", list.Value);
+                EditorGUILayout.LabelField($"{list.Key} ({list.Value.Count}): {items}", EditorStyles.wordWrappedLabel);
+            }
+        }
+    }
+
+    private static bool TryReadInt(Snapshot snapshot, string recordId, string key, out int value)
+    {
+        value = 0;
+        return snapshot != null && snapshot.blocks.TryGetValue(recordId, out var b) && b.ints.TryGetValue(key, out value);
     }
 
     private void DrawFullActionLogSection()

@@ -76,6 +76,10 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     //   세이브가 생기면(4단계) 파일에 함께 저장해야 한다. 지금은 플레이를 시작할 때마다 새로 찍는다
     private Snapshot _partStartSnapshot;
 
+    // ★ 2-C-2 — 회귀 복원(RestoreLayers)과 검증에서 건너뛰는 덩어리. 시각·씬은 비동기 씬 로드와 기록 순서 때문에
+    //   회귀 기록을 남긴 뒤 LoadScene에서 따로 옮긴다 (목적지는 닻의 day·hour·sceneID·position)
+    private static readonly HashSet<string> MovedByLoadScene = new() { RecordIds.TimeClock, RecordIds.SceneLocation };
+
     private void Awake()
     {
         if (SceneLoader.Instance != null) SceneLoader.Instance.OnSceneLoaded += HandleSceneLoaded;
@@ -186,26 +190,10 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             position = sora.transform.position,
             day = TimeManager.Instance.currentDay,
             hour = TimeManager.Instance.currentHour,
-            level = sora.level,
-            maxHealth = sora.maxHealth,
-            maxMana = sora.maxMana,
-            experience = sora.experience,
-            expToNextLevel = sora.experienceToNextLevel,     
-            attackBase = sora.attack.BaseValue,       // ★ 공·방·민도 몸 상태로 함께 저장
-            defenseBase = sora.defense.BaseValue,
-            agilityBase = sora.agility.BaseValue,
-            currentHealth = sora.currentHealth,       // ★ 경로 2에서 돌아갈 체력·마나 (설치 마나를 내기 전의 값)
-            currentMana = sora.currentMana,
-            // 순서를 보존한다. '의지' 층위인 개인친밀도는 담지 않는다
-            acquiredMemoryFlags = new List<string>(MemoryManager.Instance.GetAllAcquired()),
-            npcAffections = NPCManager.Instance.SnapshotAffections(),    
-            npcSuspicions = SuspicionManager.Instance.Snapshot(),
-            npcTrustEarned = SuspicionManager.Instance.SnapshotTrust(),
-            npcLineCrossed = SuspicionManager.Instance.SnapshotLineCrossed(),
-            counters = MemoryManager.Instance.SnapshotCounters(),          
-            loopCountAtSave = sora.loopCount,                              
-            actionLog = PlayerActionLog.Instance.Snapshot(),
-            // ★ 기록 시스템 2단계 — 같은 순간을 범용 스냅샷으로도 찍어 둔다 (지금은 비교용, 복원에는 쓰지 않음)
+            // ★ 2-C-2 — 몸·세계 값(레벨, 공방민, 체력·마나, 호감도, 의심, 카운터, 기억)을 손으로 나열하던 필드를 걷어냈다.
+            //   모두 아래 범용 스냅샷의 덩어리에 들어 있고, 복원도 그것을 쓴다
+            loopCountAtSave = sora.loopCount,
+            actionLog = PlayerActionLog.Instance.Snapshot(),   // [미결] 이번 흐름 기록 층위 — 옛 방식 유지
             recordSnapshot = RecordSystem.TakeSnapshot(SnapshotReason.Anchor),
         };
         sora.UseMana(setAnchorManaCost);   // ★ 스냅샷 뒤로 옮김 (기존: 스냅샷 전에 내서 31 → 11로 저장됐다)
@@ -243,7 +231,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     {
         if (anchor == null) return;
 
-        if (anchor.recordSnapshot != null) RecordSystem.RestoreLayers(anchor.recordSnapshot, mask);
+        if (anchor.recordSnapshot != null) RecordSystem.RestoreLayers(anchor.recordSnapshot, mask, MovedByLoadScene);   // ★ 2-C-2
         else Debug.LogError($"[TimeLoopManager] 닻 #{anchor.anchorId}에 범용 스냅샷이 없어 세계·몸을 되돌리지 못했습니다");
 
         // [미결] 이번 흐름 기록의 층위 (설계 13-2-6). 3단계 LoopRecord 전까지 옛 동작대로 그 시점으로 되돌린다
@@ -259,7 +247,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         if (!verifyRecordSnapshot || expected == null) return;
 
         var now = RecordSystem.TakeSnapshot(SnapshotReason.Verify, mask);
-        var diffs = RecordSystem.Compare(expected, now, mask);
+        var diffs = RecordSystem.Compare(expected, now, mask, MovedByLoadScene);   // ★ 2-C-2 — 시각·씬은 아직 옮기기 전이라 비교에서 뺀다
         if (diffs.Count == 0)
             Debug.Log($"[RecordSystem] {label} 검증 일치 ({mask}, 덩어리 {now.blocks.Count}개)");
         else
@@ -408,7 +396,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             RestoreFromAnchor(latest, RecordLayerMask.World | RecordLayerMask.Body);
             VerifyRecordSnapshot(latest, RecordLayerMask.World | RecordLayerMask.Body);
             LogReturnVitals("경로 2", latest, sora, healthBefore, manaBefore,
-                $"닻 시점 값으로 (레벨 {latest.level}), 정신력 -{forcedReturnMentalPenalty}");   // ★
+                $"닻 시점 값으로 (레벨 {sora.level}), 정신력 -{forcedReturnMentalPenalty}");   // ★ 2-C-2 — 복원된 몸에서 읽는다 (닻의 level 필드 제거)
             sora.LoseMental(forcedReturnMentalPenalty);
 
             ConsumeAnchor(latest, ReturnPath.Forced);
@@ -441,7 +429,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         const RecordLayerMask partStartMask = RecordLayerMask.World | RecordLayerMask.Body;
         if (_partStartSnapshot != null)
         {
-            RecordSystem.RestoreLayers(_partStartSnapshot, partStartMask);
+            RecordSystem.RestoreLayers(_partStartSnapshot, partStartMask, MovedByLoadScene);   // ★ 2-C-2 — 시각·씬은 아래 ResetToDay1·LoadScene
             VerifyRecordSnapshot("파트 시작", _partStartSnapshot, partStartMask);
         }
         else

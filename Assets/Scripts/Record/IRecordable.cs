@@ -29,4 +29,8 @@ public static class RecordIds
     public const string SoraWill = "sora.will";               // SoraStats 안 어댑터 (Will)
     public const string SoraLoop = "sora.loop";               // SoraStats 안 어댑터 (Player)
     public const string VisitedNodes = "player.visited_nodes";
+
+    // ★ 2-C-2 — 시각과 위치 (World). 회귀에서는 RestoreLayers가 건너뛰고, 회귀 기록 뒤 LoadScene으로 옮긴다
+    public const string TimeClock = "time.clock";             // TimeManager
+    public const string SceneLocation = "scene.location";     // SceneLoader
 }

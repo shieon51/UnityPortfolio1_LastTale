@@ -409,36 +409,16 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         CallProgressionChanged();
     }
 
-    // ★ 신규 — 강제 복귀(경로 2) 시 몸 상태를 닻 시점으로 되돌린다.
-    //   기존에는 TimeLoopManager가 필드를 직접 대입하고 갱신 이벤트를 부르지 않아
-    //   레벨·경험치 표시가 바로 따라오지 않았다. 대입과 갱신을 소라 쪽에 모은다
-    public void RestoreBodyFromAnchor(TimeAnchorSnapshot snapshot)
-    {
-        if (snapshot == null) return;
-
-        level = snapshot.level;
-        maxHealth = snapshot.maxHealth;
-        maxMana = snapshot.maxMana;
-        experience = snapshot.experience;
-        experienceToNextLevel = Mathf.Max(1, snapshot.expToNextLevel);   // 레벨과 요구 경험치가 어긋나지 않게
-
-        attack.SetBaseValue(snapshot.attackBase);     // ★ 공·방·민도 닻 시점으로
-        defense.SetBaseValue(snapshot.defenseBase);
-        agility.SetBaseValue(snapshot.agilityBase);
-
-        CallProgressionChanged();   // ★ 레벨·경험치·능력치 표시 갱신
-    }
+    // ★ 2-C-2 — RestoreBodyFromAnchor(닻의 손 나열 필드로 몸을 되돌리던 함수)를 제거했다. 아래 ReadState가 대신한다
 
     // ---------------- IRecordable (★ 기록 시스템 2단계) ----------------
     // 이 클래스 자신은 몸 층위. 의지 층위는 WillState, 플레이어 층위(회차 수)는 LoopState 어댑터가 맡는다
-    // 몸: TimeAnchorSnapshot의 몸 필드 + 피로도(공·방·민과 같은 취급, 2-B 결정) + 현재 HP·MP
-    // ★ 현재 HP·MP도 몸에 넣었다 (2026-10-09 결정). 몸을 되돌리는 경로 2는 닻 시점의 HP·MP로 돌아간다.
+    // 몸: 레벨, 최대 HP·MP, 경험치, 공·방·민 기본값, 피로도(2-B 결정), 현재 HP·MP(2026-10-09 결정)
+    //   몸을 되돌리는 경로 2(닻)·3(파트 시작)이 RecordSystem.RestoreLayers로 이 덩어리를 읽는다.
     //   몸을 유지하는 경로 1은 몸 층위를 복원하지 않고, 남은 마나로 회복한다 (기획서 7-2)
-    // ★ 2-C — 경로 2·3이 RecordSystem.RestoreLayers로 이 덩어리를 읽으므로 피로도도 되돌아간다.
-    //   RestoreBodyFromAnchor는 이제 호출하는 곳이 없다 (2-C-2에서 TimeAnchorSnapshot 손 나열 필드와 함께 제거)
     // 덩어리 안의 키. 바꾸지 않는다
     private const string StateKeyFatigue = "fatigue";
-    private const string StateKeyLevel = "level";
+    public const string StateKeyLevel = "level";   // ★ 2-C-2 — 오버뷰 창이 닻 레벨을 읽으려고 공개
     private const string StateKeyMaxHealth = "max_health";
     private const string StateKeyMaxMana = "max_mana";
     private const string StateKeyExp = "exp";

@@ -7,7 +7,7 @@ using System.IO;
 
 /* SceneLoader - 현재 씬에 맞춰 맵 Scene을 로드 */
 
-public class SceneLoader : Singleton<SceneLoader>
+public class SceneLoader : Singleton<SceneLoader>, IRecordable   // ★ 2-C-2 — 씬·위치를 범용 스냅샷에 포함 (World)
 {
     private string currentMapScene = "";
     public int CurrentSceneID { get; private set; }
@@ -25,6 +25,36 @@ public class SceneLoader : Singleton<SceneLoader>
     private void Awake()
     {
         //LoadSceneData();   // 씬 id: 씬 이름 대응 정보 불러오기
+        RecordSystem.Register(this);   // ★ 2-C-2
+    }
+    private void OnDestroy() => RecordSystem.Unregister(this);
+
+    // ---------------- IRecordable (★ 기록 시스템 2-C-2) ----------------
+    // 회귀에서는 RestoreLayers가 이 덩어리를 건너뛴다 — 씬 이동은 비동기이고 회귀 기록 뒤에 해야 하므로
+    // TimeLoopManager.LoadScene이 맡는다. ReadState는 세이브 불러오기(4단계)처럼 바로 적용할 때 쓰인다.
+    // ※ 파트 시작 스냅샷은 첫 씬이 로드되기 전에 찍히므로 이 덩어리 값이 비어 있다. 경로 3은 startConfig로 간다
+    private const string StateKeySceneId = "scene_id";   // 덩어리 안의 키. 바꾸지 않는다
+    private const string StateKeyPosX = "pos_x";
+    private const string StateKeyPosY = "pos_y";
+
+    public string RecordId => RecordIds.SceneLocation;
+    public RecordLayer Layer => RecordLayer.World;
+    public int StateVersion => 1;
+
+    public void WriteState(StateWriter writer)
+    {
+        Vector2 pos = player != null ? (Vector2)player.transform.position : Vector2.zero;
+        writer.WriteInt(StateKeySceneId, CurrentSceneID);
+        writer.WriteFloat(StateKeyPosX, pos.x);
+        writer.WriteFloat(StateKeyPosY, pos.y);
+    }
+
+    public void ReadState(StateReader reader, int version)
+    {
+        int sceneId = reader.ReadInt(StateKeySceneId, CurrentSceneID);
+        if (sceneId <= 0) return;   // 첫 씬 로드 전에 찍힌 덩어리
+        TravelTimeTracker.Instance?.CancelJourney();   // 걸어서 온 이동이 아니다
+        LoadScene(sceneId, new Vector2(reader.ReadFloat(StateKeyPosX), reader.ReadFloat(StateKeyPosY)));
     }
 
     private void Start()

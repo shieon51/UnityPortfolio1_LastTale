@@ -76,14 +76,16 @@ public static class RecordSystem
         return snapshot;
     }
 
-    // ★ 지금은 호출하는 곳이 없다. 닻 복원을 교체할 때 쓴다
-    public static void RestoreLayers(Snapshot snapshot, RecordLayerMask mask)
+    // ★ 고른 층위의 덩어리를 각 시스템에 되돌린다 (2-C부터 회귀 복원이 이것을 쓴다)
+    //   exclude: 이 RecordId는 건너뛴다. 시각·씬처럼 회귀 기록을 남긴 뒤 따로 옮겨야 하는 덩어리용 (2-C-2)
+    public static void RestoreLayers(Snapshot snapshot, RecordLayerMask mask, ICollection<string> exclude = null)
     {
         if (snapshot == null) return;
 
         foreach (var block in snapshot.blocks.Values)
         {
             if (!mask.Includes(block.layer)) continue;
+            if (exclude != null && exclude.Contains(block.recordId)) continue;   // ★ 2-C-2
             if (!_registry.TryGetValue(block.recordId, out var r) || IsDestroyed(r)) continue;   // 모르는 덩어리는 보관만
 
             try { r.ReadState(new StateReader(block), block.version); }
@@ -93,13 +95,17 @@ public static class RecordSystem
         foreach (var r in _registry.Values)
         {
             if (IsDestroyed(r) || !mask.Includes(r.Layer)) continue;
+            if (exclude != null && exclude.Contains(r.RecordId)) continue;   // ★ 2-C-2
             if (!snapshot.blocks.ContainsKey(r.RecordId))
                 Debug.LogWarning($"[RecordSystem] 스냅샷에 '{r.RecordId}' 덩어리가 없어 그대로 둡니다");
         }
     }
 
     // ★ 두 스냅샷이 고른 층위에서 같은지 비교한다. 다른 곳을 사람이 읽을 문장으로 돌려준다 (개발용 로그 전용)
-    public static List<string> Compare(Snapshot expected, Snapshot actual, RecordLayerMask mask)
+    // ★ 실수 비교 허용 오차. 위치는 저장·복원 과정에서 아주 작은 차이가 날 수 있다 (비교 전용 상수, 게임 수치가 아님)
+    private const float FloatTolerance = 0.01f;
+
+    public static List<string> Compare(Snapshot expected, Snapshot actual, RecordLayerMask mask, ICollection<string> exclude = null)
     {
         var diffs = new List<string>();
         if (expected == null || actual == null) { diffs.Add("스냅샷이 비어 있음"); return diffs; }
@@ -109,6 +115,8 @@ public static class RecordSystem
 
         foreach (var id in ids)
         {
+            if (exclude != null && exclude.Contains(id)) continue;   // ★ 2-C-2
+
             expected.blocks.TryGetValue(id, out var e);
             actual.blocks.TryGetValue(id, out var a);
             var layer = (e ?? a).layer;
@@ -118,6 +126,16 @@ public static class RecordSystem
             if (a == null) { diffs.Add($"{id}: 현재 쪽에 덩어리 없음"); continue; }
 
             CompareInts(id, null, e.ints, a.ints, diffs);
+
+            // ★ 2-C-2 — 실수 칸 (없는 키는 0으로 본다)
+            var floatKeys = new HashSet<string>(e.floats.Keys);
+            floatKeys.UnionWith(a.floats.Keys);
+            foreach (var k in floatKeys)
+            {
+                float ev = e.floats.TryGetValue(k, out var x) ? x : 0f;
+                float av = a.floats.TryGetValue(k, out var y) ? y : 0f;
+                if (Mathf.Abs(ev - av) > FloatTolerance) diffs.Add($"{id}.{k}: {ev:F2} ≠ {av:F2}");
+            }
 
             var mapKeys = new HashSet<string>(e.intMaps.Keys);
             mapKeys.UnionWith(a.intMaps.Keys);
