@@ -23,6 +23,11 @@ public class GameStateOverviewWindow : EditorWindow
     private bool _showLoopHistory = false;   // ★ 3-A
     private Dictionary<int, bool> _loopFoldouts = new();   // ★ 3-A — 회차 목록 순번별
 
+    // ★ 3-C — 노드 에디터에 결말·마일스톤 칸이 생기기 전까지 쓰는 시험용 값 (창에서 바꾼다)
+    [SerializeField] private string _testEndingTitleKey = "ending_test_incomplete";
+    [SerializeField] private string _testMilestoneKey = "milestone_test";
+    [SerializeField] private int _testMilestoneImportance = 2;
+
     private bool _hideFrequentRecords = true;
     // ★ 너무 잦아서 평소엔 숨기는 기록 종류
     private static readonly HashSet<RecordType> FrequentTypes = new()
@@ -320,6 +325,21 @@ public class GameStateOverviewWindow : EditorWindow
         }
         GUI.backgroundColor = Color.white;
 
+        // ★ 3-C — 결말·마일스톤 시험 (ink 태그 #ending·#milestone과 같은 경로를 탄다)
+        EditorGUILayout.Space(4);
+        EditorGUILayout.LabelField("결말·마일스톤 시험 (노드 에디터 칸이 생기기 전까지)", EditorStyles.miniBoldLabel);
+        EditorGUILayout.BeginHorizontal();
+        _testEndingTitleKey = EditorGUILayout.TextField("결말 제목 키", _testEndingTitleKey);
+        if (GUILayout.Button("불완전 결말로 마감", GUILayout.Width(130)))
+            EditorApplication.delayCall += () => TimeLoopManager.Instance?.ReachEnding(TimeLoopManager.EndingTagIncomplete, _testEndingTitleKey, RecordKeys.DebugSource);
+        EditorGUILayout.EndHorizontal();
+        EditorGUILayout.BeginHorizontal();
+        _testMilestoneKey = EditorGUILayout.TextField("마일스톤 제목 키", _testMilestoneKey);
+        _testMilestoneImportance = EditorGUILayout.IntField(_testMilestoneImportance, GUILayout.Width(40));
+        if (GUILayout.Button("마일스톤 기록", GUILayout.Width(130)))
+            PlayerActionLog.Instance?.Record(RecordType.Milestone, _testMilestoneKey, 0, _testMilestoneImportance, source: RecordKeys.DebugSource);
+        EditorGUILayout.EndHorizontal();
+
         EditorGUILayout.EndVertical();
     }
 
@@ -403,6 +423,33 @@ public class GameStateOverviewWindow : EditorWindow
 
     private static string NameOf(string[] names, int i) => i >= 0 && i < names.Length ? names[i] : i.ToString();
 
+    // ★ 3-C — 회차 요약 (이야기의 행적 회차 상세에 들어갈 데이터)
+    private static readonly string[] MilestoneKindNames = { "장면", "보스전", "영혼 레벨" };   // MilestoneKind 순서
+
+    private void DrawLoopSummary(LoopRecord l)
+    {
+        var tlm = TimeLoopManager.Instance;
+        var s = tlm != null ? tlm.GetSummary(l) : l.summary;
+        if (s == null) { EditorGUILayout.LabelField("요약: (없음)"); return; }
+
+        EditorGUILayout.LabelField($"요약{(l.IsOpen ? " (진행 중 — 지금 상태로 계산)" : "")}: 몸 Lv.{s.startLevel} → {s.endLevel}{(s.soulRecord ? " ★" : "")}   " +
+                                   $"새 정보 {s.newInfoCount}개   설치한 닻 {(s.anchorsSet.Count > 0 ? string.Join(", ", s.anchorsSet.Select(id => $"#{id}")) : "없음")}");
+
+        if (s.milestones.Count == 0) { EditorGUILayout.LabelField("마일스톤: 없음"); return; }
+        var top = new HashSet<MilestoneEntry>(s.TopMilestones(5));   // 화면에 먼저 보일 5개 (기획서 6-6-4)
+        EditorGUILayout.LabelField($"마일스톤 {s.milestones.Count}개 (● = 화면에 먼저 보일 5개{(s.milestones.Count > 5 ? $", 외 {s.milestones.Count - 5}건" : "")})");
+        foreach (var m in s.milestones)
+        {
+            string what = m.kind switch
+            {
+                MilestoneKind.BossBattle => $"{m.key} {(m.value == 1 ? "승" : "패")}",
+                MilestoneKind.SoulRecord => $"Lv.{m.value}",
+                _ => m.key,
+            };
+            EditorGUILayout.LabelField($"  {(top.Contains(m) ? "●" : "○")} {GameTimeFormatter.FormatDayTime(m.day, m.hour)}  [{NameOf(MilestoneKindNames, (int)m.kind)}] {what}  (중요도 {m.importance})");
+        }
+    }
+
     // ★ 3-B — 닻 선택 화면 대신 쓰는 개발용 선택. TimeLoopManager.waitForReturnChoiceInEditor를 켜면 사망 뒤 여기서 고른다
     private void DrawReturnChoiceSection()
     {
@@ -480,6 +527,7 @@ public class GameStateOverviewWindow : EditorWindow
                     int visible = flow.Count(r => PlayerActionLog.IsPlayerVisible(r.type));
                     EditorGUILayout.LabelField($"이 회차의 흐름: {flow.Count}건 (자기 구간 {own}건, 기록장에 보이는 것 {visible}건)");
                 }
+                DrawLoopSummary(l);   // ★ 3-C
                 EditorGUI.indentLevel--;
             }
             EditorGUILayout.EndVertical();

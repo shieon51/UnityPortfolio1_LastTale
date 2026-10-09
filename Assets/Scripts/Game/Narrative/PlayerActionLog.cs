@@ -34,6 +34,10 @@ public enum RecordType
 
     // ---- 기록 시스템 2단계 ----
     DebugEdit,          // ★ 디버그 도구의 직접 수정 (key: 대상, source: "debug"). 기록장에는 표시하지 않는다
+
+    // ---- 기록 시스템 3단계 ----
+    EndingReached,      // ★ ink #ending — 스토리 사망·불완전 결말·결말 (key: 제목 키, after: LoopEndType)
+    Milestone,          // ★ ink #milestone — 작가가 표시한 이야기의 큰 장면 (key: 제목 키, after: 중요도, source: 이벤트 기록 키)
 }
 
 // ★ 기록이 상태에 하는 일. 복원할 때 다시 적용할 수 있는지를 가른다 (기록 시스템 설계 5-2)
@@ -122,7 +126,7 @@ public class PlayerActionLog : Singleton<PlayerActionLog>
             or RecordType.ExpChange or RecordType.TimeAdvance or RecordType.SceneEnter
             or RecordType.VitalsCheckpoint or RecordType.DebugEdit => ChangeOp.Set,   // ★ DebugEdit
 
-        _ => ChangeOp.Event,   // EventCompleted, Loop, MemoryHeard, BattleResult, Travel, Hunt
+        _ => ChangeOp.Event,   // EventCompleted, Loop, MemoryHeard, BattleResult, Travel, Hunt, EndingReached, Milestone
     };
 
     // ---------------- 표시용 조회 ----------------

@@ -25,8 +25,10 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     public bool consumeAnchorOnUse = true;
     [Tooltip("과거의 닻으로 돌아가면 그보다 뒤에 내린 닻도 함께 사라진다")]
     public bool discardLaterAnchorsOnTravel = true;
-    [Tooltip("마나 부족 강제 복귀(경로 2) 시 깎이는 정신력")]
-    public int forcedReturnMentalPenalty = 10;
+    [Tooltip("몸이 되돌아가는 회귀(경로 2, Day 1)의 정신력 충격 수식 (기획서 7-2). Resources/SO/DamageFormula의 Mental Shock Formula 애셋")]
+    public MentalShockFormula mentalShockFormula;   // ★ 정신력 충격 Formula
+    [Tooltip("정신력 충격 수식을 연결하지 않았을 때 경로 2·Day 1에서 깎이는 정신력")]
+    public int forcedReturnMentalPenalty = 10;      // ★ 이제 수식이 없을 때의 대체값 (예전: 경로 2 고정값)
     // ★ 경로 2는 닻 시점의 체력·마나로 돌아가므로 비율 설정(forcedReturnHealthRatio)을 없앴다
     [Header("경로 1 회복 — 남은 마나를 생명력으로 바꿔 몸을 회복한다 (기획서 7-2)")]
     [Tooltip("경로 1로 돌아올 때 마나로 회복시키는 목표 체력 (최대 체력 대비 비율)")]
@@ -43,6 +45,9 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     public string deathCauseDefaultKey = "death_cause_monster";   // ★ 3-B
     [Tooltip("보스전 패배의 사인 문구 키. {0}에 보스의 (지금 아는) 이름이 들어간다")]
     public string deathCauseBattleKey = "death_cause_battle";     // ★ 3-B
+
+    [Header("이야기의 행적 요약 — 자동 마일스톤 규칙")]
+    public LoopSummaryRules summaryRules = new();                  // ★ 3-C
 
     [Header("돌아갈 지점 선택 (개발용)")]
     [Tooltip("켜면 사망 뒤 자동으로 고르지 않고, 오버뷰 창(전체 상태 관리)에 뜨는 선택지 버튼을 기다린다. " +
@@ -270,6 +275,60 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     public void EndCurrentLoop(LoopEndType endType, string endingTitleKey = null, string deathCauseKey = null, string deathCauseSource = null)
     {
         LoopHistory.EndLoop(endType, RecordSystem.TakeSnapshot(SnapshotReason.BeforeEnding), endingTitleKey, deathCauseKey, deathCauseSource);
+
+        // ★ 3-C — 닫힌 회차의 요약을 계산해 둔다 (자기 구간이 확정된 뒤)
+        var closed = LoopHistory.Current;
+        if (closed != null && !closed.IsOpen && PlayerActionLog.Instance != null)
+            closed.summary = LoopSummaryBuilder.Build(closed, PlayerActionLog.Instance.Records, summaryRules);
+    }
+
+    // ★ 3-C — 회차 요약. 닫힌 회차는 계산해 둔 것을, 진행 중인 회차는 지금 상태로 계산한다 (오버뷰 창·이야기의 행적용)
+    public LoopSummary GetSummary(LoopRecord loop)
+    {
+        if (loop == null) return null;
+        if (!loop.IsOpen && loop.summary != null) return loop.summary;
+        var nowBody = loop.IsOpen ? RecordSystem.TakeSnapshot(SnapshotReason.Verify, RecordLayerMask.Body) : null;
+        return LoopSummaryBuilder.Build(loop, PlayerActionLog.Instance != null ? PlayerActionLog.Instance.Records : null, summaryRules, nowBody);
+    }
+
+    // ---------------- ★ 3-C — 결말 태그 (#ending:<종류>:<제목 키>) ----------------
+    // 태그의 종류 글자. ink에 쓰는 데이터 형식이므로 바꾸지 않는다
+    public const string EndingTagDeath = "death";             // 스토리 사망
+    public const string EndingTagIncomplete = "incomplete";   // 불완전 결말
+    public const string EndingTagFinal = "final";             // 결말 (1부 완결)
+
+    // DialogueManager가 #ending 태그가 붙은 대화를 마칠 때 부른다
+    public void ReachEnding(string endingTag, string titleKey, string source = null)
+    {
+        LoopEndType type = endingTag switch
+        {
+            EndingTagDeath => LoopEndType.Death,
+            EndingTagIncomplete => LoopEndType.Incomplete,
+            EndingTagFinal => LoopEndType.Ending,
+            _ => LoopEndType.None,
+        };
+        if (type == LoopEndType.None)
+        {
+            Debug.LogError($"[TimeLoopManager] 알 수 없는 결말 종류 '{endingTag}' — {EndingTagDeath} / {EndingTagIncomplete} / {EndingTagFinal} 중 하나");
+            return;
+        }
+        if (IsAwaitingReturnChoice)   // 이미 회차가 닫혔다 — 결말 기록이 다음 회차로 새지 않게
+        {
+            Debug.LogWarning($"[TimeLoopManager] 돌아갈 지점을 고르는 중이라 결말 '{titleKey}'을 무시합니다");
+            return;
+        }
+
+        // 회차를 닫기 전에 남겨야 이 회차의 자기 구간에 들어간다
+        PlayerActionLog.Instance?.Record(RecordType.EndingReached, titleKey, 0, (int)type, source: source);
+
+        if (type == LoopEndType.Ending)   // 1부 완결 — 돌아갈 지점이 없다
+        {
+            EndCurrentLoop(LoopEndType.Ending, titleKey);
+            // 4단계: 자동 저장. 결말 이후 흐름(타이틀, 2부 열림, 시뮬레이션)은 아직 없다 (기획서 6-12, 8장)
+            Debug.LogWarning("[TimeLoopManager] 1부 결말에 도달했습니다 — 결말 이후 흐름은 아직 구현되지 않았습니다");
+            return;
+        }
+        FinishLoop(type, titleKey, null, null);   // 스토리 사망·불완전 결말 → 돌아갈 지점 선택 (3-B 흐름)
     }
 
     private void BeginFirstLoop()
@@ -371,10 +430,15 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     }
 
     // ★ 3-B — 경로별 정신력 하락. 선택지 표시와 실제 적용이 모두 이 함수를 쓴다.
-    //   지금은 경로 2만 고정값이고 Day 1은 0이다. 다음 작업에서 기획서 7-2의 정신력 충격
-    //   (기본 하락 + 레벨당 하락 × 몸이 되돌아간 폭, Formula 애셋)으로 이 함수만 바꾼다
+    // ★ 정신력 충격 — 몸이 되돌아가는 회귀(경로 2, Day 1)만 깎는다 (기획서 7-2).
+    //   예전: 경로 2는 고정값 10, Day 1은 0(미구현)이었다. 이제 둘 다 몸이 되돌아간 레벨 폭에 비례한다
     private int MentalLossFor(ReturnPath path, int levelBefore, int levelAfter)
-        => path == ReturnPath.Forced ? forcedReturnMentalPenalty : 0;
+    {
+        if (path != ReturnPath.Forced && path != ReturnPath.Day1) return 0;   // 경로 1·자발적은 몸을 유지한다
+        return mentalShockFormula != null
+            ? mentalShockFormula.Calculate(levelBefore, levelAfter)
+            : forcedReturnMentalPenalty;                                     // 수식 애셋을 연결하지 않았을 때
+    }
 
     // ★ 사용한 닻을 소모하고, 과거로 갔다면 그보다 뒤의 닻도 정리한다 (기획서 7-5)
     private void ConsumeAnchor(TimeAnchorSnapshot used, ReturnPath path)
@@ -637,7 +701,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             RestoreFromAnchor(anchor, RecordLayerMask.World | RecordLayerMask.Body);
             VerifyRecordSnapshot(anchor, RecordLayerMask.World | RecordLayerMask.Body);
             LogReturnVitals("경로 2", anchor, sora, healthBefore, manaBefore,
-                $"닻 시점 값으로 (레벨 {sora.level}), 정신력 -{option.mentalLoss}");   // ★ 3-B — 선택지에 보여준 값
+                $"닻 시점 값으로 (레벨 {option.levelBefore} → {sora.level}), 정신력 -{option.mentalLoss}");   // ★ 3-B — 선택지에 보여준 값, 레벨 폭도 함께
             sora.LoseMental(option.mentalLoss);
 
             ConsumeAnchor(anchor, ReturnPath.Forced);
@@ -649,8 +713,18 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         else                                                        // [경로 3] Day 1부터 — 닻이 있어도 고를 수 있다 (3-B)
         {
             StartNewLoopFromDay1(sora, null);   // ★ 2-B — 디버그 "다음 회차로"와 같은 절차를 쓰도록 함수로 뺐다
-            if (option.mentalLoss > 0) sora.LoseMental(option.mentalLoss);   // ★ 3-B — 지금은 0 (정신력 충격은 다음 작업)
+            // ★ 정신력 충격 — Day 1도 몸이 되돌아가므로 깎인다 (예전: 미구현, 0). 정신력은 의지 층위라 위 복원과 겹치지 않는다
+            if (option.mentalLoss > 0) sora.LoseMental(option.mentalLoss);
+            LogDay1Return(sora, option, healthBefore, manaBefore);
         }
+    }
+
+    // ★ Day 1 회귀도 경로 1·2처럼 콘솔에 한 줄 남긴다 (테스트·밸런스 확인용, 에디터·개발 빌드만)
+    [System.Diagnostics.Conditional("UNITY_EDITOR"), System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
+    private void LogDay1Return(SoraStats sora, ReturnOption option, int healthBefore, int manaBefore)
+    {
+        Debug.Log($"[회귀] Day 1 | 체력 {healthBefore} → {sora.currentHealth}/{sora.maxHealth}, 마나 {manaBefore} → {sora.currentMana}/{sora.maxMana} | " +
+                  $"몸 레벨 {option.levelBefore} → {sora.level}, 정신력 -{option.mentalLoss}, 사라진 닻 {option.anchorsLost}개");
     }
 
     // ★ 2-B — 경로 3의 "Day 1부터 새 회차" 절차. 내용은 기존 경로 3 그대로다.

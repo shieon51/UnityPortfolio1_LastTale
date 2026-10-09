@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;   // ★ 3-C — 요약 목록
 
 // ★ 기록 시스템 3단계 — 회차가 끝난 방식 (기획서 6-6-4 결말 분류). 숫자로 저장되므로 값을 바꾸지 않고 끝에만 추가한다
 public enum LoopEndType
@@ -51,7 +52,52 @@ public class LoopRecord
     public Snapshot startSnapshot;   // 회차 시작 — 첫 씬 로드가 끝난 순간
     public Snapshot endSnapshot;     // 결말 직전 — 회차를 닫는 순간
 
+    // ★ 3-C — 이야기의 행적 한 행에 필요한 요약. 회차를 닫을 때 계산해 둔다 (진행 중이면 null — 그때그때 계산)
+    //   요약은 자기 구간 기록에서 계산한 결과일 뿐이라 언제든 다시 만들 수 있다 (설계 7-1)
+    public LoopSummary summary;
+
     public bool IsOpen => endType == LoopEndType.None;
+}
+
+// ★ 3-C — 마일스톤의 출처 (기획서 6-6-4). 숫자로 저장되므로 값을 바꾸지 않고 끝에만 추가한다
+public enum MilestoneKind
+{
+    Authored = 0,     // 작가가 노드에 표시한 장면 (#milestone)
+    BossBattle = 1,   // 실전 보스전 결과 (자동)
+    SoulRecord = 2,   // 영혼 레벨 경신 (자동)
+}
+
+[Serializable]
+public class MilestoneEntry
+{
+    public MilestoneKind kind;
+    public string key;               // 작가: 제목 키 / 보스전: 보스 NPC 키 / 영혼 레벨: 비움
+    public int value;                // 보스전: 승 1·패 0 / 영혼 레벨: 새 레벨
+    public int importance;           // 클수록 먼저 보여준다
+    public long seq;                 // 기록 순번 (시간순 정렬)
+    public int day, hour;
+}
+
+// ★ 3-C — 회차 요약 (기록시스템_설계 7-1 summary)
+[Serializable]
+public class LoopSummary
+{
+    public int startLevel, endLevel;              // 몸 레벨 (모르면 0)
+    public bool soulRecord;                       // ★ — 이 회차에서 영혼 레벨을 경신했는가 (몸 레벨이 다시 오른 것만으로는 아니다)
+    public int newInfoCount;                      // 새로 알게 된 정보 수
+    public List<MilestoneEntry> milestones = new();   // 시간순. 화면에 몇 개를 고를지는 TopMilestones
+    public List<int> anchorsSet = new();          // 이 회차에 설치한 닻 번호
+    public List<string> cutsceneKeys = new();     // 본 컷씬 — 컷씬 데이터가 생기면 채운다 (기획서 C-8)
+
+    // 화면에 먼저 보여줄 n개 — 중요도 높은 순 → 시간순으로 고른 뒤, 고른 것을 다시 시간순으로 (기획서 6-6-4)
+    public List<MilestoneEntry> TopMilestones(int count)
+    {
+        var picked = new List<MilestoneEntry>(milestones);
+        picked.Sort((a, b) => a.importance != b.importance ? b.importance.CompareTo(a.importance) : a.seq.CompareTo(b.seq));
+        if (picked.Count > count) picked.RemoveRange(count, picked.Count - count);
+        picked.Sort((a, b) => a.seq.CompareTo(b.seq));
+        return picked;
+    }
 }
 
 // ★ 닻 하나의 이력 (기록시스템_설계 7-2). 회차가 아니라 세계 단위로 관리한다 —

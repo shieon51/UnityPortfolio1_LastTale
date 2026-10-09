@@ -36,6 +36,14 @@ public class DialogueManager : Singleton<DialogueManager>
     // ★ 이 대화에서 실제로 소모할 시간. -1이면 이벤트 기본값(EventData.TimeTaken)을 쓴다.
     //   #time 태그는 줄마다 리셋되지 않고 대화가 끝날 때까지 유지된다
     private int _timeTakenOverride = -1;
+
+    // ★ 3-C — #ending:<종류>:<제목 키>. 대화가 끝날 때 회차를 마감한다 (줄이 아니라 대화 단위로 유지)
+    private string _pendingEndingTag, _pendingEndingTitleKey;
+
+    [Header("마일스톤 (#milestone)")]
+    [Tooltip("#milestone 태그에 중요도를 적지 않았을 때의 중요도")]
+    public int defaultMilestoneImportance = 1;   // ★ 3-C
+
     public int ResolveTimeTaken(EventData data)
         => _timeTakenOverride >= 0 ? _timeTakenOverride : (data?.TimeTaken ?? 0);
 
@@ -224,6 +232,7 @@ public class DialogueManager : Singleton<DialogueManager>
         _pendingSpeakerKey = null; _pendingSpeakerDisplayName = null;
         _queuedText = null;
         _timeTakenOverride = -1;        // ★ 추가
+        _pendingEndingTag = null; _pendingEndingTitleKey = null;   // ★ 3-C — 끊긴 대화의 결말 예약이 남지 않게
 
         UIManager.Instance.ShowDialogUI();
 
@@ -439,7 +448,19 @@ public class DialogueManager : Singleton<DialogueManager>
                 _timeTakenOverride = Mathf.Max(0, t);      // ★ 이 대화의 소모 시간을 덮어씀
             else if (args[0] == "node" && args.Length > 1)
                 VisitedNodeLog.Instance?.MarkVisited(args[1]);                  // ★ 추가
+            else if (args[0] == "milestone" && args.Length > 1)
+                RecordMilestone(args[1], args.Length > 2 ? args[2] : null);    // ★ 3-C — 지나가는 순간 기록
+            else if (args[0] == "ending" && args.Length > 2)
+            { _pendingEndingTag = args[1]; _pendingEndingTitleKey = args[2]; } // ★ 3-C — 대화가 끝날 때 처리
         }
+    }
+
+    // ★ 3-C — #milestone:<제목 키>:<중요도>. 이야기의 행적 회차 상세에 오르는 장면 (기획서 6-6-4)
+    private void RecordMilestone(string titleKey, string importanceText)
+    {
+        if (string.IsNullOrEmpty(titleKey)) return;
+        int importance = int.TryParse(importanceText, out int v) ? v : defaultMilestoneImportance;
+        PlayerActionLog.Instance?.Record(RecordType.Milestone, titleKey, 0, importance, source: curEventData?.RecordKey);
     }
 
     private void EndDialogue()
@@ -463,6 +484,18 @@ public class DialogueManager : Singleton<DialogueManager>
         pendingBattleNPC = ""; pendingBattleWinNode = ""; pendingBattleLoseNode = "";
         pendingBattleDifficulty = BossDifficultyTier.Training;
         pendingBattleStateKey = "";                                 // ★ 추가
+
+        // ★ 3-C — 결말 태그가 있으면 이 대화로 회차가 끝난다. OnDialogueEnd(이벤트 완료 기록)가 먼저 돌았으므로
+        //   이벤트 완료 → 결말 기록 → 회차 마감 순서로 남는다
+        string endingTag = _pendingEndingTag, endingTitle = _pendingEndingTitleKey;
+        _pendingEndingTag = null; _pendingEndingTitleKey = null;
+        if (!string.IsNullOrEmpty(endingTag))
+        {
+            if (!string.IsNullOrEmpty(battleNpc))
+                Debug.LogWarning($"[DialogueManager] 결말 '{endingTitle}'과 전투 예약({battleNpc})이 한 대화에 있습니다 — 결말을 따르고 전투는 시작하지 않습니다");
+            TimeLoopManager.Instance?.ReachEnding(endingTag, endingTitle, curEventData?.RecordKey);
+            return;
+        }
 
         if (!string.IsNullOrEmpty(battleNpc))
             NPCManager.Instance.TriggerBossBattle(battleNpc, difficulty, winNode, loseNode, stateKey);
