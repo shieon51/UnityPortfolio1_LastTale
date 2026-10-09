@@ -39,7 +39,7 @@ public class FlowLogTester : MonoBehaviour
         var log = PlayerActionLog.Instance;
         if (log == null) { Debug.LogWarning("[FlowLogTester] PlayerActionLog 없음"); return; }
 
-        var flow = FlowLogBuilder.Build(log.Records);
+        var flow = FlowLogBuilder.Build(log.CurrentFlowRecords);   // ★ 3-A — Records는 세계 전체 기록이라 이번 흐름만
         if (flow.days.Count == 0) { Debug.Log("[FlowLogTester] 표시할 기록이 없음"); return; }
 
         var sb = new StringBuilder();

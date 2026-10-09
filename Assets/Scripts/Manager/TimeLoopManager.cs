@@ -12,7 +12,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     public int AnchorSerial => _anchorSerial;
 
     // ★ 닻으로 돌아간 경로. 기록에 숫자로 남으므로 값을 바꾸지 않는다
-    public enum ReturnPath { Voluntary = 0, Normal = 1, Forced = 2 }
+    public enum ReturnPath { Voluntary = 0, Normal = 1, Forced = 2, Day1 = 3 }   // ★ 3-A — Day1(경로 3) 추가. LoopRecord.returnPath에 쓴다
 
     [Header("앵커 개수/자원")]
     public int setAnchorManaCost = 20;
@@ -80,6 +80,10 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     //   회귀 기록을 남긴 뒤 LoadScene에서 따로 옮긴다 (목적지는 닻의 day·hour·sceneID·position)
     private static readonly HashSet<string> MovedByLoadScene = new() { RecordIds.TimeClock, RecordIds.SceneLocation };
 
+    // ★ 3-A — 새 회차를 연 뒤 씬 로드가 끝나면 회차 시작 스냅샷을 찍는다.
+    //   회귀 직후에는 씬이 비동기로 바뀌는 중이라 시각·위치 덩어리가 아직 옛 값이기 때문이다
+    private bool _pendingLoopStartSnapshot;
+
     private void Awake()
     {
         if (SceneLoader.Instance != null) SceneLoader.Instance.OnSceneLoaded += HandleSceneLoaded;
@@ -89,6 +93,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     private void Start()
     {
         _partStartSnapshot = RecordSystem.TakeSnapshot(SnapshotReason.PartStart);
+        BeginFirstLoop();   // ★ 3-A — 첫 회차를 연다 (세이브가 생기면 4단계에서 불러온 이력으로 대신한다)
     }
     private void OnDestroy()
     {
@@ -97,6 +102,13 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
 
     private void HandleSceneLoaded(int sceneID)
     {
+        // ★ 3-A — 회차 시작 스냅샷 (기록시스템_설계 6-1). 씬·위치·시각이 모두 새 회차 값이 된 순간
+        if (_pendingLoopStartSnapshot && LoopHistory.Current != null)
+        {
+            LoopHistory.Current.startSnapshot = RecordSystem.TakeSnapshot(SnapshotReason.LoopStart);
+            _pendingLoopStartSnapshot = false;
+        }
+
         _activeMarkers.Clear(); // 이전 씬 마커는 씬 언로드로 이미 파괴됨, 참조만 정리
         foreach (var anchor in _anchors)
         {
@@ -193,7 +205,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             // ★ 2-C-2 — 몸·세계 값(레벨, 공방민, 체력·마나, 호감도, 의심, 카운터, 기억)을 손으로 나열하던 필드를 걷어냈다.
             //   모두 아래 범용 스냅샷의 덩어리에 들어 있고, 복원도 그것을 쓴다
             loopCountAtSave = sora.loopCount,
-            actionLog = PlayerActionLog.Instance.Snapshot(),   // [미결] 이번 흐름 기록 층위 — 옛 방식 유지
+            // ★ 3-A — 행적 로그 사본(actionLog)은 없앴다. 돌아오면 recordSnapshot.seq 앞까지의 흐름을 물려받는다
             recordSnapshot = RecordSystem.TakeSnapshot(SnapshotReason.Anchor),
         };
         sora.UseMana(setAnchorManaCost);   // ★ 스냅샷 뒤로 옮김 (기존: 스냅샷 전에 내서 31 → 11로 저장됐다)
@@ -208,6 +220,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
 
         PlayerActionLog.Instance?.Record(RecordType.AnchorSet, snapshot.anchorId.ToString(), 0, snapshot.anchorId,
             payload: PlayerActionLog.EncodeDayHour(snapshot.day, snapshot.hour));
+        LoopHistory.RegisterAnchor(snapshot.anchorId, snapshot.day, snapshot.hour, snapshot.sceneID);   // ★ 3-A — 닻 이력 (사용 전)
 
         return true;
     }
@@ -222,6 +235,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         }
         (PlayerManager.Instance.CurrentCharacter as SoraStats)?.RecoverMana(removeAnchorManaRefund);
         PlayerActionLog.Instance?.Record(RecordType.AnchorRetracted, snapshot.anchorId.ToString(), snapshot.anchorId, 0);
+        LoopHistory.SetAnchorStatus(snapshot.anchorId, AnchorStatus.Retracted);   // ★ 3-A
     }
 
     // ★ 2-C — 닻 복원을 범용 스냅샷으로 교체했다 (기존: 매니저마다 옛 복원 함수를 손으로 호출).
@@ -234,8 +248,50 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         if (anchor.recordSnapshot != null) RecordSystem.RestoreLayers(anchor.recordSnapshot, mask, MovedByLoadScene);   // ★ 2-C-2
         else Debug.LogError($"[TimeLoopManager] 닻 #{anchor.anchorId}에 범용 스냅샷이 없어 세계·몸을 되돌리지 못했습니다");
 
-        // [미결] 이번 흐름 기록의 층위 (설계 13-2-6). 3단계 LoopRecord 전까지 옛 동작대로 그 시점으로 되돌린다
-        PlayerActionLog.Instance.Restore(anchor.actionLog);
+        // ★ 3-A — 행적 로그는 더 이상 되돌리지 않는다. 새 회차가 이 닻의 순번 앞까지의 흐름을 물려받는다 (BeginLoopFromAnchor)
+    }
+
+    // ---------------- ★ 3-A — 회차 열고 닫기 (기록시스템_설계 13-3-2) ----------------
+
+    // 지금 회차를 닫는다. 회귀 절차의 맨 처음에 부른다 — 이 뒤에 생기는 기록(복귀 비용, 닻 사용, 회귀 기록)은
+    // 모두 새 회차의 자기 구간에 들어간다. 결말 직전 스냅샷을 함께 남긴다
+    public void EndCurrentLoop(LoopEndType endType)
+    {
+        LoopHistory.EndLoop(endType, RecordSystem.TakeSnapshot(SnapshotReason.BeforeEnding));
+    }
+
+    private void BeginFirstLoop()
+    {
+        var sora = PlayerManager.Instance?.CurrentCharacter as SoraStats;
+        var time = TimeManager.Instance;
+        LoopHistory.BeginLoop(sora != null ? sora.loopCount : 0, parentLoop: -1, branchAnchorId: 0, branchSeq: 0,
+            time != null ? time.currentDay : 1, time != null ? time.currentHour : 0, returnPath: -1);
+        _pendingLoopStartSnapshot = true;
+    }
+
+    // 닻으로 돌아가는 회차. 부모 = 그 닻을 내린 회차, 물려받는 흐름 = 닻 스냅샷 순번 앞까지
+    private void BeginLoopFromAnchor(TimeAnchorSnapshot anchor, int loopNumber, ReturnPath path)
+    {
+        var record = LoopHistory.FindAnchor(anchor.anchorId);
+        int parent = record != null ? record.loopSet : anchor.loopCountAtSave;
+        long branchSeq = anchor.recordSnapshot != null ? anchor.recordSnapshot.seq : 0;
+        if (anchor.recordSnapshot == null)
+            Debug.LogWarning($"[TimeLoopManager] 닻 #{anchor.anchorId}에 스냅샷이 없어 이번 흐름이 비어서 시작합니다");
+
+        LoopHistory.BeginLoop(loopNumber, parent, anchor.anchorId, branchSeq, anchor.day, anchor.hour, (int)path);
+        _pendingLoopStartSnapshot = true;
+    }
+
+    // ★ 3-A — 공식 하드 리셋 전용. 닻과 회차 이력을 모두 지우고 첫 회차를 새로 연다.
+    //   예전 하드 리셋은 닻을 남겨 두었다 — 새 세계인데 지난 세계의 닻으로 돌아갈 수 있었다
+    public void ResetForHardReset()
+    {
+        foreach (var marker in _activeMarkers.Values) if (marker != null) Destroy(marker);
+        _activeMarkers.Clear();
+        _anchors.Clear();
+        _anchorSerial = 0;      // 새 세계이므로 닻 번호도 처음부터
+        LoopHistory.Clear();
+        BeginFirstLoop();
     }
 
     // ★ 2-C — 복원 직후 상태가 기준 스냅샷과 같은지 비교한다. 이제는 복원 자체가 범용 스냅샷을 쓰므로,
@@ -322,6 +378,14 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             _activeMarkers.Remove(snapshot);
         }
         PlayerActionLog.Instance?.Record(reason, snapshot.anchorId.ToString(), snapshot.anchorId, detail);
+
+        // ★ 3-A — 닻 이력의 최종 상태. 사용한 닻은 "이 닻에서 갈라진 회차"(이미 연 새 회차)를 함께 적는다
+        if (reason == RecordType.AnchorUsed)
+            LoopHistory.SetAnchorStatus(snapshot.anchorId,
+                detail == (int)ReturnPath.Forced ? AnchorStatus.ForcedUsed : AnchorStatus.Used,
+                LoopHistory.Current != null ? LoopHistory.Current.loopNumber : -1);
+        else
+            LoopHistory.SetAnchorStatus(snapshot.anchorId, AnchorStatus.Vanished);
     }
 
     public bool TravelToAnchor(TimeAnchorSnapshot anchor)
@@ -338,8 +402,10 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         }
 
         int healthBefore = sora.currentHealth, manaBefore = sora.currentMana;   // ★ 회귀 로그용
+        EndCurrentLoop(LoopEndType.Voluntary);                // ★ 3-A — 회차를 먼저 닫는다 (결말 직전 스냅샷은 비용을 내기 전)
         sora.UseMana(returnManaCost);
         sora.loopCount++;                                     // 시간 역행이므로 회차 증가
+        BeginLoopFromAnchor(anchor, sora.loopCount, ReturnPath.Voluntary);   // ★ 3-A
 
         RestoreFromAnchor(anchor, RecordLayerMask.World);      // ★ 2-C — 자발적 회귀는 세계만 되돌린다
         VerifyRecordSnapshot(anchor, RecordLayerMask.World);
@@ -364,6 +430,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     {
         var sora = PlayerManager.Instance?.CurrentCharacter as SoraStats;
         if (sora == null) return;
+        EndCurrentLoop(LoopEndType.Death);   // ★ 3-A — 회차를 먼저 닫는다. 사인 키는 3-B에서 넘긴다
         sora.loopCount++;
 
         var latest = _anchors.Count > 0 ? _anchors[_anchors.Count - 1] : null;
@@ -371,6 +438,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
 
         if (latest != null && sora.currentMana >= returnManaCost)   // [경로 1] 정상 복귀
         {
+            BeginLoopFromAnchor(latest, sora.loopCount, ReturnPath.Normal);   // ★ 3-A
             sora.UseMana(returnManaCost);                           // 중간 시점으로 되돌아가는 힘
             RestoreFromAnchor(latest, RecordLayerMask.World);      // ★ 2-C — 경로 1은 세계만 되돌린다
             VerifyRecordSnapshot(latest, RecordLayerMask.World);
@@ -393,6 +461,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             // ★ 기억은 되돌리지 않는다 (기존에는 RestoreAcquired로 기억까지 되돌렸다)
             // ★ 2-C — 경로 2는 세계와 몸을 닻 시점으로. 몸 덩어리에 레벨·공방민·피로도·체력·마나가 모두 들어 있다
             //   (기존: RestoreWorldState + RestoreBody + SetVitals를 따로 호출, 피로도는 빠져 있었다)
+            BeginLoopFromAnchor(latest, sora.loopCount, ReturnPath.Forced);   // ★ 3-A
             RestoreFromAnchor(latest, RecordLayerMask.World | RecordLayerMask.Body);
             VerifyRecordSnapshot(latest, RecordLayerMask.World | RecordLayerMask.Body);
             LogReturnVitals("경로 2", latest, sora, healthBefore, manaBefore,
@@ -413,10 +482,17 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
 
     // ★ 2-B — 경로 3의 "Day 1부터 새 회차" 절차. 내용은 기존 경로 3 그대로다.
     //   디버그 도구도 이 함수를 불러 실제 규칙과 어긋나지 않게 한다. 회차 증가는 부르는 쪽에서 한다
+    //   ★ 3-A — 회차를 닫는 것(EndCurrentLoop)도 부르는 쪽에서 한다. 여기서는 새 회차를 연다
     //   source: 기록의 출처 (실제 게임은 null, 디버그 도구는 RecordKeys.DebugSource)
     public void StartNewLoopFromDay1(SoraStats sora, string source)
     {
         if (sora == null) return;
+
+        // ★ 3-A — Day 1 회차는 부모 흐름을 물려받지 않는다. 부모는 직전 회차 (그래프에서 어디서 넘어왔는지 잇는 용도)
+        var previous = LoopHistory.Current;
+        LoopHistory.BeginLoop(sora.loopCount, previous != null ? previous.loopNumber : -1, branchAnchorId: 0, branchSeq: 0,
+            branchDay: 1, branchHour: 0, returnPath: (int)ReturnPath.Day1);
+        _pendingLoopStartSnapshot = true;
 
         // ★ Day 1은 모든 닻보다 과거다 — "과거로 가면 뒤의 닻은 사라진다"(기획서 7-5).
         //   실제 경로 3은 닻이 없을 때만 오므로 여기서 지워지는 닻은 디버그로 왔을 때뿐이다
@@ -441,7 +517,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             sora.ResetBodyForNewLoop();                         // 영혼 레벨은 유지
         }
 
-        PlayerActionLog.Instance.ClearAll();
+        // ★ 3-A — 행적을 지우지 않는다(ClearAll 제거). 새 회차가 물려받는 것이 없으므로 이번 흐름은 여기서부터 시작한다
         PlayerActionLog.Instance.Record(RecordType.Loop, "full_reset", source: source);
         PlayerActionLog.Instance?.RecordVitals();   // ★ 회귀 직후의 체력·마나
 

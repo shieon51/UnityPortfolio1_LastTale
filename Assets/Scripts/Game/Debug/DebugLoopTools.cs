@@ -13,6 +13,7 @@ public static class DebugLoopTools
             return;
         }
 
+        TimeLoopManager.Instance.EndCurrentLoop(LoopEndType.DebugSkip);   // ★ 3-A — 실제 회귀처럼 회차를 먼저 닫는다
         sora.loopCount++;   // 실제 회귀(HandleDeath)와 같은 방식. 새 회차 번호는 Loop 기록에 함께 남는다
         DialogueManager.Instance.ResetStoryState(); // ink 자체 지역변수(친밀도 등)도 새로 시작 — 디버그에만 있는 단계
         TimeLoopManager.Instance.StartNewLoopFromDay1(sora, RecordKeys.DebugSource);
@@ -41,6 +42,7 @@ public static class DebugLoopTools
             sora.loopCount = 0;
             // 레벨/경험치도 초기화하려면 PlayableCharacter에 리셋 메서드가 필요 — 아래 참고
         }
+        TimeLoopManager.Instance.ResetForHardReset();   // ★ 3-A — 닻·회차 이력도 지우고 첫 회차(0)를 새로 연다. loopCount = 0 뒤에 불러야 한다
 
         var cfg = SceneLoader.Instance.startConfig;
         SceneLoader.Instance.LoadScene(cfg.startSceneID, cfg.startPosition);

@@ -86,12 +86,14 @@ public class PlayerActionLog : Singleton<PlayerActionLog>
     public void Record(RecordType type, string key, int before = 0, int after = 0,
                        string source = null, string payload = null, ChangeOp? op = null)
     {
+        // ★ 3-A — 회차 번호는 진행 중인 회차에서 읽는다. 예전에는 소라에서 읽어, 리엘 빙의 중에는 0회차로 기록됐다
+        var loop = LoopHistory.Current;
         var sora = PlayerManager.Instance?.CurrentCharacter as SoraStats;
 
         _records.Add(new ActionRecord
         {
             seq = _nextSeq++,
-            loopCount = sora?.loopCount ?? 0,
+            loopCount = loop != null ? loop.loopNumber : (sora?.loopCount ?? 0),   // ★ 첫 회차를 열기 전에만 소라 값
             day = TimeManager.Instance != null ? TimeManager.Instance.currentDay : 0,
             hour = TimeManager.Instance != null ? TimeManager.Instance.currentHour : 0,
             sceneId = SceneLoader.Instance != null ? SceneLoader.Instance.CurrentSceneID : -1,
@@ -193,19 +195,22 @@ public class PlayerActionLog : Singleton<PlayerActionLog>
 
     public static bool IsPlayerVisible(RecordType type) => VisibleTypes.Contains(type);
 
+    // ★ 3-A — 이번 흐름에서 보여줄 기록 (예전: 전체 기록. 이제 Records는 세계 전체라 이번 흐름으로 거른다)
     public IEnumerable<ActionRecord> VisibleRecords
-        => _records.Where(r => IsPlayerVisible(r.type));
+        => CurrentFlowRecords.Where(r => IsPlayerVisible(r.type));
 
-    // 앵커 스냅샷/복원 — ★ 순번(_nextSeq)은 되돌리지 않는다
-    public List<ActionRecord> Snapshot() => new List<ActionRecord>(_records);
-    public void Restore(List<ActionRecord> snapshot) { _records.Clear(); if (snapshot != null) _records.AddRange(snapshot); }
-    public void ClearAll() => _records.Clear();
+    // ★ 3-A — 행적 로그는 회귀해도 되돌리지 않는다 (기록시스템_설계 13-3-1).
+    //   예전에는 닻마다 로그 사본을 들고 있다가 회귀하면 그 시점으로 되돌렸다(Snapshot/Restore) — 지난 회차의 행적이 사라졌다.
+    //   이제 Records는 세계 전체의 기록이고, "이번 흐름"은 회차 구간으로 계산한다 (부모 흐름의 앞부분 + 자기 구간)
+    public List<ActionRecord> CurrentFlowRecords => LoopHistory.CurrentFlowRecords(_records);
+
+    public void ClearAll() => _records.Clear();   // 공식 하드 리셋·테스트 전용
 
     // 힌트 NPC용 조회 — "이 흐름에서 안 해본 것" 판단에 사용
-    // 로그는 닻 복귀 시 그 시점으로 복원되므로, 지금 남아 있는 기록 = 이번 흐름의 기록이다
+    // ★ 3-A — 전체 기록이 아니라 이번 흐름에서 찾는다 (결과는 예전과 같다)
     public bool HasDoneInCurrentFlow(string key)
-        => _records.Exists(r => r.key == key);
+        => CurrentFlowRecords.Exists(r => r.key == key);
 
     public bool HasDoneInCurrentFlow(RecordType type, string key)
-        => _records.Exists(r => r.type == type && r.key == key);
+        => CurrentFlowRecords.Exists(r => r.type == type && r.key == key);
 }
