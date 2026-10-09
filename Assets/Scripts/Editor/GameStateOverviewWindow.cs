@@ -66,6 +66,7 @@ public class GameStateOverviewWindow : EditorWindow
             _liveNpcs = FindObjectsByType<NPC>(FindObjectsSortMode.None);
 
         _scroll = EditorGUILayout.BeginScrollView(_scroll);
+        DrawReturnChoiceSection();   // ★ 3-B — 돌아갈 지점을 고르는 중일 때만 보인다
         DrawPlayerSection();
         EditorGUILayout.Space(10);
         DrawNPCSection();
@@ -402,6 +403,39 @@ public class GameStateOverviewWindow : EditorWindow
 
     private static string NameOf(string[] names, int i) => i >= 0 && i < names.Length ? names[i] : i.ToString();
 
+    // ★ 3-B — 닻 선택 화면 대신 쓰는 개발용 선택. TimeLoopManager.waitForReturnChoiceInEditor를 켜면 사망 뒤 여기서 고른다
+    private void DrawReturnChoiceSection()
+    {
+        var tlm = TimeLoopManager.Instance;
+        if (tlm == null || !tlm.IsAwaitingReturnChoice) return;
+
+        GUI.backgroundColor = new Color(1f, 0.9f, 0.5f);
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+        GUI.backgroundColor = Color.white;
+        EditorGUILayout.LabelField("돌아갈 지점 선택 (닻 선택 화면 대신)", EditorStyles.boldLabel);
+
+        ReturnOption chosen = null;
+        foreach (var o in tlm.PendingReturnOptions)
+        {
+            string where = o.IsDay1 ? "Day 1"
+                         : $"닻 #{o.anchor.anchorId} ({GameTimeFormatter.FormatDayTime(o.anchor.day, o.anchor.hour)})";
+            string body = o.keepsBody ? $"몸 유지 Lv.{o.levelAfter}" : $"몸 Lv.{o.levelBefore} → {o.levelAfter}";
+            string cost = $"{NameOf(PathNames, (int)o.path)}  |  마나 -{o.manaCost}  |  {body}  |  " +
+                          $"체력 {o.healthAfter}/{o.maxHealthAfter}  마나 {o.manaAfter}/{o.maxManaAfter}  |  정신력 -{o.mentalLoss}" +
+                          (o.anchorsLost > 0 ? $"  |  닻 {o.anchorsLost}개 사라짐" : "");
+
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button(where, GUILayout.Width(170))) chosen = o;   // 목록을 도는 중에 바꾸지 않도록 끝나고 적용
+            EditorGUILayout.LabelField(cost, EditorStyles.wordWrappedLabel);
+            EditorGUILayout.EndHorizontal();
+        }
+        EditorGUILayout.EndVertical();
+        EditorGUILayout.Space(10);
+
+        // OnGUI 도중에 상태를 바꾸면 이 칸이 사라져 레이아웃 오류가 난다 — 그리기가 끝난 뒤에 적용한다
+        if (chosen != null) EditorApplication.delayCall += () => { if (TimeLoopManager.Instance != null) TimeLoopManager.Instance.ChooseReturn(chosen); };
+    }
+
     private void DrawLoopHistorySection()
     {
         EditorGUILayout.LabelField("회차·닻 기록 (이야기의 행적 데이터)", EditorStyles.boldLabel);
@@ -436,7 +470,8 @@ public class GameStateOverviewWindow : EditorWindow
                 EditorGUILayout.LabelField($"자기 구간: #{l.startSeq} ~ {(l.IsOpen ? "진행 중" : $"#{l.endSeq}")}   물려받은 흐름: {(l.branchSeq > 0 ? $"#{l.branchSeq} 미만" : "없음")}");
                 EditorGUILayout.LabelField($"스냅샷: 회차 시작 {(l.startSnapshot != null ? "✔" : "✘")}   결말 직전 {(l.endSnapshot != null ? "✔" : "✘")}");
                 if (!string.IsNullOrEmpty(l.endingTitleKey) || !string.IsNullOrEmpty(l.deathCauseKey))
-                    EditorGUILayout.LabelField($"결말 제목 {l.endingTitleKey ?? "-"}   사인 {l.deathCauseKey ?? "-"}");
+                    EditorGUILayout.LabelField($"결말 제목 {l.endingTitleKey ?? "-"}   사인 {l.deathCauseKey ?? "-"}" +
+                                               (string.IsNullOrEmpty(l.deathCauseSource) ? "" : $" ({l.deathCauseSource})"));   // ★ 3-B — 보스 키
 
                 if (all != null)   // 펼쳤을 때만 계산한다 (부모를 따라 올라가므로 매번 하면 무겁다)
                 {

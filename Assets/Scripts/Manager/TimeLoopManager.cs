@@ -38,6 +38,17 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     //[Tooltip("닻 없이 사망했을 때(경로 3) 되돌아가는 몸 레벨")]
     //public int resetBodyLevel = 1;
 
+    [Header("사인 — 이야기의 행적 라벨 (기록에는 키만 남는다)")]
+    [Tooltip("보스전이 아닌 사망(몬스터 피격 등)의 사인 문구 키")]
+    public string deathCauseDefaultKey = "death_cause_monster";   // ★ 3-B
+    [Tooltip("보스전 패배의 사인 문구 키. {0}에 보스의 (지금 아는) 이름이 들어간다")]
+    public string deathCauseBattleKey = "death_cause_battle";     // ★ 3-B
+
+    [Header("돌아갈 지점 선택 (개발용)")]
+    [Tooltip("켜면 사망 뒤 자동으로 고르지 않고, 오버뷰 창(전체 상태 관리)에 뜨는 선택지 버튼을 기다린다. " +
+             "닻 선택 화면이 생기기 전 테스트용. 에디터에서만 동작")]
+    public bool waitForReturnChoiceInEditor = false;               // ★ 3-B
+
     [Header("기록 시스템 검증 (개발용)")]
     [Tooltip("닻 복귀 직후, 옛 방식으로 복원한 상태가 닻의 범용 스냅샷과 같은지 비교해 콘솔에 남긴다. 에디터·개발 빌드에서만 동작")]
     public bool verifyRecordSnapshot = true;   // ★ 기록 시스템 2단계 — 복원 교체 전 검증용
@@ -255,9 +266,10 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
 
     // 지금 회차를 닫는다. 회귀 절차의 맨 처음에 부른다 — 이 뒤에 생기는 기록(복귀 비용, 닻 사용, 회귀 기록)은
     // 모두 새 회차의 자기 구간에 들어간다. 결말 직전 스냅샷을 함께 남긴다
-    public void EndCurrentLoop(LoopEndType endType)
+    // ★ 3-B — 결말 제목·사인 키와 사인의 대상(보스 NPC 키)을 함께 남긴다
+    public void EndCurrentLoop(LoopEndType endType, string endingTitleKey = null, string deathCauseKey = null, string deathCauseSource = null)
     {
-        LoopHistory.EndLoop(endType, RecordSystem.TakeSnapshot(SnapshotReason.BeforeEnding));
+        LoopHistory.EndLoop(endType, RecordSystem.TakeSnapshot(SnapshotReason.BeforeEnding), endingTitleKey, deathCauseKey, deathCauseSource);
     }
 
     private void BeginFirstLoop()
@@ -334,19 +346,35 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
 
     // ★ 경로 1 회복량. 목표 체력(최대 체력 × 비율)까지, 남은 마나가 허락하는 만큼만 회복한다.
     //   돌려주는 값은 회복 후 체력, manaSpent는 그 회복에 쓴 마나
-    private int HealthFromMana(SoraStats sora, out int manaSpent)
+    // ★ 3-B — 소라를 직접 읽지 않고 값을 받는다. 닻 선택지의 예상 값(미리보기)과 실제 적용이 같은 계산을 쓰게 하려고
+    private int HealthFromMana(int health, int maxHealth, int mana, out int manaSpent)
     {
         manaSpent = 0;
-        if (healthPerMana <= 0f) return sora.currentHealth;
+        if (healthPerMana <= 0f) return health;
 
-        int target = Mathf.RoundToInt(sora.maxHealth * deathReturnHealTargetRatio);
-        int need = Mathf.Max(0, target - sora.currentHealth);
-        int affordable = Mathf.FloorToInt(sora.currentMana * healthPerMana);
+        int target = Mathf.RoundToInt(maxHealth * deathReturnHealTargetRatio);
+        int need = Mathf.Max(0, target - health);
+        int affordable = Mathf.FloorToInt(mana * healthPerMana);
         int heal = Mathf.Min(need, affordable);
 
-        manaSpent = Mathf.Min(sora.currentMana, Mathf.CeilToInt(heal / healthPerMana));
-        return sora.currentHealth + heal;
+        manaSpent = Mathf.Min(mana, Mathf.CeilToInt(heal / healthPerMana));
+        return health + heal;
     }
+
+    // ★ 3-B — 경로 1로 돌아간 직후의 체력·마나. 복귀 비용을 낸 뒤 남은 마나로 회복한다 (기획서 7-2)
+    private void NormalReturnVitals(SoraStats sora, out int health, out int mana, out int healedHealth, out int manaSpent)
+    {
+        int manaLeft = Mathf.Max(0, sora.currentMana - returnManaCost);
+        healedHealth = HealthFromMana(sora.currentHealth, sora.maxHealth, manaLeft, out manaSpent);
+        health = Mathf.Clamp(Mathf.Max(minHealthAfterReturn, healedHealth), 1, sora.maxHealth);
+        mana = manaLeft - manaSpent;
+    }
+
+    // ★ 3-B — 경로별 정신력 하락. 선택지 표시와 실제 적용이 모두 이 함수를 쓴다.
+    //   지금은 경로 2만 고정값이고 Day 1은 0이다. 다음 작업에서 기획서 7-2의 정신력 충격
+    //   (기본 하락 + 레벨당 하락 × 몸이 되돌아간 폭, Formula 애셋)으로 이 함수만 바꾼다
+    private int MentalLossFor(ReturnPath path, int levelBefore, int levelAfter)
+        => path == ReturnPath.Forced ? forcedReturnMentalPenalty : 0;
 
     // ★ 사용한 닻을 소모하고, 과거로 갔다면 그보다 뒤의 닻도 정리한다 (기획서 7-5)
     private void ConsumeAnchor(TimeAnchorSnapshot used, ReturnPath path)
@@ -422,61 +450,206 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         return true;
     }
 
+    // ---------------- ★ 3-B — 회차 마감 흐름 (기록시스템_설계 8장) ----------------
+    //   사망·불완전 결말 → 회차 마감 → 선택지 계산 → 돌아갈 지점 선택 → 적용.
+    //   선택은 닻 선택 화면이 한다. 화면이 없으면(지금) 예전처럼 최근 닻, 없으면 Day 1을 자동으로 고른다
+
+    // 닻 선택 화면이 구독한다. 받은 선택지 중 하나로 ChooseReturn을 부르면 된다
+    public event System.Action<IReadOnlyList<ReturnOption>> OnReturnChoiceRequested;
+
+    private List<ReturnOption> _pendingReturnOptions;   // 고르기를 기다리는 선택지. 없으면 null
+    public IReadOnlyList<ReturnOption> PendingReturnOptions => _pendingReturnOptions;
+    public bool IsAwaitingReturnChoice => _pendingReturnOptions != null;
+
     // 기획서 7-2: 기억은 어떤 경로에서도 유지된다
     //   경로 1 (마나 충분)   — 마나 소모, 몸 유지
     //   경로 2 (마나 부족)   — 몸이 닻 시점으로, 정신력 하락
-    //   경로 3 (닻 없음)     — Day 1부터, 몸 레벨 1
-    public void HandleDeath()
+    //   경로 3 (Day 1)       — Day 1부터, 몸은 시작 상태로 (닻이 있어도 고를 수 있다)
+    // ★ 3-B — 사인 키를 받는다. 비우면 일반 사망(deathCauseDefaultKey). 보스전 패배는 NPCManager가 보스 키와 함께 넘긴다
+    public void HandleDeath(string deathCauseKey = null, string deathCauseSource = null)
+        => FinishLoop(LoopEndType.Death, null, string.IsNullOrEmpty(deathCauseKey) ? deathCauseDefaultKey : deathCauseKey, deathCauseSource);
+
+    // ★ 3-B — 회차를 마감하고 돌아갈 지점을 묻는다. 사망과 불완전 결말(3-C)이 함께 쓴다
+    public void FinishLoop(LoopEndType endType, string endingTitleKey, string deathCauseKey, string deathCauseSource)
     {
         var sora = PlayerManager.Instance?.CurrentCharacter as SoraStats;
         if (sora == null) return;
-        EndCurrentLoop(LoopEndType.Death);   // ★ 3-A — 회차를 먼저 닫는다. 사인 키는 3-B에서 넘긴다
-        sora.loopCount++;
+        if (IsAwaitingReturnChoice)   // 사망 처리가 두 번 들어와도(Die와 패배 흐름 등) 회차가 두 번 닫히지 않게
+        {
+            Debug.LogWarning("[TimeLoopManager] 이미 돌아갈 지점을 고르는 중입니다 — 회차 마감 요청을 무시합니다");
+            return;
+        }
 
-        var latest = _anchors.Count > 0 ? _anchors[_anchors.Count - 1] : null;
+        EndCurrentLoop(endType, endingTitleKey, deathCauseKey, deathCauseSource);   // 회차를 먼저 닫는다 (3-A)
+        // 4단계: 여기서 자기 구간 파일을 쓰고 자동 저장한다 — 선택 화면에서 게임을 꺼도 회차의 결과는 남는다 (설계 8장)
+
+        _pendingReturnOptions = BuildReturnOptions(sora);
+
+        bool waitInEditor = Application.isEditor && waitForReturnChoiceInEditor;
+        if (OnReturnChoiceRequested != null || waitInEditor)
+        {
+            if (waitInEditor) Debug.Log("[TimeLoopManager] 돌아갈 지점 선택 대기 — 오버뷰 창(전체 상태 관리) 맨 위에서 고른다");
+            OnReturnChoiceRequested?.Invoke(_pendingReturnOptions);
+            return;
+        }
+        ChooseReturn(DefaultReturnOption(_pendingReturnOptions));   // 화면이 없으면 예전 동작
+    }
+
+    // 선택지: 남은 닻 전부(마나에 따라 경로 1 또는 2) + Day 1. 닻은 설치 순(= 시간순)
+    private List<ReturnOption> BuildReturnOptions(SoraStats sora)
+    {
+        var options = new List<ReturnOption>();
+        foreach (var anchor in _anchors) options.Add(BuildAnchorOption(sora, anchor));
+        options.Add(BuildDay1Option(sora));
+        return options;
+    }
+
+    private ReturnOption BuildAnchorOption(SoraStats sora, TimeAnchorSnapshot anchor)
+    {
+        bool enoughMana = sora.currentMana >= returnManaCost;
+        var o = new ReturnOption
+        {
+            anchor = anchor,
+            path = enoughMana ? ReturnPath.Normal : ReturnPath.Forced,
+            levelBefore = sora.level,
+            anchorsLost = CountAnchorsAfter(anchor),
+        };
+
+        if (enoughMana)   // 경로 1 — 몸을 유지하고 남은 마나로 회복
+        {
+            o.manaCost = returnManaCost;
+            o.keepsBody = true;
+            o.levelAfter = sora.level;
+            o.maxHealthAfter = sora.maxHealth;
+            o.maxManaAfter = sora.maxMana;
+            NormalReturnVitals(sora, out o.healthAfter, out o.manaAfter, out _, out _);
+        }
+        else              // 경로 2 — 몸이 닻 시점의 값으로 (닻의 몸 덩어리에서 읽는다)
+        {
+            ReadBody(anchor.recordSnapshot, sora, out o.levelAfter, out o.healthAfter, out o.maxHealthAfter, out o.manaAfter, out o.maxManaAfter);
+        }
+        o.mentalLoss = MentalLossFor(o.path, o.levelBefore, o.levelAfter);
+        return o;
+    }
+
+    private ReturnOption BuildDay1Option(SoraStats sora)
+    {
+        var o = new ReturnOption
+        {
+            anchor = null,
+            path = ReturnPath.Day1,
+            levelBefore = sora.level,
+            anchorsLost = _anchors.Count,   // Day 1은 모든 닻보다 과거 — 남은 닻이 모두 사라진다
+        };
+        ReadBody(_partStartSnapshot, sora, out o.levelAfter, out o.healthAfter, out o.maxHealthAfter, out o.manaAfter, out o.maxManaAfter);
+        o.mentalLoss = MentalLossFor(o.path, o.levelBefore, o.levelAfter);
+        return o;
+    }
+
+    // 스냅샷의 몸 덩어리에서 레벨·체력·마나를 읽는다. 없으면 지금 값 (스냅샷이 없을 때의 대비)
+    private static void ReadBody(Snapshot snapshot, SoraStats sora, out int level, out int health, out int maxHealth, out int mana, out int maxMana)
+    {
+        StateBlock b = null;
+        snapshot?.blocks.TryGetValue(RecordIds.SoraBody, out b);
+        int Get(string key, int fallback) => b != null && b.ints.TryGetValue(key, out int v) ? v : fallback;
+
+        level = Get(SoraStats.StateKeyLevel, sora.level);
+        maxHealth = Get(SoraStats.StateKeyMaxHealth, sora.maxHealth);
+        maxMana = Get(SoraStats.StateKeyMaxMana, sora.maxMana);
+        health = Get(SoraStats.StateKeyHealth, maxHealth);
+        mana = Get(SoraStats.StateKeyMana, maxMana);
+    }
+
+    // 이 닻보다 뒤에 내린 닻 수 — 그 닻으로 돌아가면 사라진다 (ConsumeAnchor와 같은 기준)
+    private int CountAnchorsAfter(TimeAnchorSnapshot anchor)
+    {
+        if (!discardLaterAnchorsOnTravel) return 0;
+        int at = ToAbsoluteHour(anchor.day, anchor.hour), count = 0;
+        foreach (var a in _anchors)
+            if (a != anchor && ToAbsoluteHour(a.day, a.hour) > at) count++;
+        return count;
+    }
+
+    // 화면이 없을 때의 선택 — 예전 동작과 같다 (최근 닻, 없으면 Day 1)
+    private static ReturnOption DefaultReturnOption(List<ReturnOption> options)
+    {
+        for (int i = options.Count - 1; i >= 0; i--)
+            if (!options[i].IsDay1) return options[i];
+        return options[options.Count - 1];
+    }
+
+    // 닻 선택 화면(또는 오버뷰 창)이 고른 선택지를 적용한다. 받은 목록에 없는 선택지는 거절한다
+    public bool ChooseReturn(ReturnOption option)
+    {
+        if (_pendingReturnOptions == null || option == null || !_pendingReturnOptions.Contains(option))
+        {
+            Debug.LogWarning("[TimeLoopManager] 기다리는 선택지가 아니라서 적용하지 않습니다");
+            return false;
+        }
+        var sora = PlayerManager.Instance?.CurrentCharacter as SoraStats;
+        if (sora == null) return false;
+        if (option.anchor != null && !_anchors.Contains(option.anchor))
+        {
+            Debug.LogWarning($"[TimeLoopManager] 닻 #{option.anchor.anchorId}이 이미 없습니다");
+            return false;
+        }
+
+        _pendingReturnOptions = null;
+        ApplyReturn(sora, option);
+        // 4단계: 새 회차 시작 스냅샷과 함께 자동 저장
+        return true;
+    }
+
+    // ★ 3-B — 고른 선택지를 적용한다. 경로 1·2·3의 본문은 예전 HandleDeath 그대로이고, "최근 닻" 대신 고른 닻을 쓴다
+    private void ApplyReturn(SoraStats sora, ReturnOption option)
+    {
+        sora.loopCount++;   // 회차 수는 고른 뒤에 오른다 (설계 8장)
+        var anchor = option.anchor;
         int healthBefore = sora.currentHealth, manaBefore = sora.currentMana;   // ★ 회귀 로그용
 
-        if (latest != null && sora.currentMana >= returnManaCost)   // [경로 1] 정상 복귀
+        if (option.path == ReturnPath.Normal)                       // [경로 1] 정상 복귀
         {
-            BeginLoopFromAnchor(latest, sora.loopCount, ReturnPath.Normal);   // ★ 3-A
+            BeginLoopFromAnchor(anchor, sora.loopCount, ReturnPath.Normal);   // ★ 3-A
+            // ★ 몸은 유지되므로 죽은 몸을 남은 마나로 회복한다 (마나를 생명력으로 바꿔 쓴다, 기획서 7-2).
+            //   선택지에 보여준 예상 값과 같은 계산 (3-B)
+            NormalReturnVitals(sora, out int health, out int mana, out int healedHealth, out int manaSpent);
             sora.UseMana(returnManaCost);                           // 중간 시점으로 되돌아가는 힘
-            RestoreFromAnchor(latest, RecordLayerMask.World);      // ★ 2-C — 경로 1은 세계만 되돌린다
-            VerifyRecordSnapshot(latest, RecordLayerMask.World);
+            RestoreFromAnchor(anchor, RecordLayerMask.World);      // ★ 2-C — 경로 1은 세계만 되돌린다
+            VerifyRecordSnapshot(anchor, RecordLayerMask.World);
 
-            // ★ 몸은 유지되므로 죽은 몸을 남은 마나로 회복한다 (마나를 생명력으로 바꿔 쓴다, 기획서 7-2)
-            int healedHealth = HealthFromMana(sora, out int manaSpent);
-            SetVitals(sora, Mathf.Max(minHealthAfterReturn, healedHealth), sora.currentMana - manaSpent);
-            LogReturnVitals("경로 1", latest, sora, healthBefore, manaBefore,   // ★ 마나를 어디에 얼마 썼는지
+            SetVitals(sora, health, mana);
+            LogReturnVitals("경로 1", anchor, sora, healthBefore, manaBefore,   // ★ 마나를 어디에 얼마 썼는지
                 $"복귀 비용 {returnManaCost} + 회복 {manaSpent} → 체력 {healedHealth}" +
                 (healedHealth < minHealthAfterReturn ? $", 최소 보장 {minHealthAfterReturn} 적용" : ""));
 
-            ConsumeAnchor(latest, ReturnPath.Normal);
-            PlayerActionLog.Instance?.Record(RecordType.Loop, "death_return", latest.loopCountAtSave, latest.anchorId,
-                payload: PlayerActionLog.EncodeDayHour(latest.day, latest.hour));
+            ConsumeAnchor(anchor, ReturnPath.Normal);
+            PlayerActionLog.Instance?.Record(RecordType.Loop, "death_return", anchor.loopCountAtSave, anchor.anchorId,
+                payload: PlayerActionLog.EncodeDayHour(anchor.day, anchor.hour));
             PlayerActionLog.Instance?.RecordVitals();   // ★ 회귀 직후의 체력·마나
-            LoadScene(latest.sceneID, latest.position, latest.day, latest.hour);
+            LoadScene(anchor.sceneID, anchor.position, anchor.day, anchor.hour);
         }
-        else if (latest != null)                                    // [경로 2] 마나 부족 강제 복귀
+        else if (option.path == ReturnPath.Forced)                  // [경로 2] 마나 부족 강제 복귀
         {
             // ★ 기억은 되돌리지 않는다 (기존에는 RestoreAcquired로 기억까지 되돌렸다)
             // ★ 2-C — 경로 2는 세계와 몸을 닻 시점으로. 몸 덩어리에 레벨·공방민·피로도·체력·마나가 모두 들어 있다
             //   (기존: RestoreWorldState + RestoreBody + SetVitals를 따로 호출, 피로도는 빠져 있었다)
-            BeginLoopFromAnchor(latest, sora.loopCount, ReturnPath.Forced);   // ★ 3-A
-            RestoreFromAnchor(latest, RecordLayerMask.World | RecordLayerMask.Body);
-            VerifyRecordSnapshot(latest, RecordLayerMask.World | RecordLayerMask.Body);
-            LogReturnVitals("경로 2", latest, sora, healthBefore, manaBefore,
-                $"닻 시점 값으로 (레벨 {sora.level}), 정신력 -{forcedReturnMentalPenalty}");   // ★ 2-C-2 — 복원된 몸에서 읽는다 (닻의 level 필드 제거)
-            sora.LoseMental(forcedReturnMentalPenalty);
+            BeginLoopFromAnchor(anchor, sora.loopCount, ReturnPath.Forced);   // ★ 3-A
+            RestoreFromAnchor(anchor, RecordLayerMask.World | RecordLayerMask.Body);
+            VerifyRecordSnapshot(anchor, RecordLayerMask.World | RecordLayerMask.Body);
+            LogReturnVitals("경로 2", anchor, sora, healthBefore, manaBefore,
+                $"닻 시점 값으로 (레벨 {sora.level}), 정신력 -{option.mentalLoss}");   // ★ 3-B — 선택지에 보여준 값
+            sora.LoseMental(option.mentalLoss);
 
-            ConsumeAnchor(latest, ReturnPath.Forced);
-            PlayerActionLog.Instance?.Record(RecordType.Loop, "death_return", latest.loopCountAtSave, latest.anchorId,
-                payload: PlayerActionLog.EncodeDayHour(latest.day, latest.hour));
+            ConsumeAnchor(anchor, ReturnPath.Forced);
+            PlayerActionLog.Instance?.Record(RecordType.Loop, "death_return", anchor.loopCountAtSave, anchor.anchorId,
+                payload: PlayerActionLog.EncodeDayHour(anchor.day, anchor.hour));
             PlayerActionLog.Instance?.RecordVitals();   // ★ 회귀 직후의 체력·마나
-            LoadScene(latest.sceneID, latest.position, latest.day, latest.hour);
+            LoadScene(anchor.sceneID, anchor.position, anchor.day, anchor.hour);
         }
-        else                                                        // [경로 3] 닻 없음 — Day 1부터
+        else                                                        // [경로 3] Day 1부터 — 닻이 있어도 고를 수 있다 (3-B)
         {
             StartNewLoopFromDay1(sora, null);   // ★ 2-B — 디버그 "다음 회차로"와 같은 절차를 쓰도록 함수로 뺐다
+            if (option.mentalLoss > 0) sora.LoseMental(option.mentalLoss);   // ★ 3-B — 지금은 0 (정신력 충격은 다음 작업)
         }
     }
 

@@ -419,15 +419,15 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     // 덩어리 안의 키. 바꾸지 않는다
     private const string StateKeyFatigue = "fatigue";
     public const string StateKeyLevel = "level";   // ★ 2-C-2 — 오버뷰 창이 닻 레벨을 읽으려고 공개
-    private const string StateKeyMaxHealth = "max_health";
-    private const string StateKeyMaxMana = "max_mana";
+    public const string StateKeyMaxHealth = "max_health";   // ★ 3-B — 닻 선택지가 스냅샷에서 예상 값을 읽으려고 공개
+    public const string StateKeyMaxMana = "max_mana";       // ★ 3-B
     private const string StateKeyExp = "exp";
     private const string StateKeyExpToNext = "exp_to_next";
     private const string StateKeyAttack = "attack_base";
     private const string StateKeyDefense = "defense_base";
     private const string StateKeyAgility = "agility_base";
-    private const string StateKeyHealth = "health";   // ★ 현재 HP
-    private const string StateKeyMana = "mana";       // ★ 현재 MP
+    public const string StateKeyHealth = "health";   // ★ 현재 HP (3-B — 공개)
+    public const string StateKeyMana = "mana";       // ★ 현재 MP (3-B — 공개)
 
     public string RecordId => RecordIds.SoraBody;
     public RecordLayer Layer => RecordLayer.Body;

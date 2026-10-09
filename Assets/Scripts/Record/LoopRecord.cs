@@ -41,6 +41,7 @@ public class LoopRecord
     public LoopEndType endType = LoopEndType.None;
     public string endingTitleKey;    // 스토리 사망·결말의 제목 키 (3-C)
     public string deathCauseKey;     // 일반 사망의 사인 키 (3-B)
+    public string deathCauseSource;  // ★ 3-B — 사인의 대상 (보스전이면 보스 NPC 키). 이름 글자가 아니라 키 — 표시할 때 지금 아는 이름으로 바꾼다
 
     // 끝난 뒤 고른 지점 — 다음 회차를 열 때 채운다
     public int returnAnchorId;       // 고른 닻. Day 1이면 0

@@ -123,6 +123,7 @@ public class NPCManager : Singleton<NPCManager>, IRecordable   // ★ 기록 시
         if (!_defeatFlowActive) return;
         if (data == null || data.EventName != _defeatBossName) return;
 
+        string bossKey = _defeatBossName;   // ★ 3-B — 아래에서 비우기 전에 사인의 대상으로 붙잡아 둔다
         _defeatFlowActive = false;
         _defeatBossName = null;
 
@@ -130,7 +131,8 @@ public class NPCManager : Singleton<NPCManager>, IRecordable   // ★ 기록 시
         _pendingDefeatLoop = false;
 
         Debug.Log("[전투] 패배 대사 종료 — 회귀를 시작합니다");
-        TimeLoopManager.Instance?.HandleDeath();
+        var loop = TimeLoopManager.Instance;
+        loop?.HandleDeath(loop.deathCauseBattleKey, bossKey);   // ★ 3-B — 사인: 보스전 패배 + 보스 NPC 키 (표시 이름이 아니라 키)
     }
 
     private void InitializeDefaultNPCData()

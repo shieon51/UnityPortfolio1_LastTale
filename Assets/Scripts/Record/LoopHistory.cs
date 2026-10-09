@@ -82,7 +82,8 @@ public static class LoopHistory
     }
 
     // 지금 회차를 닫는다. 회귀 절차의 맨 처음에 부른다 (그 뒤의 기록은 모두 새 회차의 것이다)
-    public static void EndLoop(LoopEndType endType, Snapshot endSnapshot, string endingTitleKey = null, string deathCauseKey = null)
+    public static void EndLoop(LoopEndType endType, Snapshot endSnapshot, string endingTitleKey = null,
+                               string deathCauseKey = null, string deathCauseSource = null)   // ★ 3-B — 사인의 대상
     {
         var loop = Current;
         if (loop == null) { Debug.LogWarning("[LoopHistory] 닫을 회차가 없습니다"); return; }
@@ -93,6 +94,7 @@ public static class LoopHistory
         loop.endSnapshot = endSnapshot;
         loop.endingTitleKey = endingTitleKey;
         loop.deathCauseKey = deathCauseKey;
+        loop.deathCauseSource = deathCauseSource;   // ★ 3-B
     }
 
     // 지금까지 붙은 마지막 순번 (기록이 하나도 없으면 0)
