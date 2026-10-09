@@ -5888,6 +5888,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   inkJSON: {fileID: 4900000, guid: 9f7eb6bc585eb2e4387e91478be1bbe5, type: 3}
+  defaultMilestoneImportance: 1
 --- !u!1 &1150955278
 GameObject:
   m_ObjectHideFlags: 0
@@ -6863,10 +6864,18 @@ MonoBehaviour:
   anchorMarkerPrefab: {fileID: 8763291670681878086, guid: 0b3ac8fd9b680294aad0d2044f12b41d, type: 3}
   consumeAnchorOnUse: 1
   discardLaterAnchorsOnTravel: 1
+  mentalShockFormula: {fileID: 11400000, guid: 8ee6c4893b76abd4080d15cfe2542406, type: 2}
   forcedReturnMentalPenalty: 10
   deathReturnHealTargetRatio: 0.5
   healthPerMana: 2
   minHealthAfterReturn: 10
+  deathCauseDefaultKey: death_cause_monster
+  deathCauseBattleKey: death_cause_battle
+  summaryRules:
+    bossBattleImportance: 2
+    soulRecordImportance: 1
+    includeTrainingBattles: 0
+  waitForReturnChoiceInEditor: 0
   verifyRecordSnapshot: 1
   levelsPerExtraAnchor: 10
   minAnchorCount: 1
