@@ -72,9 +72,19 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     public int MaxAnchorCountFor(SoraStats sora)
        => sora == null ? minAnchorCount : MaxAnchorCount(sora.highestLevelReached);
 
+    // ★ 2-C — 파트 시작 스냅샷 (1회차 Day 1을 시작하는 순간). 경로 3은 세계와 몸을 이것으로 되돌린다 (설계 4장).
+    //   세이브가 생기면(4단계) 파일에 함께 저장해야 한다. 지금은 플레이를 시작할 때마다 새로 찍는다
+    private Snapshot _partStartSnapshot;
+
     private void Awake()
     {
         if (SceneLoader.Instance != null) SceneLoader.Instance.OnSceneLoaded += HandleSceneLoaded;
+    }
+
+    // ★ 모든 IRecordable은 Awake에서 등록되고 NPC 데이터도 Awake에서 채워지므로, 첫 Start 시점이면 빠지는 덩어리가 없다
+    private void Start()
+    {
+        _partStartSnapshot = RecordSystem.TakeSnapshot(SnapshotReason.PartStart);
     }
     private void OnDestroy()
     {
@@ -226,39 +236,39 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         PlayerActionLog.Instance?.Record(RecordType.AnchorRetracted, snapshot.anchorId.ToString(), snapshot.anchorId, 0);
     }
 
-    // ★ 세 경로에 흩어져 있던 복원 코드를 하나로 모음.
-    //   되돌리는 것은 "세계 쪽 상태"뿐이다. 기억·개인친밀도는 소라의 의지에 속해 유지된다
-    private void RestoreWorldState(TimeAnchorSnapshot snapshot)
+    // ★ 2-C — 닻 복원을 범용 스냅샷으로 교체했다 (기존: 매니저마다 옛 복원 함수를 손으로 호출).
+    //   mask가 정하는 층위만 되돌린다 — 경로 1·자발적은 World, 경로 2는 World + Body.
+    //   의지·플레이어 층위(기억, 개인친밀도, 영혼 레벨, 회차 수 등)는 mask에 없으므로 유지된다
+    private void RestoreFromAnchor(TimeAnchorSnapshot anchor, RecordLayerMask mask)
     {
-        if (snapshot == null) return;
+        if (anchor == null) return;
 
-        NPCManager.Instance.RestoreAffections(snapshot.npcAffections);
-        SuspicionManager.Instance.Restore(snapshot.npcSuspicions);
-        SuspicionManager.Instance.RestoreTrust(snapshot.npcTrustEarned);
-        SuspicionManager.Instance.RestoreLineCrossed(snapshot.npcLineCrossed);
-        MemoryManager.Instance.RestoreCounters(snapshot.counters);
-        PlayerActionLog.Instance.Restore(snapshot.actionLog);
+        if (anchor.recordSnapshot != null) RecordSystem.RestoreLayers(anchor.recordSnapshot, mask);
+        else Debug.LogError($"[TimeLoopManager] 닻 #{anchor.anchorId}에 범용 스냅샷이 없어 세계·몸을 되돌리지 못했습니다");
+
+        // [미결] 이번 흐름 기록의 층위 (설계 13-2-6). 3단계 LoopRecord 전까지 옛 동작대로 그 시점으로 되돌린다
+        PlayerActionLog.Instance.Restore(anchor.actionLog);
     }
 
-    // ★ 기록 시스템 2단계 — 옛 방식으로 복원한 직후의 상태가 닻의 범용 스냅샷과 같은지 비교만 한다.
-    //   다른 곳이 있으면 범용 스냅샷이 빠뜨린 값(또는 옛 복원이 빠뜨린 값)이다. 복원 교체 전 근거로 쓴다
+    // ★ 2-C — 복원 직후 상태가 기준 스냅샷과 같은지 비교한다. 이제는 복원 자체가 범용 스냅샷을 쓰므로,
+    //   불일치가 나오면 어떤 IRecordable의 ReadState가 값을 빠뜨렸다는 뜻이다 (자기 검증)
+    //   label: 로그에 찍을 기준 이름 ("닻 #3", "파트 시작")
     [System.Diagnostics.Conditional("UNITY_EDITOR"), System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
-    private void VerifyRecordSnapshot(TimeAnchorSnapshot anchor, RecordLayerMask mask)
+    private void VerifyRecordSnapshot(string label, Snapshot expected, RecordLayerMask mask)
     {
-        if (!verifyRecordSnapshot || anchor?.recordSnapshot == null) return;
+        if (!verifyRecordSnapshot || expected == null) return;
 
         var now = RecordSystem.TakeSnapshot(SnapshotReason.Verify, mask);
-        var diffs = RecordSystem.Compare(anchor.recordSnapshot, now, mask);
+        var diffs = RecordSystem.Compare(expected, now, mask);
         if (diffs.Count == 0)
-            Debug.Log($"[RecordSystem] 닻 #{anchor.anchorId} 검증 일치 ({mask}, 덩어리 {now.blocks.Count}개)");
+            Debug.Log($"[RecordSystem] {label} 검증 일치 ({mask}, 덩어리 {now.blocks.Count}개)");
         else
-            Debug.LogWarning($"[RecordSystem] 닻 #{anchor.anchorId} 검증 불일치 ({mask}, 덩어리 {now.blocks.Count}개) {diffs.Count}건\n- " + string.Join("\n- ", diffs)); // ★ 불일치 때도 덩어리 수 표시
+            Debug.LogWarning($"[RecordSystem] {label} 검증 불일치 ({mask}, 덩어리 {now.blocks.Count}개) {diffs.Count}건\n- " + string.Join("\n- ", diffs)); // ★ 불일치 때도 덩어리 수 표시
     }
 
-    // 몸 상태를 그 시점으로 되돌린다 (강제 복귀 전용)
-    // ★ 대입은 SoraStats.RestoreBodyFromAnchor로 옮겼다 (갱신 이벤트까지 한 곳에서 처리)
-    private void RestoreBody(SoraStats sora, TimeAnchorSnapshot snapshot)
-        => sora.RestoreBodyFromAnchor(snapshot);
+    [System.Diagnostics.Conditional("UNITY_EDITOR"), System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
+    private void VerifyRecordSnapshot(TimeAnchorSnapshot anchor, RecordLayerMask mask)
+        => VerifyRecordSnapshot($"닻 #{anchor.anchorId}", anchor.recordSnapshot, mask);
 
     // ★ currentHealth에 직접 대입하면 변경 이벤트가 발생하지 않아 HUD가 갱신되지 않는다.
     //   Heal/RecoverMana를 거쳐야 슬라이더가 즉시 따라온다
@@ -343,12 +353,12 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         sora.UseMana(returnManaCost);
         sora.loopCount++;                                     // 시간 역행이므로 회차 증가
 
-        RestoreWorldState(anchor);
-        VerifyRecordSnapshot(anchor, RecordLayerMask.World);   // ★ 자발적 회귀는 세계만 되돌린다
+        RestoreFromAnchor(anchor, RecordLayerMask.World);      // ★ 2-C — 자발적 회귀는 세계만 되돌린다
+        VerifyRecordSnapshot(anchor, RecordLayerMask.World);
         LogReturnVitals("자발적", anchor, sora, healthBefore, manaBefore, $"복귀 비용 {returnManaCost}");   // ★
         ConsumeAnchor(anchor, ReturnPath.Voluntary);          // ★ 1회용 + 이후 닻 소멸
 
-        // ★ 복원 뒤에 기록해야 한다. RestoreWorldState가 행적 로그를 그 시점으로 되돌리므로,
+        // ★ 복원 뒤에 기록해야 한다. RestoreFromAnchor가 행적 로그를 그 시점으로 되돌리므로,
         //   먼저 기록하면 복원 과정에서 지워진다
         // ★ 문구를 조립하지 않고 숫자만 남긴다 (회차 → before, 닻 번호 → after, 시각 → payload)
         PlayerActionLog.Instance?.Record(RecordType.Loop, "return_to_anchor", anchor.loopCountAtSave, anchor.anchorId,
@@ -374,8 +384,8 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         if (latest != null && sora.currentMana >= returnManaCost)   // [경로 1] 정상 복귀
         {
             sora.UseMana(returnManaCost);                           // 중간 시점으로 되돌아가는 힘
-            RestoreWorldState(latest);
-            VerifyRecordSnapshot(latest, RecordLayerMask.World);   // ★ 경로 1은 세계만 되돌린다
+            RestoreFromAnchor(latest, RecordLayerMask.World);      // ★ 2-C — 경로 1은 세계만 되돌린다
+            VerifyRecordSnapshot(latest, RecordLayerMask.World);
 
             // ★ 몸은 유지되므로 죽은 몸을 남은 마나로 회복한다 (마나를 생명력으로 바꿔 쓴다, 기획서 7-2)
             int healedHealth = HealthFromMana(sora, out int manaSpent);
@@ -393,11 +403,10 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         else if (latest != null)                                    // [경로 2] 마나 부족 강제 복귀
         {
             // ★ 기억은 되돌리지 않는다 (기존에는 RestoreAcquired로 기억까지 되돌렸다)
-            RestoreWorldState(latest);
-            RestoreBody(sora, latest);
-            // ★ 몸이 닻 시점으로 돌아가므로 체력·마나도 그 시점 값 (기존: 최대치의 절반). 검증보다 먼저 맞춘다
-            SetVitals(sora, latest.currentHealth, latest.currentMana);
-            VerifyRecordSnapshot(latest, RecordLayerMask.World | RecordLayerMask.Body);   // ★ 경로 2는 세계와 몸
+            // ★ 2-C — 경로 2는 세계와 몸을 닻 시점으로. 몸 덩어리에 레벨·공방민·피로도·체력·마나가 모두 들어 있다
+            //   (기존: RestoreWorldState + RestoreBody + SetVitals를 따로 호출, 피로도는 빠져 있었다)
+            RestoreFromAnchor(latest, RecordLayerMask.World | RecordLayerMask.Body);
+            VerifyRecordSnapshot(latest, RecordLayerMask.World | RecordLayerMask.Body);
             LogReturnVitals("경로 2", latest, sora, healthBefore, manaBefore,
                 $"닻 시점 값으로 (레벨 {latest.level}), 정신력 -{forcedReturnMentalPenalty}");   // ★
             sora.LoseMental(forcedReturnMentalPenalty);
@@ -426,12 +435,26 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         for (int i = _anchors.Count - 1; i >= 0; i--)
             DiscardAnchor(_anchors[i], RecordType.AnchorVanished, 0);
 
-        MemoryManager.Instance.ClearAllCounters();
-        NPCManager.Instance.ResetAffectionForNewLoop();
+        // ★ 2-C — 세계와 몸을 파트 시작 스냅샷으로 되돌린다 (설계 4장).
+        //   기존에는 시스템마다 초기화 함수를 따로 불러, 하나를 빠뜨리면 그 값만 남았다(피로도가 그랬다).
+        //   의지·플레이어 층위(기억, 영혼 레벨, 회차 수 등)는 mask에 없으므로 유지된다
+        const RecordLayerMask partStartMask = RecordLayerMask.World | RecordLayerMask.Body;
+        if (_partStartSnapshot != null)
+        {
+            RecordSystem.RestoreLayers(_partStartSnapshot, partStartMask);
+            VerifyRecordSnapshot("파트 시작", _partStartSnapshot, partStartMask);
+        }
+        else
+        {
+            // 스냅샷이 없을 때만(시작 전에 회귀가 불린 경우 등) 옛 초기화로 대신한다
+            Debug.LogWarning("[TimeLoopManager] 파트 시작 스냅샷이 없어 옛 초기화로 대신합니다");
+            MemoryManager.Instance.ClearAllCounters();
+            NPCManager.Instance.ResetAffectionForNewLoop();
+            sora.ResetBodyForNewLoop();                         // 영혼 레벨은 유지
+        }
+
         PlayerActionLog.Instance.ClearAll();
         PlayerActionLog.Instance.Record(RecordType.Loop, "full_reset", source: source);
-
-        sora.ResetBodyForNewLoop();                             // ★ 영혼 레벨은 유지
         PlayerActionLog.Instance?.RecordVitals();   // ★ 회귀 직후의 체력·마나
 
         var cfg = SceneLoader.Instance.startConfig;

@@ -434,7 +434,8 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     // 몸: TimeAnchorSnapshot의 몸 필드 + 피로도(공·방·민과 같은 취급, 2-B 결정) + 현재 HP·MP
     // ★ 현재 HP·MP도 몸에 넣었다 (2026-10-09 결정). 몸을 되돌리는 경로 2는 닻 시점의 HP·MP로 돌아간다.
     //   몸을 유지하는 경로 1은 몸 층위를 복원하지 않고, 남은 마나로 회복한다 (기획서 7-2)
-    // ※ 피로도는 옛 복원(RestoreBodyFromAnchor·ResetBodyForNewLoop)에 없어, 2-C에서 복원을 교체해야 실제로 되돌아간다
+    // ★ 2-C — 경로 2·3이 RecordSystem.RestoreLayers로 이 덩어리를 읽으므로 피로도도 되돌아간다.
+    //   RestoreBodyFromAnchor는 이제 호출하는 곳이 없다 (2-C-2에서 TimeAnchorSnapshot 손 나열 필드와 함께 제거)
     // 덩어리 안의 키. 바꾸지 않는다
     private const string StateKeyFatigue = "fatigue";
     private const string StateKeyLevel = "level";
@@ -467,7 +468,7 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         writer.WriteInt(StateKeyMana, currentMana);         // ★
     }
 
-    // ★ RestoreBodyFromAnchor와 같은 대입·갱신 경로. 닻 복원을 교체하면 그 함수는 이것으로 대체된다
+    // ★ 경로 2(닻)·경로 3(파트 시작)의 몸 복원이 이 함수를 거친다 (2-C)
     public void ReadState(StateReader reader, int version)
     {
         level = reader.ReadInt(StateKeyLevel, level);
