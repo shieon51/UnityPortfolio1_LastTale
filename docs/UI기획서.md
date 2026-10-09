@@ -1942,3 +1942,4 @@ UI 구현에 들어갈 때 함께 정리한다. 확실도가 "확인 필요"인 
 | 컴파일 후 Visual Studio 오류 목록 | `FindObjectOfType`·`FindObjectsOfType`·`OverlapCircleNonAlloc`(CS0618)과 `PlayableCharacter.OnValidate`(CS0114) 경고가 없다 |
 | 원웨이 플랫폼 아래에서 점프·위에서 아래 키 | 이전과 같이 아래에서 통과해 올라서고, 아래 키로 내려간다 |
 | 오버뷰·보스 AI 프로필 창에서 "라이브 적용", 전투 중 연출 대사 말풍선 위치, 스킬 오버뷰 창 열기 | 이전과 같이 동작한다 |
+| 마커 인스펙터에서 Ink Node Name을 그래프에 없는 이름(예: `Liel_Day1_002`)으로 입력 (2026-10-09) | 이름이 그대로 유지된다. "기존 knot에서 선택" 팝업에 "(직접 입력: Liel_Day1_002)"가 보인다. 팝업에서 다른 knot을 고르면 그때만 이름이 바뀌고 Ctrl+Z로 되돌아간다 |

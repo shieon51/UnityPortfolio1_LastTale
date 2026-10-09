@@ -174,13 +174,30 @@ public class EventMarkerEditor : Editor
 
         // 기존 knot에서 고르기 (그래프 먼저 만든 경우)
         GUILayout.Space(5);
+        // ★ 예전에는 목록에 없는 이름이면 IndexOf가 -1 → 팝업이 0번을 보여주고, 변경 확인 없이 대입해
+        //    매 repaint마다 이름이 0번 knot으로 덮어써졌다(직접 입력 불가). 리엘 Day 1 마커가 Day 5 노드가 된 원인
+        //    → 목록에 없는 이름은 맨 앞에 "(직접 입력: 이름)"으로 보여주고, 사용자가 팝업을 바꿨을 때만 반영한다
         int current = knots.IndexOf(marker.InkNodeName);
-        int picked = EditorGUILayout.Popup("기존 knot에서 선택", Mathf.Max(0, current), knots.ToArray());
-        if (picked >= 0 && picked < knots.Count && knots[picked] != marker.InkNodeName && !knots[picked].StartsWith("("))
+        var options = new System.Collections.Generic.List<string>(knots);
+        int offset = 0;
+        if (current < 0)
         {
-            Undo.RecordObject(marker, "Set Ink Node");
-            marker.InkNodeName = knots[picked];
-            EditorUtility.SetDirty(marker);
+            string shown = string.IsNullOrWhiteSpace(marker.InkNodeName) ? "(비어 있음)" : $"(직접 입력: {marker.InkNodeName})";
+            options.Insert(0, shown);
+            offset = 1;
+        }
+
+        EditorGUI.BeginChangeCheck();
+        int picked = EditorGUILayout.Popup("기존 knot에서 선택", current < 0 ? 0 : current + offset, options.ToArray());
+        if (EditorGUI.EndChangeCheck())
+        {
+            int knotIndex = picked - offset;
+            if (knotIndex >= 0 && knotIndex < knots.Count && knots[knotIndex] != marker.InkNodeName && !knots[knotIndex].StartsWith("("))
+            {
+                Undo.RecordObject(marker, "Set Ink Node");
+                marker.InkNodeName = knots[knotIndex];
+                EditorUtility.SetDirty(marker);
+            }
         }
     }
 
