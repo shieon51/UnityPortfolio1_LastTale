@@ -27,9 +27,13 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
     public bool discardLaterAnchorsOnTravel = true;
     [Tooltip("마나 부족 강제 복귀(경로 2) 시 깎이는 정신력")]
     public int forcedReturnMentalPenalty = 10;
-    [Tooltip("강제 복귀 후 회복되는 체력 비율")]
-    [Range(0.1f, 1f)] public float forcedReturnHealthRatio = 0.5f;
-    [Tooltip("정상 복귀 시 최소로 보장되는 체력")]
+    // ★ 경로 2는 닻 시점의 체력·마나로 돌아가므로 비율 설정(forcedReturnHealthRatio)을 없앴다
+    [Header("경로 1 회복 — 남은 마나를 생명력으로 바꿔 몸을 회복한다 (기획서 7-2)")]
+    [Tooltip("경로 1로 돌아올 때 마나로 회복시키는 목표 체력 (최대 체력 대비 비율)")]
+    [Range(0f, 1f)] public float deathReturnHealTargetRatio = 0.5f;   // ★
+    [Tooltip("마나 1로 회복하는 체력. 0이면 마나로 회복하지 않는다")]
+    public float healthPerMana = 2f;                                  // ★
+    [Tooltip("정상 복귀 시 마나가 모자라도 최소로 보장되는 체력")]
     public int minHealthAfterReturn = 10;
     //[Tooltip("닻 없이 사망했을 때(경로 3) 되돌아가는 몸 레벨")]
     //public int resetBodyLevel = 1;
@@ -163,7 +167,8 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
 
         var sora = (SoraStats)PlayerManager.Instance.CurrentCharacter;
 
-        sora.UseMana(setAnchorManaCost);
+        // ★ 설치 비용은 스냅샷을 찍은 뒤에 낸다 — 닻은 "내리기 직전"의 순간을 붙잡는다 (2026-10-09 결정).
+        //   경로 2로 돌아오면 설치에 쓴 마나도 그 시점 값으로 돌아온다 (닻에 넣은 마력이 풀려나는 것)
         var snapshot = new TimeAnchorSnapshot
         {
             anchorId = ++_anchorSerial,                       // ★ 누적 번호
@@ -179,6 +184,8 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             attackBase = sora.attack.BaseValue,       // ★ 공·방·민도 몸 상태로 함께 저장
             defenseBase = sora.defense.BaseValue,
             agilityBase = sora.agility.BaseValue,
+            currentHealth = sora.currentHealth,       // ★ 경로 2에서 돌아갈 체력·마나 (설치 마나를 내기 전의 값)
+            currentMana = sora.currentMana,
             // 순서를 보존한다. '의지' 층위인 개인친밀도는 담지 않는다
             acquiredMemoryFlags = new List<string>(MemoryManager.Instance.GetAllAcquired()),
             npcAffections = NPCManager.Instance.SnapshotAffections(),    
@@ -191,6 +198,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             // ★ 기록 시스템 2단계 — 같은 순간을 범용 스냅샷으로도 찍어 둔다 (지금은 비교용, 복원에는 쓰지 않음)
             recordSnapshot = RecordSystem.TakeSnapshot(SnapshotReason.Anchor),
         };
+        sora.UseMana(setAnchorManaCost);   // ★ 스냅샷 뒤로 옮김 (기존: 스냅샷 전에 내서 31 → 11로 저장됐다)
         _anchors.Add(snapshot);
 
         if (anchorMarkerPrefab != null)
@@ -244,7 +252,7 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         if (diffs.Count == 0)
             Debug.Log($"[RecordSystem] 닻 #{anchor.anchorId} 검증 일치 ({mask}, 덩어리 {now.blocks.Count}개)");
         else
-            Debug.LogWarning($"[RecordSystem] 닻 #{anchor.anchorId} 검증 불일치 ({mask}) {diffs.Count}건\n- " + string.Join("\n- ", diffs));
+            Debug.LogWarning($"[RecordSystem] 닻 #{anchor.anchorId} 검증 불일치 ({mask}, 덩어리 {now.blocks.Count}개) {diffs.Count}건\n- " + string.Join("\n- ", diffs)); // ★ 불일치 때도 덩어리 수 표시
     }
 
     // 몸 상태를 그 시점으로 되돌린다 (강제 복귀 전용)
@@ -260,6 +268,30 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         sora.currentMana = 0;
         sora.Heal(Mathf.Clamp(health, 1, sora.maxHealth));
         sora.RecoverMana(Mathf.Clamp(mana, 0, sora.maxMana));
+    }
+
+    // ★ 회귀 직후 체력·마나가 어떻게 바뀌었는지 콘솔에 한 줄로 남긴다 (테스트·밸런스 확인용, 에디터·개발 빌드만)
+    [System.Diagnostics.Conditional("UNITY_EDITOR"), System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
+    private void LogReturnVitals(string path, TimeAnchorSnapshot anchor, SoraStats sora, int healthBefore, int manaBefore, string detail)
+    {
+        Debug.Log($"[회귀] {path} → 닻 #{anchor.anchorId} | 체력 {healthBefore} → {sora.currentHealth}/{sora.maxHealth}, " +
+                  $"마나 {manaBefore} → {sora.currentMana}/{sora.maxMana} | {detail}");
+    }
+
+    // ★ 경로 1 회복량. 목표 체력(최대 체력 × 비율)까지, 남은 마나가 허락하는 만큼만 회복한다.
+    //   돌려주는 값은 회복 후 체력, manaSpent는 그 회복에 쓴 마나
+    private int HealthFromMana(SoraStats sora, out int manaSpent)
+    {
+        manaSpent = 0;
+        if (healthPerMana <= 0f) return sora.currentHealth;
+
+        int target = Mathf.RoundToInt(sora.maxHealth * deathReturnHealTargetRatio);
+        int need = Mathf.Max(0, target - sora.currentHealth);
+        int affordable = Mathf.FloorToInt(sora.currentMana * healthPerMana);
+        int heal = Mathf.Min(need, affordable);
+
+        manaSpent = Mathf.Min(sora.currentMana, Mathf.CeilToInt(heal / healthPerMana));
+        return sora.currentHealth + heal;
     }
 
     // ★ 사용한 닻을 소모하고, 과거로 갔다면 그보다 뒤의 닻도 정리한다 (기획서 7-5)
@@ -307,11 +339,13 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             return false;
         }
 
+        int healthBefore = sora.currentHealth, manaBefore = sora.currentMana;   // ★ 회귀 로그용
         sora.UseMana(returnManaCost);
         sora.loopCount++;                                     // 시간 역행이므로 회차 증가
 
         RestoreWorldState(anchor);
         VerifyRecordSnapshot(anchor, RecordLayerMask.World);   // ★ 자발적 회귀는 세계만 되돌린다
+        LogReturnVitals("자발적", anchor, sora, healthBefore, manaBefore, $"복귀 비용 {returnManaCost}");   // ★
         ConsumeAnchor(anchor, ReturnPath.Voluntary);          // ★ 1회용 + 이후 닻 소멸
 
         // ★ 복원 뒤에 기록해야 한다. RestoreWorldState가 행적 로그를 그 시점으로 되돌리므로,
@@ -335,13 +369,20 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
         sora.loopCount++;
 
         var latest = _anchors.Count > 0 ? _anchors[_anchors.Count - 1] : null;
+        int healthBefore = sora.currentHealth, manaBefore = sora.currentMana;   // ★ 회귀 로그용
 
         if (latest != null && sora.currentMana >= returnManaCost)   // [경로 1] 정상 복귀
         {
-            sora.UseMana(returnManaCost);
+            sora.UseMana(returnManaCost);                           // 중간 시점으로 되돌아가는 힘
             RestoreWorldState(latest);
             VerifyRecordSnapshot(latest, RecordLayerMask.World);   // ★ 경로 1은 세계만 되돌린다
-            SetVitals(sora, Mathf.Max(minHealthAfterReturn, sora.currentHealth), sora.currentMana);   // ★
+
+            // ★ 몸은 유지되므로 죽은 몸을 남은 마나로 회복한다 (마나를 생명력으로 바꿔 쓴다, 기획서 7-2)
+            int healedHealth = HealthFromMana(sora, out int manaSpent);
+            SetVitals(sora, Mathf.Max(minHealthAfterReturn, healedHealth), sora.currentMana - manaSpent);
+            LogReturnVitals("경로 1", latest, sora, healthBefore, manaBefore,   // ★ 마나를 어디에 얼마 썼는지
+                $"복귀 비용 {returnManaCost} + 회복 {manaSpent} → 체력 {healedHealth}" +
+                (healedHealth < minHealthAfterReturn ? $", 최소 보장 {minHealthAfterReturn} 적용" : ""));
 
             ConsumeAnchor(latest, ReturnPath.Normal);
             PlayerActionLog.Instance?.Record(RecordType.Loop, "death_return", latest.loopCountAtSave, latest.anchorId,
@@ -354,11 +395,12 @@ public class TimeLoopManager : Singleton<TimeLoopManager>
             // ★ 기억은 되돌리지 않는다 (기존에는 RestoreAcquired로 기억까지 되돌렸다)
             RestoreWorldState(latest);
             RestoreBody(sora, latest);
+            // ★ 몸이 닻 시점으로 돌아가므로 체력·마나도 그 시점 값 (기존: 최대치의 절반). 검증보다 먼저 맞춘다
+            SetVitals(sora, latest.currentHealth, latest.currentMana);
             VerifyRecordSnapshot(latest, RecordLayerMask.World | RecordLayerMask.Body);   // ★ 경로 2는 세계와 몸
+            LogReturnVitals("경로 2", latest, sora, healthBefore, manaBefore,
+                $"닻 시점 값으로 (레벨 {latest.level}), 정신력 -{forcedReturnMentalPenalty}");   // ★
             sora.LoseMental(forcedReturnMentalPenalty);
-            SetVitals(sora,
-                Mathf.Max(minHealthAfterReturn, Mathf.RoundToInt(sora.maxHealth * forcedReturnHealthRatio)),
-                Mathf.RoundToInt(sora.maxMana * forcedReturnHealthRatio));
 
             ConsumeAnchor(latest, ReturnPath.Forced);
             PlayerActionLog.Instance?.Record(RecordType.Loop, "death_return", latest.loopCountAtSave, latest.anchorId,

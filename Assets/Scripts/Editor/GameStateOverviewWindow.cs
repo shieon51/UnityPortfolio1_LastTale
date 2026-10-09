@@ -63,6 +63,12 @@ public class GameStateOverviewWindow : EditorWindow
 
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
         EditorGUILayout.LabelField($"레벨: {c.level}   HP: {c.currentHealth}/{c.maxHealth}   MP: {c.currentMana}/{c.maxMana}");
+        // ★ 공·방·민 — 현재값(요정화 등 보정 포함)과 기본값(훈련으로 오른 값, 경로 2·3에서 되돌아가는 값)
+        EditorGUILayout.LabelField($"공격: {c.attack.GetValue()} (기본 {c.attack.BaseValue})   " +
+                                   $"방어: {c.defense.GetValue()} (기본 {c.defense.BaseValue})   " +
+                                   $"민첩: {c.agility.GetValue()} (기본 {c.agility.BaseValue})");
+        if (TimeManager.Instance != null)   // ★ 회귀 후 시각 확인용. 표시는 GameTimeFormatter를 거친다
+            EditorGUILayout.LabelField($"현재 시각: {GameTimeFormatter.FormatDayTime(TimeManager.Instance.currentDay, TimeManager.Instance.currentHour)}");
         if (c is SoraStats sora)
         {
             EditorGUI.BeginChangeCheck();

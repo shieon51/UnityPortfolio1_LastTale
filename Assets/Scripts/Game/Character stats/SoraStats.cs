@@ -431,7 +431,9 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
 
     // ---------------- IRecordable (★ 기록 시스템 2단계) ----------------
     // 이 클래스 자신은 몸 층위. 의지 층위는 WillState, 플레이어 층위(회차 수)는 LoopState 어댑터가 맡는다
-    // 몸: TimeAnchorSnapshot의 몸 필드 + 피로도(공·방·민과 같은 취급, 2-B 결정). 현재 HP·MP는 회귀 경로마다 따로 정하므로 담지 않는다
+    // 몸: TimeAnchorSnapshot의 몸 필드 + 피로도(공·방·민과 같은 취급, 2-B 결정) + 현재 HP·MP
+    // ★ 현재 HP·MP도 몸에 넣었다 (2026-10-09 결정). 몸을 되돌리는 경로 2는 닻 시점의 HP·MP로 돌아간다.
+    //   몸을 유지하는 경로 1은 몸 층위를 복원하지 않고, 남은 마나로 회복한다 (기획서 7-2)
     // ※ 피로도는 옛 복원(RestoreBodyFromAnchor·ResetBodyForNewLoop)에 없어, 2-C에서 복원을 교체해야 실제로 되돌아간다
     // 덩어리 안의 키. 바꾸지 않는다
     private const string StateKeyFatigue = "fatigue";
@@ -443,6 +445,8 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
     private const string StateKeyAttack = "attack_base";
     private const string StateKeyDefense = "defense_base";
     private const string StateKeyAgility = "agility_base";
+    private const string StateKeyHealth = "health";   // ★ 현재 HP
+    private const string StateKeyMana = "mana";       // ★ 현재 MP
 
     public string RecordId => RecordIds.SoraBody;
     public RecordLayer Layer => RecordLayer.Body;
@@ -459,6 +463,8 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         writer.WriteInt(StateKeyDefense, defense.BaseValue);
         writer.WriteInt(StateKeyAgility, agility.BaseValue);
         writer.WriteInt(StateKeyFatigue, currentFatigue);   // ★ 2-B
+        writer.WriteInt(StateKeyHealth, currentHealth);     // ★
+        writer.WriteInt(StateKeyMana, currentMana);         // ★
     }
 
     // ★ RestoreBodyFromAnchor와 같은 대입·갱신 경로. 닻 복원을 교체하면 그 함수는 이것으로 대체된다
@@ -474,6 +480,14 @@ public class SoraStats : PlayableCharacter, IFormStageProvider, IActionLockSourc
         defense.SetBaseValue(reader.ReadInt(StateKeyDefense, defense.BaseValue));
         agility.SetBaseValue(reader.ReadInt(StateKeyAgility, agility.BaseValue));
         currentFatigue = Mathf.Clamp(reader.ReadInt(StateKeyFatigue, currentFatigue), 0, maxFatigue);   // ★ 2-B
+
+        // ★ HP·MP는 직접 대입하면 HUD가 갱신되지 않으므로 0으로 비운 뒤 Heal/RecoverMana를 거친다
+        int health = Mathf.Clamp(reader.ReadInt(StateKeyHealth, currentHealth), 1, maxHealth);
+        int mana = Mathf.Clamp(reader.ReadInt(StateKeyMana, currentMana), 0, maxMana);
+        currentHealth = 0;
+        currentMana = 0;
+        Heal(health);
+        RecoverMana(mana);
 
         CallProgressionChanged();
         CallSpecialStatChanged();   // ★ 피로도 HUD 갱신

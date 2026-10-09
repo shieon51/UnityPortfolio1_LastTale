@@ -16,6 +16,8 @@ public class TimeAnchorSnapshot
     public int expToNextLevel;
     // ★ 공·방·민 기본값 (훈련으로 오른 값 포함). 강제 복귀 시 레벨과 함께 되돌린다 (기획서 11-3)
     public int attackBase, defenseBase, agilityBase;
+    // ★ 닻을 내린 직후(설치 마나를 낸 뒤)의 체력·마나. 경로 2는 몸이 이 시점으로 돌아가므로 체력·마나도 이 값이 된다 (기획서 7-2)
+    public int currentHealth, currentMana;
 
     // ★ HashSet은 순서를 보장하지 않아 복원 시 획득 순서가 사라진다 → List로 변경
     //   (지금은 기억을 되돌리지 않지만, 기록·디버그 표시에 순서가 쓰인다)

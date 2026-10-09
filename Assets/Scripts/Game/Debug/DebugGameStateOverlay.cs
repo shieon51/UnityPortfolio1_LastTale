@@ -79,6 +79,10 @@ public class DebugGameStateOverlay : Singleton<DebugGameStateOverlay>
         {
             sb.AppendLine($"[플레이어] 몸 레벨 {player.level} (영혼 레벨 {player.highestLevelReached}) " +
                           $"HP {player.currentHealth}/{player.maxHealth} MP {player.currentMana}/{player.maxMana}");
+            // ★ 공·방·민 — 현재값(보정 포함)과 괄호 안 기본값
+            sb.AppendLine($"  공격 {player.attack.GetValue()}({player.attack.BaseValue}) " +
+                          $"방어 {player.defense.GetValue()}({player.defense.BaseValue}) " +
+                          $"민첩 {player.agility.GetValue()}({player.agility.BaseValue})");
 
             if (player is SoraStats sora)
             {
@@ -87,8 +91,9 @@ public class DebugGameStateOverlay : Singleton<DebugGameStateOverlay>
                               $"요정화 {sora.fairyStage}단계");
 
                 if (TimeManager.Instance != null)
-                    sb.AppendLine($"  시간결정체 {sora.timeCrystals}개  |  Day {TimeManager.Instance.currentDay} " +
-                                  $"{TimeManager.Instance.currentHour}시 (남은 시간 {TimeManager.Instance.timeCoins})");
+                    sb.AppendLine($"  시간결정체 {sora.timeCrystals}개  |  " +
+                                  $"{GameTimeFormatter.FormatDayTime(TimeManager.Instance.currentDay, TimeManager.Instance.currentHour)} " +   // ★ 직접 조립 대신 포맷터 (12/24시간제 설정을 따른다)
+                                  $"(남은 시간 {TimeManager.Instance.timeCoins})");
             }
         }
 
