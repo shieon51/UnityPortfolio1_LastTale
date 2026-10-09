@@ -62,6 +62,8 @@ feat: 한 줄 요약 (또는 fix:)
 - 시각 표시는 반드시 `GameTimeFormatter`를 거친다.
 - 에디터 도구는 상주 씬(`Persistent Scene`)과 맵 씬이 함께 열린 상태를 전제로 만든다. 맵 데이터(이벤트 마커 등)는 맵 씬에 둔다.
 - 텍스트 파일은 모두 UTF-8로 만든다(CP949 금지). 규칙은 루트 `.editorconfig`에 있다. 한글이 깨져 보이는 파일을 발견하면 고치기 전에 알린다.
+  - `.cs` 등 코드 파일은 UTF-8 **BOM 포함** + CRLF, `.md`는 BOM 없음. 파일을 통째로 다시 쓴 뒤에는 BOM·줄바꿈이 유지됐는지 확인한다(BOM이 빠지면 Visual Studio가 한글을 CP949로 잘못 읽을 수 있다).
+  - 커밋은 Bash heredoc(`git commit -F - <<'EOF'`)으로 한다. PowerShell 파이프로 메시지를 넘기면 메시지 앞에 BOM이 붙는다.
 - 회귀 기록은 복원(`RestoreFromAnchor`, 경로 3은 파트 시작 스냅샷 복원) 뒤에 남긴다.
 - 회귀로 되돌릴 상태는 `IRecordable`로 구현해 `RecordSystem`에 등록한다. 시스템마다 초기화·복원 함수를 따로 부르지 않는다.
 
