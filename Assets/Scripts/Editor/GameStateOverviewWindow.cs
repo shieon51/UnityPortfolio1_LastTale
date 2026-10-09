@@ -28,6 +28,23 @@ public class GameStateOverviewWindow : EditorWindow
         RecordType.MentalChange, RecordType.FatigueChange, RecordType.VitalsCheckpoint,
     };
 
+    // ★ 성능 — 예전에는 OnGUI 끝에서 Repaint()를 불러 플레이 중 매 에디터 틱마다 창 전체를 다시 그렸다.
+    //   기록이 수백 건 쌓이면 이 창 하나가 프레임을 크게 깎았다 → 정해진 주기로만 다시 그린다
+    [SerializeField] private float _repaintInterval = 0.25f;   // 다시 그리는 주기(초). 창 위쪽에서 바꾼다
+    [SerializeField] private int _maxLogRows = 200;            // 전체 행적 로그에 그릴 최근 기록 수
+    private double _nextRepaintTime;
+    private NPC[] _liveNpcs = System.Array.Empty<NPC>();       // ★ 그리기 한 번에 한 번만 찾는다 (예전: NPC마다 씬 전체 검색)
+
+    private void OnEnable() => EditorApplication.update += RepaintOnInterval;
+    private void OnDisable() => EditorApplication.update -= RepaintOnInterval;
+
+    private void RepaintOnInterval()
+    {
+        if (!Application.isPlaying || EditorApplication.timeSinceStartup < _nextRepaintTime) return;
+        _nextRepaintTime = EditorApplication.timeSinceStartup + Mathf.Max(0.05f, _repaintInterval);
+        Repaint();
+    }
+
     private void OnGUI()
     {
         if (!Application.isPlaying)
@@ -35,6 +52,15 @@ public class GameStateOverviewWindow : EditorWindow
             EditorGUILayout.HelpBox("Play 모드에서만 실시간 상태를 볼 수 있습니다.", MessageType.Info);
             return;
         }
+
+        // ★ 갱신 설정 (하드코딩 대신 창에서 조절)
+        EditorGUILayout.BeginHorizontal();
+        _repaintInterval = EditorGUILayout.FloatField(new GUIContent("갱신 주기(초)", "이 창을 다시 그리는 주기. 짧을수록 게임이 느려진다"), _repaintInterval);
+        _maxLogRows = Mathf.Max(10, EditorGUILayout.IntField(new GUIContent("로그 표시 수", "전체 행적 로그에 그릴 최근 기록 수. 많을수록 게임이 느려진다"), _maxLogRows));
+        EditorGUILayout.EndHorizontal();
+
+        if (Event.current.type == EventType.Layout)   // ★ Layout과 Repaint가 같은 목록을 쓰도록 Layout 때만 갱신
+            _liveNpcs = FindObjectsByType<NPC>(FindObjectsSortMode.None);
 
         _scroll = EditorGUILayout.BeginScrollView(_scroll);
         DrawPlayerSection();
@@ -51,8 +77,7 @@ public class GameStateOverviewWindow : EditorWindow
         EditorGUILayout.Space(10);
         DrawTimeAnchorSection();
         EditorGUILayout.EndScrollView();
-
-        Repaint(); // 실시간 갱신
+        // ★ 여기서 매번 부르던 Repaint()는 없앴다 — RepaintOnInterval이 주기마다 다시 그린다
     }
 
     private void DrawPlayerSection()
@@ -100,7 +125,7 @@ public class GameStateOverviewWindow : EditorWindow
 
             EditorGUILayout.LabelField($"모드: {data.currentMode}   관계 등급: {data.GetRelationshipTier()}");
 
-            var live = FindObjectsByType<NPC>(FindObjectsSortMode.None).FirstOrDefault(n => n.npcName == kvp.Key);
+            var live = _liveNpcs.FirstOrDefault(n => n != null && n.npcName == kvp.Key);   // ★ 미리 찾아 둔 목록에서
             if (live != null) EditorGUILayout.LabelField($"HP: {live.currentHealth}/{live.maxHealth}   MP: {live.currentMana}/{live.maxMana}");
 
             DrawNPCMemoryHierarchy(kvp.Key);
@@ -361,10 +386,22 @@ public class GameStateOverviewWindow : EditorWindow
 
         _hideFrequentRecords = EditorGUILayout.ToggleLeft("잦은 기록 숨기기 (시각·씬·경험치·정신력·피로도)", _hideFrequentRecords);
 
-        EditorGUI.indentLevel++;
-        foreach (var r in records)
+        // ★ 성능 — 최근 _maxLogRows건만 그린다 (예전: 전체 기록을 매번 문자열로 조립)
+        var shown = new List<ActionRecord>(Mathf.Min(_maxLogRows, records.Count));
+        int skipped = 0;
+        for (int i = records.Count - 1; i >= 0; i--)
         {
-            if (_hideFrequentRecords && FrequentTypes.Contains(r.type)) continue;
+            var rec = records[i];
+            if (_hideFrequentRecords && FrequentTypes.Contains(rec.type)) continue;
+            if (shown.Count < _maxLogRows) shown.Add(rec);
+            else skipped++;
+        }
+        shown.Reverse();   // 시간순으로
+
+        EditorGUI.indentLevel++;
+        if (skipped > 0) EditorGUILayout.LabelField($"… 이전 기록 {skipped}건 생략 (로그 표시 수를 늘리면 보인다)", EditorStyles.miniLabel);
+        foreach (var r in shown)
+        {
 
             string detail = r.valueBefore == r.valueAfter ? r.key : $"{r.key}: {r.valueBefore} → {r.valueAfter}";
             string extra = (string.IsNullOrEmpty(r.source) ? "" : $" ← {r.source}")

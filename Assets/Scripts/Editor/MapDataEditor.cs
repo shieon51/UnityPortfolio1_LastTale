@@ -842,19 +842,41 @@ public class MapDataEditor : EditorWindow
         if (oldMap.IsValid() && oldMap != opened) EditorSceneManager.CloseScene(oldMap, true);
         targetSceneID = id;
     }
+    // ★ 성능 — 맵 씬 판별 때마다 SceneTable.csv를 디스크에서 다시 읽었다(한 번 그릴 때 15번 이상).
+    //   파일 수정 시각이 바뀔 때만 다시 읽어 사전으로 들고 있는다
+    private readonly Dictionary<int, string> _sceneNameById = new();
+    private readonly Dictionary<string, int> _sceneIdByName = new();
+    private DateTime _sceneTableStamp = DateTime.MinValue;
+
+    private void EnsureSceneTable()
+    {
+        if (!File.Exists(sceneCsvPath)) { _sceneNameById.Clear(); _sceneIdByName.Clear(); _sceneTableStamp = DateTime.MinValue; return; }
+        DateTime stamp = File.GetLastWriteTimeUtc(sceneCsvPath);
+        if (stamp == _sceneTableStamp) return;
+
+        _sceneTableStamp = stamp;
+        _sceneNameById.Clear();
+        _sceneIdByName.Clear();
+        var lines = File.ReadAllLines(sceneCsvPath);
+        for (int i = 1; i < lines.Length; i++)
+        {
+            var c = lines[i].Split(',');
+            if (c.Length < 2 || !int.TryParse(c[0], out int id)) continue;
+            string sceneName = c[1].Trim();
+            _sceneNameById[id] = sceneName;
+            _sceneIdByName[sceneName] = id;
+        }
+    }
+
     private string GetSceneNameByID(int id)
     {
-        if (!File.Exists(sceneCsvPath)) return "Unknown";
-        var lines = File.ReadAllLines(sceneCsvPath);
-        for (int i = 1; i < lines.Length; i++) { var c = lines[i].Split(','); if (c.Length > 1 && int.Parse(c[0]) == id) return c[1].Trim(); }
-        return "Unknown";
+        EnsureSceneTable();
+        return _sceneNameById.TryGetValue(id, out var n) ? n : "Unknown";
     }
     private int GetSceneIDByName(string name)
     {
-        if (!File.Exists(sceneCsvPath)) return -1;
-        var lines = File.ReadAllLines(sceneCsvPath);
-        for (int i = 1; i < lines.Length; i++) { var c = lines[i].Split(','); if (c.Length > 1 && c[1].Trim() == name.Trim()) return int.Parse(c[0]); }
-        return -1;
+        EnsureSceneTable();
+        return name != null && _sceneIdByName.TryGetValue(name.Trim(), out var id) ? id : -1;
     }
     private void DetectCurrentSceneID() { Scene map = FindMapScene(); if (map.IsValid()) targetSceneID = GetSceneIDByName(map.name); } // ★ 활성 씬 대신 맵 씬
 
