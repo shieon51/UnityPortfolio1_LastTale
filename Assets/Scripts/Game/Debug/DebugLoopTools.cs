@@ -34,7 +34,6 @@ public static class DebugLoopTools
         MemoryManager.Instance.ClearAllCounters();
         NPCManager.Instance.ResetAllNPCData(); // ★ 추가 — 완전 리셋은 rememberAcrossLoops도 무시하고 전부 초기화
         DialogueManager.Instance.ResetStoryState();
-        PlayerActionLog.Instance.ClearAll(); // ★ 추가
         TimeManager.Instance.ResetToDay1();
 
         if (PlayerManager.Instance.CurrentCharacter is SoraStats sora)
@@ -42,6 +41,9 @@ public static class DebugLoopTools
             sora.loopCount = 0;
             // 레벨/경험치도 초기화하려면 PlayableCharacter에 리셋 메서드가 필요 — 아래 참고
         }
+        // ★ 기록 지우기는 다른 초기화가 모두 끝난 뒤, 회차 이력을 새로 열기 직전에 한다.
+        //   예전에는 ResetToDay1보다 먼저 지워, 시각을 되돌리며 남긴 기록이 옛 회차 번호(예: 11회차)로 새 세계에 남았다
+        PlayerActionLog.Instance.ClearAll();
         TimeLoopManager.Instance.ResetForHardReset();   // ★ 3-A — 닻·회차 이력도 지우고 첫 회차(0)를 새로 연다. loopCount = 0 뒤에 불러야 한다
 
         var cfg = SceneLoader.Instance.startConfig;

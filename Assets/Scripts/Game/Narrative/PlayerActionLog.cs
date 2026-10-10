@@ -208,7 +208,15 @@ public class PlayerActionLog : Singleton<PlayerActionLog>
     //   이제 Records는 세계 전체의 기록이고, "이번 흐름"은 회차 구간으로 계산한다 (부모 흐름의 앞부분 + 자기 구간)
     public List<ActionRecord> CurrentFlowRecords => LoopHistory.CurrentFlowRecords(_records);
 
-    public void ClearAll() => _records.Clear();   // 공식 하드 리셋·테스트 전용
+    // 공식 하드 리셋·테스트 전용
+    // ★ 하드 리셋은 새 세계다 — 닻 번호(_anchorSerial)처럼 순번도 1부터 다시 센다.
+    //   예전에는 기록만 지우고 순번은 남겨, 새 첫 회차의 자기 구간(#1~)과 실제 순번(#554~)이 어긋났다.
+    //   회귀는 이 함수를 부르지 않으므로 "회귀해도 순번은 되돌리지 않는다"는 규칙은 그대로다
+    public void ClearAll()
+    {
+        _records.Clear();
+        _nextSeq = 1;   // ★
+    }
 
     // 힌트 NPC용 조회 — "이 흐름에서 안 해본 것" 판단에 사용
     // ★ 3-A — 전체 기록이 아니라 이번 흐름에서 찾는다 (결과는 예전과 같다)
